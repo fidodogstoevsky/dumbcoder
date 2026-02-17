@@ -605,11 +605,13 @@ def expand(root: Delta, node: Delta, depth=0):
 
 
 def solve(X, D, depth=3):
-    solutions = {x: None for x in X}
+    xkey = mat_key(X)
+    solutions = {xkey: None}
 
     sources = []
+    requested_type = mat_type(X)
     for d in D:
-        if d.type == str:
+        if d.type == requested_type:
             root = deepcopy(d)
             sources.append(expand(root, root, depth=depth))
 
@@ -622,10 +624,11 @@ def solve(X, D, depth=3):
 
         cnt += 1
         out = tree()
+        okey = mat_key(out)
 
-        if out in X:
-            if solutions[out] is None or length(tree) < length(solutions[out]):
-                solutions[out] = tree
+        if okey == xkey:
+            if solutions[okey] is None or length(tree) < length(solutions[okey]):
+                solutions[okey] = tree
 
     took = time() - stime
     print(f'total: {cnt}, took: {took:.0f}s, iter: {cnt/took:.0f}/s')
@@ -672,15 +675,16 @@ def newtree(D, type, paths, paths_terminal, depth=6, q=None):
 def solve_needle(X, D, Q, solutions=None, maxdepth=10, ntries=100_000):
     print(f'{len(D)=}')
 
+    xkey = mat_key(X)
     if solutions is None:
-        solutions = {x: None for x in X}
+        solutions = {xkey: None}
 
     cnt = 0
     stime = time()
     notsolved = sum([s is None for s in solutions.values()])
 
     paths, paths_terminal = makepaths(D, Q)
-    requested_type = type(X[0])
+    requested_type = mat_type(X)
 
     ephermal = Delta(None, None, tailtypes=[requested_type])
     D.add(ephermal)
@@ -698,13 +702,14 @@ def solve_needle(X, D, Q, solutions=None, maxdepth=10, ntries=100_000):
 
         cnt += 1
 
-        if out in X:
-            if solutions[out] is None:
+        okey = mat_key(out)
+        if okey == xkey:
+            if solutions[okey] is None:
                 notsolved -= 1
-                print(f'[{cnt:6d}] caught {out}')
+                print(f'[{cnt:6d}] caught {tree}')
 
-            if solutions[out] is None or length(tree) < length(solutions[out]):
-                solutions[out] = tree
+            if solutions[okey] is None or length(tree) < length(solutions[okey]):
+                solutions[okey] = tree
 
         if cnt > ntries:
             break
@@ -723,11 +728,12 @@ def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0
     cnt = 0
     stime = time()
 
-    requested_type = type(X)
+    requested_type = mat_type(X)
     print(f"{requested_type=}")
 
     LOGPGAP = 2
     done = False
+    xkey = mat_key(X)
 
     def cb(tree, logp):
         nonlocal cnt, done, stime
@@ -735,10 +741,9 @@ def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0
         try:
             out = tree()
         except Exception as e:
-            print(f"it's just a little mistake: {e} with {tree}")
             return
 
-        if out == X:
+        if mat_eq(out, X):
             done = True
 
         cnt += 1
@@ -749,12 +754,13 @@ def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0
             if time() - stime > timeout:
                 done = True
 
-        if out in X:
-            if not out in solutions:
-                print(f'[{cnt:6d}] caught {out} with {tree}')
+        okey = mat_key(out)
+        if okey == xkey:
+            if okey not in solutions:
+                print(f'[{cnt:6d}] caught {tree}')
 
-            if not out in solutions or length(tree) < length(solutions[out]):
-                solutions[out] = deepcopy(tree)
+            if okey not in solutions or length(tree) < length(solutions[okey]):
+                solutions[okey] = deepcopy(tree)
 
     if budget == 0:
         idx = 0
@@ -950,6 +956,9 @@ def seesvd(D, mx, string, s):
 
 
 def count_everyone(X):
+    if isinstance(X, np.ndarray):
+        return 1
+
     subs = set()
 
     for l in range(1, len(X)+1):
@@ -965,6 +974,7 @@ def ECD(X, D, timeout=60, budget=20):
     Q = F.log_softmax(th.ones(len(D)), -1)
 
     tosolve = count_everyone(X)
+    xkey = mat_key(X)
     idx = 0
     sols = {}
     solved = False
@@ -974,31 +984,53 @@ def ECD(X, D, timeout=60, budget=20):
         trees = saturate(D, sols)
         idx += 1
 
-        if X in sols:
+        if xkey in sols:
             break
 
-        Qmodel = dream(D, trees)
+        Qmodel = dream(D, trees, target_type=mat_type(X))
 
         ntoks = 100
-        shift = max(randint(max(len(X) - ntoks, 1)), 0)
-        Q = Qmodel(tc(X)[shift:shift+ntoks][None]).flatten().detach()
+        xtc = tc(X)
+        shift = max(randint(max(len(xtc) - ntoks, 1)), 0)
+        Q = Qmodel(xtc[shift:shift+ntoks][None]).flatten().detach()
         Q = F.log_softmax(Q, -1)
 
-    return {x: tree for x, tree in zip(sols, trees)}
+    return sols
+
+def mat_key(x):
+    "hashable dict key for both strings and numpy arrays"
+    if isinstance(x, np.ndarray):
+        return x.tobytes()
+    return x
+
+def mat_eq(a, b):
+    "equality check that works for both strings and numpy arrays"
+    if isinstance(a, np.ndarray) and isinstance(b, np.ndarray):
+        return a.shape == b.shape and np.array_equal(a, b)
+    return a == b
+
+def mat_type(X):
+    "infer the DSL type of a target value"
+    if isinstance(X, np.ndarray):
+        return mat
+    return type(X)
 
 def tc(x):
+    "convert a target value to a 1d integer tensor"
+    if isinstance(x, np.ndarray):
+        return tensor(x.flatten().tolist())
     return tensor([int(c) for c in x])
 
 class RecognitionModel(nn.Module):
-    def __init__(self, nd):
+    def __init__(self, nd, vocabsize=10):
         super().__init__()
-        self.gpt = YOGPT(vocabsize=2, nheads=8, nembd=64, ntoks=100, nlayers=8)
+        self.gpt = YOGPT(vocabsize=vocabsize, nheads=8, nembd=64, ntoks=100, nlayers=8)
         self.head = nn.Linear(self.gpt.nembd, nd)
 
     def forward(self, x):
         return self.head(self.gpt(x).mean(1))
 
-def dream(D, soltrees=[]):
+def dream(D, soltrees=[], target_type=mat):
     device = th.device('cuda' if th.cuda.is_available() else 'cpu')
 
     ntoks = 100
@@ -1008,17 +1040,27 @@ def dream(D, soltrees=[]):
 
     tbar = trange(100)
     for _ in tbar:
-        trees = [newtree(D, str, paths, paths_terminal, depth=10) for _ in range(4)]
+        trees = [newtree(D, target_type, paths, paths_terminal, depth=10) for _ in range(4)]
         for i in randint(len(soltrees), size=4):
             trees.append(soltrees[i])
 
-        Xy = [[tree()[:ntoks], alld(tree)] for tree in trees]
+        Xy = []
+        for tree in trees:
+            try:
+                out = tree()
+            except Exception:
+                continue
+            xtc = tc(out)[:ntoks]
+            Xy.append([xtc, alld(tree)])
 
         # x, i: d
         Xy = [[(xy[0], D.index(d)) for d in xy[1]] for xy in Xy]
         Xy = reduce(lambda acc, xy: acc + xy, Xy, [])
 
-        X = [tc(xy[0])[None].to(device) for xy in Xy]
+        if len(Xy) == 0:
+            continue
+
+        X = [xy[0][None].to(device) for xy in Xy]
 
         q = th.vstack([qmodel(x) for x in X])
         y = tensor([xy[1] for xy in Xy], device=device)

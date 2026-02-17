@@ -1034,16 +1034,31 @@ def dream(D, soltrees=[]):
 
 if __name__ == '__main__':
     D = Deltas([
+        # int, int -> int
         Delta(add, int, [int, int], repr='+'),
-        Delta(mul, str, [str, int], repr='*'),
-        Delta(add, str, [str, str], repr='u'),
+        # int -> mat: single cell
+        Delta(cell, mat, [int], repr='cell'),
+        # mat, mat -> mat: spatial/temporal concat
+        Delta(hconcat, mat, [mat, mat], repr='h'),
+        Delta(vconcat, mat, [mat, mat], repr='v'),
+        Delta(tconcat, mat, [mat, mat], repr='t'),
+        # mat -> mat: transforms
+        Delta(rot90, mat, [mat], repr='r'),
+        Delta(fliph, mat, [mat], repr='fh'),
+        Delta(flipv, mat, [mat], repr='fv'),
+        # mat, int -> mat: repetition
+        Delta(rep_t, mat, [mat, int], repr='rt'),
+        Delta(rep_h, mat, [mat, int], repr='rh'),
+        Delta(rep_w, mat, [mat, int], repr='rw'),
+        # int terminals
+        Delta(0, int),
+        Delta(1, int),
         Delta(2, int),
         Delta(3, int),
-        Delta('0', str),
-        Delta('1', str),
     ])
 
-    X = "10001000100010001000"
-    Z = ECD(X, D, budget=16)
-
-    print(Z[X])
+    # example: a 1x3x3 checkerboard frame repeated over 2 timesteps
+    # [[[0,1,0],[1,0,1],[0,1,0]]] x2
+    X = np.tile(np.array([[[0,1,0],[1,0,1],[0,1,0]]]), (2,1,1))
+    print(f"target shape: {X.shape}")
+    print(X)

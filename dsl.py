@@ -1,7 +1,57 @@
 from operator import mul, add
+import numpy as np
 from numpy import zeros, ones, empty, array
 from functools import partial, reduce
 from copy import deepcopy
+
+# ■ matrix type: 3d numpy arrays (T, H, W) of ints
+mat = 'mat'
+
+def cell(v):
+    "int -> mat: 1x1x1 grid with value v"
+    return np.array([[[v]]], dtype=int)
+
+def hconcat(a, b):
+    "mat, mat -> mat: concat along width (axis=2), must match T and H"
+    if a.shape[0] != b.shape[0] or a.shape[1] != b.shape[1]:
+        raise ValueError(f"hconcat shape mismatch {a.shape} {b.shape}")
+    return np.concatenate([a, b], axis=2)
+
+def vconcat(a, b):
+    "mat, mat -> mat: concat along height (axis=1), must match T and W"
+    if a.shape[0] != b.shape[0] or a.shape[2] != b.shape[2]:
+        raise ValueError(f"vconcat shape mismatch {a.shape} {b.shape}")
+    return np.concatenate([a, b], axis=1)
+
+def tconcat(a, b):
+    "mat, mat -> mat: concat along time (axis=0), must match H and W"
+    if a.shape[1] != b.shape[1] or a.shape[2] != b.shape[2]:
+        raise ValueError(f"tconcat shape mismatch {a.shape} {b.shape}")
+    return np.concatenate([a, b], axis=0)
+
+def rot90(a):
+    "mat -> mat: rotate each frame 90 degrees ccw"
+    return np.rot90(a, axes=(1, 2)).copy()
+
+def fliph(a):
+    "mat -> mat: flip each frame horizontally"
+    return np.flip(a, axis=2).copy()
+
+def flipv(a):
+    "mat -> mat: flip each frame vertically"
+    return np.flip(a, axis=1).copy()
+
+def rep_t(a, n):
+    "mat, int -> mat: repeat along time"
+    return np.tile(a, (n, 1, 1))
+
+def rep_h(a, n):
+    "mat, int -> mat: repeat along height"
+    return np.tile(a, (1, n, 1))
+
+def rep_w(a, n):
+    "mat, int -> mat: repeat along width"
+    return np.tile(a, (1, 1, n))
 
 class Delta:
     def __init__(self, head, type=None, tailtypes=None, tails=None, repr=None, hiddentail=None, arrow=None, ishole=False, isarg=False):

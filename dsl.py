@@ -4,7 +4,8 @@ from numpy import zeros, ones, empty, array
 from functools import partial, reduce
 from copy import deepcopy
 
-# ■ matrix type: 3d numpy arrays (T, H, W) of ints
+# matrix type: 3d numpy arrays (T, H, W) of ints
+# these are the matrix primitives
 mat = 'mat'
 
 def cell(v):
@@ -53,12 +54,31 @@ def rep_w(a, n):
     "mat, int -> mat: repeat along width"
     return np.tile(a, (1, 1, n))
 
+def fill(v, h, w):
+    "int, int, int -> mat: 1-frame grid of shape (1, h, w) filled with v"
+    if h <= 0 or w <= 0:
+        raise ValueError(f"fill needs positive dims, got h={h} w={w}")
+    return np.full((1, h, w), v, dtype=int)
+
+def mset(a, r, c, v):
+    "mat, int, int, int -> mat: set cell (r, c) in each frame to v"
+    if r < 0 or r >= a.shape[1] or c < 0 or c >= a.shape[2]:
+        raise ValueError(f"mset out of bounds: ({r},{c}) in {a.shape}")
+    out = a.copy()
+    out[:, r, c] = v
+    return out
+
 class Delta:
+    # a single node in an expression tree
     def __init__(self, head, type=None, tailtypes=None, tails=None, repr=None, hiddentail=None, arrow=None, ishole=False, isarg=False):
         self.head = head
+            # the function/value
         self.tails = tails
+            # the arguments the function takes
         self.tailtypes = tailtypes
+            # the expected argument types
         self.type = type
+            # the return type
         self.ishole = ishole
         self.isarg = isarg
 
@@ -76,13 +96,11 @@ class Delta:
         if repr is None:
             repr = str(head)
 
-            if not self.ishole and not self.isarg and type == str:
-                repr = f"'{repr}'"
-
         self.repr = repr
         self.idx = 0
 
     def __call__(self):
+        # calling delta() evaluates the expression
         if self.tails is None:
             return self.head
 

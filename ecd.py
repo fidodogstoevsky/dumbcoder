@@ -35,6 +35,7 @@ import multiprocessing as mp
 # ■ ~
 
 class Deltas:
+    # a collection of Delta primitives forming the DSL
     def __init__(self, core):
         self.core = core
         self.invented = []
@@ -721,10 +722,13 @@ def solve_needle(X, D, Q, solutions=None, maxdepth=10, ntries=100_000):
     return solutions, notsolved
 
 
+class _EnumDone(Exception):
+    pass
+
 def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0):
     print(f'{len(D)=}')
+    # the length of the DSL
 
-    tosolve = count_everyone(X)
     cnt = 0
     stime = time()
 
@@ -748,11 +752,12 @@ def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0
 
         cnt += 1
 
-        if not(cnt % 100000) and cnt > 0:
-            print(f'! {cnt/(time()-stime):.2f}/s')
+        if not(cnt % 10000) and cnt > 0:
+            print(f'! {cnt} trees, {cnt/(time()-stime):.0f}/s', flush=True)
 
             if time() - stime > timeout:
                 done = True
+                raise _EnumDone()
 
         okey = mat_key(out)
         if okey == xkey:
@@ -762,25 +767,34 @@ def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0
             if okey not in solutions or length(tree) < length(solutions[okey]):
                 solutions[okey] = deepcopy(tree)
 
+        if done:
+            raise _EnumDone()
+
     if budget == 0:
         idx = 0
         while not done:
-            cenumerate(D, Q, requested_type, (LOGPGAP * idx, LOGPGAP * (idx+1)), maxdepth, cb)
+            try:
+                cenumerate(D, Q, requested_type, (LOGPGAP * idx, LOGPGAP * (idx+1)), maxdepth, cb)
+            except _EnumDone:
+                pass
             idx += 1
     else:
         ephermal = Delta('root', ishole=True, tailtypes=[requested_type])
         D.add(ephermal)
         Q = th.hstack((Q, tensor([0])))
 
-        for logp, wrapper in penumerate(D, ephermal, 0, budget, makepaths(D, Q), maxdepth=maxdepth+1):
-            tree = wrapper.tails[0]
-            cb(tree, logp)
+        try:
+            for logp, wrapper in penumerate(D, ephermal, 0, budget, makepaths(D, Q), maxdepth=maxdepth+1):
+                tree = wrapper.tails[0]
+                cb(tree, logp)
+        except _EnumDone:
+            pass
 
         D.pop(ephermal)
 
     took = time() - stime
-    print(f'total: {cnt}, took: {took/60:.1f}m, iter: {cnt/took:.0f}/s')
-    print(f'solved: {sum(s is not None for s in solutions.values())}/{tosolve}')
+    print(f'total: {cnt}, took: {took/60:.1f}m, iter: {cnt/(took+1e-9):.0f}/s')
+    print(f'solved: {sum(s is not None for s in solutions.values())}')
     return solutions
 
 
@@ -955,94 +969,144 @@ def seesvd(D, mx, string, s):
     return k, c, nd
 
 
-def count_everyone(X):
-    if isinstance(X, np.ndarray):
-        return 1
-
-    subs = set()
-
-    for l in range(1, len(X)+1):
-        for sidx in range(len(X) - l+1):
-            subs.add(X[sidx:sidx+l])
-
-    return len(subs)
-
-
-def ECD(X, D, timeout=60, budget=20):
+def ECD(X, D, timeout=60, budget=0):
     D.reset()
+    # reset the DSL
 
     Q = F.log_softmax(th.ones(len(D)), -1)
+    # initialize uniform log-probability dist
+    # over all DSL primitives. This is the prior,
+    # for which primitives are likely
 
-    tosolve = count_everyone(X)
     xkey = mat_key(X)
     idx = 0
     sols = {}
-    solved = False
-    while not solved:
-        sols = solve_enumeration(X, D, Q, sols, maxdepth=10, timeout=timeout, budget=budget + 2 * idx)
-
-        trees = saturate(D, sols)
-        idx += 1
+    while True:
+        sols = solve_enumeration(X, D, Q, sols, maxdepth=10, timeout=timeout, budget=budget)
 
         if xkey in sols:
             break
 
-        Qmodel = dream(D, trees, target_type=mat_type(X))
+        soltrees = [s for s in sols.values() if s is not None]
+        if len(soltrees) > 0:
+            trees = saturate(D, sols)
+        else:
+            trees = []
 
-        ntoks = 100
-        xtc = tc(X)
-        shift = max(randint(max(len(xtc) - ntoks, 1)), 0)
-        Q = Qmodel(xtc[shift:shift+ntoks][None]).flatten().detach()
+        idx += 1
+
+        Qmodel = dream(D, trees)
+
+        Q, _ = Qmodel(tc_mat(X)[None])
+        Q = Q.flatten().detach()
+
         Q = F.log_softmax(Q, -1)
+        print(f'--- ECD iteration {idx}, Q biased, retrying ---', flush=True)
 
     return sols
 
 def mat_key(x):
-    "hashable dict key for both strings and numpy arrays"
-    if isinstance(x, np.ndarray):
-        return x.tobytes()
-    return x
+    return x.tobytes()
 
 def mat_eq(a, b):
-    "equality check that works for both strings and numpy arrays"
-    if isinstance(a, np.ndarray) and isinstance(b, np.ndarray):
-        return a.shape == b.shape and np.array_equal(a, b)
-    return a == b
+    return a.shape == b.shape and np.array_equal(a, b)
 
 def mat_type(X):
-    "infer the DSL type of a target value"
-    if isinstance(X, np.ndarray):
-        return mat
-    return type(X)
+    return mat
 
-def tc(x):
-    "convert a target value to a 1d integer tensor"
-    if isinstance(x, np.ndarray):
-        return tensor(x.flatten().tolist())
-    return tensor([int(c) for c in x])
 
-class RecognitionModel(nn.Module):
-    def __init__(self, nd, vocabsize=10):
+class MatRecognitionModel(nn.Module):
+    """autoregressive frame-prediction recognition model for 3d matrices (T, H, W).
+
+    processes one frame at a time:
+      1. encode frame t with a 2d cnn
+      2. update a recurrent hidden state
+      3. predict frame t+1 from hidden state
+      4. after all frames, project hidden state to DSL logits
+
+    returns (dsl_logits, frame_pred_logits) where frame_pred_logits
+    is a list of (B, vocabsize, H, W) tensors for frames 1..T-1.
+    """
+    def __init__(self, nd, vocabsize=10, nembd=64):
         super().__init__()
-        self.gpt = YOGPT(vocabsize=vocabsize, nheads=8, nembd=64, ntoks=100, nlayers=8)
-        self.head = nn.Linear(self.gpt.nembd, nd)
+        self.nembd = nembd
+        self.vocabsize = vocabsize
+
+        self.embed = nn.Embedding(vocabsize, nembd)
+
+        # encode a single frame
+        self.encoder = nn.Sequential(
+            nn.Conv2d(nembd, nembd, 3, padding=1),
+            nn.GELU(),
+            nn.Conv2d(nembd, nembd, 3, padding=1),
+            nn.GELU(),
+        )
+
+        # temporal state
+        self.rnn = nn.GRUCell(nembd, nembd)
+
+        # decode hidden state -> next frame prediction
+        self.decoder = nn.Sequential(
+            nn.Conv2d(nembd, nembd, 3, padding=1),
+            nn.GELU(),
+            nn.Conv2d(nembd, vocabsize, 1),
+        )
+
+        # DSL logits from final hidden state
+        self.head = nn.Linear(nembd, nd)
+
+        print(f'{sum(p.numel() for p in self.parameters()) / 2**20:.2f}M params')
+
+    def encode_frame(self, frame):
+        "frame: (B, H, W) int tensor -> (B, nembd, H, W)"
+        emb = self.embed(frame)            # (B, H, W, nembd)
+        emb = emb.permute(0, 3, 1, 2)     # (B, nembd, H, W)
+        # pad to min 3x3 for conv2d kernels
+        _, _, h, w = emb.shape
+        pad = [0, max(0, 3 - w), 0, max(0, 3 - h)]
+        if any(p > 0 for p in pad):
+            emb = F.pad(emb, pad)
+        return emb + self.encoder(emb)     # residual
 
     def forward(self, x):
-        return self.head(self.gpt(x).mean(1))
+        # x: (B, T, H, W) int tensor
+        B, T, H, W = x.shape
+        h = th.zeros(B, self.nembd, device=x.device)
 
-def dream(D, soltrees=[], target_type=mat):
+        frame_preds = []
+        for t in range(T):
+            enc = self.encode_frame(x[:, t])      # (B, nembd, H', W')
+            pooled = enc.mean(dim=(2, 3))          # (B, nembd)
+            h = self.rnn(pooled, h)
+
+            if t < T - 1:
+                # predict next frame from hidden state
+                h_spatial = h[:, :, None, None].expand(-1, -1, H, W)
+                pred = self.decoder(h_spatial)     # (B, vocabsize, H, W)
+                frame_preds.append(pred)
+
+        dsl_logits = self.head(h)                  # (B, nd)
+        return dsl_logits, frame_preds
+
+
+def tc_mat(x, vocabsize=10):
+    "convert a numpy matrix to a (T, H, W) long tensor, clamping to valid range"
+    return th.from_numpy(np.clip(x, 0, vocabsize - 1).astype(np.int64))
+
+def dream(D, soltrees=[]):
     device = th.device('cuda' if th.cuda.is_available() else 'cpu')
 
-    ntoks = 100
-    qmodel = RecognitionModel(len(D)).to(device)
+    qmodel = MatRecognitionModel(len(D)).to(device)
+
     opt = th.optim.Adam(qmodel.parameters())
     paths, paths_terminal = makepaths(D, th.ones(len(D)))
 
     tbar = trange(100)
     for _ in tbar:
-        trees = [newtree(D, target_type, paths, paths_terminal, depth=10) for _ in range(4)]
-        for i in randint(len(soltrees), size=4):
-            trees.append(soltrees[i])
+        trees = [newtree(D, mat, paths, paths_terminal, depth=10) for _ in range(4)]
+        if len(soltrees) > 0:
+            for i in randint(len(soltrees), size=4):
+                trees.append(soltrees[i])
 
         Xy = []
         for tree in trees:
@@ -1050,7 +1114,11 @@ def dream(D, soltrees=[], target_type=mat):
                 out = tree()
             except Exception:
                 continue
-            xtc = tc(out)[:ntoks]
+
+            if not isinstance(out, np.ndarray) or 0 in out.shape or out.shape[0] < 2:
+                continue
+            xtc = tc_mat(out)
+
             Xy.append([xtc, alld(tree)])
 
         # x, i: d
@@ -1062,11 +1130,27 @@ def dream(D, soltrees=[], target_type=mat):
 
         X = [xy[0][None].to(device) for xy in Xy]
 
-        q = th.vstack([qmodel(x) for x in X])
-        y = tensor([xy[1] for xy in Xy], device=device)
-
         opt.zero_grad()
-        loss = F.cross_entropy(q, y)
+
+        # autoregressive: dsl loss + frame prediction loss
+        dsl_loss = tensor(0.0, device=device)
+        frame_loss = tensor(0.0, device=device)
+        nframes = 0
+
+        for xy, x in zip(Xy, X):
+            dsl_logits, frame_preds = qmodel(x)
+            dsl_loss = dsl_loss + F.cross_entropy(dsl_logits, tensor([xy[1]], device=device))
+
+            # frame prediction: compare pred[t] to actual frame[t+1]
+            for t, pred in enumerate(frame_preds):
+                target_frame = x[:, t + 1]           # (1, H, W)
+                frame_loss = frame_loss + F.cross_entropy(pred, target_frame)
+                nframes += 1
+
+        loss = dsl_loss / len(X)
+        if nframes > 0:
+            loss = loss + frame_loss / nframes
+
         loss.backward()
         opt.step()
 
@@ -1076,31 +1160,24 @@ def dream(D, soltrees=[], target_type=mat):
 
 if __name__ == '__main__':
     D = Deltas([
-        # int, int -> int
-        Delta(add, int, [int, int], repr='+'),
-        # int -> mat: single cell
-        Delta(cell, mat, [int], repr='cell'),
-        # mat, mat -> mat: spatial/temporal concat
-        Delta(hconcat, mat, [mat, mat], repr='h'),
-        Delta(vconcat, mat, [mat, mat], repr='v'),
-        Delta(tconcat, mat, [mat, mat], repr='t'),
-        # mat -> mat: transforms
-        Delta(rot90, mat, [mat], repr='r'),
-        Delta(fliph, mat, [mat], repr='fh'),
-        Delta(flipv, mat, [mat], repr='fv'),
-        # mat, int -> mat: repetition
+        # constructors
+        Delta(fill, mat, [int, int, int], repr='fill'),
+        Delta(mset, mat, [mat, int, int, int], repr='mset'),
+        # repetition
         Delta(rep_t, mat, [mat, int], repr='rt'),
-        Delta(rep_h, mat, [mat, int], repr='rh'),
-        Delta(rep_w, mat, [mat, int], repr='rw'),
-        # int terminals
+        # int terminals (colors / dims)
         Delta(0, int),
         Delta(1, int),
         Delta(2, int),
         Delta(3, int),
     ])
 
-    # example: a 1x3x3 checkerboard frame repeated over 2 timesteps
-    # [[[0,1,0],[1,0,1],[0,1,0]]] x2
-    X = np.tile(np.array([[[0,1,0],[1,0,1],[0,1,0]]]), (2,1,1))
+    X = np.tile(np.array([[[0,0,0],[0,1,0],[0,0,0]]]), (2,1,1))
     print(f"target shape: {X.shape}")
     print(X)
+
+    Z = ECD(X, D, timeout=120)
+    for k, v in Z.items():
+        if v is not None:
+            print(f'solution: {v}')
+            print(f'evaluates to:\n{v()}')

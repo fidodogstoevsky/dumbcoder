@@ -299,6 +299,9 @@ def p2enumerate(n, nlogp, prebudget, budget, maxdepth=3):
 
 
 def cenumerate(D, Q, tp, budget, maxdepth, cb):
+    """ enumerate programs by probability
+    callback-style, budget window used in
+    the main solve_enumeration loop with expanding windows"""
     if budget[1] <= 0 or maxdepth < 0:
         return True
 
@@ -335,11 +338,18 @@ def cenumerate_fold(D, Q, d, tailtypes, budget, offset, maxdepth, cb):
     return True
 
 def groom(D, sources, alogp, budget, paths, maxdepth):
+    """ fills in the argument list for a node
+    input:
+    * D: the primitives
+    * sources: list of probability dists
+
+    """
     if len(sources) == 0:
         yield alogp, []
         return
 
     source, *nextsources = sources
+
 
     for idx, logp in enumerate(source):
         if budget + logp < 0:
@@ -351,6 +361,11 @@ def groom(D, sources, alogp, budget, paths, maxdepth):
 
 
 def penumerate(D, n, nlogp, budget, paths, maxdepth=3):
+    """ expands a node
+    enumerate programs by probability
+    generator-style, single budget ceiling,
+    used when a budget > 0 is passed to
+    solve_enumeration and also internally in saturate"""
     if budget < 0 or isterminal(n):
         yield nlogp, n
         return
@@ -702,6 +717,7 @@ def solve_needle(X, D, Q, solutions=None, maxdepth=10, ntries=100_000):
             print(f"what is this {tree=}?")
 
         cnt += 1
+        # increment the count of programs that have been successfully evaluated
 
         okey = mat_key(out)
         if okey == xkey:
@@ -726,6 +742,12 @@ class _EnumDone(Exception):
     pass
 
 def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0):
+    """systematically enumerates programs from the DSL, evaluating each one.
+    If a program evaluates to X, it's saved in sols.
+    The enumeration is budget-based: it iterates over increasingly wide
+    probability budgets (LOGPGAP * idx to LOGPGAP * (idx+1)), so it tries
+    the most probable programs first and fans out.
+    Stops when X is found or timeout is hit."""
     print(f'{len(D)=}')
     # the length of the DSL
 
@@ -740,14 +762,20 @@ def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0
     xkey = mat_key(X)
 
     def cb(tree, logp):
+        """the callback passed to cenumerate/penumerate
+        called once per enumerated program
+        for each candidate tree"""
         nonlocal cnt, done, stime
 
         try:
             out = tree()
+            # run the program
         except Exception as e:
+            # skip it if it throws 
             return
 
         if mat_eq(out, X):
+            # check if the program outputs X
             done = True
 
         cnt += 1
@@ -794,7 +822,9 @@ def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0
 
     took = time() - stime
     print(f'total: {cnt}, took: {took/60:.1f}m, iter: {cnt/(took+1e-9):.0f}/s')
+        # print the number of programs that were evaluated
     print(f'solved: {sum(s is not None for s in solutions.values())}')
+        # print the number of solutions that were found
     return solutions
 
 

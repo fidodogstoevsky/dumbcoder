@@ -126,29 +126,59 @@ The `mat` type is a 3D numpy array of shape `(T, H, W)` — `T` frames of `H×W`
 
 ## Example
 
+Target is a 3-dimensional array: three frames of a 3x3 grid, showing "movement" along the center row
+
 ```python
-from ecd import ECD, mat_key
-from dsl import *
+X = np.array([
+    [[0,0,0],
+     [1,0,0],
+     [0,0,0]],
 
-D = Deltas([
-    Delta(fill, mat, [int, int, int], repr='fill'),
-    Delta(mset, mat, [mat, int, int, int], repr='mset'),
-    Delta(rep_t, mat, [mat, int], repr='rt'),
-    Delta(0, int),
-    Delta(1, int),
-    Delta(2, int),
-    Delta(3, int),
+    [[0,0,0],
+     [0,1,0],
+     [0,0,0]],
+
+    [[0,0,0],
+     [0,0,1],
+     [0,0,0]],
 ])
-
-# target: a 3x3 grid with 1 at center, repeated over 2 frames
-X = np.tile(np.array([[[0,0,0],[0,1,0],[0,0,0]]]), (2,1,1))
-
-Z = ECD(X, D, timeout=120)
-
-xkey = mat_key(X)
-print(Z[xkey])       # the program tree
-print(Z[xkey]())     # evaluates back to X
 ```
+
+### Iteration 0
+
+Run ECD with the default DSL
+
+#### Explore 0
+
+Within 266-274 trees, finds each of the three individual frames:
+
+- `(mset (fill 0 3 3) 1 0 1)` a 3x3 grid of zeros, with value 1 at row 1 column 0
+- `(mset (fill 0 3 3) 1 1 1)` a 3x3 grid of zeros, with value 1 at row 1 column 1
+- `(mset (fill 0 3 3) 1 2 1)` a 3x3 grid of zeros, with value 1 at row 1 column 2
+
+Which are concatenated along the time axis (`tconcat`) to form the target matrix
+
+`(tconcat (tconcat (mset (fill 0 3 3) 1 0 1) (mset (fill 0 3 3) 1 1 1)) (mset (fill 0 3 3) 1 2 1))`
+
+#### Compress 0
+
+Abstracts `f0 = (mset (fill 0 3 3) 1 $0 1)`, a function that takes an int `$0` and generates a 3x3 grid of zeros with value 1 at row 1 column `$0`. Compression ratio k=0.583 (reduced description by 42%).
+
+#### Dream 0
+
+Trains autoregressive recognition model on random + solution trees. Loss dropped from 4.47 → 2.40.
+
+### Iteration 1
+
+Run ECD with DSL enriched by `f0`, and with updated Q-bias
+
+#### Explore 1
+
+Finds full target in just 359 trees
+
+`(tconcat (tconcat (f0 0) (f0 1)) (f0 2))`
+
+"Concatenate a 3x3 grid of zeros with value 1 at row 1 column 1, a 3x3 grid of zeros with value 1 at row 1 column 2, and a 3x3 grid of zeros with value 1 at row 1 column 3"
 
 ---
 

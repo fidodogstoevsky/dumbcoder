@@ -25,7 +25,6 @@ from copy import deepcopy
 from time import time, sleep
 
 from dsl import *
-from gpt import *
 
 import os
 
@@ -535,9 +534,10 @@ def saturate(D, sols):
 
         stime = time()
 
-        splitted_trees = split(ncores, trees)
+        nc = min(ncores, len(trees))
+        splitted_trees = split(nc, trees)
 
-        if ncores > 1:
+        if nc > 1:
             try:
                 pool = mp.Pool(ncores)
                 counts = pool.starmap(count_jive, zip(repeat(D), repeat(Q), repeat(trees), splitted_trees))
@@ -760,22 +760,23 @@ def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0
     LOGPGAP = 2
     done = False
     xkey = mat_key(X)
+    subtargets = mat_subtargets(X)
 
     def cb(tree, logp):
         """the callback passed to cenumerate/penumerate
-        called once per enumerated program
-        for each candidate tree"""
+        called once per enumerated program.
+        checks if the output matches X or any frame sub-sequence of X."""
         nonlocal cnt, done, stime
 
         try:
             out = tree()
-            # run the program
         except Exception as e:
-            # skip it if it throws 
+            return
+
+        if not isinstance(out, np.ndarray) or 0 in out.shape:
             return
 
         if mat_eq(out, X):
-            # check if the program outputs X
             done = True
 
         cnt += 1
@@ -788,7 +789,7 @@ def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0
                 raise _EnumDone()
 
         okey = mat_key(out)
-        if okey == xkey:
+        if okey in subtargets:
             if okey not in solutions:
                 print(f'[{cnt:6d}] caught {tree}')
 
@@ -1036,13 +1037,23 @@ def ECD(X, D, timeout=60, budget=0):
     return sols
 
 def mat_key(x):
-    return x.tobytes()
+    return (x.shape, x.tobytes())
 
 def mat_eq(a, b):
     return a.shape == b.shape and np.array_equal(a, b)
 
 def mat_type(X):
     return mat
+
+def mat_subtargets(X):
+    "all contiguous frame sub-sequences of X, as {mat_key: ndarray}"
+    T = X.shape[0]
+    subs = {}
+    for l in range(1, T + 1):
+        for s in range(T - l + 1):
+            sub = X[s:s+l]
+            subs[mat_key(sub)] = sub
+    return subs
 
 
 class MatRecognitionModel(nn.Module):
@@ -1118,6 +1129,18 @@ class MatRecognitionModel(nn.Module):
         dsl_logits = self.head(h)                  # (B, nd)
         return dsl_logits, frame_preds
 
+def sample(ps):
+    if ps[0] < 0:
+        ps = np.exp(ps)
+
+    ps /= ps.sum()
+    cdf = ps.cumsum(-1)
+    x = rand()
+    for i in range(len(ps)):
+        if cdf[i] > x:
+            return i
+
+    return len(ps)-1
 
 def tc_mat(x, vocabsize=10):
     "convert a numpy matrix to a (T, H, W) long tensor, clamping to valid range"
@@ -1193,7 +1216,8 @@ if __name__ == '__main__':
         # constructors
         Delta(fill, mat, [int, int, int], repr='fill'),
         Delta(mset, mat, [mat, int, int, int], repr='mset'),
-        # repetition
+        # concat / repetition
+        Delta(tconcat, mat, [mat, mat], repr='t'),
         Delta(rep_t, mat, [mat, int], repr='rt'),
         # int terminals (colors / dims)
         Delta(0, int),
@@ -1202,7 +1226,12 @@ if __name__ == '__main__':
         Delta(3, int),
     ])
 
-    X = np.tile(np.array([[[0,0,0],[0,1,0],[0,0,0]]]), (2,1,1))
+    # movement: dot moves right across middle row over 3 frames
+    X = np.array([
+        [[1,0,0],[0,0,0],[0,0,0]],
+        [[0,0,0],[0,1,0],[0,0,0]],
+        [[0,0,0],[0,0,0],[0,0,1]],
+    ])
     print(f"target shape: {X.shape}")
     print(X)
 

@@ -1,0 +1,4 @@
+run on list of tasks (each task is multiple histories, increasing by one grid at each time step?) rather than just one task
+
+can mentalizing be learned
+

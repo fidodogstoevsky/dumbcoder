@@ -2,3 +2,26 @@ run on list of tasks (each task is multiple histories, increasing by one grid at
 
 can mentalizing be learned
 
+
+we want a list of grids to grid
+
+function that takes grid history and outputs a grid
+
+currently I'm syntehsizing a history. but it's already given
+
+we want to synthesize something that 
+
+primitives:
+copy grid copy(n) n is grid index
+
+want it to learn move(find(copy(-1), agent))
+copy last grid, find agent, move it left
+
+move: copy + change to 0 + change to 1
+
+dsl of copying + modification
+
+encodes expectation that the world changes in bits, innate, tends to be cohesive
+
+prediction vs compression
+currently doing latter

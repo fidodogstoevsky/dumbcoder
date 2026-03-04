@@ -68,6 +68,10 @@ class Deltas:
         for idx, d in enumerate(self.ds):
             d.idx = idx
 
+        # O(1) lookup dicts
+        self._idx_by_repr = {d.repr: i for i, d in enumerate(self.ds)}
+        self._idx_by_head_type = {(id(d.head), d.type): i for i, d in enumerate(self.ds)}
+
     def logp(self, Q, d):
         if d.tails is None:
             return Q[self.index(d)]
@@ -110,15 +114,9 @@ class Deltas:
 
 
     def index(self, d: Union[Delta, str]):
-        for idx, dd in enumerate(self.ds):
-            if isinstance(d, Delta):
-                if d.head == dd.head and d.type == dd.type:
-                    return idx
-            else:
-                if d == dd.repr:
-                    return idx
-
-        return None
+        if isinstance(d, str):
+            return self._idx_by_repr.get(d)
+        return self._idx_by_head_type.get((id(d.head), d.type))
 
     def reset(self):
         self.invented = []
@@ -308,11 +306,12 @@ def cenumerate(D, Q, tp, budget, maxdepth, cb):
         if -Q[i] > budget[1]:
             continue
 
-        d = D[i]
+        d = D.ds[i]
         logp = Q[i]
         nbudget = (budget[0] + logp, budget[1] + logp)
+        tailtypes = list(d.tailtypes) if d.tailtypes is not None else d.tailtypes
 
-        cenumerate_fold(D, Q, d, d.tailtypes, nbudget, logp, maxdepth - 1, cb)
+        cenumerate_fold(D, Q, d, tailtypes, nbudget, logp, maxdepth - 1, cb)
 
 def cenumerate_fold(D, Q, d, tailtypes, budget, offset, maxdepth, cb):
     if tailtypes is not None and len(tailtypes) > 0:
@@ -327,7 +326,7 @@ def cenumerate_fold(D, Q, d, tailtypes, budget, offset, maxdepth, cb):
             nbudget = (budget[0] + tlogp, budget[1] + tlogp)
             noffset = offset + tlogp
 
-            cenumerate_fold(D, Q, nd, deepcopy(tailtypes), nbudget, noffset, maxdepth, cb)
+            cenumerate_fold(D, Q, nd, list(tailtypes), nbudget, noffset, maxdepth, cb)
 
         return cenumerate(D, Q, tailtp, (0, budget[1]), maxdepth, ccb)
 
@@ -1226,11 +1225,63 @@ if __name__ == '__main__':
         Delta(3, int),
     ])
 
-    # movement: dot moves right across middle row over 3 frames
+    # X = np.array([
+    #     [[1,0,0],
+    #      [0,0,0],
+    #      [0,0,0]],
+
+    #     [[0,0,0],
+    #      [0,1,0],
+    #      [0,0,0]],
+
+    #     [[0,0,0],
+    #      [0,0,0],
+    #      [0,0,1]],
+    # ])
+
     X = np.array([
-        [[1,0,0],[0,0,0],[0,0,0]],
-        [[0,0,0],[0,1,0],[0,0,0]],
-        [[0,0,0],[0,0,0],[0,0,1]],
+        [
+            [1, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 2]
+        ],
+        [
+            [0, 1, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 2]
+        ],
+        [
+            [0, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 2]
+        ],
+        [
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 0, 2]
+        ],
+        [
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 2]
+        ],
+        [
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 1],
+            [0, 0, 0, 2]
+        ],
+        [
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 1]
+        ],
     ])
     print(f"target shape: {X.shape}")
     print(X)

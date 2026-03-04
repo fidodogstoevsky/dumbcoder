@@ -188,4 +188,3 @@ Finds full target in just 359 trees
 |------|----------|
 | `dsl.py` | `Delta`, `Deltas`, matrix primitives, tree utilities |
 | `ecd.py` | `ECD`, `solve_enumeration`, `saturate`, `dream`, enumeration helpers |
-| `gpt.py` | `YOGPT` transformer, used as a building block for recognition models |

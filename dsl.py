@@ -55,7 +55,7 @@ def rep_w(a, n):
     return np.tile(a, (1, 1, n))
 
 def fill(v, h, w):
-    "int, int, int -> mat: 1-frame grid of shape (1, h, w) filled with v"
+    "int, int,w int -> mat: 1-frame grid of shape (1, h, w) filled with v"
     if h <= 0 or w <= 0:
         raise ValueError(f"fill needs positive dims, got h={h} w={w}")
     return np.full((1, h, w), v, dtype=int)

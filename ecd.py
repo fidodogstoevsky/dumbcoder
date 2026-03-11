@@ -68,9 +68,15 @@ class Deltas:
         for idx, d in enumerate(self.ds):
             d.idx = idx
 
-        # O(1) lookup dicts
-        self._idx_by_repr = {d.repr: i for i, d in enumerate(self.ds)}
-        self._idx_by_head_type = {(id(d.head), d.type): i for i, d in enumerate(self.ds)}
+        # O(1) lookup dicts (first-occurrence wins, matching original linear-scan semantics)
+        self._idx_by_repr = {}
+        self._idx_by_head_type = {}
+        for i, d in enumerate(self.ds):
+            if d.repr not in self._idx_by_repr:
+                self._idx_by_repr[d.repr] = i
+            key = (id(d.head), d.type)
+            if key not in self._idx_by_head_type:
+                self._idx_by_head_type[key] = i
 
     def logp(self, Q, d):
         if d.tails is None:
@@ -740,31 +746,28 @@ def solve_needle(X, D, Q, solutions=None, maxdepth=10, ntries=100_000):
 class _EnumDone(Exception):
     pass
 
-def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0):
+def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0):
     """systematically enumerates programs from the DSL, evaluating each one.
-    If a program evaluates to X, it's saved in sols.
+    If a program evaluates to any matrix in Xs, it's saved in solutions.
     The enumeration is budget-based: it iterates over increasingly wide
     probability budgets (LOGPGAP * idx to LOGPGAP * (idx+1)), so it tries
     the most probable programs first and fans out.
-    Stops when X is found or timeout is hit."""
+    Stops when all matrices in Xs are solved or timeout is hit."""
     print(f'{len(D)=}')
-    # the length of the DSL
 
     cnt = 0
     stime = time()
 
-    requested_type = mat_type(X)
-    print(f"{requested_type=}")
-
     LOGPGAP = 2
     done = False
-    xkey = mat_key(X)
-    subtargets = mat_subtargets(X)
+    # sub-sequences of every Xi, so assembly can combine found partial solutions
+    subtargets = {}
+    for x in Xs:
+        subtargets.update(mat_subtargets(x))
 
     def cb(tree, logp):
-        """the callback passed to cenumerate/penumerate
-        called once per enumerated program.
-        checks if the output matches X or any frame sub-sequence of X."""
+        """called once per enumerated program.
+        checks if the output matches any matrix in Xs or any sub-sequence of one."""
         nonlocal cnt, done, stime
 
         try:
@@ -774,9 +777,6 @@ def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0
 
         if not isinstance(out, np.ndarray) or 0 in out.shape:
             return
-
-        if mat_eq(out, X):
-            done = True
 
         cnt += 1
 
@@ -795,6 +795,9 @@ def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0
             if okey not in solutions or length(tree) < length(solutions[okey]):
                 solutions[okey] = deepcopy(tree)
 
+            if all(mat_key(x) in solutions for x in Xs):
+                done = True
+
         if done:
             raise _EnumDone()
 
@@ -802,12 +805,12 @@ def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0
         idx = 0
         while not done:
             try:
-                cenumerate(D, Q, requested_type, (LOGPGAP * idx, LOGPGAP * (idx+1)), maxdepth, cb)
+                cenumerate(D, Q, mat, (LOGPGAP * idx, LOGPGAP * (idx+1)), maxdepth, cb)
             except _EnumDone:
                 pass
             idx += 1
     else:
-        ephermal = Delta('root', ishole=True, tailtypes=[requested_type])
+        ephermal = Delta('root', ishole=True, tailtypes=[mat])
         D.add(ephermal)
         Q = th.hstack((Q, tensor([0])))
 
@@ -822,9 +825,7 @@ def solve_enumeration(X, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0
 
     took = time() - stime
     print(f'total: {cnt}, took: {took/60:.1f}m, iter: {cnt/(took+1e-9):.0f}/s')
-        # print the number of programs that were evaluated
-    print(f'solved: {sum(s is not None for s in solutions.values())}')
-        # print the number of solutions that were found
+    print(f'solved: {sum(mat_key(x) in solutions for x in Xs)}/{len(Xs)}')
     return solutions
 
 
@@ -999,22 +1000,24 @@ def seesvd(D, mx, string, s):
     return k, c, nd
 
 
-def ECD(X, D, timeout=60, budget=0):
+def ECD(Xs, D, timeout=60, budget=0):
     D.reset()
-    # reset the DSL
 
     Q = F.log_softmax(th.ones(len(D)), -1)
-    # initialize uniform log-probability dist
-    # over all DSL primitives. This is the prior,
-    # for which primitives are likely
 
-    xkey = mat_key(X)
     idx = 0
     sols = {}
-    while True:
-        sols = solve_enumeration(X, D, Q, sols, maxdepth=10, timeout=timeout, budget=budget)
 
-        if xkey in sols:
+    def all_solved():
+        return all(mat_key(x) in sols for x in Xs)
+
+    while True:
+        sols = solve_enumeration(Xs, D, Q, sols, maxdepth=10, timeout=timeout, budget=budget)
+
+        for x in Xs:
+            assemble_tconcat(x, sols)
+
+        if all_solved():
             break
 
         soltrees = [s for s in sols.values() if s is not None]
@@ -1027,13 +1030,37 @@ def ECD(X, D, timeout=60, budget=0):
 
         Qmodel = dream(D, trees)
 
-        Q, _ = Qmodel(tc_mat(X)[None])
-        Q = Q.flatten().detach()
+        # average Q over unsolved targets so the model guides search toward what's missing
+        unsolved = [x for x in Xs if mat_key(x) not in sols]
+        qs = th.stack([Qmodel(tc_mat(x)[None])[0].flatten().detach() for x in unsolved])
+        Q = F.log_softmax(qs.mean(0), -1)
 
-        Q = F.log_softmax(Q, -1)
-        print(f'--- ECD iteration {idx}, Q biased, retrying ---', flush=True)
+        print(f'--- ECD iteration {idx}, {len(unsolved)}/{len(Xs)} unsolved, Q biased ---', flush=True)
 
     return sols
+
+def assemble_tconcat(X, sols):
+    """Recursively try to build a solution for X by splitting at every tconcat boundary.
+    If X[:k] and X[k:] are both solved, combines them with tconcat.
+    Stores the assembled solution in sols and returns it, or returns None."""
+    xkey = mat_key(X)
+    if sols.get(xkey) is not None:
+        return sols[xkey]
+
+    T = X.shape[0]
+    if T == 1:
+        return None
+
+    for k in range(1, T):
+        left_sol  = assemble_tconcat(X[:k], sols)
+        right_sol = assemble_tconcat(X[k:], sols)
+        if left_sol is not None and right_sol is not None:
+            tc = Delta(tconcat, mat, [mat, mat], repr='t')
+            tc.tails = [deepcopy(left_sol), deepcopy(right_sol)]
+            sols[xkey] = tc
+            return tc
+
+    return None
 
 def mat_key(x):
     return (x.shape, x.tobytes())
@@ -1210,6 +1237,13 @@ def dream(D, soltrees=[]):
 
     return qmodel.to('cpu')
 
+def make_task(path, size=4):
+    "create a (T, size, size) matrix with a single 1-cell moving along path"
+    x = np.zeros((len(path), size, size), dtype=int)
+    for t, (r, c) in enumerate(path):
+        x[t, r, c] = 1
+    return x
+
 if __name__ == '__main__':
     D = Deltas([
         # constructors
@@ -1223,70 +1257,29 @@ if __name__ == '__main__':
         Delta(1, int),
         Delta(2, int),
         Delta(3, int),
+        Delta(4, int),
     ])
 
-    # X = np.array([
-    #     [[1,0,0],
-    #      [0,0,0],
-    #      [0,0,0]],
+    # 12 tasks: a 1-cell moving in different directions on a 4x4 grid over 4 time steps
+    Xs = [
+        make_task([(0,0),(0,1),(0,2),(0,3)]),  # right, row 0
+        make_task([(1,0),(1,1),(1,2),(1,3)]),  # right, row 1
+        make_task([(2,0),(2,1),(2,2),(2,3)]),  # right, row 2
+        make_task([(3,0),(3,1),(3,2),(3,3)]),  # right, row 3
+        make_task([(0,0),(1,0),(2,0),(3,0)]),  # down, col 0
+        make_task([(0,1),(1,1),(2,1),(3,1)]),  # down, col 1
+        make_task([(0,2),(1,2),(2,2),(3,2)]),  # down, col 2
+        make_task([(0,3),(1,3),(2,3),(3,3)]),  # down, col 3
+        make_task([(0,0),(1,1),(2,2),(3,3)]),  # diagonal ↘
+        make_task([(0,3),(1,2),(2,1),(3,0)]),  # diagonal ↙
+        make_task([(3,0),(2,1),(1,2),(0,3)]),  # diagonal ↗
+        make_task([(3,3),(2,2),(1,1),(0,0)]),  # diagonal ↖
+    ]
 
-    #     [[0,0,0],
-    #      [0,1,0],
-    #      [0,0,0]],
+    X = np.stack(Xs)  # (12, 4, 4, 4)
+    print(f"X shape: {X.shape}  —  {len(Xs)} tasks, each {Xs[0].shape}")
 
-    #     [[0,0,0],
-    #      [0,0,0],
-    #      [0,0,1]],
-    # ])
-
-    X = np.array([
-        [
-            [1, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 2]
-        ],
-        [
-            [0, 1, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 2]
-        ],
-        [
-            [0, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 2]
-        ],
-        [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 0, 2]
-        ],
-        [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 2]
-        ],
-        [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 1],
-            [0, 0, 0, 2]
-        ],
-        [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 1]
-        ],
-    ])
-    print(f"target shape: {X.shape}")
-    print(X)
-
-    Z = ECD(X, D, timeout=120)
+    Z = ECD(Xs, D, timeout=120)
     for k, v in Z.items():
         if v is not None:
             print(f'solution: {v}')

@@ -521,6 +521,118 @@ def split(ncores, xs):
     return splitted
 
 
+def _annotate_holes(D, tree):
+    """BFS over a parsed abstraction body tree.
+    Propagates the expected type (from each parent's tailtypes) down to
+    $i placeholder nodes, marking them ishole=True so typize() can find them.
+    Modifies tree in-place.
+    """
+    qq = [(tree, None)]
+    while qq:
+        n, expected_type = qq.pop(0)
+        # $i placeholders come out of todelta() as bare Delta('$i') – untyped, no tails
+        if isinstance(n.head, str) and n.head.startswith('$'):
+            if expected_type is not None:
+                n.type = expected_type
+            n.ishole = True
+            continue
+        if not n.tails:
+            continue
+        if n.tailtypes:
+            for tail, tailtype in zip(n.tails, n.tailtypes):
+                qq.append((tail, tailtype))
+        else:
+            for tail in n.tails:
+                qq.append((tail, None))
+
+
+def saturate_stitch(D, sols, iterations=10, max_arity=3):
+    """Learn abstractions via stitch_core (top-down synthesis).
+
+    Replaces saturate(D, sols):
+      1. serialise solution trees to s-expression strings
+      2. run stitch_core.compress() to discover reusable fragments
+      3. parse each abstraction body, infer argument types, register in D
+      4. parse stitch's rewritten programs as the new tree corpus
+
+    Falls back to saturate() if stitch_core is not installed.
+    """
+    try:
+        import stitch_core
+    except ImportError:
+        print("stitch_core not installed; falling back to saturate()")
+        return saturate(D, sols)
+
+    ghosttime = time()
+    trees = [normalize(s) for s in sols.values() if s]
+    D.reset()
+
+    if not trees:
+        return trees
+
+    print(f"size of the forest: {len(pickle.dumps(trees)) >> 10}M")
+
+    programs = [str(tree) for tree in trees]
+    print(f"running stitch_core.compress on {len(programs)} programs "
+          f"(iterations={iterations}, max_arity={max_arity})")
+
+    result = stitch_core.compress(programs, iterations=iterations,
+                                  max_arity=max_arity, silent=True)
+
+    if not result.abstractions:
+        print("stitch found no useful abstractions")
+        return trees
+
+    # Register each abstraction in D in discovery order so that later
+    # abstractions can reference earlier ones during parsing.
+    for abs_result in result.abstractions:
+        # stitch uses #i for argument holes; todelta() expects $i
+        body_str = abs_result.body
+        for i in range(abs_result.arity):
+            body_str = body_str.replace(f'#{i}', f'${i}')
+
+        try:
+            hiddentail = tr(D, body_str)
+        except Exception as e:
+            print(f"skipping abstraction '{abs_result.name}' — "
+                  f"could not parse body '{body_str}': {e}")
+            continue
+
+        # Mark $i placeholders as typed holes so typize() can collect them
+        _annotate_holes(D, hiddentail)
+        tailtypes = typize(hiddentail)
+
+        name = abs_result.name  # e.g. "fn_0", "fn_1", ...
+        if len(tailtypes) == 0:
+            # 0-arity stitch abstractions are either partial applications of
+            # multi-arg primitives (e.g. (iterate 1 (gset ...)) with only 2 of
+            # 4 args) or constants whose numpy-array head breaks D.index after
+            # deepcopy.  Skip them entirely.
+            print(f"skipping abstraction '{name}' — no typed holes found "
+                  f"(partial application or unannotatable constant)")
+            continue
+        else:
+            df = Delta(name, type=hiddentail.type, tailtypes=tailtypes,
+                       hiddentail=hiddentail, repr=name)
+
+        freeze(df)
+        D.add(df)
+        print(f"added abstraction {name}: {abs_result.body}  [{df.type}]")
+
+    # Parse stitch's rewritten programs as the new compressed tree corpus
+    new_trees = []
+    for prog_str in result.rewritten:
+        try:
+            tree = tr(D, prog_str)
+            freeze(tree)
+            new_trees.append(tree)
+        except Exception as e:
+            print(f"could not parse rewritten program '{prog_str}': {e}")
+
+    print(f"stitch compression took {(time() - ghosttime)/60:.2f}m")
+    return new_trees if new_trees else trees
+
+
 def saturate(D, sols):
     ghosttime = time()
     trees = [normalize(s) for s in sols.values() if s]
@@ -659,6 +771,8 @@ def solve(X, D, depth=3):
 
 def needle(D, n, paths, paths_terminal, depth=0):
     if n.tailtypes is None:
+        return
+    if depth < 0:
         return
 
     source = paths_terminal if depth <= 1 else paths
@@ -1023,7 +1137,7 @@ def ECD(Xs, D, timeout=60, budget=0):
 
         soltrees = [s for s in sols.values() if s is not None]
         if len(soltrees) > 0:
-            trees = saturate(D, sols)
+            trees = saturate_stitch(D, sols)
         else:
             trees = []
 
@@ -1202,7 +1316,7 @@ def dream(D, soltrees=[]):
             Xy.append([xtc, alld(tree)])
 
         # x, i: d
-        Xy = [[(xy[0], D.index(d)) for d in xy[1]] for xy in Xy]
+        Xy = [[(xy[0], idx) for d in xy[1] if (idx := D.index(d)) is not None] for xy in Xy]
         Xy = reduce(lambda acc, xy: acc + xy, Xy, [])
 
         if len(Xy) == 0:

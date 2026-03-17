@@ -1,12 +1,23 @@
 from operator import mul, add
 import numpy as np
-from numpy import zeros, ones, empty, array
+from numpy import ones, empty, array
 from functools import partial, reduce
 from copy import deepcopy
 
-# matrix type: 3d numpy arrays (T, H, W) of ints
-# these are the matrix primitives
-mat = 'mat'
+# types
+mat       = 'mat'    # 3d numpy array (T, H, W)
+grid      = 'grid'   # 2d numpy array (H, W)
+direction = 'dir'    # (dr, dc) tuple
+
+# direction terminals
+RIGHT   = ( 0,  1)
+LEFT    = ( 0, -1)
+UP      = (-1,  0)
+DOWN    = ( 1,  0)
+DIAG_DR = ( 1,  1)
+DIAG_DL = ( 1, -1)
+DIAG_UR = (-1,  1)
+DIAG_UL = (-1, -1)
 
 def cell(v):
     "int -> mat: 1x1x1 grid with value v"
@@ -67,6 +78,46 @@ def mset(a, r, c, v):
     out = a.copy()
     out[:, r, c] = v
     return out
+
+# ── motion primitives ─────────────────────────────────────────────────────────
+
+def zeros(h, w):
+    "int, int -> grid: blank h×w grid"
+    if h <= 0 or w <= 0:
+        raise ValueError(f"zeros: need positive dims, got h={h} w={w}")
+    return np.zeros((h, w), dtype=int)
+
+def gset(g, r, c, v):
+    "grid, int, int, int -> grid: set cell (r,c) to v"
+    if r < 0 or r >= g.shape[0] or c < 0 or c >= g.shape[1]:
+        raise ValueError(f"gset out of bounds: ({r},{c}) in {g.shape}")
+    out = g.copy()
+    out[r, c] = v
+    return out
+
+def step(g, v, d):
+    "grid, int, dir -> grid: move all cells with value v one step in direction d, clearing vacated cells"
+    dr, dc = d
+    h, w = g.shape
+    old = [(r, c) for r in range(h) for c in range(w) if g[r, c] == v]
+    out = g.copy()
+    for r, c in old:
+        out[r, c] = 0
+    for r, c in old:
+        nr, nc = r + dr, c + dc
+        if 0 <= nr < h and 0 <= nc < w:
+            out[nr, nc] = v
+    return out
+
+def iterate(n, g, v, d):
+    "int, grid, int, dir -> mat: record n states, applying step(g,v,d) between each"
+    if n <= 0:
+        raise ValueError(f"iterate: need n>0, got {n}")
+    frames = [g.copy()]
+    for _ in range(n - 1):
+        g = step(g, v, d)
+        frames.append(g.copy())
+    return np.stack(frames)  # (n, H, W)
 
 class Delta:
     # a single node in an expression tree

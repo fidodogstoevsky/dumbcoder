@@ -95,7 +95,7 @@ class Deltas:
         if isinstance(idx, str):
             if (idx := self.index(idx)) is None:
                 return None
-
+        
         # always careful, always on the watch
         return deepcopy(self.ds[idx])
 
@@ -544,6 +544,7 @@ def saturate(D, sols):
 
         if nc > 1:
             try:
+                import pdb; pdb.set_trace()
                 pool = mp.Pool(ncores)
                 counts = pool.starmap(count_jive, zip(repeat(D), repeat(Q), repeat(trees), splitted_trees))
             finally:
@@ -1246,13 +1247,22 @@ def make_task(path, size=4):
 
 if __name__ == '__main__':
     D = Deltas([
-        # constructors
-        Delta(fill, mat, [int, int, int], repr='fill'),
-        Delta(mset, mat, [mat, int, int, int], repr='mset'),
-        # concat / repetition
-        Delta(tconcat, mat, [mat, mat], repr='t'),
-        Delta(rep_t, mat, [mat, int], repr='rt'),
-        # int terminals (colors / dims)
+        # mat primitives
+        Delta(tconcat, mat,       [mat, mat],                       repr='t'),
+        Delta(iterate, mat,       [int, grid, int, direction],      repr='iterate'),
+        # grid primitives
+        Delta(zeros,   grid,      [int, int],                       repr='zeros'),
+        Delta(gset,    grid,      [grid, int, int, int],            repr='gset'),
+        # direction terminals
+        Delta(RIGHT,   direction, repr='right'),
+        Delta(LEFT,    direction, repr='left'),
+        Delta(UP,      direction, repr='up'),
+        Delta(DOWN,    direction, repr='down'),
+        Delta(DIAG_DR, direction, repr='dr'),
+        Delta(DIAG_DL, direction, repr='dl'),
+        Delta(DIAG_UR, direction, repr='ur'),
+        Delta(DIAG_UL, direction, repr='ul'),
+        # int terminals
         Delta(0, int),
         Delta(1, int),
         Delta(2, int),
@@ -1274,12 +1284,13 @@ if __name__ == '__main__':
         make_task([(0,3),(1,2),(2,1),(3,0)]),  # diagonal ↙
         make_task([(3,0),(2,1),(1,2),(0,3)]),  # diagonal ↗
         make_task([(3,3),(2,2),(1,1),(0,0)]),  # diagonal ↖
+
     ]
 
     X = np.stack(Xs)  # (12, 4, 4, 4)
     print(f"X shape: {X.shape}  —  {len(Xs)} tasks, each {Xs[0].shape}")
 
-    Z = ECD(Xs, D, timeout=120)
+    Z = ECD(Xs, D, timeout=10)
     for k, v in Z.items():
         if v is not None:
             print(f'solution: {v}')

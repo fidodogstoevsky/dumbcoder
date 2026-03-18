@@ -863,7 +863,7 @@ class _EnumDone(Exception):
 
 def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0):
     """systematically enumerates programs from the DSL, evaluating each one.
-    If a program evaluates to any matrix in Xs, it's saved in solutions.
+    If a program evaluates to a full task matrix in Xs, it's saved in solutions.
     The enumeration is budget-based: it iterates over increasingly wide
     probability budgets (LOGPGAP * idx to LOGPGAP * (idx+1)), so it tries
     the most probable programs first and fans out.
@@ -875,14 +875,11 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
     LOGPGAP = 2
     done = False
-    # sub-sequences of every Xi, so assembly can combine found partial solutions
-    subtargets = {}
-    for x in Xs:
-        subtargets.update(mat_subtargets(x))
+    targets = {mat_key(x): x for x in Xs}
 
     def cb(tree, logp):
         """called once per enumerated program.
-        checks if the output matches any matrix in Xs or any sub-sequence of one."""
+        checks if the output matches any full task matrix in Xs."""
         nonlocal cnt, done, stime
 
         try:
@@ -903,7 +900,7 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
                 raise _EnumDone()
 
         okey = mat_key(out)
-        if okey in subtargets:
+        if okey in targets:
             if okey not in solutions:
                 print(f'[{cnt:6d}] caught {tree}')
 
@@ -1129,9 +1126,6 @@ def ECD(Xs, D, timeout=60, budget=0):
     while True:
         sols = solve_enumeration(Xs, D, Q, sols, maxdepth=10, timeout=timeout, budget=budget)
 
-        for x in Xs:
-            assemble_tconcat(x, sols)
-
         if all_solved():
             break
 
@@ -1152,30 +1146,8 @@ def ECD(Xs, D, timeout=60, budget=0):
 
         print(f'--- ECD iteration {idx}, {len(unsolved)}/{len(Xs)} unsolved, Q biased ---', flush=True)
 
-    return sols
-
-def assemble_tconcat(X, sols):
-    """Recursively try to build a solution for X by splitting at every tconcat boundary.
-    If X[:k] and X[k:] are both solved, combines them with tconcat.
-    Stores the assembled solution in sols and returns it, or returns None."""
-    xkey = mat_key(X)
-    if sols.get(xkey) is not None:
-        return sols[xkey]
-
-    T = X.shape[0]
-    if T == 1:
-        return None
-
-    for k in range(1, T):
-        left_sol  = assemble_tconcat(X[:k], sols)
-        right_sol = assemble_tconcat(X[k:], sols)
-        if left_sol is not None and right_sol is not None:
-            tc = Delta(tconcat, mat, [mat, mat], repr='t')
-            tc.tails = [deepcopy(left_sol), deepcopy(right_sol)]
-            sols[xkey] = tc
-            return tc
-
-    return None
+    full_keys = {mat_key(x) for x in Xs}
+    return {k: v for k, v in sols.items() if k in full_keys}
 
 def mat_key(x):
     return (x.shape, x.tobytes())
@@ -1185,16 +1157,6 @@ def mat_eq(a, b):
 
 def mat_type(X):
     return mat
-
-def mat_subtargets(X):
-    "all contiguous frame sub-sequences of X, as {mat_key: ndarray}"
-    T = X.shape[0]
-    subs = {}
-    for l in range(1, T + 1):
-        for s in range(T - l + 1):
-            sub = X[s:s+l]
-            subs[mat_key(sub)] = sub
-    return subs
 
 
 class MatRecognitionModel(nn.Module):
@@ -1361,27 +1323,41 @@ def make_task(path, size=4):
 
 if __name__ == '__main__':
     D = Deltas([
-        # mat primitives
-        Delta(tconcat, mat,       [mat, mat],                       repr='t'),
-        Delta(iterate, mat,       [int, grid, int, direction],      repr='iterate'),
+        # mat construction
+        Delta(unfold,    mat,       [grid, int, fn],                  repr='unfold'),
+        # mat transformations
+        Delta(map_mat,   mat,       [fn, mat],                        repr='map'),
+        Delta(zip_mat,   mat,       [fn2, mat, mat],                  repr='zip'),
+        Delta(fold_mat,  grid,      [fn2, grid, mat],                 repr='fold'),
+        Delta(filter_mat, mat,      [fn_pred, mat],                   repr='filter'),
         # grid primitives
-        Delta(zeros,   grid,      [int, int],                       repr='zeros'),
-        Delta(gset,    grid,      [grid, int, int, int],            repr='gset'),
+        Delta(zeros,     grid,      [int, int],                       repr='zeros'),
+        Delta(gset,      grid,      [grid, int, int, int],            repr='gset'),
+        # fn constructors (grid -> grid)
+        Delta(step_fn,   fn,        [int, direction],                 repr='step'),
+        Delta(compose,   fn,        [fn, fn],                         repr='compose'),
+        # fn2 terminals (grid -> grid -> grid)
+        Delta(overlay,   fn2,                                         repr='overlay'),
+        # fn_pred terminals (grid -> bool)
+        Delta(nonempty,  fn_pred,                                     repr='nonempty'),
+        # int arithmetic
+        Delta(add,       int,       [int, int],                       repr='add'),
+        Delta(mul,       int,       [int, int],                       repr='mul'),
         # direction terminals
-        Delta(RIGHT,   direction, repr='right'),
-        Delta(LEFT,    direction, repr='left'),
-        Delta(UP,      direction, repr='up'),
-        Delta(DOWN,    direction, repr='down'),
-        Delta(DIAG_DR, direction, repr='dr'),
-        Delta(DIAG_DL, direction, repr='dl'),
-        Delta(DIAG_UR, direction, repr='ur'),
-        Delta(DIAG_UL, direction, repr='ul'),
+        Delta(RIGHT,     direction,                                    repr='right'),
+        Delta(LEFT,      direction,                                    repr='left'),
+        Delta(UP,        direction,                                    repr='up'),
+        Delta(DOWN,      direction,                                    repr='down'),
+        Delta(DIAG_DR,   direction,                                    repr='dr'),
+        Delta(DIAG_DL,   direction,                                    repr='dl'),
+        Delta(DIAG_UR,   direction,                                    repr='ur'),
+        Delta(DIAG_UL,   direction,                                    repr='ul'),
         # int terminals
-        Delta(0, int),
-        Delta(1, int),
-        Delta(2, int),
-        Delta(3, int),
-        Delta(4, int),
+        Delta(0,         int,                                          repr='0'),
+        Delta(1,         int,                                          repr='1'),
+        Delta(2,         int,                                          repr='2'),
+        Delta(3,         int,                                          repr='3'),
+        Delta(4,         int,                                          repr='4'),
     ])
 
     # 12 tasks: a 1-cell moving in different directions on a 4x4 grid over 4 time steps

@@ -1,13 +1,18 @@
-from operator import mul, add
+from operator import add, mul
 import numpy as np
-from numpy import ones, empty, array
-from functools import partial, reduce
+from functools import reduce
 from copy import deepcopy
 
 # types
-mat       = 'mat'    # 3d numpy array (T, H, W)
-grid      = 'grid'   # 2d numpy array (H, W)
-direction = 'dir'    # (dr, dc) tuple
+mat      = 'mat'      # 3d numpy array (T, H, W)
+grid     = 'grid'     # 2d numpy array (H, W)
+fn       = 'fn'       # grid -> grid
+fn2      = 'fn2'      # grid -> grid -> grid
+fn_pred  = 'fn_pred'  # grid -> bool
+
+# int is used as a type string too
+# direction is used as a type string
+direction = 'dir'
 
 # direction terminals
 RIGHT   = ( 0,  1)
@@ -19,67 +24,7 @@ DIAG_DL = ( 1, -1)
 DIAG_UR = (-1,  1)
 DIAG_UL = (-1, -1)
 
-def cell(v):
-    "int -> mat: 1x1x1 grid with value v"
-    return np.array([[[v]]], dtype=int)
-
-def hconcat(a, b):
-    "mat, mat -> mat: concat along width (axis=2), must match T and H"
-    if a.shape[0] != b.shape[0] or a.shape[1] != b.shape[1]:
-        raise ValueError(f"hconcat shape mismatch {a.shape} {b.shape}")
-    return np.concatenate([a, b], axis=2)
-
-def vconcat(a, b):
-    "mat, mat -> mat: concat along height (axis=1), must match T and W"
-    if a.shape[0] != b.shape[0] or a.shape[2] != b.shape[2]:
-        raise ValueError(f"vconcat shape mismatch {a.shape} {b.shape}")
-    return np.concatenate([a, b], axis=1)
-
-def tconcat(a, b):
-    "mat, mat -> mat: concat along time (axis=0), must match H and W"
-    if a.shape[1] != b.shape[1] or a.shape[2] != b.shape[2]:
-        raise ValueError(f"tconcat shape mismatch {a.shape} {b.shape}")
-    return np.concatenate([a, b], axis=0)
-
-def rot90(a):
-    "mat -> mat: rotate each frame 90 degrees ccw"
-    return np.rot90(a, axes=(1, 2)).copy()
-
-def fliph(a):
-    "mat -> mat: flip each frame horizontally"
-    return np.flip(a, axis=2).copy()
-
-def flipv(a):
-    "mat -> mat: flip each frame vertically"
-    return np.flip(a, axis=1).copy()
-
-def rep_t(a, n):
-    "mat, int -> mat: repeat along time"
-    return np.tile(a, (n, 1, 1))
-
-def rep_h(a, n):
-    "mat, int -> mat: repeat along height"
-    return np.tile(a, (1, n, 1))
-
-def rep_w(a, n):
-    "mat, int -> mat: repeat along width"
-    return np.tile(a, (1, 1, n))
-
-def fill(v, h, w):
-    "int, int,w int -> mat: 1-frame grid of shape (1, h, w) filled with v"
-    if h <= 0 or w <= 0:
-        raise ValueError(f"fill needs positive dims, got h={h} w={w}")
-    return np.full((1, h, w), v, dtype=int)
-
-def mset(a, r, c, v):
-    "mat, int, int, int -> mat: set cell (r, c) in each frame to v"
-    if r < 0 or r >= a.shape[1] or c < 0 or c >= a.shape[2]:
-        raise ValueError(f"mset out of bounds: ({r},{c}) in {a.shape}")
-    out = a.copy()
-    out[:, r, c] = v
-    return out
-
-# ── motion primitives ─────────────────────────────────────────────────────────
+# ── grid primitives ────────────────────────────────────────────────────────────
 
 def zeros(h, w):
     "int, int -> grid: blank h×w grid"
@@ -95,8 +40,13 @@ def gset(g, r, c, v):
     out[r, c] = v
     return out
 
-def step(g, v, d):
-    "grid, int, dir -> grid: move all cells with value v one step in direction d, clearing vacated cells"
+# ── int arithmetic ─────────────────────────────────────────────────────────────
+# add and mul are imported from operator: add(a,b) = a+b, mul(a,b) = a*b
+
+# ── fn constructors (grid -> grid) ────────────────────────────────────────────
+
+def _step_grid(g, v, d):
+    "move all cells with value v one step in direction d, clearing vacated cells"
     dr, dc = d
     h, w = g.shape
     old = [(r, c) for r in range(h) for c in range(w) if g[r, c] == v]
@@ -109,15 +59,74 @@ def step(g, v, d):
             out[nr, nc] = v
     return out
 
-def iterate(n, g, v, d):
-    "int, grid, int, dir -> mat: record n states, applying step(g,v,d) between each"
+def step_fn(v, d):
+    "int, direction -> fn: returns grid->grid that moves value v in direction d"
+    def _step(g):
+        return _step_grid(g, v, d)
+    return _step
+
+def compose(f, g):
+    "fn, fn -> fn: returns h where h(x) = g(f(x))"
+    def _composed(x):
+        return g(f(x))
+    return _composed
+
+# ── fn2 terminals (grid -> grid -> grid) ──────────────────────────────────────
+
+def _overlay(g1, g2):
+    "element-wise maximum of two grids (union / overlay)"
+    if g1.shape != g2.shape:
+        raise ValueError(f"overlay shape mismatch {g1.shape} {g2.shape}")
+    return np.maximum(g1, g2)
+
+overlay = _overlay   # fn2 terminal
+
+# ── fn_pred terminals (grid -> bool) ──────────────────────────────────────────
+
+def _nonempty(g):
+    "True if grid has any nonzero cell"
+    return bool(np.any(g != 0))
+
+nonempty = _nonempty  # fn_pred terminal
+
+# ── mat construction ───────────────────────────────────────────────────────────
+
+def unfold(g, n, f):
+    "grid, int, fn -> mat: produce n frames [g, f(g), f²(g), …, f^(n-1)(g)]"
     if n <= 0:
-        raise ValueError(f"iterate: need n>0, got {n}")
+        raise ValueError(f"unfold: need n>0, got {n}")
     frames = [g.copy()]
     for _ in range(n - 1):
-        g = step(g, v, d)
+        g = f(g)
         frames.append(g.copy())
-    return np.stack(frames)  # (n, H, W)
+    return np.stack(frames)
+
+# ── mat transformations ────────────────────────────────────────────────────────
+
+def map_mat(f, m):
+    "fn, mat -> mat: apply f to each frame"
+    return np.stack([f(m[t]) for t in range(m.shape[0])])
+
+def zip_mat(f, m1, m2):
+    "fn2, mat, mat -> mat: combine frames pairwise with f"
+    if m1.shape != m2.shape:
+        raise ValueError(f"zip_mat shape mismatch {m1.shape} {m2.shape}")
+    return np.stack([f(m1[t], m2[t]) for t in range(m1.shape[0])])
+
+def fold_mat(f, acc, m):
+    "fn2, grid, mat -> grid: fold mat frames into single grid"
+    for t in range(m.shape[0]):
+        acc = f(acc, m[t])
+    return acc
+
+def filter_mat(pred, m):
+    "fn_pred, mat -> mat: keep only frames where pred(frame) is True"
+    frames = [m[t] for t in range(m.shape[0]) if pred(m[t])]
+    if not frames:
+        raise ValueError("filter_mat: no frames passed predicate")
+    return np.stack(frames)
+
+# ── Delta expression tree ──────────────────────────────────────────────────────
 
 class Delta:
     # a single node in an expression tree
@@ -347,7 +356,7 @@ def isequal(n1, n2):
         return n1.type == n2.type
 
     if n1.head == n2.head:
-        # 26 no kids
+        # no kids
         if not n1.tails and not n2.tails:
             return True
 
@@ -379,8 +388,6 @@ def extract_matches(tree, treeholed):
     out = []
     if not tree.tails:
         return []
-
-    # assert len(tree.tails) == len(treeholed.tails)
 
     for tail, holedtail in zip(tree.tails, treeholed.tails):
         out += extract_matches(tail, holedtail)

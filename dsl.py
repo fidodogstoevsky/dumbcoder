@@ -1,6 +1,5 @@
 from operator import add, mul
 import numpy as np
-from functools import reduce
 from copy import deepcopy
 
 # types
@@ -31,6 +30,11 @@ def zeros(h, w):
     if h <= 0 or w <= 0:
         raise ValueError(f"zeros: need positive dims, got h={h} w={w}")
     return np.zeros((h, w), dtype=int)
+
+# Common blank grids as terminals (saves 2 int-holes compared to zeros(h,w))
+blank33 = np.zeros((3, 3), dtype=int)
+blank44 = np.zeros((4, 4), dtype=int)
+blank55 = np.zeros((5, 5), dtype=int)
 
 def gset(g, r, c, v):
     "grid, int, int, int -> grid: set cell (r,c) to v"
@@ -253,17 +257,6 @@ def countholes(tree: Delta) -> int:
     return sum(map(countholes, tree.tails))
 
 
-def getdepth(tree: Delta) -> int:
-    if tree.tails is None or len(tree.tails) == 0:
-        return 0
-
-    out = 0
-    for tail in tree.tails:
-        out = max(out, 1 + getdepth(tail))
-
-    return out
-
-
 def getast(expr):
     ast = []
     idx = 0
@@ -290,22 +283,6 @@ def getast(expr):
                 idx += 1
 
             ast.append(expr[se_idx:idx])
-
-        elif expr[idx].isdigit():
-            sidx = idx
-
-            out = ''
-            nopen = 1
-            while idx < len(expr) and expr[idx].isdigit():
-                out += expr[idx]
-                idx += 1
-
-            ast.append(out)
-            # for the next ) or something else
-            idx -= 1
-
-        elif not expr[idx] in [' ', ')']:
-            ast.append(expr[idx])
 
         idx += 1
 
@@ -533,33 +510,6 @@ def showoff_types(tree: Delta):
             qq.append(t)
 
     return types
-
-def comp(n1, n2):
-    if isequal(n1, n2):
-        return deepcopy(n1)
-
-    if not n1.tails or not n2.tails:
-        return False
-
-    for c1, c2 in zip(n1.tails, n2.tails):
-        for out in [comp(n1, c2), comp(n2, c1), comp(c1, c2)]:
-            if out:
-                return out
-
-            return False
-
-def showoff_kids(tree):
-    if not tree.tails:
-        return
-
-    yield str(tree)
-
-    for tail in tree.tails:
-        yield from showoff_kids(tail)
-
-# also know as filter
-def flatten(xs):
-    return reduce(lambda acc, x: acc + x if x else acc, xs, [])
 
 def alld(tree):
     "enumerate all heads in tree"

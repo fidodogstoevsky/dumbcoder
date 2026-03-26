@@ -1,15 +1,8 @@
-from operator import mul, add
-
-import random
 import numpy as np
-from numpy.random import rand, randint, randn, normal
-from numpy import zeros, ones, empty, array
-from collections import Counter, defaultdict, namedtuple
-from dataclasses import dataclass
-
-from itertools import product, repeat
-
-from typing import Optional, Union, List, NamedTuple
+from numpy.random import rand, randint
+from numpy import array
+from collections import Counter, defaultdict
+from typing import Union
 
 import torch as th
 import torch.nn as nn
@@ -17,19 +10,13 @@ import torch.nn.functional as F
 from torch import tensor, as_tensor, from_numpy
 
 from itertools import chain
-from functools import partial, reduce, lru_cache
 
 import pickle
-from tqdm import tqdm, trange
+from tqdm import trange
 from copy import deepcopy
-from time import time, sleep
+from time import time
 
 from dsl import *
-
-import os
-
-ncores = os.cpu_count() // 2
-import multiprocessing as mp
 
 # ■ ~
 
@@ -129,21 +116,6 @@ class Deltas:
         self.infer()
 
 
-@dataclass
-class Gen:
-    # logp of the saved enumeration
-    logp: float
-    # generator of the current branch expansion or a frozen branch
-    generator: Union['generator', Delta]
-    # logp of the current expanded branch (self.branch_logp > self.logp)
-    branch_logp: float
-    # generators for the rest of the branches
-    next_generators: List['generator']
-
-    def __repr__(self):
-        return f"({self.logp:.2f}/{self.branch_logp:.2f}) [{' '.join(ap(str, self.next_generators))}]"
-
-
 def makepaths(D, Q):
     Paths = [[] for i in range(len(D))]
     Paths_terminal = [[] for i in range(len(D))]
@@ -174,132 +146,6 @@ def makepaths(D, Q):
             Paths_terminal[d.idx].append(ps)
 
     return Paths, Paths_terminal
-
-def creategens(D, sources, paths, paths_terminal, maxdepth):
-    if len(sources) == 0:
-        return []
-
-    source, *nextsources = sources
-
-    out = []
-    for idx, logp in enumerate(source):
-        branchgen = denumerate(D, D[idx], logp, paths, paths_terminal, maxdepth)
-        gen = Gen(logp, branchgen, logp, creategens(D, nextsources, paths, paths_terminal, maxdepth))
-
-        out.append(gen)
-
-    return out
-
-def denumerate(D, n, nlogp, paths, paths_terminal, maxdepth=10, verb=False):
-    if not n.tailtypes:
-        yield nlogp, n
-        return
-
-    sources = paths[n.idx] if maxdepth > 1 else paths_terminal[n.idx]
-
-    gensources = creategens(D, sources, paths, paths_terminal, maxdepth - 1)
-
-    exhausted = False
-    while not exhausted:
-        n.tails = []
-        gens = []
-        idx = 0
-
-        generators = gensources
-
-        logps = []
-        while len(generators) > 0:
-            tail = None
-            while tail is None:
-                gen = None
-                maxlogp = -np.inf
-                for g in generators:
-                    if g.logp > maxlogp:
-                        maxlogp = g.logp
-                        gen = g
-
-                if maxlogp == -np.inf:
-                    exhausted = True
-                    g.logp = -np.inf
-
-                    if idx > 0:
-                        # exhausted left tail
-                        gens[-1].logp = -np.inf
-
-                    break
-
-                if isinstance(gen.generator, Delta):
-                    logp, tail = gen.branch_logp, gen.generator
-                    logps.append(logp)
-                else:
-                    try:
-                        logp, tail = next(gen.generator)
-
-                        # not the rightest
-                        if len(gen.next_generators) > 0:
-                            frozen = Gen(logp, deepcopy(tail), logp, creategens(D, sources[idx+1:], paths, paths_terminal, maxdepth-1))
-                            generators.append(frozen)
-
-                            # don't want to try this one next
-                            gen.logp = logp - 1e-6
-                            # retry
-                            tail = None
-                        else:
-                            logps.append(logp)
-
-                    except StopIteration:
-                        gen.logp = -np.inf
-
-            if exhausted:
-                break
-
-            gens.append(gen)
-            idx += 1
-
-            n.tails.append(tail)
-
-            generators = gen.next_generators
-            if len(generators) == 0:
-                break
-
-        if exhausted:
-            if idx > 0:
-                exhausted = False
-
-            continue
-
-        for gen, logp in zip(reversed(gens), np.cumsum(logps[::-1])):
-            gen.logp = logp
-
-        yield nlogp + gens[0].logp, deepcopy(n)
-
-
-def p2enumerate(n, nlogp, prebudget, budget, maxdepth=3):
-    if budget < 0 or isterminal(n):
-        yield nlogp, n
-        return
-
-    sources = paths[int(maxdepth <= 1)]
-    lsources, rsources = sources[n.idx]
-
-    for lidx, llogp in enumerate(lsources):
-        if budget + llogp < 0:
-            continue
-
-        for llogp, ltree in p2enumerate(D[lidx], llogp, prebudget + llogp, budget + llogp, maxdepth-1):
-            for ridx, rlogp in enumerate(rsources):
-                if budget + llogp + rlogp < 0:
-                    continue
-
-                for rlogp, rtree in p2enumerate(D[ridx], rlogp, prebudget + llogp + rlogp, budget + llogp + rlogp, maxdepth-1):
-
-                    if isterminal(D[ridx]) and prebudget > 0:
-                        continue
-
-                    n.tails = [ltree, rtree]
-
-                    yield llogp + rlogp, deepcopy(n)
-
 
 def cenumerate(D, Q, tp, budget, maxdepth, cb):
     """ enumerate programs by probability
@@ -380,147 +226,6 @@ def penumerate(D, n, nlogp, budget, paths, maxdepth=3):
         n.tails = args
         yield logp, deepcopy(n)
 
-def sgroom(D, sources, alogp, budget, paths, maxdepth):
-    if len(sources) == 0:
-        yield alogp, []
-        return
-
-    source, *nextsources = sources
-
-    for idx, (logp, nz) in enumerate(source):
-        if logp == -np.inf:
-            continue
-
-        for nlogp, tree in spenumerate(D, D[idx], nz, logp, budget + logp, paths, maxdepth-1):
-            for nnlogp, nntrees in sgroom(D, nextsources, alogp + nlogp, budget + nlogp, paths, maxdepth-1):
-                yield nnlogp, [tree] + nntrees
-
-
-def spenumerate(D, n, nz, nlogp, budget, paths, maxdepth=3):
-    if budget < 0 or isterminal(n):
-        yield nlogp, n
-        return
-
-    sources = paths[nz]
-
-    for logp, args in sgroom(D, sources, nlogp, budget + nlogp, paths, maxdepth-1):
-        n.tails = args
-        yield logp, deepcopy(n)
-
-def marknodes(D, Q, tree):
-    z = 0
-    paths = []
-    qq = [tree]
-
-    while len(qq) > 0:
-        n = qq.pop(0)
-
-        if not n.tails:
-            paths.append([[]] * 2)
-        else:
-            sources = []
-            for tail in n.tails:
-                z += 1
-
-                # idx tells for the index in D,
-                # (q, z) for p of going and z where to
-                # -1 means no entry for z
-                dtails = [(-np.inf, -1)] * len(D)
-
-                if not D.index(tail) is None:
-                    dtails[tail.idx] = (Q[D.index(tail)], z)
-                else:
-                    print(f'big mistake - {tail}:{tail.type} is not in {D}')
-
-                # bonus for the hole
-                arrowidx = D.index(Delta('<>', ishole=True, type=tail.type))
-                dtails[arrowidx] = (0, -1)
-
-                sources.append(dtails)
-
-                qq.append(tail)
-
-            paths.append(sources)
-
-    return paths
-
-def count_ghosts(tree, ghost):
-    if isequal(tree, ghost):
-        return 1
-
-    if not tree.tails:
-        return 0
-
-    out = 0
-    for tail in tree.tails:
-        out += count_ghosts(tail, ghost)
-
-    return out
-
-
-def chill_count(tree, ghosts):
-    count = Counter()
-    qq = [tree]
-
-    while len(qq) > 0:
-        n = qq.pop(0)
-
-        for ghost in ghosts:
-            if isequal(n, ghost):
-                count[ghost] += 1
-
-        if not n.tails: continue
-        for tail in n.tails:
-            qq.append(tail)
-
-    return count
-
-
-def count_simply(trees, ghosts):
-    count = Counter()
-
-    for ghost in ghosts:
-        for tree in trees:
-            count[ghost] += count_ghosts(tree, ghost)
-
-    return count
-
-
-def count_jive(D, Q, alltrees, trees):
-    count = Counter()
-
-    for tree in trees:
-        for _, ghost in spenumerate(D, D[D.index(tree)], 0, 0, np.inf, marknodes(D, Q, tree), np.inf):
-            c = 0
-            for tree in alltrees:
-                c += count_ghosts(tree, ghost)
-
-            count[ghost] = c
-
-    return count
-
-
-def ghostsout(D, Q, trees):
-    ghosts = set()
-    for tree in trees:
-        for _, ghost in spenumerate(D, D[D.index(tree)], 0, 0, np.inf, marknodes(D, Q, tree), np.inf):
-            ghosts.add(ghost)
-
-    return ghosts
-
-
-def split(ncores, xs):
-    l = len(xs) // ncores
-
-    splitted = []
-    for i in range(ncores+1):
-        splitted.append(xs[i*l:min(len(xs),(i+1)*l)])
-    splitted[-2].extend(splitted[-1])
-    splitted.pop(-1)
-
-    return splitted
-
-
 def _annotate_holes(D, tree):
     """BFS over a parsed abstraction body tree.
     Propagates the expected type (from each parent's tailtypes) down to
@@ -560,8 +265,9 @@ def saturate_stitch(D, sols, iterations=10, max_arity=3):
     try:
         import stitch_core
     except ImportError:
-        print("stitch_core not installed; falling back to saturate()")
-        return saturate(D, sols)
+        print("stitch_core not installed; no compression performed")
+        D.reset()
+        return [normalize(s) for s in sols.values() if s]
 
     ghosttime = time()
     trees = [normalize(s) for s in sols.values() if s]
@@ -633,142 +339,6 @@ def saturate_stitch(D, sols, iterations=10, max_arity=3):
     return new_trees if new_trees else trees
 
 
-def saturate(D, sols):
-    ghosttime = time()
-    trees = [normalize(s) for s in sols.values() if s]
-
-    D.reset()
-
-    print(f"size of the forest: {len(pickle.dumps(trees)) >> 10}M")
-
-    while True:
-        types = reduce(lambda acc, x: acc | x, [showoff_types(tree) for tree in trees])
-
-        for tp in types:
-            D.add(Delta('<>', ishole=True, type=tp))
-
-        Q = th.log_softmax(th.ones(len(D)), -1)
-
-        stime = time()
-
-        nc = min(ncores, len(trees))
-        splitted_trees = split(nc, trees)
-
-        if nc > 1:
-            try:
-                import pdb; pdb.set_trace()
-                pool = mp.Pool(ncores)
-                counts = pool.starmap(count_jive, zip(repeat(D), repeat(Q), repeat(trees), splitted_trees))
-            finally:
-                pool.close()
-                pool.join()
-
-            counts = sum(counts, Counter())
-        else:
-            counts = count_jive(D, Q, trees, trees)
-
-        print(f'counted those fellows in {(time() - stime) / 60:.2f}m')
-
-        mx = sum(map(length, trees))
-
-        mk = 0.99
-        hiddentail = None
-
-        for ghost, c in counts.items():
-            nargs = 1 + countholes(ghost)
-
-            mxj = mx - c * (length(ghost) - nargs)
-            mj = length(ghost)
-
-            k = (mxj + mj) / mx
-            if k < mk:
-                mk = k
-                hiddentail = deepcopy(ghost)
-
-        for dhole in D[D.index('<>'):]:
-            D.pop(dhole)
-
-        if hiddentail == None:
-            print(f'ghosting took {(time() - ghosttime)/60:.2f}m')
-            return trees
-
-        tailtypes = typize(hiddentail)
-
-        if len(tailtypes) == 0:
-            name = hiddentail()
-            df = Delta(name, type=hiddentail.type, hiddentail=hiddentail, repr=f"'{name}'")
-        else:
-            name = f"f{len(D.invented)}"
-            df = Delta(name, type=hiddentail.type, tailtypes=tailtypes, hiddentail=hiddentail, repr=name)
-
-        print(f"adding {df}: {df.type} with {df.hiddentail} #{mk:.3f}")
-
-        trees = [replace(tree, df.hiddentail, df) for tree in trees]
-
-        for tree in trees:
-            freeze(tree)
-
-        freeze(df)
-        D.add(df)
-
-def expand(root: Delta, node: Delta, depth=0):
-    deltas = D.bytype_terminal if depth <= 1 else D.bytype
-
-    if node.tailtypes is None:
-        yield deepcopy(root)
-        return
-
-    for lc in deltas[node.tailtypes[0]]:
-        lchild = deepcopy(D[lc])
-
-        if isterminal(lchild):
-            trees = [None]
-        else:
-            trees = expand(root, lchild, depth - 1)
-
-        for _ in trees:
-            for rc in deltas[node.tailtypes[1]]:
-                rchild = deepcopy(D[rc])
-
-                node.tails = [lchild, rchild]
-
-                yield deepcopy(root)
-
-                if not isterminal(rchild):
-                    yield from expand(root, rchild, depth - 1)
-
-
-def solve(X, D, depth=3):
-    xkey = mat_key(X)
-    solutions = {xkey: None}
-
-    sources = []
-    requested_type = mat_type(X)
-    for d in D:
-        if d.type == requested_type:
-            root = deepcopy(d)
-            sources.append(expand(root, root, depth=depth))
-
-    cnt = 0
-    stime = time()
-
-    for tree in chain.from_iterable(sources):
-        if not isterminal(tree):
-            continue
-
-        cnt += 1
-        out = tree()
-        okey = mat_key(out)
-
-        if okey == xkey:
-            if solutions[okey] is None or length(tree) < length(solutions[okey]):
-                solutions[okey] = tree
-
-    took = time() - stime
-    print(f'total: {cnt}, took: {took:.0f}s, iter: {cnt/took:.0f}/s')
-    print(f'solved: {sum(s is not None for s in solutions.values())}/{len(solutions)}')
-    return solutions
-
 def needle(D, n, paths, paths_terminal, depth=0):
     if n.tailtypes is None:
         return
@@ -807,56 +377,6 @@ def newtree(D, type, paths, paths_terminal, depth=6, q=None):
     needle(D, tree, paths, paths_terminal, depth=depth)
 
     return tree
-
-def solve_needle(X, D, Q, solutions=None, maxdepth=10, ntries=100_000):
-    print(f'{len(D)=}')
-
-    xkey = mat_key(X)
-    if solutions is None:
-        solutions = {xkey: None}
-
-    cnt = 0
-    stime = time()
-    notsolved = sum([s is None for s in solutions.values()])
-
-    paths, paths_terminal = makepaths(D, Q)
-    requested_type = mat_type(X)
-
-    ephermal = Delta(None, None, tailtypes=[requested_type])
-    D.add(ephermal)
-
-    for wrapper in penumerate(D, ephermal, 0, 10, *makepaths(D, Q), maxdepth=maxdepth+1):
-        tree = wrapper.tails[0]
-        out = tree()
-
-    while True:
-        tree = newtree(D, requested_type, paths, paths_terminal, q=Q)
-        try:
-            out = tree()
-        except TypeError:
-            print(f"what is this {tree=}?")
-
-        cnt += 1
-        # increment the count of programs that have been successfully evaluated
-
-        okey = mat_key(out)
-        if okey == xkey:
-            if solutions[okey] is None:
-                notsolved -= 1
-                print(f'[{cnt:6d}] caught {tree}')
-
-            if solutions[okey] is None or length(tree) < length(solutions[okey]):
-                solutions[okey] = tree
-
-        if cnt > ntries:
-            break
-
-
-    took = time() - stime
-    print(f'total: {cnt}, took: {took:.0f}s, iter: {cnt/took:.0f}/s')
-    print(f'solved: {sum(s is not None for s in solutions.values())}/{len(solutions)}')
-    return solutions, notsolved
-
 
 class _EnumDone(Exception):
     pass
@@ -941,190 +461,32 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
     return solutions
 
 
-def kcompress(D, trees):
-    while True:
-        ds = flatten(list(map(lambda tree: list(showoff_kids(tree)), trees)))
-        count = Counter(ds)
-        most_common = count.most_common()
-
-        totall = sum(map(length, trees))
-        mink = totall
-        nd = None
-
-        for d, c in most_common:
-            if c < 3:
-                continue
-
-            d = tr(D, d)
-
-            topkalon = totall - c * length(d) + c + length(d)
-            if topkalon < mink:
-                mink = topkalon
-                nd = d
-
-        if nd is None:
-            return trees
-
-        if d in D:
-            return trees
-
-        print(f'selecting {nd() if nd else ""} {nd} with {mink/totall:.2f} of {count[str(nd)]}')
-
-        D.add(nd)
-
-        for tree in trees:
-            replace(tree, nd, Delta(nd(), type(nd())))
-
-
-def truly_largest_substring(string):
-    for s1idx in range(len(string)):
-        if string[s1idx] != '(':
-            continue
-
-        for e1idx in range(s1idx+2, len(string)):
-            for s2idx in range(s1idx+1, len(string)):
-                if string[s2idx] != '(':
-                    continue
-
-                for e2idx in range(s2idx+2, len(string)):
-                    if BREAK in string[s1idx:e1idx]:
-                        continue
-
-                    if string[s1idx:e1idx] == string[s2idx:e2idx]:
-                        yield string[s1idx:e1idx]
-
-def findwrap(s, start):
-    i = start
-    nbrackets = 0
-    while i < len(s):
-        if s[i] == '(':
-            nbrackets += 1
-
-        if s[i] == ')':
-            nbrackets -= 1
-
-        if nbrackets == 0:
-            return i
-
-        i += 1
-
-BREAK = " @ "
-
-def getit(D, string, prefix):
-    if prefix[-1] != ')':
-        prefix = prefix[:-prefix[::-1].find(' ')-1]
-
-    sidx = string.find(prefix)
-    idx = sidx
-
-    holeidx = 0
-    nbrackets = 0
-    mut = prefix
-    pastprefix = False
-
-    tailtypes = []
-
-    while idx < len(string):
-        if pastprefix and string[idx] not in "() ":
-            se_idx = idx
-            idx += 1
-
-            while string[idx].isalnum() or string[idx] == "'":
-                idx += 1
-
-            expr = string[se_idx:idx]
-            mut += f' ${holeidx}'
-            holeidx += 1
-
-            tailtypes.append(D[expr].type)
-
-        if string[idx] == BREAK:
-            break
-
-        if string[idx] == ')':
-            if pastprefix:
-                mut += ')'
-
-            nbrackets -= 1
-
-        if string[idx] == '(':
-            if pastprefix:
-                ending = findwrap(string, ast)
-                idx = tr(D, string[idx:ending+1])
-                tailtypes.append(ast.type)
-
-                mut += f' ${holeidx}'
-                holeidx += 1
-                idx = ending
-
-            else:
-                nbrackets += 1
-
-        if nbrackets == 0:
-            break
-
-        if idx >= sidx + len(prefix):
-            pastprefix = True
-
-        idx += 1
-
-    hiddentail = tr(D, mut)
-
-    if len(tailtypes) == 0:
-        name = hiddentail()
-        df = Delta(name, type=hiddentail.type, hiddentail=hiddentail)
-
-    else:
-        name = f"f{len(D.invented)}"
-        df = Delta(name, type=hiddentail.type, tailtypes=tailtypes, hiddentail=hiddentail, repr=f"{name} ({' '.join([f'${i}' for i in range(len(tailtypes))])}) {hiddentail}")
-
-    return df
-
-def count_occ(string, s):
-    c = 0
-    l = len(s)
-    for sidx in range(len(string)-l+1):
-        if string[sidx:sidx+l] == s:
-            c += 1
-
-    return c
-
-
-def seesvd(D, mx, string, s):
-    try:
-        nd = getit(D, string, s)
-    except:
-        return [np.inf]
-
-    c = count_occ(string, s)
-
-    _repr = len(s.split(' '))
-    if nd.tailtypes:
-        nrepr = 1 + len(nd.tailtypes)
-    else:
-        nrepr = 1
-
-    mxj = mx - c * (_repr - nrepr)
-    mj = length(nd.hiddentail)
-
-    k = (mxj + mj) / mx
-
-    return k, c, nd
-
-
 def ECD(Xs, D, timeout=60, budget=0):
     D.reset()
 
-    Q = F.log_softmax(th.ones(len(D)), -1)
-
+    Qmodel = None  # no model on the first iteration; use uniform Q
     idx = 0
     sols = {}
 
     def all_solved():
         return all(mat_key(x) in sols for x in Xs)
 
+    def task_Q(x):
+        "return a task-specific log-prob vector, or uniform if no model yet"
+        if Qmodel is None:
+            return F.log_softmax(th.ones(len(D)), -1)
+        return F.log_softmax(Qmodel(tc_mat(x)[None])[0].flatten().detach(), -1)
+
     while True:
-        sols = solve_enumeration(Xs, D, Q, sols, maxdepth=10, timeout=timeout, budget=budget)
+        unsolved = [x for x in Xs if mat_key(x) not in sols]
+        # allocate timeout evenly across unsolved tasks
+        per_task_timeout = timeout / len(unsolved)
+
+        for x in unsolved:
+            if mat_key(x) in sols:
+                continue  # may have been solved by an earlier task in this round
+            sols = solve_enumeration([x], D, task_Q(x), sols,
+                                     maxdepth=10, timeout=per_task_timeout, budget=budget)
 
         if all_solved():
             break
@@ -1139,12 +501,8 @@ def ECD(Xs, D, timeout=60, budget=0):
 
         Qmodel = dream(D, trees)
 
-        # average Q over unsolved targets so the model guides search toward what's missing
         unsolved = [x for x in Xs if mat_key(x) not in sols]
-        qs = th.stack([Qmodel(tc_mat(x)[None])[0].flatten().detach() for x in unsolved])
-        Q = F.log_softmax(qs.mean(0), -1)
-
-        print(f'--- ECD iteration {idx}, {len(unsolved)}/{len(Xs)} unsolved, Q biased ---', flush=True)
+        print(f'--- ECD iteration {idx}, {len(unsolved)}/{len(Xs)} unsolved, Q task-specific ---', flush=True)
 
     full_keys = {mat_key(x) for x in Xs}
     return {k: v for k, v in sols.items() if k in full_keys}
@@ -1160,44 +518,52 @@ def mat_type(X):
 
 
 class MatRecognitionModel(nn.Module):
-    """autoregressive frame-prediction recognition model for 3d matrices (T, H, W).
+    """Recognition model conditioned on both the task matrix and a partial program tree.
 
-    processes one frame at a time:
+    Matrix encoder:
       1. encode frame t with a 2d cnn
       2. update a recurrent hidden state
-      3. predict frame t+1 from hidden state
-      4. after all frames, project hidden state to DSL logits
+      3. predict frame t+1 from hidden state (auxiliary loss)
+      4. pool to a single matrix embedding
 
-    returns (dsl_logits, frame_pred_logits) where frame_pred_logits
-    is a list of (B, vocabsize, H, W) tensors for frames 1..T-1.
+    Program encoder:
+      - embed each already-placed primitive by its DSL index
+      - mean-pool to a single program embedding
+
+    Output:
+      - concat(matrix_embedding, program_embedding) -> DSL logits
+
+    forward(x, prog_ctx=None)
+      x:        (B, T, H, W) int tensor  — the task matrix
+      prog_ctx: (B, K) int tensor        — indices of primitives already placed
+                                           (None or K=0 means empty partial program)
+    returns (dsl_logits, frame_pred_logits)
     """
     def __init__(self, nd, vocabsize=10, nembd=64):
         super().__init__()
         self.nembd = nembd
         self.vocabsize = vocabsize
 
+        # matrix encoder
         self.embed = nn.Embedding(vocabsize, nembd)
-
-        # encode a single frame
         self.encoder = nn.Sequential(
             nn.Conv2d(nembd, nembd, 3, padding=1),
             nn.GELU(),
             nn.Conv2d(nembd, nembd, 3, padding=1),
             nn.GELU(),
         )
-
-        # temporal state
         self.rnn = nn.GRUCell(nembd, nembd)
-
-        # decode hidden state -> next frame prediction
         self.decoder = nn.Sequential(
             nn.Conv2d(nembd, nembd, 3, padding=1),
             nn.GELU(),
             nn.Conv2d(nembd, vocabsize, 1),
         )
 
-        # DSL logits from final hidden state
-        self.head = nn.Linear(nembd, nd)
+        # program encoder: embed each placed primitive, then mean-pool
+        self.prog_embed = nn.Embedding(nd, nembd)
+
+        # DSL logits from concat(matrix_hidden, program_hidden)
+        self.head = nn.Linear(2 * nembd, nd)
 
         print(f'{sum(p.numel() for p in self.parameters()) / 2**20:.2f}M params')
 
@@ -1205,14 +571,13 @@ class MatRecognitionModel(nn.Module):
         "frame: (B, H, W) int tensor -> (B, nembd, H, W)"
         emb = self.embed(frame)            # (B, H, W, nembd)
         emb = emb.permute(0, 3, 1, 2)     # (B, nembd, H, W)
-        # pad to min 3x3 for conv2d kernels
         _, _, h, w = emb.shape
         pad = [0, max(0, 3 - w), 0, max(0, 3 - h)]
         if any(p > 0 for p in pad):
             emb = F.pad(emb, pad)
         return emb + self.encoder(emb)     # residual
 
-    def forward(self, x):
+    def forward(self, x, prog_ctx=None):
         # x: (B, T, H, W) int tensor
         B, T, H, W = x.shape
         h = th.zeros(B, self.nembd, device=x.device)
@@ -1224,12 +589,17 @@ class MatRecognitionModel(nn.Module):
             h = self.rnn(pooled, h)
 
             if t < T - 1:
-                # predict next frame from hidden state
                 h_spatial = h[:, :, None, None].expand(-1, -1, H, W)
                 pred = self.decoder(h_spatial)     # (B, vocabsize, H, W)
                 frame_preds.append(pred)
 
-        dsl_logits = self.head(h)                  # (B, nd)
+        # encode partial program: mean-pool primitive embeddings
+        if prog_ctx is not None and prog_ctx.shape[1] > 0:
+            prog_h = self.prog_embed(prog_ctx).mean(dim=1)  # (B, nembd)
+        else:
+            prog_h = th.zeros(B, self.nembd, device=x.device)
+
+        dsl_logits = self.head(th.cat([h, prog_h], dim=-1))  # (B, nd)
         return dsl_logits, frame_preds
 
 def sample(ps):
@@ -1264,7 +634,11 @@ def dream(D, soltrees=[]):
             for i in randint(len(soltrees), size=4):
                 trees.append(soltrees[i])
 
-        Xy = []
+        # Build autoregressive training examples.
+        # For each node at DFS position i in a tree, the partial-program context
+        # is the indices of all nodes placed before it (positions 0..i-1).
+        # Training target: predict node i given (matrix, context).
+        Xy = []  # list of (matrix_tensor, target_idx, ctx_indices_list)
         for tree in trees:
             try:
                 out = tree()
@@ -1273,44 +647,50 @@ def dream(D, soltrees=[]):
 
             if not isinstance(out, np.ndarray) or 0 in out.shape or out.shape[0] < 2:
                 continue
+
             xtc = tc_mat(out)
+            nodes = alld(tree)
+            node_indices = [D.index(d) for d in nodes]
 
-            Xy.append([xtc, alld(tree)])
-
-        # x, i: d
-        Xy = [[(xy[0], idx) for d in xy[1] if (idx := D.index(d)) is not None] for xy in Xy]
-        Xy = reduce(lambda acc, xy: acc + xy, Xy, [])
+            for i, target_idx in enumerate(node_indices):
+                if target_idx is None:
+                    continue
+                ctx = [j for j in node_indices[:i] if j is not None]
+                Xy.append((xtc, target_idx, ctx))
 
         if len(Xy) == 0:
             continue
 
-        X = [xy[0][None].to(device) for xy in Xy]
-
         opt.zero_grad()
 
-        # autoregressive: dsl loss + frame prediction loss
         dsl_loss = tensor(0.0, device=device)
         frame_loss = tensor(0.0, device=device)
         nframes = 0
 
-        for xy, x in zip(Xy, X):
-            dsl_logits, frame_preds = qmodel(x)
-            dsl_loss = dsl_loss + F.cross_entropy(dsl_logits, tensor([xy[1]], device=device))
+        for xtc, target_idx, ctx in Xy:
+            x = xtc[None].to(device)                          # (1, T, H, W)
 
-            # frame prediction: compare pred[t] to actual frame[t+1]
+            if ctx:
+                prog_ctx = tensor([ctx], device=device)       # (1, K)
+            else:
+                prog_ctx = None
+
+            dsl_logits, frame_preds = qmodel(x, prog_ctx)
+            dsl_loss = dsl_loss + F.cross_entropy(dsl_logits, tensor([target_idx], device=device))
+
             for t, pred in enumerate(frame_preds):
-                target_frame = x[:, t + 1]           # (1, H, W)
+                target_frame = x[:, t + 1]
                 frame_loss = frame_loss + F.cross_entropy(pred, target_frame)
                 nframes += 1
 
-        loss = dsl_loss / len(X)
+        loss = dsl_loss / len(Xy)
         if nframes > 0:
             loss = loss + frame_loss / nframes
 
         loss.backward()
         opt.step()
 
-        tbar.set_description(f'{loss=:.2f} batchsize={len(X)}')
+        tbar.set_description(f'{loss=:.2f} batchsize={len(Xy)}')
 
     return qmodel.to('cpu')
 
@@ -1321,28 +701,115 @@ def make_task(path, size=4):
         x[t, r, c] = 1
     return x
 
+def make_nav_task(size=6, n_walls=6, agent=None, goal=None, min_dist=None, seed=None):
+    """Generate a navigation task on a size×size grid.
+
+    Values: agent=1, goal=2, wall=3.
+    Agent follows the BFS shortest path to the goal, one step per frame.
+    Walls and goal are visible on every frame; goal disappears when reached.
+
+    min_dist: minimum Manhattan distance between agent and goal.
+              Defaults to size // 2.
+
+    Returns (T, size, size) int array, or None if no valid placement exists.
+    """
+    from collections import deque
+
+    if min_dist is None:
+        min_dist = size // 2
+
+    rng = np.random.default_rng(seed)
+    cells = [(r, c) for r in range(size) for c in range(size)]
+    rng.shuffle(cells)
+
+    # place walls first
+    it = iter(cells)
+    walls = set()
+    while len(walls) < n_walls:
+        walls.add(next(it))
+
+    # pick agent and goal from remaining cells, enforcing min_dist
+    free = [c for c in cells if c not in walls]
+    if agent is None and goal is None:
+        placed = False
+        for i, a in enumerate(free):
+            for g in free[i+1:]:
+                if abs(a[0]-g[0]) + abs(a[1]-g[1]) >= min_dist:
+                    agent, goal = a, g
+                    placed = True
+                    break
+            if placed:
+                break
+        if not placed:
+            return None
+    elif agent is None:
+        candidates = [c for c in free if c != goal and abs(c[0]-goal[0]) + abs(c[1]-goal[1]) >= min_dist]
+        if not candidates:
+            return None
+        agent = candidates[0]
+    elif goal is None:
+        candidates = [c for c in free if c != agent and abs(c[0]-agent[0]) + abs(c[1]-agent[1]) >= min_dist]
+        if not candidates:
+            return None
+        goal = candidates[0]
+
+    # BFS shortest path (4-directional)
+    queue = deque([(agent, [agent])])
+    visited = {agent}
+    path = None
+    while queue:
+        pos, cur = queue.popleft()
+        if pos == goal:
+            path = cur
+            break
+        for dr, dc in ((-1,0),(1,0),(0,-1),(0,1)):
+            nb = (pos[0]+dr, pos[1]+dc)
+            if 0 <= nb[0] < size and 0 <= nb[1] < size and nb not in walls and nb not in visited:
+                visited.add(nb)
+                queue.append((nb, cur + [nb]))
+
+    if path is None:
+        return None
+
+    T = len(path)
+    x = np.zeros((T, size, size), dtype=int)
+    for t, (ar, ac) in enumerate(path):
+        for wr, wc in walls:
+            x[t, wr, wc] = 3
+        gr, gc = goal
+        x[t, gr, gc] = 2 if (ar, ac) != goal else 1  # goal replaced by agent on arrival
+        x[t, ar, ac] = 1
+    return x
+
+def make_nav_tasks(n=12, size=6, n_walls=6, seed=0):
+    "generate n random navigation tasks, retrying on unsolvable layouts"
+    rng = np.random.default_rng(seed)
+    tasks = []
+    attempt = 0
+    while len(tasks) < n:
+        t = make_nav_task(size=size, n_walls=n_walls, seed=int(rng.integers(1<<31)))
+        attempt += 1
+        if t is not None:
+            tasks.append(t)
+    print(f"generated {n} nav tasks ({attempt} attempts, {size}x{size}, {n_walls} walls)")
+    return tasks
+
+# if __name__ == '__main__':
+#     tasks = make_nav_tasks(n=2)
+#     for t in range(len(tasks)):
+#         print(f'task #{t}')
+#         print(tasks[t])
+
 if __name__ == '__main__':
     D = Deltas([
-        # mat construction
+        # mat construction — only unfold for round 1; HOFs added after first compression
         Delta(unfold,    mat,       [grid, int, fn],                  repr='unfold'),
-        # mat transformations
-        Delta(map_mat,   mat,       [fn, mat],                        repr='map'),
-        Delta(zip_mat,   mat,       [fn2, mat, mat],                  repr='zip'),
-        Delta(fold_mat,  grid,      [fn2, grid, mat],                 repr='fold'),
-        Delta(filter_mat, mat,      [fn_pred, mat],                   repr='filter'),
         # grid primitives
-        Delta(zeros,     grid,      [int, int],                       repr='zeros'),
+        # blank44 is a terminal (saves 2 int-holes vs zeros(4,4))
+        Delta(blank44,   grid,                                         repr='blank'),
         Delta(gset,      grid,      [grid, int, int, int],            repr='gset'),
-        # fn constructors (grid -> grid)
+        # fn constructors — only step for round 1
         Delta(step_fn,   fn,        [int, direction],                 repr='step'),
-        Delta(compose,   fn,        [fn, fn],                         repr='compose'),
-        # fn2 terminals (grid -> grid -> grid)
-        Delta(overlay,   fn2,                                         repr='overlay'),
-        # fn_pred terminals (grid -> bool)
-        Delta(nonempty,  fn_pred,                                     repr='nonempty'),
-        # int arithmetic
-        Delta(add,       int,       [int, int],                       repr='add'),
-        Delta(mul,       int,       [int, int],                       repr='mul'),
         # direction terminals
         Delta(RIGHT,     direction,                                    repr='right'),
         Delta(LEFT,      direction,                                    repr='left'),
@@ -1358,6 +825,8 @@ if __name__ == '__main__':
         Delta(2,         int,                                          repr='2'),
         Delta(3,         int,                                          repr='3'),
         Delta(4,         int,                                          repr='4'),
+        Delta(5,         int,                                          repr='5'),
+        Delta(6,         int,                                          repr='6'),
     ])
 
     # 12 tasks: a 1-cell moving in different directions on a 4x4 grid over 4 time steps
@@ -1374,13 +843,13 @@ if __name__ == '__main__':
         make_task([(0,3),(1,2),(2,1),(3,0)]),  # diagonal ↙
         make_task([(3,0),(2,1),(1,2),(0,3)]),  # diagonal ↗
         make_task([(3,3),(2,2),(1,1),(0,0)]),  # diagonal ↖
-
     ]
 
-    X = np.stack(Xs)  # (12, 4, 4, 4)
-    print(f"X shape: {X.shape}  —  {len(Xs)} tasks, each {Xs[0].shape}")
+    Xs = Xs + make_nav_tasks(n=12, size=6, n_walls=6, seed=0)
+    print(f'LEN: {len(Xs)}')
+    print(f"{len(Xs)} tasks, shapes: {[x.shape for x in Xs]}")
 
-    Z = ECD(Xs, D, timeout=10)
+    Z = ECD(Xs, D, timeout=120)
     for k, v in Z.items():
         if v is not None:
             print(f'solution: {v}')

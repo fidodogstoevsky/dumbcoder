@@ -18,8 +18,6 @@ from time import time
 
 from dsl import *
 
-# ■ ~
-
 class Deltas:
     # a collection of Delta primitives forming the DSL
     def __init__(self, core):
@@ -83,7 +81,6 @@ class Deltas:
             if (idx := self.index(idx)) is None:
                 return None
         
-        # always careful, always on the watch
         return deepcopy(self.ds[idx])
 
     def __len__(self):
@@ -147,12 +144,15 @@ def makepaths(D, Q):
 
     return Paths, Paths_terminal
 
-def cenumerate(D, Q, tp, budget, maxdepth, cb):
+def cenumerate(D, Q, tp, budget, maxdepth, cb, deadline=None):
     """ enumerate programs by probability
     callback-style, budget window used in
     the main solve_enumeration loop with expanding windows"""
     if budget[1] <= 0 or maxdepth < 0:
         return True
+
+    if deadline is not None and time() > deadline:
+        raise _EnumDone()
 
     for i in D.bytype[tp]:
         if -Q[i] > budget[1]:
@@ -163,9 +163,9 @@ def cenumerate(D, Q, tp, budget, maxdepth, cb):
         nbudget = (budget[0] + logp, budget[1] + logp)
         tailtypes = list(d.tailtypes) if d.tailtypes is not None else d.tailtypes
 
-        cenumerate_fold(D, Q, d, tailtypes, nbudget, logp, maxdepth - 1, cb)
+        cenumerate_fold(D, Q, d, tailtypes, nbudget, logp, maxdepth - 1, cb, deadline)
 
-def cenumerate_fold(D, Q, d, tailtypes, budget, offset, maxdepth, cb):
+def cenumerate_fold(D, Q, d, tailtypes, budget, offset, maxdepth, cb, deadline=None):
     if tailtypes is not None and len(tailtypes) > 0:
         tailtp = tailtypes.pop(0)
 
@@ -178,9 +178,9 @@ def cenumerate_fold(D, Q, d, tailtypes, budget, offset, maxdepth, cb):
             nbudget = (budget[0] + tlogp, budget[1] + tlogp)
             noffset = offset + tlogp
 
-            cenumerate_fold(D, Q, nd, list(tailtypes), nbudget, noffset, maxdepth, cb)
+            cenumerate_fold(D, Q, nd, list(tailtypes), nbudget, noffset, maxdepth, cb, deadline)
 
-        return cenumerate(D, Q, tailtp, (0, budget[1]), maxdepth, ccb)
+        return cenumerate(D, Q, tailtp, (0, budget[1]), maxdepth, ccb, deadline)
 
     if budget[0] < 0 and 0 <= budget[1]:
         return cb(d, offset)
@@ -251,7 +251,7 @@ def _annotate_holes(D, tree):
                 qq.append((tail, None))
 
 
-def saturate_stitch(D, sols, iterations=10, max_arity=3):
+def saturate_stitch(D, sols, iterations=10, max_arity=6):
     """Learn abstractions via stitch_core (top-down synthesis).
 
     Replaces saturate(D, sols):
@@ -278,7 +278,21 @@ def saturate_stitch(D, sols, iterations=10, max_arity=3):
 
     print(f"size of the forest: {len(pickle.dumps(trees)) >> 10}M")
 
-    programs = [str(tree) for tree in trees]
+    # If all solutions are singleton(grid_expr), strip singleton so stitch
+    # discovers grid-level abstractions that can be composed with more gset calls.
+    # We'll re-wrap with singleton when reconstructing the tree corpus.
+    singleton_d = next((d for d in D.core if d.repr == 'singleton'), None)
+    strip_singleton = (
+        singleton_d is not None and
+        all(t.head is singleton and t.tails and len(t.tails) == 1 for t in trees)
+    )
+    if strip_singleton:
+        print("stripping singleton for grid-level compression")
+        inner_trees = [t.tails[0] for t in trees]
+        programs = [str(t) for t in inner_trees]
+    else:
+        programs = [str(tree) for tree in trees]
+
     print(f"running stitch_core.compress on {len(programs)} programs "
           f"(iterations={iterations}, max_arity={max_arity})")
 
@@ -306,6 +320,7 @@ def saturate_stitch(D, sols, iterations=10, max_arity=3):
 
         # Mark $i placeholders as typed holes so typize() can collect them
         _annotate_holes(D, hiddentail)
+
         tailtypes = typize(hiddentail)
 
         name = abs_result.name  # e.g. "fn_0", "fn_1", ...
@@ -314,7 +329,7 @@ def saturate_stitch(D, sols, iterations=10, max_arity=3):
             # multi-arg primitives (e.g. (iterate 1 (gset ...)) with only 2 of
             # 4 args) or constants whose numpy-array head breaks D.index after
             # deepcopy.  Skip them entirely.
-            print(f"skipping abstraction '{name}' — no typed holes found "
+            print(f"skipping abstraction '{name}': {abs_result.body} — no typed holes found "
                   f"(partial application or unannotatable constant)")
             continue
         else:
@@ -330,6 +345,11 @@ def saturate_stitch(D, sols, iterations=10, max_arity=3):
     for prog_str in result.rewritten:
         try:
             tree = tr(D, prog_str)
+            if strip_singleton:
+                # re-wrap the grid tree with singleton
+                wrapper = deepcopy(singleton_d)
+                wrapper.tails = [tree]
+                tree = wrapper
             freeze(tree)
             new_trees.append(tree)
         except Exception as e:
@@ -382,7 +402,8 @@ class _EnumDone(Exception):
     pass
 
 def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0):
-    """systematically enumerates programs from the DSL, evaluating each one.
+    """runs for each unsolved task
+    systematically enumerates programs from the DSL, evaluating each one.
     If a program evaluates to a full task matrix in Xs, it's saved in solutions.
     The enumeration is budget-based: it iterates over increasingly wide
     probability budgets (LOGPGAP * idx to LOGPGAP * (idx+1)), so it tries
@@ -391,6 +412,7 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
     print(f'{len(D)=}')
 
     cnt = 0
+    all_cnt = 0
     stime = time()
 
     LOGPGAP = 2
@@ -400,7 +422,12 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
     def cb(tree, logp):
         """called once per enumerated program.
         checks if the output matches any full task matrix in Xs."""
-        nonlocal cnt, done, stime
+        nonlocal cnt, all_cnt, done, stime
+
+        all_cnt += 1
+        if not(all_cnt % 10000) and time() - stime > timeout:
+            done = True
+            raise _EnumDone()
 
         try:
             out = tree()
@@ -415,14 +442,14 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
         if not(cnt % 10000) and cnt > 0:
             print(f'! {cnt} trees, {cnt/(time()-stime):.0f}/s', flush=True)
 
-            if time() - stime > timeout:
-                done = True
-                raise _EnumDone()
+        if not(cnt % 100) and time() - stime > timeout:
+            done = True
+            raise _EnumDone()
 
         okey = mat_key(out)
         if okey in targets:
             if okey not in solutions:
-                print(f'[{cnt:6d}] caught {tree}')
+                print(f'[{cnt:6d}] caught {tree}', flush=True)
 
             if okey not in solutions or length(tree) < length(solutions[okey]):
                 solutions[okey] = deepcopy(tree)
@@ -435,9 +462,10 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
     if budget == 0:
         idx = 0
-        while not done:
+        deadline = stime + timeout
+        while not done and time() < deadline:
             try:
-                cenumerate(D, Q, mat, (LOGPGAP * idx, LOGPGAP * (idx+1)), maxdepth, cb)
+                cenumerate(D, Q, mat, (LOGPGAP * idx, LOGPGAP * (idx+1)), maxdepth, cb, deadline)
             except _EnumDone:
                 pass
             idx += 1
@@ -456,12 +484,13 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
         D.pop(ephermal)
 
     took = time() - stime
-    print(f'total: {cnt}, took: {took/60:.1f}m, iter: {cnt/(took+1e-9):.0f}/s')
-    print(f'solved: {sum(mat_key(x) in solutions for x in Xs)}/{len(Xs)}')
+    print(f'total: {cnt}, took: {took/60:.1f}m, iter: {cnt/(took+1e-9):.0f}/s', flush=True)
+    print(f'solved: {sum(mat_key(x) in solutions for x in Xs)}/{len(Xs)}', flush=True)
     return solutions
 
 
-def ECD(Xs, D, timeout=60, budget=0):
+def ECD(Xs, D, timeout=60, budget=0, max_iterations=10):
+    # when ECD is first run, reset the DSL
     D.reset()
 
     Qmodel = None  # no model on the first iteration; use uniform Q
@@ -477,7 +506,7 @@ def ECD(Xs, D, timeout=60, budget=0):
             return F.log_softmax(th.ones(len(D)), -1)
         return F.log_softmax(Qmodel(tc_mat(x)[None])[0].flatten().detach(), -1)
 
-    while True:
+    while idx < max_iterations:
         unsolved = [x for x in Xs if mat_key(x) not in sols]
         # allocate timeout evenly across unsolved tasks
         per_task_timeout = timeout / len(unsolved)
@@ -488,9 +517,6 @@ def ECD(Xs, D, timeout=60, budget=0):
             sols = solve_enumeration([x], D, task_Q(x), sols,
                                      maxdepth=10, timeout=per_task_timeout, budget=budget)
 
-        if all_solved():
-            break
-
         soltrees = [s for s in sols.values() if s is not None]
         if len(soltrees) > 0:
             trees = saturate_stitch(D, sols)
@@ -500,6 +526,9 @@ def ECD(Xs, D, timeout=60, budget=0):
         idx += 1
 
         Qmodel = dream(D, trees)
+
+        if all_solved():
+            break
 
         unsolved = [x for x in Xs if mat_key(x) not in sols]
         print(f'--- ECD iteration {idx}, {len(unsolved)}/{len(Xs)} unsolved, Q task-specific ---', flush=True)
@@ -694,12 +723,60 @@ def dream(D, soltrees=[]):
 
     return qmodel.to('cpu')
 
+
+###################################################################################
+##### task production
+
 def make_task(path, size=4):
     "create a (T, size, size) matrix with a single 1-cell moving along path"
     x = np.zeros((len(path), size, size), dtype=int)
     for t, (r, c) in enumerate(path):
         x[t, r, c] = 1
     return x
+
+    # Xs = [
+    #     make_task([(0,0),(0,1),(0,2),(0,3)]),  # right, row 0
+    #     make_task([(1,0),(1,1),(1,2),(1,3)]),  # right, row 1
+    #     make_task([(2,0),(2,1),(2,2),(2,3)]),  # right, row 2
+    #     make_task([(3,0),(3,1),(3,2),(3,3)]),  # right, row 3
+    #     make_task([(0,3),(0,2),(0,1),(0,0)]),  # left, row 0
+    #     make_task([(1,3),(1,2),(1,1),(1,0)]),  # left, row 1
+    #     make_task([(2,3),(2,2),(2,1),(2,0)]),  # left, row 2
+    #     make_task([(3,3),(3,2),(3,1),(3,0)]),  # left, row 3
+    #     make_task([(0,0),(1,0),(2,0),(3,0)]),  # down, col 0
+    #     make_task([(0,1),(1,1),(2,1),(3,1)]),  # down, col 1
+    #     make_task([(0,2),(1,2),(2,2),(3,2)]),  # down, col 2
+    #     make_task([(0,3),(1,3),(2,3),(3,3)]),  # down, col 3
+    #     make_task([(3,0),(2,0),(1,0),(0,0)]),  # up, col 0
+    #     make_task([(3,1),(2,1),(1,1),(0,1)]),  # up, col 1
+    #     make_task([(3,2),(2,2),(1,2),(0,2)]),  # up, col 2
+    #     make_task([(3,3),(2,3),(1,3),(0,3)]),  # up, col 3
+    # ]
+
+def simple_walk_tasks(size):
+    """create size*2*2 tasks: walk each direction of each row/col"""
+    tasks = []
+    for row in range(size):
+        x = np.zeros((size, size, size), dtype=int)
+        for t in range(size):
+            x[t,row,t] = 1
+        tasks.append(x)
+    for row in range(size):
+        x = np.zeros((size, size, size), dtype=int)
+        for t in range(size):
+            x[t,row,size-(t+1)] = 1
+        tasks.append(x)
+    for col in range(size):
+        x = np.zeros((size, size, size), dtype=int)
+        for t in range(size):
+            x[t,t,col] = 1
+        tasks.append(x)
+    for col in range(size):
+        x = np.zeros((size, size, size), dtype=int)
+        for t in range(size):
+            x[t,size-(t+1),col] = 1
+        tasks.append(x)
+    return tasks
 
 def make_nav_task(size=6, n_walls=6, agent=None, goal=None, min_dist=None, seed=None):
     """Generate a navigation task on a size×size grid.
@@ -794,31 +871,89 @@ def make_nav_tasks(n=12, size=6, n_walls=6, seed=0):
     print(f"generated {n} nav tasks ({attempt} attempts, {size}x{size}, {n_walls} walls)")
     return tasks
 
-# if __name__ == '__main__':
-#     tasks = make_nav_tasks(n=2)
-#     for t in range(len(tasks)):
-#         print(f'task #{t}')
-#         print(tasks[t])
+def make_static_nav(size=6, n_walls=3, seed=None, min_dist=None):
+    """Generate a static navigation scene as a single-frame (1, size, size) matrix.
+
+    Values: agent=1, goal=2, wall=3.
+    Returns (1, size, size) int array, or None if no valid placement exists.
+
+    min_dist: minimum Manhattan distance between agent and goal.
+              Defaults to size // 2.
+    """
+    if min_dist is None:
+        min_dist = size // 2
+
+    rng = np.random.default_rng(seed)
+    cells = [(r, c) for r in range(size) for c in range(size)]
+    rng.shuffle(cells)
+
+    # place walls
+    it = iter(cells)
+    walls = set()
+    while len(walls) < n_walls:
+        walls.add(next(it))
+
+    # pick agent and goal from remaining cells, enforcing min_dist
+    free = [c for c in cells if c not in walls]
+    placed = False
+    agent, goal = None, None
+    for i, a in enumerate(free):
+        for g in free[i+1:]:
+            if abs(a[0]-g[0]) + abs(a[1]-g[1]) >= min_dist:
+                agent, goal = a, g
+                placed = True
+                break
+        if placed:
+            break
+
+    if not placed:
+        return None
+
+    x = np.zeros((1, size, size), dtype=int)
+    for wr, wc in walls:
+        x[0, wr, wc] = 3
+    x[0, goal[0], goal[1]] = 2
+    x[0, agent[0], agent[1]] = 1
+    return x
+
+
+def make_static_tasks(n=12, size=6, n_walls=3, seed=0):
+    "generate n random static navigation scenes"
+    rng = np.random.default_rng(seed)
+    tasks = []
+    attempts = 0
+    while len(tasks) < n:
+        t = make_static_nav(size=size, n_walls=n_walls, seed=int(rng.integers(1<<31)))
+        attempts += 1
+        if t is not None:
+            tasks.append(t)
+    print(f"generated {n} static scenes ({attempts} attempts, {size}x{size}, {n_walls} walls)")
+    return tasks
+
+###################################################################################
 
 if __name__ == '__main__':
+    """create an instance of the Deltas class, named D
+    a Deltas object D is an instance of a DSL
+    it's initiated with core primitives
+    """
     D = Deltas([
-        # mat construction — only unfold for round 1; HOFs added after first compression
+        # mat construction
         Delta(unfold,    mat,       [grid, int, fn],                  repr='unfold'),
+        Delta(singleton, mat,       [grid],                           repr='singleton'),
         # grid primitives
         # blank44 is a terminal (saves 2 int-holes vs zeros(4,4))
         Delta(blank44,   grid,                                         repr='blank'),
+        #Delta(blank66,   grid,                                         repr='blank'),
         Delta(gset,      grid,      [grid, int, int, int],            repr='gset'),
-        # fn constructors — only step for round 1
+        Delta(place_agent_goal, grid, [int, int, int, int],          repr='place_ag'),
+        # fn constructors
         Delta(step_fn,   fn,        [int, direction],                 repr='step'),
         # direction terminals
         Delta(RIGHT,     direction,                                    repr='right'),
         Delta(LEFT,      direction,                                    repr='left'),
         Delta(UP,        direction,                                    repr='up'),
         Delta(DOWN,      direction,                                    repr='down'),
-        Delta(DIAG_DR,   direction,                                    repr='dr'),
-        Delta(DIAG_DL,   direction,                                    repr='dl'),
-        Delta(DIAG_UR,   direction,                                    repr='ur'),
-        Delta(DIAG_UL,   direction,                                    repr='ul'),
         # int terminals
         Delta(0,         int,                                          repr='0'),
         Delta(1,         int,                                          repr='1'),
@@ -829,27 +964,13 @@ if __name__ == '__main__':
         Delta(6,         int,                                          repr='6'),
     ])
 
-    # 12 tasks: a 1-cell moving in different directions on a 4x4 grid over 4 time steps
-    Xs = [
-        make_task([(0,0),(0,1),(0,2),(0,3)]),  # right, row 0
-        make_task([(1,0),(1,1),(1,2),(1,3)]),  # right, row 1
-        make_task([(2,0),(2,1),(2,2),(2,3)]),  # right, row 2
-        make_task([(3,0),(3,1),(3,2),(3,3)]),  # right, row 3
-        make_task([(0,0),(1,0),(2,0),(3,0)]),  # down, col 0
-        make_task([(0,1),(1,1),(2,1),(3,1)]),  # down, col 1
-        make_task([(0,2),(1,2),(2,2),(3,2)]),  # down, col 2
-        make_task([(0,3),(1,3),(2,3),(3,3)]),  # down, col 3
-        make_task([(0,0),(1,1),(2,2),(3,3)]),  # diagonal ↘
-        make_task([(0,3),(1,2),(2,1),(3,0)]),  # diagonal ↙
-        make_task([(3,0),(2,1),(1,2),(0,3)]),  # diagonal ↗
-        make_task([(3,3),(2,2),(1,1),(0,0)]),  # diagonal ↖
-    ]
+    Xs = make_static_tasks(n=6, size=4, n_walls=0) + make_static_tasks(n=6, size=4, n_walls=1)
 
-    Xs = Xs + make_nav_tasks(n=12, size=6, n_walls=6, seed=0)
-    print(f'LEN: {len(Xs)}')
+
+    #Xs = Xs + make_nav_tasks(n=12, size=6, n_walls=6, seed=0)
     print(f"{len(Xs)} tasks, shapes: {[x.shape for x in Xs]}")
 
-    Z = ECD(Xs, D, timeout=120)
+    Z = ECD(Xs, D, timeout=600, max_iterations=10)
     for k, v in Z.items():
         if v is not None:
             print(f'solution: {v}')

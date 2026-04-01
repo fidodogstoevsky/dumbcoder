@@ -18,10 +18,10 @@ RIGHT   = ( 0,  1)
 LEFT    = ( 0, -1)
 UP      = (-1,  0)
 DOWN    = ( 1,  0)
-DIAG_DR = ( 1,  1)
-DIAG_DL = ( 1, -1)
-DIAG_UR = (-1,  1)
-DIAG_UL = (-1, -1)
+# DIAG_DR = ( 1,  1)
+# DIAG_DL = ( 1, -1)
+# DIAG_UR = (-1,  1)
+# DIAG_UL = (-1, -1)
 
 # ── grid primitives ────────────────────────────────────────────────────────────
 
@@ -35,6 +35,7 @@ def zeros(h, w):
 blank33 = np.zeros((3, 3), dtype=int)
 blank44 = np.zeros((4, 4), dtype=int)
 blank55 = np.zeros((5, 5), dtype=int)
+blank66 = np.zeros((6, 6), dtype=int)
 
 def gset(g, r, c, v):
     "grid, int, int, int -> grid: set cell (r,c) to v"
@@ -94,6 +95,14 @@ def _nonempty(g):
 nonempty = _nonempty  # fn_pred terminal
 
 # ── mat construction ───────────────────────────────────────────────────────────
+
+def singleton(g):
+    "grid -> mat: wrap a single grid as a 1-frame matrix"
+    return g[np.newaxis].copy()
+
+def place_agent_goal(ar, ac, gr, gc):
+    "int,int,int,int -> grid: place agent(1) at (ar,ac) and goal(2) at (gr,gc) on blank44"
+    return gset(gset(blank44, ar, ac, 1), gr, gc, 2)
 
 def unfold(g, n, f):
     "grid, int, fn -> mat: produce n frames [g, f(g), f²(g), …, f^(n-1)(g)]"

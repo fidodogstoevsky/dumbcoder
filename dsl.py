@@ -172,6 +172,10 @@ def hide_walls(m):
     out[out == 3] = 0
     return out
 
+def believed_nav_unfold(g, n):
+    "grid, int -> mat: nav_unfold from agent's believed grid, hiding phantom walls from output"
+    return hide_walls(nav_unfold(g, n))
+
 def map_mat(f, m):
     "fn, mat -> mat: apply f to each frame"
     return np.stack([f(m[t]) for t in range(m.shape[0])])

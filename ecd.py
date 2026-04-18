@@ -561,6 +561,7 @@ def bootstrap_nav_solutions(Xs, D):
         return None
 
     d_nav  = find_d('nav_unfold')
+    d_bnu  = find_d('believed_nav_unfold')
     d_ag   = find_d('place_ag')
     d_wall = find_d('place_wall')
     d_blank = find_d('blank')
@@ -579,27 +580,55 @@ def bootstrap_nav_solutions(Xs, D):
 
         ag_node = deepcopy(d_ag)
         ag_node.tails = [deepcopy(d_blank), int_d(ar), int_d(ac), int_d(gr), int_d(gc)]
-        grid = ag_node
+        grid_node = ag_node
 
         for wr, wc in walls:
             if int_d(wr) is None or int_d(wc) is None or d_wall is None:
-                grid = None; break
+                grid_node = None; break
             pw = deepcopy(d_wall)
-            pw.tails = [grid, int_d(wr), int_d(wc)]
-            grid = pw
+            pw.tails = [grid_node, int_d(wr), int_d(wc)]
+            grid_node = pw
 
-        if grid is None:
+        if grid_node is None:
             continue
 
+        # Standard nav_unfold bootstrap (works for real-wall tasks)
         root = deepcopy(d_nav)
-        root.tails = [grid, int_d(T)]
-
+        root.tails = [grid_node, int_d(T)]
         try:
             result = root()
             if np.array_equal(result, x):
                 sols[mat_key(x)] = root
+                continue
         except Exception:
             pass
+
+        # False-belief bootstrap: task has no visible walls but path is suboptimal.
+        # Try believed_nav_unfold(place_wall(place_ag(blank,...), pw_r, pw_c), T)
+        # for each candidate phantom wall position.
+        if not walls and d_bnu is not None and d_wall is not None:
+            size = frame.shape[0]
+            found = False
+            for pw_r in range(size):
+                if found:
+                    break
+                for pw_c in range(size):
+                    if (pw_r, pw_c) in ((ar, ac), (gr, gc)):
+                        continue
+                    if int_d(pw_r) is None or int_d(pw_c) is None:
+                        continue
+                    pw_node = deepcopy(d_wall)
+                    pw_node.tails = [deepcopy(ag_node), int_d(pw_r), int_d(pw_c)]
+                    root2 = deepcopy(d_bnu)
+                    root2.tails = [pw_node, int_d(T)]
+                    try:
+                        result2 = root2()
+                        if np.array_equal(result2, x):
+                            sols[mat_key(x)] = root2
+                            found = True
+                            break
+                    except Exception:
+                        pass
 
     return sols
 
@@ -662,13 +691,11 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
 
     full_keys = {mat_key(x) for x in Xs}
 
-    # Print all solutions rewritten with the newest abstractions
-    if rewritten_strs:
-        print("\n--- solutions rewritten with newest abstractions ---")
-        for s in rewritten_strs:
-            print(s)
+    sol_keys = [k for k, v in sols.items() if v is not None]
+    rewritten_map = dict(zip(sol_keys, rewritten_strs)) if rewritten_strs else {}
 
-    return {k: v for k, v in sols.items() if k in full_keys}
+    return ({k: v for k, v in sols.items() if k in full_keys},
+            {k: v for k, v in rewritten_map.items() if k in full_keys})
 
 def mat_key(x):
     return (x.shape, x.tobytes())
@@ -1105,6 +1132,7 @@ if __name__ == '__main__':
     """
     D = Deltas([
         # mat construction
+        Delta(believed_nav_unfold, mat, [grid, int],           repr='believed_nav_unfold'),
         Delta(hide_walls,      mat,  [mat],                    repr='hide_walls'),
         Delta(nav_unfold,      mat,  [grid, int],              repr='nav_unfold'),
         Delta(unfold,          mat,  [grid, int, fn],          repr='unfold'),
@@ -1138,8 +1166,9 @@ if __name__ == '__main__':
     seeds = bootstrap_nav_solutions(Xs, D)
     print(f"bootstrapped {len(seeds)}/{len(Xs)} solutions")
 
-    Z = ECD(Xs, D, per_task_timeout=60, max_iterations=10, seeds=seeds)
+    Z, rewritten_map = ECD(Xs, D, per_task_timeout=60, max_iterations=10, seeds=seeds)
     for k, v in Z.items():
         if v is not None:
             print(f'solution: {v}')
-            print(f'evaluates to:\n{v()}')
+            if k in rewritten_map:
+                print(f'rewritten: {rewritten_map[k]}')

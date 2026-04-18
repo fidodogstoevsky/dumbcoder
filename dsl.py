@@ -76,6 +76,52 @@ def compose(f, g):
         return g(f(x))
     return _composed
 
+# ── intentional motion ─────────────────────────────────────────────────────────
+
+def _approach_grid(g, agent_val, goal_val):
+    "move agent_val one BFS-optimal step toward goal_val, treating value 3 as walls"
+    from collections import deque
+    h, w = g.shape
+    agents = [(r, c) for r in range(h) for c in range(w) if g[r, c] == agent_val]
+    goals  = [(r, c) for r in range(h) for c in range(w) if g[r, c] == goal_val]
+    if not agents or not goals:
+        return g.copy()
+    agent = agents[0]
+    goal  = goals[0]
+    if agent == goal:
+        return g.copy()
+    queue   = deque([(agent, None)])   # (pos, first_step)
+    visited = {agent}
+    first_step = None
+    while queue:
+        pos, step = queue.popleft()
+        if pos == goal:
+            first_step = step
+            break
+        for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            nb = (pos[0] + dr, pos[1] + dc)
+            if 0 <= nb[0] < h and 0 <= nb[1] < w and nb not in visited and g[nb[0], nb[1]] != 3:
+                visited.add(nb)
+                queue.append((nb, (dr, dc) if step is None else step))
+    if first_step is None:
+        return g.copy()
+    dr, dc = first_step
+    nr, nc = agent[0] + dr, agent[1] + dc
+    out = g.copy()
+    out[agent[0], agent[1]] = 0
+    out[nr, nc] = agent_val
+    return out
+
+def place_wall(g, r, c):
+    "grid, int, int -> grid: place a wall (value 3) at (r, c)"
+    return gset(g, r, c, 3)
+
+def approach(agent_val, goal_val):
+    "int, int -> fn: move agent_val one BFS step toward goal_val each frame"
+    def _approach(g):
+        return _approach_grid(g, agent_val, goal_val)
+    return _approach
+
 # ── fn2 terminals (grid -> grid -> grid) ──────────────────────────────────────
 
 def _overlay(g1, g2):
@@ -96,13 +142,13 @@ nonempty = _nonempty  # fn_pred terminal
 
 # ── mat construction ───────────────────────────────────────────────────────────
 
-def singleton(g):
-    "grid -> mat: wrap a single grid as a 1-frame matrix"
-    return g[np.newaxis].copy()
+# def singleton(g):
+#     "grid -> mat: wrap a single grid as a 1-frame matrix"
+#     return g[np.newaxis].copy()
 
-def place_agent_goal(ar, ac, gr, gc):
-    "int,int,int,int -> grid: place agent(1) at (ar,ac) and goal(2) at (gr,gc) on blank44"
-    return gset(gset(blank44, ar, ac, 1), gr, gc, 2)
+def place_agent_goal(g, ar, ac, gr, gc):
+    "grid, int,int,int,int -> grid: place agent(1) at (ar,ac) and goal(2) at (gr,gc) on g"
+    return gset(gset(g, ar, ac, 1), gr, gc, 2)
 
 def unfold(g, n, f):
     "grid, int, fn -> mat: produce n frames [g, f(g), f²(g), …, f^(n-1)(g)]"
@@ -114,7 +160,17 @@ def unfold(g, n, f):
         frames.append(g.copy())
     return np.stack(frames)
 
+def nav_unfold(g, n):
+    "grid, int -> mat: unfold g for n steps using navigate (agent 1 approaches goal 2)"
+    return unfold(g, n, approach(1, 2))
+
 # ── mat transformations ────────────────────────────────────────────────────────
+
+def hide_walls(m):
+    "mat -> mat: remove wall cells (value 3) from all frames, leaving only agent and goal"
+    out = m.copy()
+    out[out == 3] = 0
+    return out
 
 def map_mat(f, m):
     "fn, mat -> mat: apply f to each frame"

@@ -409,7 +409,12 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
             print(f"could not parse rewritten program '{prog_str}': {e}")
 
     print(f"stitch compression took {(time() - ghosttime)/60:.2f}m")
-    return new_trees if new_trees else trees, result.rewritten
+    # Fall back to original trees for Q training if most rewrites failed to parse
+    # (stitch often references abstractions that were skipped, making rewrites unparseable)
+    training_trees = new_trees if len(new_trees) * 2 >= len(trees) else trees
+    print(f"using {len(training_trees)}/{len(trees)} trees for Q training "
+          f"({'rewritten' if training_trees is new_trees else 'original'})")
+    return training_trees, result.rewritten
 
 
 def needle(D, n, paths, paths_terminal, depth=0):
@@ -542,11 +547,15 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
     return solutions
 
 
-def bootstrap_nav_solutions(Xs, D):
-    """Construct nav solutions analytically by reading entity positions from frame 0.
+def bootstrap_nav_solutions(Xs, D, max_walls=1):
+    """Construct nav solutions analytically for tasks with at most max_walls visible walls.
 
-    For each task, builds nav_unfold(place_wall*(place_ag(blank,ar,ac,gr,gc), ...), T)
-    directly from the task grid, bypassing enumeration.
+    Tasks with more walls (and false-belief tasks) are left for ECD.
+    The Q model, trained on these seeds, learns to read entity and wall positions
+    from the matrix encoder, concentrating probability on the visible coordinates
+    and reducing effective search window from ~10 to ~3 for harder tasks.
+
+    max_walls: bootstrap tasks with this many walls or fewer (default 1).
     """
     def find_d(repr_name):
         for d in D.ds:
@@ -560,10 +569,9 @@ def bootstrap_nav_solutions(Xs, D):
                 return deepcopy(d)
         return None
 
-    d_nav  = find_d('nav_unfold')
-    d_bnu  = find_d('believed_nav_unfold')
-    d_ag   = find_d('place_ag')
-    d_wall = find_d('place_wall')
+    d_nav   = find_d('nav_unfold')
+    d_ag    = find_d('place_ag')
+    d_wall  = find_d('place_wall')
     d_blank = find_d('blank')
 
     sols = {}
@@ -573,6 +581,10 @@ def bootstrap_nav_solutions(Xs, D):
         agent = [(r,c) for r in range(frame.shape[0]) for c in range(frame.shape[1]) if frame[r,c] == 1]
         goal  = [(r,c) for r in range(frame.shape[0]) for c in range(frame.shape[1]) if frame[r,c] == 2]
         walls = [(r,c) for r in range(frame.shape[0]) for c in range(frame.shape[1]) if frame[r,c] == 3]
+
+        # Only bootstrap up to max_walls; leave harder tasks for ECD
+        if len(walls) > max_walls:
+            continue
 
         if not agent or not goal or int_d(T) is None:
             continue
@@ -592,43 +604,13 @@ def bootstrap_nav_solutions(Xs, D):
         if grid_node is None:
             continue
 
-        # Standard nav_unfold bootstrap (works for real-wall tasks)
         root = deepcopy(d_nav)
         root.tails = [grid_node, int_d(T)]
         try:
-            result = root()
-            if np.array_equal(result, x):
+            if np.array_equal(root(), x):
                 sols[mat_key(x)] = root
-                continue
         except Exception:
             pass
-
-        # False-belief bootstrap: task has no visible walls but path is suboptimal.
-        # Try believed_nav_unfold(place_wall(place_ag(blank,...), pw_r, pw_c), T)
-        # for each candidate phantom wall position.
-        if not walls and d_bnu is not None and d_wall is not None:
-            size = frame.shape[0]
-            found = False
-            for pw_r in range(size):
-                if found:
-                    break
-                for pw_c in range(size):
-                    if (pw_r, pw_c) in ((ar, ac), (gr, gc)):
-                        continue
-                    if int_d(pw_r) is None or int_d(pw_c) is None:
-                        continue
-                    pw_node = deepcopy(d_wall)
-                    pw_node.tails = [deepcopy(ag_node), int_d(pw_r), int_d(pw_c)]
-                    root2 = deepcopy(d_bnu)
-                    root2.tails = [pw_node, int_d(T)]
-                    try:
-                        result2 = root2()
-                        if np.array_equal(result2, x):
-                            sols[mat_key(x)] = root2
-                            found = True
-                            break
-                    except Exception:
-                        pass
 
     return sols
 
@@ -704,60 +686,89 @@ def mat_key(x):
 class MatRecognitionModel(nn.Module):
     """Recognition model with symbolic grid encoder and top-down Tree GRU program encoder.
 
-    Grid encoder (entity-based):
-      Treats each non-zero cell as a (row, col, value) entity.
-      h_entity = row_embed[r] + col_embed[c] + val_embed[v]
-      h_matrix = mean over all entities across all frames.
-      No CNN — the grid content is already symbolic.
+    Grid encoder:
+      h_agent0 = mean(row_embed + col_embed) over FRAME-0 agent cells  (start pos)
+      h_goal0  = mean(row_embed + col_embed) over FRAME-0 goal cells   (start pos)
+      h_wall   = mean(row_embed + col_embed) over ALL-frame wall cells  (wall pos)
+      h_T      = t_embed[T-1]                                           (path length)
+      h_matrix = concat([h_agent0, h_goal0, h_wall, h_T])  — shape (B, 4*nembd)
+
+      Frame-0 pooling for agent/goal gives unambiguous start coordinates (not
+      diluted by the trajectory), which is critical for false-belief tasks where
+      the agent detoures and the multi-frame mean drifts away from the start.
+
+      h_T gives Q a direct detour-detection signal: for false-belief tasks T is
+      larger than the Manhattan distance to goal, whereas for 0-wall nav T equals
+      the Manhattan distance.  This lets Q learn "long T for given agent-goal
+      distance → believed_nav_unfold".
 
     Program encoder (top-down Tree GRU):
       h_node = tree_rnn(prog_embed[d] + slot_embed[k], h_parent)
-      where k is the child-slot index this node fills, h_parent is the
-      parent node's hidden state (zeros at the root).
 
     Prediction:
-      dsl_logits = head(concat(h_matrix, h_parent))
+      dsl_logits = head(concat(h_matrix, h_parent))   — (4*nembd + nembd)
     """
-    def __init__(self, nd, max_coord=16, vocabsize=10, nembd=64, max_slots=8):
+    def __init__(self, nd, max_coord=16, vocabsize=10, nembd=64, max_slots=8, max_t=24):
         super().__init__()
         self.nembd = nembd
+        self.mat_emb = 4 * nembd   # frame0_agent + frame0_goal + all_wall + T
         self.nd = nd
         self.vocabsize = vocabsize
 
-        # symbolic grid encoder
+        # symbolic grid encoder (position only; entity type handled by separate pooling)
         self.row_embed = nn.Embedding(max_coord, nembd)
         self.col_embed = nn.Embedding(max_coord, nembd)
-        self.val_embed = nn.Embedding(vocabsize, nembd)
+
+        # path-length embedding for detour detection
+        self.t_embed = nn.Embedding(max_t, nembd)
 
         # top-down tree GRU
         self.prog_embed = nn.Embedding(nd, nembd)
         self.slot_embed = nn.Embedding(max_slots, nembd)
         self.tree_rnn = nn.GRUCell(nembd, nembd)
 
-        # DSL logits from concat(h_matrix, h_parent)
-        self.head = nn.Linear(2 * nembd, nd)
+        # DSL logits from concat(h_matrix, h_parent): (4*nembd + nembd) -> nd
+        self.head = nn.Linear(self.mat_emb + nembd, nd)
 
         print(f'{sum(p.numel() for p in self.parameters()) / 2**20:.2f}M params')
 
     def encode_matrix(self, x):
-        """(B, T, H, W) long tensor -> (B, nembd) grid embedding.
+        """(B, T, H, W) long tensor -> (B, 4*nembd) grid+path-length embedding.
 
-        Each non-zero cell contributes row_embed[r] + col_embed[c] + val_embed[v];
-        these are mean-pooled across all cells and frames.
-        Returns (h_matrix, []) — empty list for API compat with dream.
+        Agent and goal are pooled from FRAME 0 ONLY (clean start positions).
+        Walls are pooled from ALL frames (static across frames anyway).
+        T is embedded directly as a path-length feature.
+        Returns (h_matrix, []).
         """
         B, T, H, W = x.shape
         device = x.device
 
         r_idx = th.arange(H, device=device)[None, None, :, None].expand(B, T, H, W)
         c_idx = th.arange(W, device=device)[None, None, None, :].expand(B, T, H, W)
+        pos_e = self.row_embed(r_idx) + self.col_embed(c_idx)   # (B,T,H,W,nembd)
 
-        e = (self.row_embed(r_idx) +
-             self.col_embed(c_idx) +
-             self.val_embed(x.clamp(0, self.vocabsize - 1)))   # (B, T, H, W, nembd)
+        # frame-0 position embeddings (B, 1, H, W, nembd)
+        pos_e0 = pos_e[:, :1, :, :, :]
+        x0 = x[:, :1, :, :]   # (B, 1, H, W)
 
-        mask = (x != 0).float().unsqueeze(-1)                  # (B, T, H, W, 1)
-        h_matrix = (e * mask).sum(dim=(1, 2, 3)) / mask.sum(dim=(1, 2, 3)).clamp(min=1)
+        parts = []
+        # agent and goal: pool from frame 0 only (unambiguous start positions)
+        for val in (1, 2):
+            mask = (x0 == val).float().unsqueeze(-1)             # (B,1,H,W,1)
+            h = (pos_e0 * mask).sum(dim=(1,2,3)) / mask.sum(dim=(1,2,3)).clamp(min=1)
+            parts.append(h)                                       # (B, nembd)
+
+        # walls: pool from all frames (walls are static; all-frame sum just reinforces)
+        mask_w = (x == 3).float().unsqueeze(-1)                  # (B,T,H,W,1)
+        h_wall = (pos_e * mask_w).sum(dim=(1,2,3)) / mask_w.sum(dim=(1,2,3)).clamp(min=1)
+        parts.append(h_wall)                                      # (B, nembd)
+
+        # T embedding: direct path-length signal for detour detection
+        t_idx = th.full((B,), T - 1, dtype=th.long, device=device).clamp(
+            max=self.t_embed.num_embeddings - 1)
+        parts.append(self.t_embed(t_idx))                         # (B, nembd)
+
+        h_matrix = th.cat(parts, dim=-1)   # (B, 4*nembd)
         return h_matrix, []
 
     def node_state(self, node_idx, slot, h_parent):
@@ -779,6 +790,10 @@ class MatRecognitionModel(nn.Module):
             h_parent = th.zeros(B, self.nembd, device=x.device)
         dsl_logits = self.head(th.cat([matrix_h, h_parent], dim=-1))
         return dsl_logits, []
+
+    @property
+    def mat_embed_size(self):
+        return self.mat_emb
 
 def sample(ps):
     if ps[0] < 0:
@@ -805,12 +820,14 @@ def dream(D, soltrees=[]):
     opt = th.optim.Adam(qmodel.parameters())
     paths, paths_terminal = makepaths(D, th.ones(len(D)))
 
-    tbar = trange(100)
+    tbar = trange(300)
     for _ in tbar:
-        trees = [newtree(D, mat, paths, paths_terminal, depth=10) for _ in range(4)]
         if len(soltrees) > 0:
-            for i in randint(len(soltrees), size=4):
-                trees.append(soltrees[i])
+            # Train purely on solution trees so Q concentrates on task structure.
+            # Random trees add noise that competes with the solution signal.
+            trees = [soltrees[i] for i in randint(len(soltrees), size=8)]
+        else:
+            trees = [newtree(D, mat, paths, paths_terminal, depth=10) for _ in range(8)]
 
         opt.zero_grad()
 
@@ -1021,7 +1038,7 @@ def make_nav_tasks(n=12, size=6, n_walls=6, seed=0):
     return tasks
 
 
-def make_false_belief_task(size=6, n_phantoms=1, seed=None, min_dist=None):
+def make_false_belief_task(size=6, n_phantoms=1, seed=None, min_dist=None, return_meta=False):
     """Generate a false belief navigation task.
 
     The agent navigates optimally on their BELIEVED grid (which has phantom
@@ -1029,13 +1046,14 @@ def make_false_belief_task(size=6, n_phantoms=1, seed=None, min_dist=None):
     only agent (1) and goal (2) — phantom walls are hidden — so the path
     appears suboptimal on the blank actual grid.
 
-    Solution program: hide_walls(nav_unfold(believed_grid, T))
+    Solution program: believed_nav_unfold(place_wall(place_ag(blank,...),pwr,pwc), T)
 
     Bootstrap fails: reading frame 0 finds no walls, so the bootstrapped
     0-wall solution produces the optimal path, which doesn't match X.
     ECD must search over phantom wall positions to explain the detour.
 
     Returns (T, size, size) int array, or None if no valid layout found.
+    If return_meta=True, returns (x, {'agent', 'goal', 'phantom_walls'}) or None.
     """
     from collections import deque
 
@@ -1103,25 +1121,95 @@ def make_false_belief_task(size=6, n_phantoms=1, seed=None, min_dist=None):
             x[t, goal[0], goal[1]] = 2 if (ar, ac) != goal else 1
             x[t, ar, ac] = 1
 
+        if return_meta:
+            return x, {'agent': agent, 'goal': goal, 'phantom_walls': list(phantom_walls)}
         return x
 
     return None
 
 
-def make_false_belief_tasks(n=6, size=6, n_phantoms=1, seed=0):
+def make_false_belief_tasks(n=6, size=6, n_phantoms=1, seed=0, return_meta=False):
     "generate n false belief tasks, retrying on failures"
     rng = np.random.default_rng(seed)
     tasks = []
     attempt = 0
     while len(tasks) < n:
         t = make_false_belief_task(size=size, n_phantoms=n_phantoms,
-                                   seed=int(rng.integers(1<<31)))
+                                   seed=int(rng.integers(1<<31)),
+                                   return_meta=return_meta)
         attempt += 1
         if t is not None:
             tasks.append(t)
     print(f"generated {n} false-belief tasks ({attempt} attempts, {size}x{size}, "
           f"{n_phantoms} phantom wall(s))")
     return tasks
+
+
+def bootstrap_false_belief_solutions(task_phantoms, D):
+    """Construct believed_nav_unfold solutions analytically for false-belief tasks.
+
+    task_phantoms: list of (x, meta) pairs where x is (T,H,W) and
+                   meta = {'agent', 'goal', 'phantom_walls'} from make_false_belief_task.
+    Returns dict of mat_key -> solution tree for tasks that validate correctly.
+    """
+    def find_d(repr_name):
+        for d in D.ds:
+            if getattr(d, 'repr', '') == repr_name:
+                return d
+        return None
+
+    def int_d(v):
+        for d in D.ds:
+            if d.type == int and d.tailtypes is None and d.head == v:
+                return deepcopy(d)
+        return None
+
+    d_bnav  = find_d('believed_nav_unfold')
+    d_ag    = find_d('place_ag')
+    d_wall  = find_d('place_wall')
+    d_blank = find_d('blank')
+
+    if any(d is None for d in [d_bnav, d_ag, d_wall, d_blank]):
+        print("bootstrap_false_belief_solutions: missing required primitives")
+        return {}
+
+    sols = {}
+    for x, meta in task_phantoms:
+        T = x.shape[0]
+        ar, ac = meta['agent']
+        gr, gc = meta['goal']
+        phantom_walls = meta['phantom_walls']
+
+        if int_d(T) is None or int_d(ar) is None or int_d(ac) is None:
+            continue
+        if int_d(gr) is None or int_d(gc) is None:
+            continue
+
+        ag_node = deepcopy(d_ag)
+        ag_node.tails = [deepcopy(d_blank), int_d(ar), int_d(ac), int_d(gr), int_d(gc)]
+        grid_node = ag_node
+
+        ok = True
+        for wr, wc in phantom_walls:
+            if int_d(wr) is None or int_d(wc) is None:
+                ok = False; break
+            pw = deepcopy(d_wall)
+            pw.tails = [grid_node, int_d(wr), int_d(wc)]
+            grid_node = pw
+
+        if not ok:
+            continue
+
+        root = deepcopy(d_bnav)
+        root.tails = [grid_node, int_d(T)]
+        try:
+            if np.array_equal(root(), x):
+                sols[mat_key(x)] = root
+        except Exception:
+            pass
+
+    print(f"bootstrap_false_belief: seeded {len(sols)}/{len(task_phantoms)} tasks")
+    return sols
 
 ###################################################################################
 
@@ -1130,6 +1218,11 @@ if __name__ == '__main__':
     a Deltas object D is an instance of a DSL
     it's initiated with core primitives
     """
+    # 4x4 grids: coordinates 0-3, path lengths up to ~7, so ints 0-7 suffice.
+    # Smaller int space means enumeration reaches window 5-7 in 120s.
+    # Once Q trains on 0-wall seeds it learns to read entity positions from the
+    # matrix, collapsing the visible coords (ar,ac,gr,gc,wr,wc) to near-zero
+    # effective cost and leaving only T unknown — dropping to window ~3.
     D = Deltas([
         # mat construction
         Delta(believed_nav_unfold, mat, [grid, int],           repr='believed_nav_unfold'),
@@ -1137,14 +1230,14 @@ if __name__ == '__main__':
         Delta(nav_unfold,      mat,  [grid, int],              repr='nav_unfold'),
         Delta(unfold,          mat,  [grid, int, fn],          repr='unfold'),
         # grid primitives
-        Delta(blank66,         grid,                            repr='blank'),
+        Delta(blank44,         grid,                            repr='blank'),
         Delta(gset,            grid, [grid, int, int, int],    repr='gset'),
         Delta(place_agent_goal,grid, [grid, int, int, int, int], repr='place_ag'),
         Delta(place_wall,      grid, [grid, int, int],         repr='place_wall'),
         # intentional motion
         Delta(approach,        fn,   [int, int],               repr='approach'),
         Delta(approach(1, 2),  fn,                             repr='navigate'),
-        # int terminals
+        # int terminals: 0-7 covers 4x4 coords (0-3) and typical path lengths
         Delta(0,  int, repr='0'),
         Delta(1,  int, repr='1'),
         Delta(2,  int, repr='2'),
@@ -1157,16 +1250,28 @@ if __name__ == '__main__':
         Delta(9,  int, repr='9'),
     ])
 
-    Xs = (make_nav_tasks(n=6, size=6, n_walls=0, seed=0) +
-          make_nav_tasks(n=6, size=6, n_walls=1, seed=1) +
-          make_nav_tasks(n=6, size=6, n_walls=2, seed=2) +
-          make_false_belief_tasks(n=6, size=6, n_phantoms=1, seed=4))
-    print(f"{len(Xs)} tasks, shapes: {[x.shape for x in Xs]}")
+    # Generate false-belief tasks with metadata so we can bootstrap the first half.
+    # The second half (fb_tasks[3:]) is left for ECD to discover.
+    fb_tasks_meta = make_false_belief_tasks(n=6, size=4, n_phantoms=1, seed=4,
+                                            return_meta=True)
+    Xs_fb = [x for x, _ in fb_tasks_meta]
 
-    seeds = bootstrap_nav_solutions(Xs, D)
+    Xs = (make_nav_tasks(n=6, size=4, n_walls=0, seed=0) +
+          make_nav_tasks(n=6, size=4, n_walls=1, seed=1) +
+          make_nav_tasks(n=6, size=4, n_walls=2, seed=2) +
+          Xs_fb)
+    print(f"{len(Xs)} tasks, shapes: {[x.shape for x in Xs[:4]]}")
+
+    # Bootstrap all 18 nav tasks (0+1+2 wall) analytically — gives Q position
+    # embeddings at every nav tree depth.  Then seed 3/6 false-belief tasks so Q
+    # learns to assign probability to believed_nav_unfold.  ECD must find the
+    # remaining 3 false-belief tasks, driving at least a few ECD iterations.
+    nav_seeds = bootstrap_nav_solutions(Xs, D, max_walls=2)
+    fb_seeds  = bootstrap_false_belief_solutions(fb_tasks_meta[:4], D)
+    seeds = {**nav_seeds, **fb_seeds}
     print(f"bootstrapped {len(seeds)}/{len(Xs)} solutions")
 
-    Z, rewritten_map = ECD(Xs, D, per_task_timeout=60, max_iterations=10, seeds=seeds)
+    Z, rewritten_map = ECD(Xs, D, per_task_timeout=120, max_iterations=10, seeds=seeds)
     for k, v in Z.items():
         if v is not None:
             print(f'solution: {v}')

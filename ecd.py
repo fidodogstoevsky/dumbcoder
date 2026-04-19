@@ -637,12 +637,12 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
         return q
 
     def task_Q(x):
-        "return a TreeQ (or flat uniform tensor) for tree-conditioned enumeration"
+        "return a flat log-prob tensor for this task's matrix"
         if Qmodel is None:
             return uniform_type_q()
         with th.no_grad():
-            mat_h, _ = Qmodel.encode_matrix(tc_mat(x)[None])
-        return TreeQ(Qmodel, mat_h)
+            logits = Qmodel(tc_mat(x)[None])          # (1, nd)
+            return F.log_softmax(logits.squeeze(0), dim=-1)   # (nd,)
 
     while idx < max_iterations:
         unsolved = [x for x in Xs if mat_key(x) not in sols]
@@ -684,7 +684,7 @@ def mat_key(x):
 
 
 class MatRecognitionModel(nn.Module):
-    """Recognition model with symbolic grid encoder and top-down Tree GRU program encoder.
+    """Recognition model: flat matrix-conditioned Q.
 
     Grid encoder:
       h_agent0 = mean(row_embed + col_embed) over FRAME-0 agent cells  (start pos)
@@ -693,42 +693,33 @@ class MatRecognitionModel(nn.Module):
       h_T      = t_embed[T-1]                                           (path length)
       h_matrix = concat([h_agent0, h_goal0, h_wall, h_T])  — shape (B, 4*nembd)
 
-      Frame-0 pooling for agent/goal gives unambiguous start coordinates (not
-      diluted by the trajectory), which is critical for false-belief tasks where
-      the agent detoures and the multi-frame mean drifts away from the start.
+      Frame-0 pooling gives unambiguous start coordinates.
+      h_T encodes path length — false-belief tasks have T > Manhattan distance,
+      letting Q learn "long T → believed_nav_unfold" even with invisible phantom walls.
 
-      h_T gives Q a direct detour-detection signal: for false-belief tasks T is
-      larger than the Manhattan distance to goal, whereas for 0-wall nav T equals
-      the Manhattan distance.  This lets Q learn "long T for given agent-goal
-      distance → believed_nav_unfold".
+    Prediction (flat, no tree context):
+      dsl_logits = head(h_matrix)   — (nd,)
 
-    Program encoder (top-down Tree GRU):
-      h_node = tree_rnn(prog_embed[d] + slot_embed[k], h_parent)
-
-    Prediction:
-      dsl_logits = head(concat(h_matrix, h_parent))   — (4*nembd + nembd)
+    This flat Q is computed ONCE per task and reused for all enumeration decisions.
+    Eliminating the per-node GRU passes avoids both the 20× enumeration slowdown
+    and the depth-generalization failure of tree-conditioned Q.
     """
-    def __init__(self, nd, max_coord=16, vocabsize=10, nembd=64, max_slots=8, max_t=24):
+    def __init__(self, nd, max_coord=16, vocabsize=10, nembd=64, max_t=24):
         super().__init__()
         self.nembd = nembd
         self.mat_emb = 4 * nembd   # frame0_agent + frame0_goal + all_wall + T
         self.nd = nd
         self.vocabsize = vocabsize
 
-        # symbolic grid encoder (position only; entity type handled by separate pooling)
+        # symbolic grid encoder
         self.row_embed = nn.Embedding(max_coord, nembd)
         self.col_embed = nn.Embedding(max_coord, nembd)
 
-        # path-length embedding for detour detection
+        # path-length embedding
         self.t_embed = nn.Embedding(max_t, nembd)
 
-        # top-down tree GRU
-        self.prog_embed = nn.Embedding(nd, nembd)
-        self.slot_embed = nn.Embedding(max_slots, nembd)
-        self.tree_rnn = nn.GRUCell(nembd, nembd)
-
-        # DSL logits from concat(h_matrix, h_parent): (4*nembd + nembd) -> nd
-        self.head = nn.Linear(self.mat_emb + nembd, nd)
+        # flat DSL logits: h_matrix -> nd
+        self.head = nn.Linear(self.mat_emb, nd)
 
         print(f'{sum(p.numel() for p in self.parameters()) / 2**20:.2f}M params')
 
@@ -771,25 +762,10 @@ class MatRecognitionModel(nn.Module):
         h_matrix = th.cat(parts, dim=-1)   # (B, 4*nembd)
         return h_matrix, []
 
-    def node_state(self, node_idx, slot, h_parent):
-        """Compute child hidden state from parent node primitive and slot index.
-
-        node_idx: (B,) long  — DSL index of the parent node
-        slot:     (B,) long  — which child-slot of the parent we're filling
-        h_parent: (B, nembd) — parent's hidden state (zeros at root)
-        Returns:  (B, nembd)
-        """
-        e = self.prog_embed(node_idx) + self.slot_embed(slot.clamp(max=self.slot_embed.num_embeddings - 1))
-        return self.tree_rnn(e, h_parent)
-
-    def forward(self, x, h_parent=None):
-        "(B,T,H,W), (B,nembd)|None -> dsl_logits (B,nd), []"
+    def forward(self, x):
+        "(B,T,H,W) -> dsl_logits (B,nd)"
         matrix_h, _ = self.encode_matrix(x)
-        B = x.shape[0]
-        if h_parent is None:
-            h_parent = th.zeros(B, self.nembd, device=x.device)
-        dsl_logits = self.head(th.cat([matrix_h, h_parent], dim=-1))
-        return dsl_logits, []
+        return self.head(matrix_h)
 
     @property
     def mat_embed_size(self):
@@ -843,38 +819,26 @@ def dream(D, soltrees=[]):
             if not isinstance(out, np.ndarray) or 0 in out.shape or out.shape[0] < 2:
                 continue
 
-            x = tc_mat(out)[None].to(device)          # (1, T, H, W)
-            matrix_h, _ = qmodel.encode_matrix(x)     # (1, nembd)
+            x = tc_mat(out)[None].to(device)   # (1, T, H, W)
+            dsl_logits = qmodel(x)             # (1, nd)
 
-            # top-down DFS: predict each node given (matrix_h, h_parent),
-            # then compute h_child = tree_rnn(embed(d) + slot(k), h_parent)
-            # for each child slot k before recursing into it.
-            h0 = th.zeros(1, qmodel.nembd, device=device)
-            accum = [node_loss, n_nodes]   # mutable refs threaded through visit
+            # flat Q: predict each node in the tree using the same matrix embedding.
+            # No tree-context GRU — avoids depth-generalization failure and per-node
+            # forward-pass overhead during enumeration.
+            accum = [node_loss, n_nodes]
 
-            def visit(node, h_parent, slot):
+            def visit(node):
                 idx = D.index(node)
                 if idx is not None:
-                    dsl_logits = qmodel.head(th.cat([matrix_h, h_parent], dim=-1))
                     accum[0] = accum[0] + F.cross_entropy(
                         dsl_logits, tensor([idx], device=device)
                     )
                     accum[1] += 1
-
                 if node.tails:
-                    if idx is not None:
-                        # compute this node's own hidden state from its primitive
-                        # and the slot it fills in *its* parent, then use it as
-                        # h_parent for each child
-                        idx_t  = tensor([idx],  device=device)
-                        slot_t = tensor([slot], device=device)
-                        h_node = qmodel.node_state(idx_t, slot_t, h_parent)
-                    else:
-                        h_node = h_parent
-                    for k, child in enumerate(node.tails):
-                        visit(child, h_node, k)
+                    for child in node.tails:
+                        visit(child)
 
-            visit(tree, h0, 0)
+            visit(tree)
             node_loss = accum[0]
             n_nodes   = accum[1]
 

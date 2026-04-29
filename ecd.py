@@ -358,9 +358,39 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
 
     # Register each abstraction in D in discovery order so that later
     # abstractions can reference earlier ones during parsing.
+    # Also track skipped partial-application bodies so their references in
+    # rewritten programs can be inline-expanded rather than lost entirely.
+    skipped_bodies = {}  # name -> stitch body string (with #i holes, not $i)
+
+    def expand_skipped(prog_str):
+        """Inline-expand references to skipped abstractions.
+
+        Stitch may skip an abstraction like fn_3: (#0 1 5) but still rewrite
+        programs as (fn_3 place_wall).  We substitute the arguments into the
+        saved body to recover (place_wall 1 5) which is then parseable.
+        Iterates until no more expansions are possible (abstractions can nest).
+        """
+        import re
+        changed = True
+        while changed:
+            changed = False
+            for name, body in skipped_bodies.items():
+                pattern = rf'\({re.escape(name)}((?:\s+\S+)*)\)'
+                def replacer(m, body=body):
+                    args = m.group(1).split()
+                    result = body
+                    for i, arg in enumerate(args):
+                        result = result.replace(f'#{i}', arg)
+                    return result
+                new = re.sub(pattern, replacer, prog_str)
+                if new != prog_str:
+                    prog_str, changed = new, True
+        return prog_str
+
     for abs_result in result.abstractions:
         # stitch uses #i for argument holes; todelta() expects $i
         body_str = abs_result.body
+        body_str_dollar = body_str  # preserve #i version for skipped_bodies
         for i in range(abs_result.arity):
             body_str = body_str.replace(f'#{i}', f'${i}')
 
@@ -369,6 +399,7 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
         except Exception as e:
             print(f"skipping abstraction '{abs_result.name}' — "
                   f"could not parse body '{body_str}': {e}")
+            skipped_bodies[abs_result.name] = body_str_dollar
             continue
 
         # Mark $i placeholders as typed holes so typize() can collect them
@@ -381,9 +412,10 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
             # 0-arity stitch abstractions are either partial applications of
             # multi-arg primitives (e.g. (iterate 1 (gset ...)) with only 2 of
             # 4 args) or constants whose numpy-array head breaks D.index after
-            # deepcopy.  Skip them entirely.
+            # deepcopy.  Skip them entirely, but save the body for expansion.
             print(f"skipping abstraction '{name}': {abs_result.body} — no typed holes found "
                   f"(partial application or unannotatable constant)")
+            skipped_bodies[name] = body_str_dollar
             continue
         else:
             df = Delta(name, type=hiddentail.type, tailtypes=tailtypes,
@@ -393,11 +425,13 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
         D.add(df)
         print(f"added abstraction {name}: {abs_result.body}  [{df.type}]")
 
-    # Parse stitch's rewritten programs as the new compressed tree corpus
+    # Parse stitch's rewritten programs as the new compressed tree corpus.
+    # For programs referencing skipped abstractions, inline-expand them first.
     new_trees = []
     for prog_str in result.rewritten:
+        expanded = expand_skipped(prog_str)
         try:
-            tree = tr(D, prog_str)
+            tree = tr(D, expanded)
             if strip_singleton:
                 # re-wrap the grid tree with singleton
                 wrapper = deepcopy(singleton_d)
@@ -406,7 +440,11 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
             freeze(tree)
             new_trees.append(tree)
         except Exception as e:
-            print(f"could not parse rewritten program '{prog_str}': {e}")
+            if expanded != prog_str:
+                print(f"could not parse rewritten program '{prog_str}' "
+                      f"(expanded: '{expanded}'): {e}")
+            else:
+                print(f"could not parse rewritten program '{prog_str}': {e}")
 
     print(f"stitch compression took {(time() - ghosttime)/60:.2f}m")
     # Fall back to original trees for Q training if most rewrites failed to parse
@@ -687,15 +725,19 @@ class MatRecognitionModel(nn.Module):
     """Recognition model: flat matrix-conditioned Q.
 
     Grid encoder:
-      h_agent0 = mean(row_embed + col_embed) over FRAME-0 agent cells  (start pos)
-      h_goal0  = mean(row_embed + col_embed) over FRAME-0 goal cells   (start pos)
-      h_wall   = mean(row_embed + col_embed) over ALL-frame wall cells  (wall pos)
-      h_T      = t_embed[T-1]                                           (path length)
-      h_matrix = concat([h_agent0, h_goal0, h_wall, h_T])  — shape (B, 4*nembd)
+      h_agent0    = mean(row_embed + col_embed) over FRAME-0 agent cells  (start pos)
+      h_goal0     = mean(row_embed + col_embed) over FRAME-0 goal cells   (start pos)
+      h_wall      = mean(row_embed + col_embed) over ALL-frame wall cells  (wall pos)
+      h_agent_all = mean(row_embed + col_embed) over ALL-frame agent cells (traj mean)
+      h_T         = t_embed[T-1]                                           (path length)
+      h_matrix = concat([h_agent0, h_goal0, h_wall, h_agent_all, h_T])  — (B, 5*nembd)
 
-      Frame-0 pooling gives unambiguous start coordinates.
-      h_T encodes path length — false-belief tasks have T > Manhattan distance,
-      letting Q learn "long T → believed_nav_unfold" even with invisible phantom walls.
+      Frame-0 gives unambiguous start coordinates.
+      h_agent_all captures trajectory shape: a detour path yields a different mean
+      agent position from a straight-line path even when T and start/goal are identical
+      (e.g. detour (0,3)→(0,2)→(1,2)→(2,2) has mean (0.75,2.25) while straight
+      (0,3)→(1,3)→(2,3)→(2,2) has mean (1.25,2.75)).  This is the key signal for
+      distinguishing false-belief tasks where T = Manhattan distance.
 
     Prediction (flat, no tree context):
       dsl_logits = head(h_matrix)   — (nd,)
@@ -707,7 +749,7 @@ class MatRecognitionModel(nn.Module):
     def __init__(self, nd, max_coord=16, vocabsize=10, nembd=64, max_t=24):
         super().__init__()
         self.nembd = nembd
-        self.mat_emb = 4 * nembd   # frame0_agent + frame0_goal + all_wall + T
+        self.mat_emb = 5 * nembd   # frame0_agent + frame0_goal + all_wall + all_agent + T
         self.nd = nd
         self.vocabsize = vocabsize
 
@@ -754,12 +796,20 @@ class MatRecognitionModel(nn.Module):
         h_wall = (pos_e * mask_w).sum(dim=(1,2,3)) / mask_w.sum(dim=(1,2,3)).clamp(min=1)
         parts.append(h_wall)                                      # (B, nembd)
 
+        # all-frame agent mean: encodes trajectory shape (differs between detour and
+        # straight path even when T and start/goal positions are the same).
+        # e.g. detour (0,3)→(0,2)→(1,2)→(2,2) has mean (0.75, 2.25) while
+        # straight (0,3)→(1,3)→(2,3)→(2,2) has mean (1.25, 2.75).
+        mask_a = (x == 1).float().unsqueeze(-1)                  # (B,T,H,W,1)
+        h_agent_all = (pos_e * mask_a).sum(dim=(1,2,3)) / mask_a.sum(dim=(1,2,3)).clamp(min=1)
+        parts.append(h_agent_all)                                 # (B, nembd)
+
         # T embedding: direct path-length signal for detour detection
         t_idx = th.full((B,), T - 1, dtype=th.long, device=device).clamp(
             max=self.t_embed.num_embeddings - 1)
         parts.append(self.t_embed(t_idx))                         # (B, nembd)
 
-        h_matrix = th.cat(parts, dim=-1)   # (B, 4*nembd)
+        h_matrix = th.cat(parts, dim=-1)   # (B, 5*nembd)
         return h_matrix, []
 
     def forward(self, x):
@@ -796,7 +846,7 @@ def dream(D, soltrees=[]):
     opt = th.optim.Adam(qmodel.parameters())
     paths, paths_terminal = makepaths(D, th.ones(len(D)))
 
-    tbar = trange(300)
+    tbar = trange(600)
     for _ in tbar:
         if len(soltrees) > 0:
             # Train purely on solution trees so Q concentrates on task structure.

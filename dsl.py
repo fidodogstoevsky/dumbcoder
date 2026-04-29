@@ -122,6 +122,24 @@ def approach(agent_val, goal_val):
         return _approach_grid(g, agent_val, goal_val)
     return _approach
 
+# ── goal algebra ───────────────────────────────────────────────────────────────
+
+def exists(v):
+    "int -> fn_pred: True if any cell in the grid equals v"
+    def _exists(g):
+        return bool(np.any(g == v))
+    return _exists
+
+def be_at(target_val):
+    "int -> fn: move agent (value 1) one BFS step toward target_val"
+    return approach(1, target_val)
+
+def if_goal(pred, goal1, goal2):
+    "fn_pred, fn, fn -> fn: each step apply goal1 if pred(grid) else goal2"
+    def _if(g):
+        return goal1(g) if pred(g) else goal2(g)
+    return _if
+
 # ── fn2 terminals (grid -> grid -> grid) ──────────────────────────────────────
 
 def _overlay(g1, g2):

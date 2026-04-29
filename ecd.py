@@ -1329,6 +1329,10 @@ if __name__ == '__main__':
         # intentional motion
         Delta(approach,        fn,   [int, int],               repr='approach'),
         Delta(approach(1, 2),  fn,                             repr='navigate'),
+        # goal algebra: if(exists(3), be_at(3), be_at(2)) etc.
+        Delta(exists,          fn_pred, [int],                 repr='exists'),
+        Delta(be_at,           fn,      [int],                 repr='be_at'),
+        Delta(if_goal,         fn,      [fn_pred, fn, fn],     repr='if'),
         # int terminals: 0-7 covers 4x4 coords (0-3) and typical path lengths
         Delta(0,  int, repr='0'),
         Delta(1,  int, repr='1'),

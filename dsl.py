@@ -8,6 +8,7 @@ grid     = 'grid'     # 2d numpy array (H, W)
 fn       = 'fn'       # grid -> grid
 fn2      = 'fn2'      # grid -> grid -> grid
 fn_pred  = 'fn_pred'  # grid -> bool
+goal     = 'goal'     # goal specification (interpreted by optimize)
 
 # int is used as a type string too
 # direction is used as a type string
@@ -100,7 +101,8 @@ def _approach_grid(g, agent_val, goal_val):
             break
         for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
             nb = (pos[0] + dr, pos[1] + dc)
-            if 0 <= nb[0] < h and 0 <= nb[1] < w and nb not in visited and g[nb[0], nb[1]] != 3:
+            if (0 <= nb[0] < h and 0 <= nb[1] < w and nb not in visited
+                    and (g[nb[0], nb[1]] != 3 or nb == goal)):
                 visited.add(nb)
                 queue.append((nb, (dr, dc) if step is None else step))
     if first_step is None:
@@ -139,6 +141,35 @@ def if_goal(pred, goal1, goal2):
     def _if(g):
         return goal1(g) if pred(g) else goal2(g)
     return _if
+
+# ── goal type and optimize ─────────────────────────────────────────────────────
+# goal is a declarative specification of what the agent wants to achieve.
+# optimize(g) → fn converts a goal spec into an executable step function.
+# This separates *what* (goal) from *how* (optimize), allowing ECD to compose
+# goals independently and letting optimize be the single locus of planning logic.
+
+def at(target_val):
+    "int -> goal: agent (value 1) should reach cell with value target_val"
+    return ('at', target_val)
+
+def if_else(pred, goal_then, goal_else):
+    "fn_pred, goal, goal -> goal: conditional goal — use goal_then if pred else goal_else"
+    return ('if', pred, goal_then, goal_else)
+
+def optimize(goal_spec):
+    "goal -> fn: BFS-optimal step function that pursues goal_spec each frame"
+    def _step(g):
+        kind = goal_spec[0]
+        if kind == 'at':
+            _, target = goal_spec
+            return _approach_grid(g, 1, target)
+        elif kind == 'if':
+            _, pred, g_then, g_else = goal_spec
+            active = g_then if pred(g) else g_else
+            return optimize(active)(g)
+        else:
+            raise ValueError(f"optimize: unknown goal kind '{kind}'")
+    return _step
 
 # ── fn2 terminals (grid -> grid -> grid) ──────────────────────────────────────
 

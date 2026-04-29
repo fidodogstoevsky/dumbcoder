@@ -1333,6 +1333,10 @@ if __name__ == '__main__':
         Delta(exists,          fn_pred, [int],                 repr='exists'),
         Delta(be_at,           fn,      [int],                 repr='be_at'),
         Delta(if_goal,         fn,      [fn_pred, fn, fn],     repr='if'),
+        # goal type + optimize: declarative goals compiled to step functions
+        Delta(at,              goal,    [int],                 repr='at'),
+        Delta(if_else,         goal,    [fn_pred, goal, goal], repr='if_else'),
+        Delta(optimize,        fn,      [goal],                repr='optimize'),
         # int terminals: 0-7 covers 4x4 coords (0-3) and typical path lengths
         Delta(0,  int, repr='0'),
         Delta(1,  int, repr='1'),

@@ -78,3 +78,31 @@ The actual fix: inline-expand skipped abstractions
   tasks.
 
   The inline-expansion approach recovers these rewritten programs without needing currying.
+
+  - skipped_bodies dict: collects the stitch body string (with \#i holes) for every abstraction that
+  gets skipped — both parse failures and 0-arity/partial-application cases.
+  - expand_skipped(prog_str): iterates re.sub until stable. The regex `\(fn_3(\s+\S+)*\)` captures the
+  arguments, then substitutes \#0, \#1, ... into the saved body. So (fn_3 place_wall) with body (\#0 1 5)
+  → (place_wall 1 5). The loop handles nesting: if a skipped abstraction references another skipped
+  abstraction, multiple passes resolve it.
+  - Applied before parsing each rewritten program: expanded = expand_skipped(prog_str), then tr(D,
+  expanded). If expansion produces a parseable program, it joins the training corpus. The error message
+   also shows the expanded form to make failures easier to debug.
+
+
+
+   === Actually
+
+   Got rid of the regex, replaced with s expression parser
+
+
+ fn_1: (\#0 1 0) has the hole \#0 in head/function position — (\$0 1 0) means "call \$0 as a function with
+   args 1, 0". Your DSL has fixed-head trees where the head is always a known primitive, so there's no
+  type to assign to a hole-as-head. typize walks the tree looking for \$i placeholders and infers their
+  type from the parent's tailtypes — but a hole in head position has no parent tailtype entry, so it
+  collects zero typed holes.
+
+  This was always going to be skipped. What changed with the fix is the consequence: previously,
+  rewritten programs referencing fn_1 would fail to parse and be dropped. Now they get inline-expanded
+  ((fn_1 place_wall) → (place_wall 1 0)) and parse fine. The skip message is correct and expected —
+  fn_1 is genuinely unrepresentable as a DSL primitive. It just no longer causes downstream failures.

@@ -362,35 +362,113 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
     # rewritten programs can be inline-expanded rather than lost entirely.
     skipped_bodies = {}  # name -> stitch body string (with #i holes, not $i)
 
+    def _parse_sexp(s, i):
+        """Parse one s-expression from s starting at position i.
+        Skips leading spaces.  Returns (token_str, end_pos) or (None, i).
+        Handles nested parentheses correctly — unlike regex, won't consume
+        closing parens that belong to the outer expression.
+        """
+        while i < len(s) and s[i] == ' ':
+            i += 1
+        if i >= len(s) or s[i] == ')':
+            return None, i
+        if s[i] == '(':
+            start, depth = i, 0
+            while i < len(s):
+                if s[i] == '(':
+                    depth += 1
+                elif s[i] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        return s[start:i+1], i+1
+                i += 1
+            return s[start:], i   # unbalanced — return what we have
+        else:
+            start = i
+            while i < len(s) and s[i] not in ' ()':
+                i += 1
+            return s[start:i], i
+
     def expand_skipped(prog_str):
         """Inline-expand references to skipped abstractions.
 
-        Stitch may skip an abstraction like fn_3: (#0 1 5) but still rewrite
-        programs as (fn_3 place_wall).  We substitute the arguments into the
-        saved body to recover (place_wall 1 5) which is then parseable.
-        Iterates until no more expansions are possible (abstractions can nest).
+        Stitch may skip fn_X but still rewrite programs using it.  Two cases:
+
+        1. Template hole: fn_1: (#0 1 0), used as (fn_1 place_wall)
+           → substitute #0 → (place_wall 1 0)
+
+        2. Partial application: fn_6: (place_ag blank), used as (fn_6 0 3 3 1)
+           → no #i holes, extra args appended inside body's outermost parens
+           → (place_ag blank 0 3 3 1)
+
+        Uses a proper s-expression parser so nested parens in arguments are
+        handled correctly (unlike regex which misidentifies ) as a non-whitespace
+        argument token and swallows the tail of the enclosing expression).
         """
-        import re
+        def expand_once(s):
+            result = []
+            i = 0
+            while i < len(s):
+                if s[i] == '(':
+                    # check whether this is a call to a skipped abstraction
+                    for name, body in skipped_bodies.items():
+                        prefix = '(' + name
+                        end_name = i + len(prefix)
+                        if (s[i:end_name] == prefix and
+                                (end_name >= len(s) or s[end_name] in ' )')):
+                            # parse arguments until the matching close paren
+                            pos = end_name
+                            args = []
+                            while pos < len(s) and s[pos] != ')':
+                                arg, pos = _parse_sexp(s, pos)
+                                if arg is None:
+                                    break
+                                args.append(arg)
+                            if pos < len(s) and s[pos] == ')':
+                                end = pos + 1
+                                # count #i holes in body
+                                arity = 0
+                                while f'#{arity}' in body:
+                                    arity += 1
+                                # substitute #i → args[i]
+                                expanded = body
+                                for j in range(min(arity, len(args))):
+                                    expanded = expanded.replace(f'#{j}', args[j])
+                                # extra args beyond arity: append into body's
+                                # outermost (...) — handles partial applications
+                                # like (fn_6 a b c) where fn_6 = (place_ag blank)
+                                extra = args[arity:]
+                                if extra and expanded.startswith('(') and expanded.endswith(')'):
+                                    expanded = expanded[:-1] + ' ' + ' '.join(extra) + ')'
+                                result.append(expanded)
+                                i = end
+                                break
+                    else:
+                        result.append(s[i])
+                        i += 1
+                else:
+                    result.append(s[i])
+                    i += 1
+            return ''.join(result)
+
         changed = True
         while changed:
-            changed = False
-            for name, body in skipped_bodies.items():
-                pattern = rf'\({re.escape(name)}((?:\s+\S+)*)\)'
-                def replacer(m, body=body):
-                    args = m.group(1).split()
-                    result = body
-                    for i, arg in enumerate(args):
-                        result = result.replace(f'#{i}', arg)
-                    return result
-                new = re.sub(pattern, replacer, prog_str)
-                if new != prog_str:
-                    prog_str, changed = new, True
+            new = expand_once(prog_str)
+            changed = new != prog_str
+            prog_str = new
         return prog_str
 
     for abs_result in result.abstractions:
         # stitch uses #i for argument holes; todelta() expects $i
         body_str = abs_result.body
         body_str_dollar = body_str  # preserve #i version for skipped_bodies
+
+        # Inline-expand any skipped abstractions referenced inside this body
+        # before attempting to register it.  Needed when a later abstraction's
+        # body references an earlier skipped one (e.g. fn_3 body uses fn_1).
+        body_str = expand_skipped(body_str)
+        body_str_dollar = body_str  # save expanded #i form for future expansions
+
         for i in range(abs_result.arity):
             body_str = body_str.replace(f'#{i}', f'${i}')
 

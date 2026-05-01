@@ -990,25 +990,6 @@ def make_task(path, size=4):
         x[t, r, c] = 1
     return x
 
-    # Xs = [
-    #     make_task([(0,0),(0,1),(0,2),(0,3)]),  # right, row 0
-    #     make_task([(1,0),(1,1),(1,2),(1,3)]),  # right, row 1
-    #     make_task([(2,0),(2,1),(2,2),(2,3)]),  # right, row 2
-    #     make_task([(3,0),(3,1),(3,2),(3,3)]),  # right, row 3
-    #     make_task([(0,3),(0,2),(0,1),(0,0)]),  # left, row 0
-    #     make_task([(1,3),(1,2),(1,1),(1,0)]),  # left, row 1
-    #     make_task([(2,3),(2,2),(2,1),(2,0)]),  # left, row 2
-    #     make_task([(3,3),(3,2),(3,1),(3,0)]),  # left, row 3
-    #     make_task([(0,0),(1,0),(2,0),(3,0)]),  # down, col 0
-    #     make_task([(0,1),(1,1),(2,1),(3,1)]),  # down, col 1
-    #     make_task([(0,2),(1,2),(2,2),(3,2)]),  # down, col 2
-    #     make_task([(0,3),(1,3),(2,3),(3,3)]),  # down, col 3
-    #     make_task([(3,0),(2,0),(1,0),(0,0)]),  # up, col 0
-    #     make_task([(3,1),(2,1),(1,1),(0,1)]),  # up, col 1
-    #     make_task([(3,2),(2,2),(1,2),(0,2)]),  # up, col 2
-    #     make_task([(3,3),(2,3),(1,3),(0,3)]),  # up, col 3
-    # ]
-
 def simple_walk_tasks(size):
     """create size*2*2 tasks: walk each direction of each row/col"""
     tasks = []
@@ -1236,7 +1217,10 @@ def make_false_belief_tasks(n=6, size=6, n_phantoms=1, seed=0, return_meta=False
 
 
 def bootstrap_false_belief_solutions(task_phantoms, D):
-    """Construct believed_nav_unfold solutions analytically for false-belief tasks.
+    """Construct hide_walls(unfold(believed_grid, T, navigate)) solutions for false-belief tasks.
+
+    believed_grid encodes both agent/goal positions and phantom walls.
+    hide_walls strips the phantom walls from the output, matching the task matrix.
 
     task_phantoms: list of (x, meta) pairs where x is (T,H,W) and
                    meta = {'agent', 'goal', 'phantom_walls'} from make_false_belief_task.
@@ -1254,12 +1238,14 @@ def bootstrap_false_belief_solutions(task_phantoms, D):
                 return deepcopy(d)
         return None
 
-    d_bnav  = find_d('believed_nav_unfold')
-    d_ag    = find_d('place_ag')
-    d_wall  = find_d('place_wall')
-    d_blank = find_d('blank')
+    d_hide   = find_d('hide_walls')
+    d_unfold = find_d('unfold')
+    d_nav    = find_d('navigate')
+    d_ag     = find_d('place_ag')
+    d_wall   = find_d('place_wall')
+    d_blank  = find_d('blank')
 
-    if any(d is None for d in [d_bnav, d_ag, d_wall, d_blank]):
+    if any(d is None for d in [d_hide, d_unfold, d_nav, d_ag, d_wall, d_blank]):
         print("bootstrap_false_belief_solutions: missing required primitives")
         return {}
 
@@ -1290,8 +1276,10 @@ def bootstrap_false_belief_solutions(task_phantoms, D):
         if not ok:
             continue
 
-        root = deepcopy(d_bnav)
-        root.tails = [grid_node, int_d(T)]
+        unfold_node = deepcopy(d_unfold)
+        unfold_node.tails = [grid_node, int_d(T), deepcopy(d_nav)]
+        root = deepcopy(d_hide)
+        root.tails = [unfold_node]
         try:
             if np.array_equal(root(), x):
                 sols[mat_key(x)] = root
@@ -1315,7 +1303,6 @@ if __name__ == '__main__':
     # effective cost and leaving only T unknown — dropping to window ~3.
     D = Deltas([
         # mat construction
-        Delta(believed_nav_unfold, mat, [grid, int],           repr='believed_nav_unfold'),
         Delta(hide_walls,      mat,  [mat],                    repr='hide_walls'),
         Delta(nav_unfold,      mat,  [grid, int],              repr='nav_unfold'),
         Delta(unfold,          mat,  [grid, int, fn],          repr='unfold'),

@@ -20,10 +20,6 @@ RIGHT   = ( 0,  1)
 LEFT    = ( 0, -1)
 UP      = (-1,  0)
 DOWN    = ( 1,  0)
-# DIAG_DR = ( 1,  1)
-# DIAG_DL = ( 1, -1)
-# DIAG_UR = (-1,  1)
-# DIAG_UL = (-1, -1)
 
 # ── grid primitives ────────────────────────────────────────────────────────────
 
@@ -65,12 +61,6 @@ def _step_grid(g, v, d):
         if 0 <= nr < h and 0 <= nc < w:
             out[nr, nc] = v
     return out
-
-def step_fn(v, d):
-    "int, direction -> fn: returns grid->grid that moves value v in direction d"
-    def _step(g):
-        return _step_grid(g, v, d)
-    return _step
 
 def compose(f, g):
     "fn, fn -> fn: returns h where h(x) = g(f(x))"
@@ -289,10 +279,6 @@ nonempty = _nonempty  # fn_pred terminal
 
 # ── mat construction ───────────────────────────────────────────────────────────
 
-# def singleton(g):
-#     "grid -> mat: wrap a single grid as a 1-frame matrix"
-#     return g[np.newaxis].copy()
-
 def place_agent_goal(g, ar, ac, gr, gc):
     "grid, int,int,int,int -> grid: place agent(1) at (ar,ac) and goal(2) at (gr,gc) on g"
     return gset(gset(g, ar, ac, 1), gr, gc, 2)
@@ -318,26 +304,6 @@ def hide_walls(m):
     out = m.copy()
     out[out == 3] = 0
     return out
-
-def believed_nav_unfold(g, n):
-    "grid, int -> mat: nav_unfold from agent's believed grid, hiding phantom walls from output"
-    return hide_walls(nav_unfold(g, n))
-
-def map_mat(f, m):
-    "fn, mat -> mat: apply f to each frame"
-    return np.stack([f(m[t]) for t in range(m.shape[0])])
-
-def zip_mat(f, m1, m2):
-    "fn2, mat, mat -> mat: combine frames pairwise with f"
-    if m1.shape != m2.shape:
-        raise ValueError(f"zip_mat shape mismatch {m1.shape} {m2.shape}")
-    return np.stack([f(m1[t], m2[t]) for t in range(m1.shape[0])])
-
-def fold_mat(f, acc, m):
-    "fn2, grid, mat -> grid: fold mat frames into single grid"
-    for t in range(m.shape[0]):
-        acc = f(acc, m[t])
-    return acc
 
 def filter_mat(pred, m):
     "fn_pred, mat -> mat: keep only frames where pred(frame) is True"
@@ -710,22 +676,6 @@ def typize(tree: Delta):
 
     return tailtypes
 
-def showoff_types(tree: Delta):
-    qq = [tree]
-    types = set()
-
-    while len(qq) > 0:
-        n = qq.pop(0)
-
-        types.add(n.type)
-
-        if not n.tails:
-            continue
-
-        for t in n.tails:
-            qq.append(t)
-
-    return types
 
 def alld(tree):
     "enumerate all heads in tree"

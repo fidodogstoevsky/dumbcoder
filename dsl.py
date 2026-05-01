@@ -9,6 +9,7 @@ fn       = 'fn'       # grid -> grid
 fn2      = 'fn2'      # grid -> grid -> grid
 fn_pred  = 'fn_pred'  # grid -> bool
 goal     = 'goal'     # goal specification (interpreted by optimize)
+know     = 'know'     # knowledge state: (believed_grid, observed_mask)
 
 # int is used as a type string too
 # direction is used as a type string
@@ -123,6 +124,103 @@ def approach(agent_val, goal_val):
     def _approach(g):
         return _approach_grid(g, agent_val, goal_val)
     return _approach
+
+# ── knowledge state ────────────────────────────────────────────────────────────
+# know = (believed_grid: ndarray, observed_mask: ndarray[bool])
+# believed_grid: what the agent thinks the world looks like (H, W) int
+# observed_mask: which cells have been directly observed (H, W) bool
+#
+# Construction: full_obs, partial_obs, assume
+# Queries:      k_exists, k_loc
+# Planning:     optimize_k converts a goal + knowledge state into a step fn
+
+def full_obs(g):
+    "grid -> know: agent has observed every cell; believed grid == actual grid"
+    return (g.copy(), np.ones(g.shape, dtype=bool))
+
+def partial_obs(g, rs, cs):
+    "grid, int list, int list -> know: agent has only observed cells at (rs[i], cs[i])"
+    believed = np.zeros_like(g)
+    mask = np.zeros(g.shape, dtype=bool)
+    for r, c in zip(rs, cs):
+        if 0 <= r < g.shape[0] and 0 <= c < g.shape[1]:
+            believed[r, c] = g[r, c]
+            mask[r, c] = True
+    return (believed, mask)
+
+def assume(k, r, c, v):
+    "know, int, int, int -> know: agent assumes cell (r,c) has value v"
+    believed, mask = k
+    b2 = believed.copy()
+    if 0 <= r < b2.shape[0] and 0 <= c < b2.shape[1]:
+        b2[r, c] = v
+    return (b2, mask)
+
+def k_exists(k, v):
+    "know, int -> bool: agent believes value v is present somewhere"
+    believed, _ = k
+    return bool(np.any(believed == v))
+
+def k_loc(k, v):
+    "know, int -> (int, int) or None: first believed location of value v"
+    believed, _ = k
+    locs = list(zip(*np.where(believed == v)))
+    return locs[0] if locs else None
+
+def k_exists_pred(v):
+    "int -> (know -> bool): curried k_exists for use as a goal predicate"
+    return lambda k: k_exists(k, v)
+
+def _approach_grid_on(g, believed, agent_val, goal_val):
+    "move agent_val in actual grid g one BFS step toward goal_val, planning on believed"
+    from collections import deque
+    h, w = believed.shape
+    agents = [(r, c) for r in range(h) for c in range(w) if g[r, c] == agent_val]
+    goals  = [(r, c) for r in range(h) for c in range(w) if believed[r, c] == goal_val]
+    if not agents or not goals:
+        return g.copy()
+    agent = agents[0]
+    goal  = goals[0]
+    if agent == goal:
+        return g.copy()
+    queue   = deque([(agent, None)])
+    visited = {agent}
+    first_step = None
+    while queue:
+        pos, step = queue.popleft()
+        if pos == goal:
+            first_step = step
+            break
+        for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            nb = (pos[0] + dr, pos[1] + dc)
+            if (0 <= nb[0] < h and 0 <= nb[1] < w and nb not in visited
+                    and (believed[nb[0], nb[1]] != 3 or nb == goal)):
+                visited.add(nb)
+                queue.append((nb, (dr, dc) if step is None else step))
+    if first_step is None:
+        return g.copy()
+    dr, dc = first_step
+    nr, nc = agent[0] + dr, agent[1] + dc
+    out = g.copy()
+    out[agent[0], agent[1]] = 0
+    out[nr, nc] = agent_val
+    return out
+
+def optimize_k(goal_spec, k):
+    "goal, know -> fn: BFS-optimal step fn planning on the believed grid in k"
+    believed, _ = k
+    def _step(g):
+        kind = goal_spec[0]
+        if kind == 'at':
+            _, target = goal_spec
+            return _approach_grid_on(g, believed, 1, target)
+        elif kind == 'if':
+            _, pred, g_then, g_else = goal_spec
+            active = g_then if pred(k) else g_else
+            return optimize_k(active, k)(g)
+        else:
+            raise ValueError(f"optimize_k: unknown goal kind '{kind}'")
+    return _step
 
 # ── goal algebra ───────────────────────────────────────────────────────────────
 

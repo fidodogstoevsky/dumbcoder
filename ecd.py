@@ -311,8 +311,6 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
       2. run stitch_core.compress() to discover reusable fragments
       3. parse each abstraction body, infer argument types, register in D
       4. parse stitch's rewritten programs as the new tree corpus
-
-    Falls back to saturate() if stitch_core is not installed.
     """
     try:
         import stitch_core
@@ -350,7 +348,7 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
           f"(iterations={iterations}, max_arity={max_arity})")
 
     result = stitch_core.compress(programs, iterations=iterations,
-                                  max_arity=max_arity, silent=True)
+                                  max_arity=max_arity, silent=True, eta_long=True, no_mismatch_check=True)
 
     if not result.abstractions:
         print("stitch found no useful abstractions")
@@ -1337,6 +1335,11 @@ if __name__ == '__main__':
         Delta(at,              goal,    [int],                 repr='at'),
         Delta(if_else,         goal,    [fn_pred, goal, goal], repr='if_else'),
         Delta(optimize,        fn,      [goal],                repr='optimize'),
+        # knowledge state: (believed_grid, observed_mask)
+        Delta(full_obs,        know,    [grid],                repr='full_obs'),
+        Delta(assume,          know,    [know, int, int, int], repr='assume'),
+        Delta(k_exists_pred,   fn_pred, [int],                 repr='k_exists'),
+        Delta(optimize_k,      fn,      [goal, know],          repr='optimize_k'),
         # int terminals: 0-7 covers 4x4 coords (0-3) and typical path lengths
         Delta(0,  int, repr='0'),
         Delta(1,  int, repr='1'),

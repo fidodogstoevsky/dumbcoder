@@ -1,4 +1,4 @@
-== Wednesday, April 29th
+= Fixing Stitch problems
 
 Stitch represents abstractions in lambda calculus, where a hole can appear in function position like ```(#0 1 5)``` which means "apply function $lambda$0 to arguments 1 and 5"
 
@@ -91,7 +91,7 @@ The actual fix: inline-expand skipped abstractions
 
 
 
-   === Actually
+*actually....*
 
    Got rid of the regex, replaced with s expression parser
 
@@ -106,3 +106,148 @@ The actual fix: inline-expand skipped abstractions
   rewritten programs referencing fn_1 would fail to parse and be dropped. Now they get inline-expanded
   ((fn_1 place_wall) → (place_wall 1 0)) and parse fine. The skip message is correct and expected —
   fn_1 is genuinely unrepresentable as a DSL primitive. It just no longer causes downstream failures.
+
+= New DSL
+
+Keep:
+- blank, gset, place_wall, place_agent_goal (grid construction)
+- unfold (generic iteration)
+- approach (generic move A toward B one step)
+- navigate (convenience terminal, just approach(1,2))
+- exists (generic grid predicate)
+- if_goal/if_else (generic conditionals)
+
+remove:
+- nav_unfold (pre-packages intention)
+- hide_walls (encodes observer perspective) replace with mask(mat,val)
+- at, optimize, goal type (pre-packages desire)
+- full_obs, assume, optimize_k, know type (belief)
+
+= New Test Suite
+
+=== round 1
+
+6 total tasks
+- 3 nav (0 wall)
+- 3 false-belief
+
+bootstrap the 3 nav tasks, see if ECD can find the 3 false-belief tasks
+
+hypothesis: expected discovery is:
+  mask(unfold(believed_grid, T, navigate), 3) where believed_grid has phantom walls
+
+test so that the hypothesis is the only clean explanation
+of the false belief tasks
+
+Q trains on unfold(place_ag(...), T, navigate),
+must discover that mask(unfold(place_wall(place_ag(...), ...), T, navigate), 3) explains the detour trajectories
+
+=== round 2
+
+increased to 12 nav seeds. But stitch didn't discover abstractions. all 12 programs have the same top-level structure `(unfold (place_ag blank ...) T navigate)` but stitch finds no useful abstraction because `T` varies and the int coordinates vary. Stitch's compression metric is based on size reduction; abstracting `(unfold #0 #1 navigate)` would save nothing since the holes just push the varying parts up. The shared parts (`unfold, blank, navigate, place_ag`) are all single-token terminals — there's no repeated subtree to compress.
+
+= May 8
+
+Belief: a primitive that captures which grid drives the agent's trajectory
+
+== phases
+
+== primitive encoding of grids, remove bootstrapping
+
+rather than needing to find the encoding of the starting grid (as `(place_ag blank 3 3 2 0)` for example) by enumerating coordinates, the starting grid is encoded as a task-specific primitive
+
+- each task `Xs[i]` gets a terminal `Delta(x[0], grid, repr='ig_i')` 
+- stitch sees distinct tokens per task, so it creates holes for them `fn_nav($grid, $T) = (unfold $grid $T navigate)`
+- so ECD only searches over T and step functions
+- for false belief tasks, it searches over phantom wall position (since that's invisible in `x[0]`)
+
+so no bootstrapping, ECD discovers everything
+
+== removing `T`
+
+rather than needing to enumerate ints to find the timespan `T` over which to unfold (how many grids in the sequence), when evaluating a candidate program just run it for as many timesteps as are in the target task
+
+- added `unfold_auto(grid, fn)` to `dsl.py` which reads a module-level `_unfold_steps`
+- in exploration, before enumerating each task, set `_unfold_steps` to `x.shape[0]` which is the `T` dimension of the task matrix x. So the found program should unfold for exactly as many steps as are in the target matrix. 
+- in dreaming, set `_unfold_steps` to a sampled `T` when evaluating solution trees (dream just needs a valid input, it doesn't need a precise T)
+- so instead of `Delta(unfold, mat, [grid, int, fn])` we have `Delta(unfold_auto, mat, [grid, fn])` (but for simplicty we rename `unfold_auto` to `unfold`)
+
+=== phase 1
+
+mvp
+
+_Tasks :_ 10 navs on $4 times 4$ grids with a fixed 2-cell vertical barrier at $(1,2),(2,2)$.
+
+`
+0 0 0 0
+0 3 3 0
+0 0 0 0
+0 0 0 0
+`
+
+Each task gets a task-specific terminal `ig_i = x[0]` (agent + goal + walls).
+
+All tasks solved instantly in enumeration, after just two trees. Solutions:
+
+- `(unfold ig_0 navigate)`
+- `(unfold ig_1 navigate)`
+- etc
+
+So stitch abstracts
+`fn_0: (unfold #0 navigate)  [mat]`
+
+and programs are rewritten
+
+- `(fn_0 ig_0)`
+- `(fn_0 ig_1)`
+
+it's just a nav primitive paramterised over the initial grid. 
+
+=== phase 2
+
+dataset:
+- 8 nav tasks $4 times 4$, one wall
+- 20 false-belief tasks $4 times 4$, one phantom wall
+
+DSL:
+- 20 core primitives
+- 28 task-specific terminals
+
+i.e. the initial grid $x[0]$ that the system sees as a terminal primitive contains just the agent and goal, walls aren't visible to the system. This is the "true" grid, the grid that the system sees with its own "eyes". 
+
+_Explore 0_
+
+just as before, the system immediately finds `(unfold ig_0 navigate)` etc for each of the 8 simple nav tasks.
+
+then to solve the false belief tasks, it enumerates about 1.2 million trees. it doesn't find anything so it moves to compression.
+
+_Compress 0_
+
+stitch abstracts `fn_0: (unfold #0 navigate)  [mat]` as it did in phase 1. 
+
+_Explore 1_
+
+then in the new ECD iteration, the system finds solutions to the false belief tasks within $1000$ to $2000$ trees.
+
+- `(mask (fn_0 (place_wall ig_8 2 1)) 3)`
+- `(mask (fn_0 (place_wall ig_9 2 1)) 3)`
+- `(mask (fn_0 (place_wall ig_10 1 1)) 3)`
+- etc
+
+_Compress 1_
+
+Stitch finds
+
+`fn_0  [<class 'int'>, <class 'int'>, grid]
+  body: (mask (unfold (place_wall $2 $1 $0) navigate) 3)`
+
+and 
+
+`fn_2  [grid]
+  body: (unfold $0 navigate)`
+
+along with some other useless coincidental abstractions (baked-in column values)
+
+if run with capped iterations `saturate_stitch(D, sols, iterations=2)`, iteration 1 finds the general belief primitive `fn_0($grid, $pwr, $pwc)` and nav `fn_1($grid)`
+
+

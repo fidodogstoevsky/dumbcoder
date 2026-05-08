@@ -115,6 +115,40 @@ class Deltas:
         self.infer()
 
 
+def task_terminals(Xs, mode='full'):
+    """Create one task-specific grid terminal per task.
+
+    Each terminal evaluates to a slice of the task's first frame, giving ECD
+    the initial world state without requiring coordinate enumeration.
+
+    mode='full'  — terminal = x[0]  (agent + goal + walls)
+                   Use for nav and false-belief tasks.
+                   Solution: (unfold ig_i T navigate) or
+                             (mask (unfold (place_wall ig_i pwr pwc) T navigate) 3)
+
+    mode='agent' — terminal = x[0] with goal cells zeroed out  (agent + walls only)
+                   Use for desire tasks.
+                   Solution: (unfold (gset ig_i gr gc gv) T (approach 1 gv))
+                   This preserves the shared gv variable — it appears in both
+                   gset (world representation) and approach (behaviour), which is
+                   the structural signature of desire.
+
+    Returns a list of Delta terminals in the same order as Xs.
+    Repr is 'ig_{i}' so stitch treats each as a distinct token and creates
+    a grid-typed hole when the same program structure recurs across tasks.
+    """
+    terminals = []
+    for i, x in enumerate(Xs):
+        frame = x[0].copy()
+        if mode == 'agent':
+            # zero out all non-agent, non-wall cells so goal_val is not baked in
+            agent_val = 1
+            wall_val  = 3
+            frame[(frame != agent_val) & (frame != wall_val)] = 0
+        terminals.append(Delta(frame, grid, repr=f'ig_{i}'))
+    return terminals
+
+
 def makepaths(D, Q):
     Paths = [[] for i in range(len(D))]
     Paths_terminal = [[] for i in range(len(D))]
@@ -278,6 +312,30 @@ def penumerate(D, n, nlogp, budget, paths, maxdepth=3):
         n.tails = args
         yield logp, deepcopy(n)
 
+def _unsatisfied_tailtypes(tree):
+    """Return the list of tailtypes for arg slots not yet filled in tree (BFS).
+
+    When stitch creates a partial-application abstraction — e.g. fn_0 whose body
+    is (unfold (grid_expr) (int_expr)) with unfold's fn slot empty — the missing
+    slot's type is not captured by typize (which only sees $i holes).  This
+    function collects those missing types so they can be appended to tailtypes,
+    making the invented primitive usable during enumeration and correctly typed
+    during annotation of later abstractions that call it with the extra args.
+    """
+    result = []
+    qq = [tree]
+    while qq:
+        n = qq.pop(0)
+        if n.tailtypes:
+            n_filled = len(n.tails) if n.tails else 0
+            for i in range(n_filled, len(n.tailtypes)):
+                result.append(n.tailtypes[i])
+        if n.tails:
+            for t in n.tails:
+                qq.append(t)
+    return result
+
+
 def _annotate_holes(D, tree):
     """BFS over a parsed abstraction body tree.
     Propagates the expected type (from each parent's tailtypes) down to
@@ -348,8 +406,9 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
           f"(iterations={iterations}, max_arity={max_arity})")
 
     result = stitch_core.compress(programs, iterations=iterations,
-                                  max_arity=max_arity, silent=True, eta_long=True, no_mismatch_check=True)
+                                  max_arity=max_arity, silent=True)
 
+    print(f"stitch returned {len(result.abstractions)} abstractions")
     if not result.abstractions:
         print("stitch found no useful abstractions")
         return trees, [str(t) for t in trees]
@@ -482,6 +541,9 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
         _annotate_holes(D, hiddentail)
 
         tailtypes = typize(hiddentail)
+        # Append types for any arg slots left unsatisfied in the hiddentail
+        # (e.g. unfold's fn slot when stitch creates a partial-application body).
+        tailtypes = tailtypes + _unsatisfied_tailtypes(hiddentail)
 
         name = abs_result.name  # e.g. "fn_0", "fn_1", ...
         if len(tailtypes) == 0:
@@ -528,7 +590,7 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
     training_trees = new_trees if len(new_trees) * 2 >= len(trees) else trees
     print(f"using {len(training_trees)}/{len(trees)} trees for Q training "
           f"({'rewritten' if training_trees is new_trees else 'original'})")
-    return training_trees, result.rewritten
+    return training_trees, [str(t) for t in new_trees]
 
 
 def needle(D, n, paths, paths_terminal, depth=0):
@@ -581,6 +643,10 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
     probability budgets (LOGPGAP * idx to LOGPGAP * (idx+1)), so it tries
     the most probable programs first and fans out.
     Stops when all matrices in Xs are solved or timeout is hit."""
+    import dsl as _dsl
+    if len(Xs) == 1:
+        _dsl._unfold_steps = Xs[0].shape[0]
+
     print(f'{len(D)=}')
 
     cnt = 0
@@ -655,78 +721,13 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
         D.pop(ephermal)
 
+    _dsl._unfold_steps = None
+
     took = time() - stime
     print(f'total: {cnt}, took: {took/60:.1f}m, iter: {cnt/(took+1e-9):.0f}/s', flush=True)
     print(f'solved: {sum(mat_key(x) in solutions for x in Xs)}/{len(Xs)}', flush=True)
     return solutions
 
-
-def bootstrap_nav_solutions(Xs, D, max_walls=1):
-    """Construct nav solutions analytically for tasks with at most max_walls visible walls.
-
-    Tasks with more walls (and false-belief tasks) are left for ECD.
-    The Q model, trained on these seeds, learns to read entity and wall positions
-    from the matrix encoder, concentrating probability on the visible coordinates
-    and reducing effective search window from ~10 to ~3 for harder tasks.
-
-    max_walls: bootstrap tasks with this many walls or fewer (default 1).
-    """
-    def find_d(repr_name):
-        for d in D.ds:
-            if getattr(d, 'repr', '') == repr_name:
-                return d
-        return None
-
-    def int_d(v):
-        for d in D.ds:
-            if d.type == int and d.tailtypes is None and d.head == v:
-                return deepcopy(d)
-        return None
-
-    d_nav   = find_d('nav_unfold')
-    d_ag    = find_d('place_ag')
-    d_wall  = find_d('place_wall')
-    d_blank = find_d('blank')
-
-    sols = {}
-    for x in Xs:
-        frame = x[0]
-        T = x.shape[0]
-        agent = [(r,c) for r in range(frame.shape[0]) for c in range(frame.shape[1]) if frame[r,c] == 1]
-        goal  = [(r,c) for r in range(frame.shape[0]) for c in range(frame.shape[1]) if frame[r,c] == 2]
-        walls = [(r,c) for r in range(frame.shape[0]) for c in range(frame.shape[1]) if frame[r,c] == 3]
-
-        # Only bootstrap up to max_walls; leave harder tasks for ECD
-        if len(walls) > max_walls:
-            continue
-
-        if not agent or not goal or int_d(T) is None:
-            continue
-        ar, ac = agent[0];  gr, gc = goal[0]
-
-        ag_node = deepcopy(d_ag)
-        ag_node.tails = [deepcopy(d_blank), int_d(ar), int_d(ac), int_d(gr), int_d(gc)]
-        grid_node = ag_node
-
-        for wr, wc in walls:
-            if int_d(wr) is None or int_d(wc) is None or d_wall is None:
-                grid_node = None; break
-            pw = deepcopy(d_wall)
-            pw.tails = [grid_node, int_d(wr), int_d(wc)]
-            grid_node = pw
-
-        if grid_node is None:
-            continue
-
-        root = deepcopy(d_nav)
-        root.tails = [grid_node, int_d(T)]
-        try:
-            if np.array_equal(root(), x):
-                sols[mat_key(x)] = root
-        except Exception:
-            pass
-
-    return sols
 
 
 def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, seeds=None):
@@ -753,10 +754,24 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
     def task_Q(x):
         "return a flat log-prob tensor for this task's matrix"
         if Qmodel is None:
-            return uniform_type_q()
-        with th.no_grad():
-            logits = Qmodel(tc_mat(x)[None])          # (1, nd)
-            return F.log_softmax(logits.squeeze(0), dim=-1)   # (nd,)
+            q = uniform_type_q()
+        else:
+            with th.no_grad():
+                logits = Qmodel(tc_mat(x)[None])          # (1, nd)
+                q = F.log_softmax(logits.squeeze(0), dim=-1)   # (nd,)
+
+        # Mask out ig terminals that don't belong to this task.
+        # ig_i terminals are task-specific grid constants; only the one whose
+        # value equals x[0] is valid for this task.  All others get -inf so
+        # they are never enumerated, keeping the search budget on structure.
+        q = q.clone()
+        for d in D.ds:
+            if (getattr(d, 'repr', '').startswith('ig_')
+                    and d.tailtypes is None
+                    and not np.array_equal(d.head, x[0])):
+                q[D.index(d)] = -np.inf
+
+        return q
 
     while idx < max_iterations:
         unsolved = [x for x in Xs if mat_key(x) not in sols]
@@ -766,12 +781,17 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
         for x in unsolved:
             if mat_key(x) in sols:
                 continue  # may have been solved by an earlier task in this round
-            sols = solve_enumeration([x], D, task_Q(x), sols,
+            # After several iterations a task-specific Q can actively hurt
+            # exploration by concentrating mass far from the solution.
+            # Fall back to a type-uniform Q for persistently unsolved tasks
+            # so that all program structures remain reachable.
+            q = task_Q(x) if idx < 3 else uniform_type_q()
+            sols = solve_enumeration([x], D, q, sols,
                                      maxdepth=10, timeout=t, budget=budget)
 
         soltrees = [s for s in sols.values() if s is not None]
         if len(soltrees) > 0:
-            trees, rewritten_strs = saturate_stitch(D, sols)
+            trees, rewritten_strs = saturate_stitch(D, sols, iterations=2)
         else:
             trees, rewritten_strs = [], []
 
@@ -915,6 +935,7 @@ def tc_mat(x, vocabsize=10):
     return th.from_numpy(np.clip(x, 0, vocabsize - 1).astype(np.int64))
 
 def dream(D, soltrees=[]):
+    import dsl as _dsl
     device = th.device('cuda' if th.cuda.is_available() else 'cpu')
 
     qmodel = MatRecognitionModel(len(D)).to(device)
@@ -938,9 +959,12 @@ def dream(D, soltrees=[]):
 
         for tree in trees:
             try:
+                _dsl._unfold_steps = int(randint(2, 9))
                 out = tree()
             except Exception:
                 continue
+            finally:
+                _dsl._unfold_steps = None
 
             if not isinstance(out, np.ndarray) or 0 in out.shape or out.shape[0] < 2:
                 continue
@@ -1109,6 +1133,86 @@ def make_nav_tasks(n=12, size=6, n_walls=6, seed=0):
     return tasks
 
 
+def make_fixed_wall_task(walls, size=4, seed=None, min_dist=None):
+    """Generate a nav task with fixed wall positions and variable agent/goal.
+
+    walls: sequence of (r, c) tuples — identical across every task in the corpus.
+    Agent and goal are placed randomly on free cells.
+    Because wall positions are hard-coded constants shared across all programs,
+    stitch can factor them into a reusable abstraction (unlike pure nav tasks
+    where only leaf integers vary).
+
+    Returns (T, size, size) int array, or None if no valid placement or path.
+    """
+    from collections import deque
+    if min_dist is None:
+        min_dist = size // 2
+
+    rng = np.random.default_rng(seed)
+    wall_set = set(map(tuple, walls))
+    free = [(r, c) for r in range(size) for c in range(size) if (r, c) not in wall_set]
+    rng.shuffle(free)
+
+    agent = goal = None
+    for i, a in enumerate(free):
+        for g in free[i+1:]:
+            if abs(a[0]-g[0]) + abs(a[1]-g[1]) >= min_dist:
+                agent, goal = a, g
+                break
+        if agent:
+            break
+    if agent is None:
+        return None
+
+    queue = deque([(agent, [agent])])
+    visited = {agent}
+    path = None
+    while queue:
+        pos, cur = queue.popleft()
+        if pos == goal:
+            path = cur
+            break
+        for dr, dc in ((-1,0),(1,0),(0,-1),(0,1)):
+            nb = (pos[0]+dr, pos[1]+dc)
+            if (0 <= nb[0] < size and 0 <= nb[1] < size
+                    and nb not in wall_set and nb not in visited):
+                visited.add(nb)
+                queue.append((nb, cur + [nb]))
+
+    if path is None:
+        return None
+
+    T = len(path)
+    x = np.zeros((T, size, size), dtype=int)
+    for t, (ar, ac) in enumerate(path):
+        for wr, wc in wall_set:
+            x[t, wr, wc] = 3
+        gr, gc = goal
+        x[t, gr, gc] = 2 if (ar, ac) != goal else 1
+        x[t, ar, ac] = 1
+    return x
+
+
+def make_fixed_wall_tasks(n, walls, size=4, seed=0):
+    """Generate n nav tasks with fixed wall positions, variable agent/goal.
+
+    walls: sequence of (r, c) tuples fixed across all tasks.
+    Every solution program shares the same place_wall(…, r, c) subtrees,
+    giving stitch a concrete repeated structure to compress into an abstraction.
+    """
+    rng = np.random.default_rng(seed)
+    tasks = []
+    attempts = 0
+    while len(tasks) < n:
+        t = make_fixed_wall_task(walls, size=size, seed=int(rng.integers(1<<31)))
+        attempts += 1
+        if t is not None:
+            tasks.append(t)
+    wall_str = ' '.join(f'({r},{c})' for r, c in walls)
+    print(f"generated {n} fixed-wall tasks ({attempts} attempts, {size}x{size}, walls=[{wall_str}])")
+    return tasks
+
+
 def make_false_belief_task(size=6, n_phantoms=1, seed=None, min_dist=None, return_meta=False):
     """Generate a false belief navigation task.
 
@@ -1117,7 +1221,7 @@ def make_false_belief_task(size=6, n_phantoms=1, seed=None, min_dist=None, retur
     only agent (1) and goal (2) — phantom walls are hidden — so the path
     appears suboptimal on the blank actual grid.
 
-    Solution program: believed_nav_unfold(place_wall(place_ag(blank,...),pwr,pwc), T)
+    Solution program: mask(unfold(place_wall(place_ag(blank,...),pwr,pwc), T, navigate), 3)
 
     Bootstrap fails: reading frame 0 finds no walls, so the bootstrapped
     0-wall solution produces the optimal path, which doesn't match X.
@@ -1216,154 +1320,85 @@ def make_false_belief_tasks(n=6, size=6, n_phantoms=1, seed=0, return_meta=False
     return tasks
 
 
-def bootstrap_false_belief_solutions(task_phantoms, D):
-    """Construct hide_walls(unfold(believed_grid, T, navigate)) solutions for false-belief tasks.
 
-    believed_grid encodes both agent/goal positions and phantom walls.
-    hide_walls strips the phantom walls from the output, matching the task matrix.
+def make_desire_task(goal_val, size=4, seed=None, min_dist=None):
+    """Generate a desire task: agent(1) navigates toward goal(goal_val), no walls.
 
-    task_phantoms: list of (x, meta) pairs where x is (T,H,W) and
-                   meta = {'agent', 'goal', 'phantom_walls'} from make_false_belief_task.
-    Returns dict of mat_key -> solution tree for tasks that validate correctly.
+    goal_val: the value the agent is 'desiring' (e.g. 2, 4, 5 — not 3, which is walls).
+    The solution program uses gset to place agent and goal, and approach(1, goal_val)
+    as the step function — so goal_val appears twice, once in the world representation
+    and once in the agent's driving function.  That shared variable is the desire.
+
+    Returns (x, meta) where x is (T, size, size) and
+    meta = {'agent', 'goal', 'goal_val', 'T'}, or None on failure.
     """
-    def find_d(repr_name):
-        for d in D.ds:
-            if getattr(d, 'repr', '') == repr_name:
-                return d
+    from collections import deque
+    if min_dist is None:
+        min_dist = size // 2
+
+    rng = np.random.default_rng(seed)
+    cells = [(r, c) for r in range(size) for c in range(size)]
+    rng.shuffle(cells)
+
+    agent = goal_pos = None
+    for i, a in enumerate(cells):
+        for g in cells[i+1:]:
+            if abs(a[0]-g[0]) + abs(a[1]-g[1]) >= min_dist:
+                agent, goal_pos = a, g
+                break
+        if agent:
+            break
+    if agent is None:
         return None
 
-    def int_d(v):
-        for d in D.ds:
-            if d.type == int and d.tailtypes is None and d.head == v:
-                return deepcopy(d)
+    queue = deque([(agent, [agent])])
+    visited = {agent}
+    path = None
+    while queue:
+        pos, cur = queue.popleft()
+        if pos == goal_pos:
+            path = cur
+            break
+        for dr, dc in ((-1,0),(1,0),(0,-1),(0,1)):
+            nb = (pos[0]+dr, pos[1]+dc)
+            if 0 <= nb[0] < size and 0 <= nb[1] < size and nb not in visited:
+                visited.add(nb)
+                queue.append((nb, cur + [nb]))
+
+    if path is None:
         return None
 
-    d_hide   = find_d('hide_walls')
-    d_unfold = find_d('unfold')
-    d_nav    = find_d('navigate')
-    d_ag     = find_d('place_ag')
-    d_wall   = find_d('place_wall')
-    d_blank  = find_d('blank')
+    T = len(path)
+    x = np.zeros((T, size, size), dtype=int)
+    gr, gc = goal_pos
+    for t, (ar, ac) in enumerate(path):
+        x[t, gr, gc] = goal_val if (ar, ac) != goal_pos else 1
+        x[t, ar, ac] = 1
 
-    if any(d is None for d in [d_hide, d_unfold, d_nav, d_ag, d_wall, d_blank]):
-        print("bootstrap_false_belief_solutions: missing required primitives")
-        return {}
+    return x, {'agent': agent, 'goal': goal_pos, 'goal_val': goal_val, 'T': T}
 
-    sols = {}
-    for x, meta in task_phantoms:
-        T = x.shape[0]
-        ar, ac = meta['agent']
-        gr, gc = meta['goal']
-        phantom_walls = meta['phantom_walls']
 
-        if int_d(T) is None or int_d(ar) is None or int_d(ac) is None:
-            continue
-        if int_d(gr) is None or int_d(gc) is None:
-            continue
+def make_desire_tasks(n_per_goal, goal_vals=(2, 4, 5), size=4, seed=0):
+    """Generate desire tasks for each goal_val in goal_vals.
 
-        ag_node = deepcopy(d_ag)
-        ag_node.tails = [deepcopy(d_blank), int_d(ar), int_d(ac), int_d(gr), int_d(gc)]
-        grid_node = ag_node
+    n_per_goal tasks are generated per goal value, giving stitch enough variation
+    to discover the general desire abstraction: the shared goal_val variable
+    appearing in both gset(…, goal_val) and approach(1, goal_val).
 
-        ok = True
-        for wr, wc in phantom_walls:
-            if int_d(wr) is None or int_d(wc) is None:
-                ok = False; break
-            pw = deepcopy(d_wall)
-            pw.tails = [grid_node, int_d(wr), int_d(wc)]
-            grid_node = pw
+    goal_vals: avoid 3 (reserved for walls in approach's BFS).
+    """
+    rng = np.random.default_rng(seed)
+    tasks = []
+    for gv in goal_vals:
+        count = 0
+        while count < n_per_goal:
+            result = make_desire_task(gv, size=size, seed=int(rng.integers(1<<31)))
+            if result is not None:
+                tasks.append(result)
+                count += 1
+    print(f"generated {len(tasks)} desire tasks "
+          f"({n_per_goal}/goal_val, goal_vals={list(goal_vals)}, {size}x{size})")
+    return tasks
 
-        if not ok:
-            continue
-
-        unfold_node = deepcopy(d_unfold)
-        unfold_node.tails = [grid_node, int_d(T), deepcopy(d_nav)]
-        root = deepcopy(d_hide)
-        root.tails = [unfold_node]
-        try:
-            if np.array_equal(root(), x):
-                sols[mat_key(x)] = root
-        except Exception:
-            pass
-
-    print(f"bootstrap_false_belief: seeded {len(sols)}/{len(task_phantoms)} tasks")
-    return sols
 
 ###################################################################################
-
-if __name__ == '__main__':
-    """create an instance of the Deltas class, named D
-    a Deltas object D is an instance of a DSL
-    it's initiated with core primitives
-    """
-    # 4x4 grids: coordinates 0-3, path lengths up to ~7, so ints 0-7 suffice.
-    # Smaller int space means enumeration reaches window 5-7 in 120s.
-    # Once Q trains on 0-wall seeds it learns to read entity positions from the
-    # matrix, collapsing the visible coords (ar,ac,gr,gc,wr,wc) to near-zero
-    # effective cost and leaving only T unknown — dropping to window ~3.
-    D = Deltas([
-        # mat construction
-        Delta(hide_walls,      mat,  [mat],                    repr='hide_walls'),
-        Delta(nav_unfold,      mat,  [grid, int],              repr='nav_unfold'),
-        Delta(unfold,          mat,  [grid, int, fn],          repr='unfold'),
-        # grid primitives
-        Delta(blank44,         grid,                            repr='blank'),
-        Delta(gset,            grid, [grid, int, int, int],    repr='gset'),
-        Delta(place_agent_goal,grid, [grid, int, int, int, int], repr='place_ag'),
-        Delta(place_wall,      grid, [grid, int, int],         repr='place_wall'),
-        # intentional motion
-        Delta(approach,        fn,   [int, int],               repr='approach'),
-        Delta(approach(1, 2),  fn,                             repr='navigate'),
-        # goal algebra: if(exists(3), be_at(3), be_at(2)) etc.
-        Delta(exists,          fn_pred, [int],                 repr='exists'),
-        Delta(be_at,           fn,      [int],                 repr='be_at'),
-        Delta(if_goal,         fn,      [fn_pred, fn, fn],     repr='if'),
-        # goal type + optimize: declarative goals compiled to step functions
-        Delta(at,              goal,    [int],                 repr='at'),
-        Delta(if_else,         goal,    [fn_pred, goal, goal], repr='if_else'),
-        Delta(optimize,        fn,      [goal],                repr='optimize'),
-        # knowledge state: (believed_grid, observed_mask)
-        Delta(full_obs,        know,    [grid],                repr='full_obs'),
-        Delta(assume,          know,    [know, int, int, int], repr='assume'),
-        Delta(k_exists_pred,   fn_pred, [int],                 repr='k_exists'),
-        Delta(optimize_k,      fn,      [goal, know],          repr='optimize_k'),
-        # int terminals: 0-7 covers 4x4 coords (0-3) and typical path lengths
-        Delta(0,  int, repr='0'),
-        Delta(1,  int, repr='1'),
-        Delta(2,  int, repr='2'),
-        Delta(3,  int, repr='3'),
-        Delta(4,  int, repr='4'),
-        Delta(5,  int, repr='5'),
-        Delta(6,  int, repr='6'),
-        Delta(7,  int, repr='7'),
-        Delta(8,  int, repr='8'),
-        Delta(9,  int, repr='9'),
-    ])
-
-    # Generate false-belief tasks with metadata so we can bootstrap the first half.
-    # The second half (fb_tasks[3:]) is left for ECD to discover.
-    fb_tasks_meta = make_false_belief_tasks(n=6, size=4, n_phantoms=1, seed=4,
-                                            return_meta=True)
-    Xs_fb = [x for x, _ in fb_tasks_meta]
-
-    Xs = (make_nav_tasks(n=6, size=4, n_walls=0, seed=0) +
-          make_nav_tasks(n=6, size=4, n_walls=1, seed=1) +
-          make_nav_tasks(n=6, size=4, n_walls=2, seed=2) +
-          Xs_fb)
-    print(f"{len(Xs)} tasks, shapes: {[x.shape for x in Xs[:4]]}")
-
-    # Bootstrap all 18 nav tasks (0+1+2 wall) analytically — gives Q position
-    # embeddings at every nav tree depth.  Then seed 3/6 false-belief tasks so Q
-    # learns to assign probability to believed_nav_unfold.  ECD must find the
-    # remaining 3 false-belief tasks, driving at least a few ECD iterations.
-    nav_seeds = bootstrap_nav_solutions(Xs, D, max_walls=2)
-    fb_seeds  = bootstrap_false_belief_solutions(fb_tasks_meta[:4], D)
-    seeds = {**nav_seeds, **fb_seeds}
-    print(f"bootstrapped {len(seeds)}/{len(Xs)} solutions")
-
-    Z, rewritten_map = ECD(Xs, D, per_task_timeout=120, max_iterations=10, seeds=seeds)
-    for k, v in Z.items():
-        if v is not None:
-            print(f'solution: {v}')
-            if k in rewritten_map:
-                print(f'rewritten: {rewritten_map[k]}')

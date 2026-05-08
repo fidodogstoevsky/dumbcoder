@@ -8,8 +8,6 @@ grid     = 'grid'     # 2d numpy array (H, W)
 fn       = 'fn'       # grid -> grid
 fn2      = 'fn2'      # grid -> grid -> grid
 fn_pred  = 'fn_pred'  # grid -> bool
-goal     = 'goal'     # goal specification (interpreted by optimize)
-know     = 'know'     # knowledge state: (believed_grid, observed_mask)
 
 # int is used as a type string too
 # direction is used as a type string
@@ -115,104 +113,7 @@ def approach(agent_val, goal_val):
         return _approach_grid(g, agent_val, goal_val)
     return _approach
 
-# ── knowledge state ────────────────────────────────────────────────────────────
-# know = (believed_grid: ndarray, observed_mask: ndarray[bool])
-# believed_grid: what the agent thinks the world looks like (H, W) int
-# observed_mask: which cells have been directly observed (H, W) bool
-#
-# Construction: full_obs, partial_obs, assume
-# Queries:      k_exists, k_loc
-# Planning:     optimize_k converts a goal + knowledge state into a step fn
-
-def full_obs(g):
-    "grid -> know: agent has observed every cell; believed grid == actual grid"
-    return (g.copy(), np.ones(g.shape, dtype=bool))
-
-def partial_obs(g, rs, cs):
-    "grid, int list, int list -> know: agent has only observed cells at (rs[i], cs[i])"
-    believed = np.zeros_like(g)
-    mask = np.zeros(g.shape, dtype=bool)
-    for r, c in zip(rs, cs):
-        if 0 <= r < g.shape[0] and 0 <= c < g.shape[1]:
-            believed[r, c] = g[r, c]
-            mask[r, c] = True
-    return (believed, mask)
-
-def assume(k, r, c, v):
-    "know, int, int, int -> know: agent assumes cell (r,c) has value v"
-    believed, mask = k
-    b2 = believed.copy()
-    if 0 <= r < b2.shape[0] and 0 <= c < b2.shape[1]:
-        b2[r, c] = v
-    return (b2, mask)
-
-def k_exists(k, v):
-    "know, int -> bool: agent believes value v is present somewhere"
-    believed, _ = k
-    return bool(np.any(believed == v))
-
-def k_loc(k, v):
-    "know, int -> (int, int) or None: first believed location of value v"
-    believed, _ = k
-    locs = list(zip(*np.where(believed == v)))
-    return locs[0] if locs else None
-
-def k_exists_pred(v):
-    "int -> (know -> bool): curried k_exists for use as a goal predicate"
-    return lambda k: k_exists(k, v)
-
-def _approach_grid_on(g, believed, agent_val, goal_val):
-    "move agent_val in actual grid g one BFS step toward goal_val, planning on believed"
-    from collections import deque
-    h, w = believed.shape
-    agents = [(r, c) for r in range(h) for c in range(w) if g[r, c] == agent_val]
-    goals  = [(r, c) for r in range(h) for c in range(w) if believed[r, c] == goal_val]
-    if not agents or not goals:
-        return g.copy()
-    agent = agents[0]
-    goal  = goals[0]
-    if agent == goal:
-        return g.copy()
-    queue   = deque([(agent, None)])
-    visited = {agent}
-    first_step = None
-    while queue:
-        pos, step = queue.popleft()
-        if pos == goal:
-            first_step = step
-            break
-        for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-            nb = (pos[0] + dr, pos[1] + dc)
-            if (0 <= nb[0] < h and 0 <= nb[1] < w and nb not in visited
-                    and (believed[nb[0], nb[1]] != 3 or nb == goal)):
-                visited.add(nb)
-                queue.append((nb, (dr, dc) if step is None else step))
-    if first_step is None:
-        return g.copy()
-    dr, dc = first_step
-    nr, nc = agent[0] + dr, agent[1] + dc
-    out = g.copy()
-    out[agent[0], agent[1]] = 0
-    out[nr, nc] = agent_val
-    return out
-
-def optimize_k(goal_spec, k):
-    "goal, know -> fn: BFS-optimal step fn planning on the believed grid in k"
-    believed, _ = k
-    def _step(g):
-        kind = goal_spec[0]
-        if kind == 'at':
-            _, target = goal_spec
-            return _approach_grid_on(g, believed, 1, target)
-        elif kind == 'if':
-            _, pred, g_then, g_else = goal_spec
-            active = g_then if pred(k) else g_else
-            return optimize_k(active, k)(g)
-        else:
-            raise ValueError(f"optimize_k: unknown goal kind '{kind}'")
-    return _step
-
-# ── goal algebra ───────────────────────────────────────────────────────────────
+# ── conditionals ───────────────────────────────────────────────────────────────
 
 def exists(v):
     "int -> fn_pred: True if any cell in the grid equals v"
@@ -220,44 +121,11 @@ def exists(v):
         return bool(np.any(g == v))
     return _exists
 
-def be_at(target_val):
-    "int -> fn: move agent (value 1) one BFS step toward target_val"
-    return approach(1, target_val)
-
-def if_goal(pred, goal1, goal2):
-    "fn_pred, fn, fn -> fn: each step apply goal1 if pred(grid) else goal2"
+def if_fn(pred, f1, f2):
+    "fn_pred, fn, fn -> fn: apply f1 if pred(grid) else f2"
     def _if(g):
-        return goal1(g) if pred(g) else goal2(g)
+        return f1(g) if pred(g) else f2(g)
     return _if
-
-# ── goal type and optimize ─────────────────────────────────────────────────────
-# goal is a declarative specification of what the agent wants to achieve.
-# optimize(g) → fn converts a goal spec into an executable step function.
-# This separates *what* (goal) from *how* (optimize), allowing ECD to compose
-# goals independently and letting optimize be the single locus of planning logic.
-
-def at(target_val):
-    "int -> goal: agent (value 1) should reach cell with value target_val"
-    return ('at', target_val)
-
-def if_else(pred, goal_then, goal_else):
-    "fn_pred, goal, goal -> goal: conditional goal — use goal_then if pred else goal_else"
-    return ('if', pred, goal_then, goal_else)
-
-def optimize(goal_spec):
-    "goal -> fn: BFS-optimal step function that pursues goal_spec each frame"
-    def _step(g):
-        kind = goal_spec[0]
-        if kind == 'at':
-            _, target = goal_spec
-            return _approach_grid(g, 1, target)
-        elif kind == 'if':
-            _, pred, g_then, g_else = goal_spec
-            active = g_then if pred(g) else g_else
-            return optimize(active)(g)
-        else:
-            raise ValueError(f"optimize: unknown goal kind '{kind}'")
-    return _step
 
 # ── fn2 terminals (grid -> grid -> grid) ──────────────────────────────────────
 
@@ -293,16 +161,21 @@ def unfold(g, n, f):
         frames.append(g.copy())
     return np.stack(frames)
 
-def nav_unfold(g, n):
-    "grid, int -> mat: unfold g for n steps using navigate (agent 1 approaches goal 2)"
-    return unfold(g, n, approach(1, 2))
+# Set by solve_enumeration to the current task's T before each enumeration.
+_unfold_steps = None
+
+def unfold_auto(g, f):
+    "grid, fn -> mat: unfold for _unfold_steps frames (T injected by solve_enumeration)"
+    if _unfold_steps is None:
+        raise ValueError("unfold_auto: _unfold_steps not set")
+    return unfold(g, _unfold_steps, f)
 
 # ── mat transformations ────────────────────────────────────────────────────────
 
-def hide_walls(m):
-    "mat -> mat: remove wall cells (value 3) from all frames, leaving only agent and goal"
+def mask(m, v):
+    "mat, int -> mat: zero out all cells with value v across all frames"
     out = m.copy()
-    out[out == 3] = 0
+    out[out == v] = 0
     return out
 
 def filter_mat(pred, m):
@@ -468,7 +341,11 @@ def getast(expr):
 
         idx += 1
 
-    if isinstance(ast[0], list):
+    # Unwrap only when the entire expression was a single nested s-expression,
+    # e.g. getast('(fn_1 3 1)') called on the inner content of outer parens.
+    # Do NOT unwrap when there are trailing tokens, e.g. '(fn_1 3 1) 1 2 0'
+    # — those trailing tokens are additional arguments that must be preserved.
+    if len(ast) == 1 and isinstance(ast[0], list):
         return ast[0]
 
     return ast
@@ -496,7 +373,12 @@ def todelta(D, ast):
             idx += 1
 
         if len(args) > 0:
-            d.tails = args
+            # Append rather than overwrite — handles stitch's partial-application
+            # encoding where ((fn_1 3 1) 1 2 0) means fn_1 called with [3,1,1,2,0].
+            if d.tails:
+                d.tails = list(d.tails) + args
+            else:
+                d.tails = args
 
         newast.append(d)
 
@@ -512,7 +394,12 @@ def isequal(n1, n2):
         return n1.type == n2.type
 
     if n1.isarg and n2.isarg:
-        return n1.type == n2.type
+        return n1.head == n2.head and n1.type == n2.type
+
+    # An arg node can never equal a non-arg node; short-circuit before the
+    # head comparison which may involve numpy arrays and raise ValueError.
+    if n1.isarg or n2.isarg:
+        return False
 
     if n1.head == n2.head:
         # no kids
@@ -568,8 +455,7 @@ def replace_hidden(tree, arg, tail):
 
         for idx, nt in enumerate(n.tails):
             if isequal(nt, arg):
-                n.tails[idx] = tail
-                break
+                n.tails[idx] = deepcopy(tail)
             else:
                 qq.append(nt)
 
@@ -651,30 +537,35 @@ def normalize(tree):
 
 # not reentrant
 def typize(tree: Delta):
-    "replace each hole with $arg, returning all $arg's types"
+    """Collect types of $i holes keyed by stitch's own index; do NOT rename.
+
+    Stitch uses #i as explicit argument positions (not BFS order).  After the
+    #{i} → ${i} substitution, holes already carry the correct name.  Renaming
+    them to BFS order breaks the tidx→$i mapping in __call__.
+
+    Duplicate occurrences of the same $i (stitch shared variables) are handled
+    by replace_hidden replacing all matches in one pass.
+    """
+    seen = {}   # '$i' → type
     qq = [tree]
-    tailtypes = []
-    z = 0
-
-    while len(qq) > 0:
+    while qq:
         n = qq.pop(0)
-
         if not n.tails:
             continue
-
         for idx in range(len(n.tails)):
-            # is this a hole?
-            if n.tails[idx].ishole:
-                type = n.tails[idx].type
-                tailtypes.append(type)
-
-                # need to hole it for next tree replacement
-                n.tails[idx] = Delta(f'${z}', ishole=True, type=type)
-                z += 1
+            child = n.tails[idx]
+            if child.ishole:
+                name = child.head   # e.g. '$4'
+                if name not in seen:
+                    seen[name] = child.type
+                # Leave hole name unchanged — preserve stitch's $i index
             else:
-                qq.append(n.tails[idx])
+                qq.append(child)
 
-    return tailtypes
+    if not seen:
+        return []
+    max_i = max(int(k[1:]) for k in seen)
+    return [seen.get(f'${i}') for i in range(max_i + 1)]
 
 
 def alld(tree):

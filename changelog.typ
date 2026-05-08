@@ -250,4 +250,8 @@ along with some other useless coincidental abstractions (baked-in column values)
 
 if run with capped iterations `saturate_stitch(D, sols, iterations=2)`, iteration 1 finds the general belief primitive `fn_0($grid, $pwr, $pwc)` and nav `fn_1($grid)`
 
+So the system successfully finds the expected discovery, abstracting `fn0: (mask (unfold (place_wall $2 $1 $0) navigate) 3)`. It's a function that takes a grid (the initial grid, the task-specific terminal primitive) and a coordinate pair, and returns the sequence of grids produced by an agent navigating a version of the task-grid augmented with a wall placed at the coordinate. 
 
+To discover `(unfold #0 navigate)` is to discover the concept of 
+
+So to discover `f0` is to discover

@@ -379,6 +379,18 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
         return fallback, [str(t) for t in fallback]
 
     ghosttime = time()
+
+    # Serialize with invented primitives still in D so previously-discovered
+    # abstractions appear as atomic tokens (e.g. "fn_0") rather than being
+    # expanded back to their bodies.  Stitch then treats them as terminals and
+    # only discovers new structure on top of them.
+    # Track a global name offset so stitch's fn_0/fn_1/... get remapped to
+    # names that don't collide with primitives already in D.
+    n_already_invented = len(D.invented)
+    trees = [deepcopy(s) for s in sols.values() if s]
+    programs_compressed = [str(t) for t in trees]
+
+    # Also normalize (expand) for the fallback tree corpus used by dream.
     trees = [normalize(s) for s in sols.values() if s]
     D.reset()
 
@@ -387,20 +399,7 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
 
 
 
-    # If all solutions are singleton(grid_expr), strip singleton so stitch
-    # discovers grid-level abstractions that can be composed with more gset calls.
-    # We'll re-wrap with singleton when reconstructing the tree corpus.
-    singleton_d = next((d for d in D.core if d.repr == 'singleton'), None)
-    strip_singleton = (
-        singleton_d is not None and
-        all(t.head is singleton and t.tails and len(t.tails) == 1 for t in trees)
-    )
-    if strip_singleton:
-        print("stripping singleton for grid-level compression")
-        inner_trees = [t.tails[0] for t in trees]
-        programs = [str(t) for t in inner_trees]
-    else:
-        programs = [str(tree) for tree in trees]
+    programs = programs_compressed
 
     print(f"running stitch_core.compress on {len(programs)} programs "
           f"(iterations={iterations}, max_arity={max_arity})")
@@ -516,6 +515,11 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
         return prog_str
 
     for abs_result in result.abstractions:
+        # Remap stitch's fn_i to fn_{i + n_already_invented} so names are
+        # globally unique across ECD iterations and don't shadow prior inventions.
+        stitch_i = int(abs_result.name.split('_')[1])
+        name = f"fn_{stitch_i + n_already_invented}"
+
         # stitch uses #i for argument holes; todelta() expects $i
         body_str = abs_result.body
         body_str_dollar = body_str  # preserve #i version for skipped_bodies
@@ -524,6 +528,15 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
         # before attempting to register it.  Needed when a later abstraction's
         # body references an earlier skipped one (e.g. fn_3 body uses fn_1).
         body_str = expand_skipped(body_str)
+
+        # Remap fn_i references inside the body to use the global offset.
+        # Must be done longest-name-first to avoid fn_1 matching inside fn_10.
+        import re as _re
+        for si in sorted(range(len(result.abstractions)), reverse=True):
+            old = f'fn_{si}'
+            new_n = f'fn_{si + n_already_invented}'
+            body_str = _re.sub(rf'\b{old}\b', new_n, body_str)
+
         body_str_dollar = body_str  # save expanded #i form for future expansions
 
         for i in range(abs_result.arity):
@@ -532,9 +545,9 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
         try:
             hiddentail = tr(D, body_str)
         except Exception as e:
-            print(f"skipping abstraction '{abs_result.name}' — "
+            print(f"skipping abstraction '{name}' — "
                   f"could not parse body '{body_str}': {e}")
-            skipped_bodies[abs_result.name] = body_str_dollar
+            skipped_bodies[name] = body_str_dollar
             continue
 
         # Mark $i placeholders as typed holes so typize() can collect them
@@ -544,8 +557,6 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
         # Append types for any arg slots left unsatisfied in the hiddentail
         # (e.g. unfold's fn slot when stitch creates a partial-application body).
         tailtypes = tailtypes + _unsatisfied_tailtypes(hiddentail)
-
-        name = abs_result.name  # e.g. "fn_0", "fn_1", ...
         if len(tailtypes) == 0:
             # 0-arity stitch abstractions are either partial applications of
             # multi-arg primitives (e.g. (iterate 1 (gset ...)) with only 2 of
@@ -563,11 +574,17 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
         D.add(df)
         print(f"added abstraction {name}: {abs_result.body}  [{df.type}]")
 
+    def remap_names(s):
+        "Remap stitch's fn_i references to globally-unique fn_{i+offset} names."
+        for si in sorted(range(len(result.abstractions)), reverse=True):
+            s = _re.sub(rf'\bfn_{si}\b', f'fn_{si + n_already_invented}', s)
+        return s
+
     # Parse stitch's rewritten programs as the new compressed tree corpus.
     # For programs referencing skipped abstractions, inline-expand them first.
     new_trees = []
     for prog_str in result.rewritten:
-        expanded = expand_skipped(prog_str)
+        expanded = expand_skipped(remap_names(prog_str))
         try:
             tree = tr(D, expanded)
             if strip_singleton:

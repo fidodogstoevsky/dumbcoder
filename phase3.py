@@ -39,9 +39,9 @@ from ecd import (
     normalize, mat_key,
 )
 from dsl import (
-    mat, grid, fn, fn_pred,
-    mask, unfold, unfold_auto, blank44, gset, place_agent_goal, place_wall,
-    approach, if_fn, exists,
+    mat, grid, fn,
+    unfold_auto, gset,
+    approach,
 )
 
 # ── Tasks ──────────────────────────────────────────────────────────────────
@@ -51,16 +51,9 @@ print(f"\n{len(Xs_desire)} desire tasks (goal_vals 2, 4, 5)")
 
 # ── DSL ────────────────────────────────────────────────────────────────────
 core_prims = [
-    Delta(mask,             mat,  [mat, int],                 repr='mask'),
-    Delta(unfold_auto,      mat,  [grid, fn],                  repr='unfold'),
-    Delta(blank44,          grid,                             repr='blank'),
-    Delta(gset,             grid, [grid, int, int, int],      repr='gset'),
-    Delta(place_agent_goal, grid, [grid, int, int, int, int], repr='place_ag'),
-    Delta(place_wall,       grid, [grid, int, int],           repr='place_wall'),
-    Delta(approach,         fn,   [int, int],                 repr='approach'),
-    Delta(approach(1, 2),   fn,                               repr='navigate'),
-    Delta(if_fn,            fn,   [fn_pred, fn, fn],          repr='if'),
-    Delta(exists,           fn_pred, [int],                   repr='exists'),
+    Delta(unfold_auto,      mat,  [grid, fn],            repr='unfold'),
+    Delta(gset,             grid, [grid, int, int, int], repr='gset'),
+    Delta(approach,         fn,   [int, int],            repr='approach'),
     Delta(0, int, repr='0'), Delta(1, int, repr='1'),
     Delta(2, int, repr='2'), Delta(3, int, repr='3'),
     Delta(4, int, repr='4'), Delta(5, int, repr='5'),

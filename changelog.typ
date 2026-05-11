@@ -255,3 +255,11 @@ So the system successfully finds the expected discovery, abstracting `fn0: (mask
 To discover `(unfold #0 navigate)` is to discover the concept of 
 
 So to discover `f0` is to discover
+
+
+TODO:
+- implement other step functions, right now `navigate` is the only one. There should be other possible explanations for a movement, and there should be a cost to choosing more complex explanations. `navigate` already assumes so much, it's a complicated primitive. 
+- unpack `navigate`, so it's discovered from lower-level primitives?
+- unpack `mask` and discover from lower-level, structurally. or, figure out a reason for `mask` to exist outside of just this one use case
+- basically, it all feels too tailored. make it more general so that it feels like it's actually putting stuff together and discovering something. right now I'm just waiting for it to apply `mask` to `unfold` and calling that learning theory of mind. but there's already so much encoded there
+- so keep removing and making lower level, and show the point at which it breaks down

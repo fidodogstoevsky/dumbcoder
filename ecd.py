@@ -269,7 +269,7 @@ def cenumerate_fold(D, Q, d, tailtypes, budget, offset, maxdepth, cb, deadline=N
 
         return cenumerate(D, Q, tailtp, (0, budget[1]), maxdepth, ccb, deadline, h_parent=h_child)
 
-    if budget[0] < 0 and 0 <= budget[1]:
+    if budget[0] <= 0 and 0 <= budget[1]:
         return cb(d, offset)
 
     return True
@@ -380,24 +380,23 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
 
     ghosttime = time()
 
-    # Serialize with invented primitives still in D so previously-discovered
-    # abstractions appear as atomic tokens (e.g. "fn_0") rather than being
-    # expanded back to their bodies.  Stitch then treats them as terminals and
-    # only discovers new structure on top of them.
-    # Track a global name offset so stitch's fn_0/fn_1/... get remapped to
-    # names that don't collide with primitives already in D.
+    # Always pass fully-expanded (normalized) programs to stitch.
+    # Using compressed programs (with fn_0 as an opaque token) causes a
+    # naming collision: stitch names its new discoveries fn_0, fn_1, etc.,
+    # clashing with the existing fn_0 token already in the programs.
+    # Stitch's fn_0 body then references the input token "fn_0", which after
+    # the fn_0→fn_1 offset remapping becomes self-referential ("fn_1 uses fn_1"),
+    # and expand_skipped loops forever trying to inline-expand it.
+    # With normalized programs stitch sees only primitive operations — no fn_i
+    # tokens — so its discoveries are always fresh with clean intra-stitch deps.
     n_already_invented = len(D.invented)
-    trees = [deepcopy(s) for s in sols.values() if s]
-    programs_compressed = [str(t) for t in trees]
-
-    # Also normalize (expand) for the fallback tree corpus used by dream.
     trees = [normalize(s) for s in sols.values() if s]
     D.reset()
 
     if not trees:
         return trees, []
 
-    programs = programs_compressed
+    programs = [str(t) for t in trees]
 
     print(f"running stitch_core.compress on {len(programs)} programs "
           f"(iterations={iterations}, max_arity={max_arity})")
@@ -506,10 +505,12 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
             return ''.join(result)
 
         changed = True
-        while changed:
+        iters = 0
+        while changed and iters < 50:
             new = expand_once(prog_str)
             changed = new != prog_str
             prog_str = new
+            iters += 1
         return prog_str
 
     for abs_result in result.abstractions:
@@ -740,7 +741,7 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
 
 
-def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, seeds=None):
+def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, seeds=None, run_dream=True):
     # when ECD is first run, reset the DSL
     D.reset()
 
@@ -783,19 +784,18 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
         #         else:
         #             q[D.index(d)] = 0.0  # certain choice within grid type
 
-        # return q
-
-        # Mask out ig terminals that don't belong to this task, then renormalize     
-        # within the grid type so the valid ig_i gets logp=0 (certainty).            
-        # Without renormalization, ig_i retains logp=-log(n_ig_terminals) even       
-        # though it's the only valid option — inflating solution cost by ~3.5        
-        # nats and pushing solutions into later budget windows.                      
+        # Mask out ig terminals that don't belong to this task, then renormalize
+        # within the grid type so the valid ig_i gets logp=0 (certainty).
+        # Without renormalization, ig_i retains logp=-log(n_ig_terminals) even
+        # though it's the only valid option — inflating solution cost and
+        # pushing solutions into later budget windows.
         q = q.clone()
         for d in D.ds:
-            if (getattr(d, 'repr', '').startswith('ig_')
-                    and d.tailtypes is None
-                    and not np.array_equal(d.head, x[0])):
-                q[D.index(d)] = -np.inf  
+            if getattr(d, 'repr', '').startswith('ig_') and d.tailtypes is None:
+                if np.array_equal(d.head, x[0]):
+                    q[D.index(d)] = 0.0  # certain: only valid grid terminal
+                else:
+                    q[D.index(d)] = -np.inf
 
         return q
 
@@ -823,7 +823,7 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
 
         idx += 1
 
-        Qmodel = dream(D, trees)
+        Qmodel = dream(D, trees) if run_dream else None
 
         if all_solved():
             break

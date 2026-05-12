@@ -1,32 +1,28 @@
 """Phase 2: false-belief tasks, discovered from scratch.
 
-No bootstrapping. No hand-coded mental primitives. ECD discovers everything.
+No bootstrapping.  ECD searches from the ground up.
 
 init_grid design
 ----------------
 Each task gets a task-specific terminal ig_i = x[0] (first frame).
+This removes coordinate enumeration from the search entirely:
 
   Nav solution:          (unfold ig_i (approach 1 2))
-  False-belief solution: (map_mat (replace_val 3 0) (unfold (place_wall ig_i pwr pwc) (approach 1 2)))
+  False-belief solution: (mask (unfold (place_wall ig_i pwr pwc) (approach 1 2)) 3)
 
-Neither mask nor navigate appear in the DSL — they must be discovered.
+Because ig_X tokens differ across tasks, stitch creates grid-typed holes and
+discovers the pattern that matters:
 
-Expected discovery (layered across ECD iterations)
----------------------------------------------------
-Iteration 1 — shared subexpressions across all 28 programs:
-  fn_navigate  = (approach 1 2)           — the step function used everywhere
-  fn_hide      = (replace_val 3 0)        — zero out walls (used in every false-belief solution)
+  fn_navigate = (approach 1 2)
 
-Iteration 2 — structure visible now that subexpressions are atomic:
   fn_nav($grid)
     = (unfold $grid fn_navigate)
 
   fn_belief($grid, $pwr, $pwc)
-    = (map_mat fn_hide (unfold (place_wall $grid $pwr $pwc) fn_navigate))
+    = (mask (unfold (place_wall $grid $pwr $pwc) fn_navigate) 3)
 
-The belief primitive is built entirely from non-mental sub-primitives:
-  map_mat, replace_val, unfold, place_wall, approach carry no mental semantics.
-  Mental content emerges from their composition.
+The mask(…, 3) wrapper is the semantic signature of belief:
+  "navigate on the believed grid (with phantom wall), hide the wall from output"
 
 Run:
   python phase2.py
@@ -41,8 +37,8 @@ from ecd import (
 )
 from dsl import (
     mat, grid, fn,
-    unfold_auto, place_wall,
-    approach, replace_val, map_mat,
+    mask, unfold_auto, place_wall,
+    approach,
 )
 
 # ── Tasks ──────────────────────────────────────────────────────────────────
@@ -54,11 +50,11 @@ print(f"\n{len(Xs)} tasks: {len(Xs_nav)} nav + {len(Xs_fb)} false-belief")
 
 # ── DSL ────────────────────────────────────────────────────────────────────
 core_prims = [
-    Delta(map_mat,      mat,  [fn, mat],           repr='map_mat'),
-    Delta(unfold_auto,  mat,  [grid, fn],           repr='unfold'),
-    Delta(place_wall,   grid, [grid, int, int],     repr='place_wall'),
-    Delta(replace_val,  fn,   [int, int],           repr='replace_val'),
-    Delta(approach,     fn,   [int, int],           repr='approach'),
+    Delta(mask,           mat,  [mat, int],           repr='mask'),
+    Delta(unfold_auto,    mat,  [grid, fn],            repr='unfold'),
+    Delta(place_wall,     grid, [grid, int, int],      repr='place_wall'),
+    Delta(approach,       fn,   [int, int],            repr='approach'),
+    #Delta(approach(1,2),       fn,                          repr='navigate'),
     Delta(0, int, repr='0'), Delta(1, int, repr='1'),
     Delta(2, int, repr='2'), Delta(3, int, repr='3'),
     Delta(4, int, repr='4'), Delta(5, int, repr='5'),
@@ -88,17 +84,14 @@ else:
     for d in D.invented:
         argtypes = ', '.join(str(t) for t in (d.tailtypes or []))
         body_str = str(normalize(deepcopy(d)))
-        has_map_mat     = 'map_mat'     in body_str
-        has_replace_val = 'replace_val' in body_str
-        has_wall        = 'place_wall'  in body_str
-        has_approach    = 'approach'    in body_str
+        has_mask    = 'mask'       in body_str
+        has_wall    = 'place_wall' in body_str
+        has_approach= 'approach'   in body_str
         tag = None
-        if has_map_mat and has_replace_val and has_wall and has_approach:
-            tag = '*** BELIEF — map_mat(hide-walls, navigate-under-phantom-wall) ***'
-        elif has_approach and not has_wall and not has_map_mat:
+        if has_mask and has_wall and has_approach:
+            tag = '*** BELIEF — mask(navigate-under-hidden-wall) ***'
+        elif has_approach and not has_wall and not has_mask:
             tag = '    navigate — (approach 1 2)'
-        elif has_replace_val and not has_wall:
-            tag = '    hide_walls — (replace_val 3 0)'
         elif has_wall and has_approach:
             tag = '    nav-with-wall'
         print(f"  {d.repr}  [{argtypes}]")

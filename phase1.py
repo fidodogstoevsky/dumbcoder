@@ -37,7 +37,8 @@ Xs = make_fixed_wall_tasks(n=10, walls=WALLS, size=4, seed=0)
 core_prims = [
     Delta(unfold_auto,      mat,  [grid, fn],            repr='unfold'),
     Delta(place_wall,       grid, [grid, int, int],      repr='place_wall'),
-    Delta(approach(1, 2),   fn,                          repr='navigate'),
+    Delta(approach,       fn,   [int, int],            repr='approach'),
+    #Delta(approach(1, 2),   fn,                          repr='navigate'),
     Delta(0, int, repr='0'), Delta(1, int, repr='1'),
     Delta(2, int, repr='2'), Delta(3, int, repr='3'),
     Delta(4, int, repr='4'), Delta(5, int, repr='5'),
@@ -51,7 +52,7 @@ print(f"DSL: {len(core_prims)} core prims + {len(ig)} task terminals = {len(D)} 
 
 # ── ECD ────────────────────────────────────────────────────────────────────
 print("\nRunning ECD…\n")
-Z, rewritten = ECD(Xs, D, per_task_timeout=30, max_iterations=3)
+Z, rewritten = ECD(Xs, D, per_task_timeout=30, max_iterations=3, run_dream=False)
 
 # ── Report ─────────────────────────────────────────────────────────────────
 n_solved = sum(v is not None for v in Z.values())

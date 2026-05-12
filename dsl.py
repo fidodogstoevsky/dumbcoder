@@ -66,6 +66,12 @@ def compose(f, g):
         return g(f(x))
     return _composed
 
+def step(v, d):
+    "int, dir -> fn: move all cells with value v one step in direction d"
+    def _step(g):
+        return _step_grid(g, v, d)
+    return _step
+
 # ── intentional motion ─────────────────────────────────────────────────────────
 
 def _approach_grid(g, agent_val, goal_val):

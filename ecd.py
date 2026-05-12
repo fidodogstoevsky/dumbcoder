@@ -397,8 +397,6 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
     if not trees:
         return trees, []
 
-
-
     programs = programs_compressed
 
     print(f"running stitch_core.compress on {len(programs)} programs "
@@ -587,11 +585,6 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
         expanded = expand_skipped(remap_names(prog_str))
         try:
             tree = tr(D, expanded)
-            if strip_singleton:
-                # re-wrap the grid tree with singleton
-                wrapper = deepcopy(singleton_d)
-                wrapper.tails = [tree]
-                tree = wrapper
             freeze(tree)
             new_trees.append(tree)
         except Exception as e:
@@ -777,16 +770,32 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
                 logits = Qmodel(tc_mat(x)[None])          # (1, nd)
                 q = F.log_softmax(logits.squeeze(0), dim=-1)   # (nd,)
 
-        # Mask out ig terminals that don't belong to this task.
-        # ig_i terminals are task-specific grid constants; only the one whose
-        # value equals x[0] is valid for this task.  All others get -inf so
-        # they are never enumerated, keeping the search budget on structure.
+        # # Mask out ig terminals that don't belong to this task, then renormalize
+        # # within the grid type so the valid ig_i gets logp=0 (certainty).
+        # # Without renormalization, ig_i retains logp=-log(n_ig_terminals) even
+        # # though it's the only valid option — inflating solution cost by ~3.5
+        # # nats and pushing solutions into later budget windows.
+        # q = q.clone()
+        # for d in D.ds:
+        #     if getattr(d, 'repr', '').startswith('ig_') and d.tailtypes is None:
+        #         if not np.array_equal(d.head, x[0]):
+        #             q[D.index(d)] = -np.inf
+        #         else:
+        #             q[D.index(d)] = 0.0  # certain choice within grid type
+
+        # return q
+
+        # Mask out ig terminals that don't belong to this task, then renormalize     
+        # within the grid type so the valid ig_i gets logp=0 (certainty).            
+        # Without renormalization, ig_i retains logp=-log(n_ig_terminals) even       
+        # though it's the only valid option — inflating solution cost by ~3.5        
+        # nats and pushing solutions into later budget windows.                      
         q = q.clone()
         for d in D.ds:
             if (getattr(d, 'repr', '').startswith('ig_')
                     and d.tailtypes is None
                     and not np.array_equal(d.head, x[0])):
-                q[D.index(d)] = -np.inf
+                q[D.index(d)] = -np.inf  
 
         return q
 
@@ -1415,6 +1424,78 @@ def make_desire_tasks(n_per_goal, goal_vals=(2, 4, 5), size=4, seed=0):
                 count += 1
     print(f"generated {len(tasks)} desire tasks "
           f"({n_per_goal}/goal_val, goal_vals={list(goal_vals)}, {size}x{size})")
+    return tasks
+
+
+def make_physics_task(direction, val=1, size=4, n_objects=3, seed=None):
+    """Generate a physics task: n_objects of value val drift in direction each frame.
+
+    Objects stop at the grid boundary (they don't wrap or disappear).
+    The trajectory runs until all objects have reached the boundary wall.
+
+    direction: one of UP, DOWN, LEFT, RIGHT from dsl.py
+    val: cell value for the moving objects (default 1)
+    n_objects: how many objects to place
+
+    Returns (x, meta) where x is (T, size, size) and
+    meta = {'direction': direction, 'val': val}, or None on failure.
+    """
+    from dsl import _step_grid
+    rng = np.random.default_rng(seed)
+    cells = [(r, c) for r in range(size) for c in range(size)]
+    rng.shuffle(cells)
+
+    if n_objects > len(cells):
+        return None
+
+    g = np.zeros((size, size), dtype=int)
+    for r, c in cells[:n_objects]:
+        g[r, c] = val
+
+    frames = [g.copy()]
+    for _ in range(size * 2):
+        ng = _step_grid(g, val, direction)
+        if np.array_equal(ng, g):
+            break  # all objects hit the wall
+        g = ng
+        frames.append(g.copy())
+
+    if len(frames) < 2:
+        return None
+
+    x = np.stack(frames)
+    return x, {'direction': direction, 'val': val}
+
+
+def make_physics_tasks(n_per_dir, directions=None, val=1, size=4, n_objects=3, seed=0):
+    """Generate physics tasks for each direction.
+
+    n_per_dir tasks per direction. With diverse starting positions and all four
+    directions, stitch can discover:
+      fn_step($dir) = (unfold $grid (step 1 $dir))
+    showing that direction is a free parameter — the directional primitive.
+
+    directions: list of (dr, dc) tuples; defaults to all four cardinal directions.
+    """
+    from dsl import UP, DOWN, LEFT, RIGHT
+    if directions is None:
+        directions = [UP, DOWN, LEFT, RIGHT]
+
+    rng = np.random.default_rng(seed)
+    tasks = []
+    for d in directions:
+        count = 0
+        while count < n_per_dir:
+            result = make_physics_task(d, val=val, size=size, n_objects=n_objects,
+                                       seed=int(rng.integers(1<<31)))
+            if result is not None:
+                tasks.append(result)
+                count += 1
+
+    dir_names = {(-1,0):'UP', (1,0):'DOWN', (0,-1):'LEFT', (0,1):'RIGHT'}
+    names = [dir_names.get(tuple(d), str(d)) for d in directions]
+    print(f"generated {len(tasks)} physics tasks "
+          f"({n_per_dir}/dir, dirs={names}, {size}x{size}, {n_objects} objects)")
     return tasks
 
 

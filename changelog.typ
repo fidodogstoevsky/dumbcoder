@@ -263,3 +263,13 @@ TODO:
 - unpack `mask` and discover from lower-level, structurally. or, figure out a reason for `mask` to exist outside of just this one use case
 - basically, it all feels too tailored. make it more general so that it feels like it's actually putting stuff together and discovering something. right now I'm just waiting for it to apply `mask` to `unfold` and calling that learning theory of mind. but there's already so much encoded there
 - so keep removing and making lower level, and show the point at which it breaks down
+
+= May 11: new step functions
+
+`approach(agent, goal)` is expensive, it runs BFS internally and takes 2 int args
+
+so `step(agent, dir)` is a shorter explanation since it's simpler internally (doesn't run bfs) and also dir only has four options
+
+Semantic evaluation:
+- for belief: does mask wrap a grid with extra content?
+- for desire: does a hole appear in both a world-placement position and a step-function position?

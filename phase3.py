@@ -7,7 +7,7 @@ init_grid design (agent mode)
 Each task terminal ig_i = x[0] with goal cells zeroed out — only the agent
 (and walls, if any) are encoded.  The goal must be added explicitly:
 
-  Solution: (unfold (gset ig_i gr gc gv) (approach 1 gv))
+  Solution: (unfold (gset ig_i gr gc gv) (approach_1 gv))
 
 This preserves the shared-variable structure of desire:
   gv appears in BOTH gset (what is placed in the world)
@@ -15,7 +15,7 @@ This preserves the shared-variable structure of desire:
 
 Stitch discovers:
   fn_desire($grid, $gr, $gc, $gv)
-    = (unfold (gset $grid $gr $gc $gv) (approach 1 $gv))
+    = (unfold (gset $grid $gr $gc $gv) (approach_1 $gv))
 
 The same $gv hole fills both slots — that shared variable IS desire:
   "the thing placed in the world is the same thing the agent moves toward"
@@ -41,7 +41,7 @@ from ecd import (
 from dsl import (
     mat, grid, fn,
     unfold_auto, gset,
-    approach,
+    approach_from,
 )
 
 # ── Tasks ──────────────────────────────────────────────────────────────────
@@ -51,9 +51,12 @@ print(f"\n{len(Xs_desire)} desire tasks (goal_vals 2, 4, 5)")
 
 # ── DSL ────────────────────────────────────────────────────────────────────
 core_prims = [
-    Delta(unfold_auto,      mat,  [grid, fn],            repr='unfold'),
-    Delta(gset,             grid, [grid, int, int, int], repr='gset'),
-    Delta(approach,         fn,   [int, int],            repr='approach'),
+    Delta(unfold_auto,       mat,  [grid, fn],            repr='unfold'),
+    Delta(gset,              grid, [grid, int, int, int], repr='gset'),
+    # approach_from(1) fixes the agent value, leaving only goal_val free.
+    # Solution: (unfold (gset ig_i gr gc gv) (approach_1 gv))
+    # $gv appears in both gset and approach_1 — that shared variable is desire.
+    Delta(approach_from(1),  fn,   [int],                 repr='approach_1'),
     Delta(0, int, repr='0'), Delta(1, int, repr='1'),
     Delta(2, int, repr='2'), Delta(3, int, repr='3'),
     Delta(4, int, repr='4'), Delta(5, int, repr='5'),
@@ -82,13 +85,13 @@ else:
     for d in D.invented:
         argtypes  = ', '.join(str(t) for t in (d.tailtypes or []))
         body_str  = str(normalize(deepcopy(d)))
-        has_approach = 'approach' in body_str
+        has_approach = 'approach_1' in body_str
         has_gset     = 'gset'     in body_str
         has_wall     = 'place_wall' in body_str
         has_mask     = 'mask'     in body_str
         tag = None
         if has_approach and has_gset and not has_wall and not has_mask:
-            tag = '*** DESIRE — approach(1, gv) + gset(…, gv) shared variable ***'
+            tag = '*** DESIRE — approach_1(gv) + gset(…, gv) shared variable ***'
         print(f"  {d.repr}  [{argtypes}]")
         print(f"    body: {body_str}")
         if tag:

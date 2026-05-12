@@ -66,6 +66,12 @@ def compose(f, g):
         return g(f(x))
     return _composed
 
+def approach_from(agent_val):
+    "int -> fn→fn: partially apply approach, fixing the agent value"
+    def _approach_from(goal_val):
+        return approach(agent_val, goal_val)
+    return _approach_from
+
 def step(v, d):
     "int, dir -> fn: move all cells with value v one step in direction d"
     def _step(g):
@@ -183,6 +189,18 @@ def mask(m, v):
     out = m.copy()
     out[out == v] = 0
     return out
+
+def replace_val(src, dst):
+    "int, int -> fn: replace all cells of value src with dst in a grid"
+    def _replace(g):
+        out = g.copy()
+        out[out == src] = dst
+        return out
+    return _replace
+
+def map_mat(f, m):
+    "fn, mat -> mat: apply grid→grid function f to every frame of mat m"
+    return np.stack([f(m[t]) for t in range(m.shape[0])])
 
 def filter_mat(pred, m):
     "fn_pred, mat -> mat: keep only frames where pred(frame) is True"

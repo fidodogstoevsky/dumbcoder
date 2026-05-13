@@ -32,6 +32,10 @@ from dsl import (
 # ── Tasks ──────────────────────────────────────────────────────────────────
 WALLS = [(1, 2), (2, 2)]
 Xs = make_fixed_wall_tasks(n=10, walls=WALLS, size=4, seed=0)
+for idx, task in enumerate(Xs):
+    print('-----------------')
+    print(f'task no.: {idx}')
+    print(task)
 
 # ── DSL ────────────────────────────────────────────────────────────────────
 core_prims = [

@@ -180,39 +180,12 @@ def makepaths(D, Q):
 
     return Paths, Paths_terminal
 
-class TreeQ:
-    """Wraps MatRecognitionModel for top-down tree-conditioned Q during enumeration.
+def cenumerate(D, Q, tp, budget, maxdepth, cb, deadline=None):
+    """Enumerate programs by probability, callback-style.
 
-    logits(h_parent) -> (nd,) log-prob tensor conditioned on parent hidden state.
-    node_state(d_idx, slot, h_parent) -> (1, nembd) child hidden state.
-    h0: zeros root hidden state.
-    """
-    def __init__(self, model, mat_h):
-        self.model = model
-        self.mat_h = mat_h          # (1, nembd), already on cpu, no grad
-        self.h0 = th.zeros(1, model.nembd)
-
-    def logits(self, h_parent=None):
-        if h_parent is None:
-            h_parent = self.h0
-        with th.no_grad():
-            raw = self.model.head(th.cat([self.mat_h, h_parent], dim=-1))
-            return F.log_softmax(raw, -1).squeeze(0)   # (nd,)
-
-    def node_state(self, d_idx, slot, h_parent):
-        with th.no_grad():
-            return self.model.node_state(
-                tensor([d_idx]), tensor([slot]), h_parent
-            )   # (1, nembd)
-
-
-def cenumerate(D, Q, tp, budget, maxdepth, cb, deadline=None, h_parent=None):
-    """ enumerate programs by probability
-    callback-style, budget window used in
-    the main solve_enumeration loop with expanding windows.
-
-    Q: flat log-prob tensor  OR  TreeQ instance.
-    h_parent: (1, nembd) hidden state of the slot being filled, or None for root.
+    Budget window (lo, hi): fires cb when accumulated log-cost falls in [lo, hi].
+    Called in expanding windows from solve_enumeration to try cheapest programs first.
+    Q: flat log-prob tensor (nd,).
     """
     if budget[1] <= 0 or maxdepth < 0:
         return True
@@ -220,14 +193,8 @@ def cenumerate(D, Q, tp, budget, maxdepth, cb, deadline=None, h_parent=None):
     if deadline is not None and time() > deadline:
         raise _EnumDone()
 
-    # Compute local log-prob vector, conditioned on h_parent when using TreeQ
-    if isinstance(Q, TreeQ):
-        q = Q.logits(h_parent)
-    else:
-        q = Q
-
     for i in D.bytype[tp]:
-        qi = q[i].item() if isinstance(q[i], th.Tensor) else float(q[i])
+        qi = Q[i].item() if isinstance(Q[i], th.Tensor) else float(Q[i])
         if -qi > budget[1]:
             continue
 
@@ -236,22 +203,11 @@ def cenumerate(D, Q, tp, budget, maxdepth, cb, deadline=None, h_parent=None):
         nbudget = (budget[0] + logp, budget[1] + logp)
         tailtypes = list(d.tailtypes) if d.tailtypes is not None else d.tailtypes
 
-        # pass d's own index and the h_parent used to choose it so
-        # cenumerate_fold can derive each child slot's h_parent
-        cenumerate_fold(D, Q, d, tailtypes, nbudget, logp, maxdepth - 1, cb, deadline,
-                        d_idx=i, h_parent_of_d=h_parent)
+        cenumerate_fold(D, Q, d, tailtypes, nbudget, logp, maxdepth - 1, cb, deadline)
 
-def cenumerate_fold(D, Q, d, tailtypes, budget, offset, maxdepth, cb, deadline=None,
-                    d_idx=None, h_parent_of_d=None):
+def cenumerate_fold(D, Q, d, tailtypes, budget, offset, maxdepth, cb, deadline=None):
     if tailtypes is not None and len(tailtypes) > 0:
-        current_slot = len(d.tails) if d.tails else 0
         tailtp = tailtypes.pop(0)
-
-        # h_parent for nodes chosen to fill current_slot of d
-        if isinstance(Q, TreeQ) and d_idx is not None and h_parent_of_d is not None:
-            h_child = Q.node_state(d_idx, current_slot, h_parent_of_d)
-        else:
-            h_child = None
 
         def ccb(tail, tlogp):
             nd = deepcopy(d)
@@ -262,12 +218,9 @@ def cenumerate_fold(D, Q, d, tailtypes, budget, offset, maxdepth, cb, deadline=N
             nbudget = (budget[0] + tlogp, budget[1] + tlogp)
             noffset = offset + tlogp
 
-            # same d, same h_parent_of_d — cenumerate_fold will compute the
-            # next slot's h_child from those on the next iteration
-            cenumerate_fold(D, Q, nd, list(tailtypes), nbudget, noffset, maxdepth, cb, deadline,
-                            d_idx=d_idx, h_parent_of_d=h_parent_of_d)
+            cenumerate_fold(D, Q, nd, list(tailtypes), nbudget, noffset, maxdepth, cb, deadline)
 
-        return cenumerate(D, Q, tailtp, (0, budget[1]), maxdepth, ccb, deadline, h_parent=h_child)
+        return cenumerate(D, Q, tailtp, (0, budget[1]), maxdepth, ccb, deadline)
 
     if budget[0] <= 0 and 0 <= budget[1]:
         return cb(d, offset)
@@ -790,9 +743,11 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
         # though it's the only valid option — inflating solution cost and
         # pushing solutions into later budget windows.
         q = q.clone()
+        x0_agent = x[0].copy()
+        x0_agent[(x0_agent != 1) & (x0_agent != 3)] = 0  # agent-mode view of this frame
         for d in D.ds:
             if getattr(d, 'repr', '').startswith('ig_') and d.tailtypes is None:
-                if np.array_equal(d.head, x[0]):
+                if np.array_equal(d.head, x[0]) or np.array_equal(d.head, x0_agent):
                     q[D.index(d)] = 0.0  # certain: only valid grid terminal
                 else:
                     q[D.index(d)] = -np.inf

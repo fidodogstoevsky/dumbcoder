@@ -30,7 +30,7 @@ from ecd import (
 from dsl import (
     mat, grid, fn, util,
     unfold_auto, gset,
-    neg_distance, optimize,
+    neg_distance, distance, neg_util, add_util, optimize,
 )
 
 # ── Tasks ──────────────────────────────────────────────────────────────────
@@ -50,6 +50,9 @@ core_prims = [
     Delta(gset,         grid, [grid, int, int, int],  repr='gset'),
     Delta(optimize,     fn,   [util, int],            repr='optimize'),
     Delta(neg_distance, util, [int],                  repr='neg_dist'),
+    Delta(distance,     util, [int],                  repr='distance'),
+    Delta(neg_util,     util, [util],                 repr='neg_util'),
+    Delta(add_util,     util, [util, util],           repr='add_util'),
     Delta(0, int, repr='0'), Delta(1, int, repr='1'),
     Delta(2, int, repr='2'), Delta(3, int, repr='3'),
     Delta(4, int, repr='4'), Delta(5, int, repr='5'),

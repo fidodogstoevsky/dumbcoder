@@ -159,6 +159,24 @@ def neg_distance(target_val):
         return -_bfs_distance(g, r, c, target_val)
     return _u
 
+def distance(target_val):
+    "int -> util: u(g,r,c) = BFS distance from (r,c) to nearest target_val cell"
+    def _u(g, r, c):
+        return _bfs_distance(g, r, c, target_val)
+    return _u
+
+def neg_util(u):
+    "util -> util: negate a utility function"
+    def _u(g, r, c):
+        return -u(g, r, c)
+    return _u
+
+def add_util(u1, u2):
+    "util, util -> util: additive combination of two utility functions"
+    def _u(g, r, c):
+        return u1(g, r, c) + u2(g, r, c)
+    return _u
+
 def optimize(u, agent_val):
     "util, int -> fn: move agent_val one greedy step maximising u at the landing cell"
     def _step(g):
@@ -292,6 +310,14 @@ def unfold_auto(g, f):
     if _unfold_steps is None:
         raise ValueError("unfold_auto: _unfold_steps not set")
     return unfold(g, _unfold_steps, f)
+
+def predict_auto(g, f):
+    "grid, fn -> grid: apply f (_unfold_steps - 1) times to predict the last frame"
+    if _unfold_steps is None:
+        raise ValueError("predict_auto: _unfold_steps not set")
+    for _ in range(_unfold_steps - 1):
+        g = f(g)
+    return g
 
 # ── mat transformations ────────────────────────────────────────────────────────
 

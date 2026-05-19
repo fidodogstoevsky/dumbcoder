@@ -21,7 +21,7 @@ from copy import deepcopy
 from ecd import (
     Deltas, Delta, ECD,
     make_fixed_wall_tasks, task_terminals,
-    normalize, mat_key,
+    normalize, mat_key, make_nav_tasks,
 )
 from dsl import (
     mat, grid, fn,
@@ -30,12 +30,11 @@ from dsl import (
 )
 
 # ── Tasks ──────────────────────────────────────────────────────────────────
-WALLS = [(1, 2), (2, 2)]
-Xs = make_fixed_wall_tasks(n=10, walls=WALLS, size=4, seed=0)
-for idx, task in enumerate(Xs):
-    print('-----------------')
-    print(f'task no.: {idx}')
-    print(task)
+Xs = make_nav_tasks(n=8,  size=4, n_walls=2, seed=0)
+# for idx, task in enumerate(Xs):
+#     print('-----------------')
+#     print(f'task no.: {idx}')
+#     print(task)
 
 # ── DSL ────────────────────────────────────────────────────────────────────
 core_prims = [
@@ -45,9 +44,6 @@ core_prims = [
     #Delta(approach(1, 2),   fn,                          repr='navigate'),
     Delta(0, int, repr='0'), Delta(1, int, repr='1'),
     Delta(2, int, repr='2'), Delta(3, int, repr='3'),
-    Delta(4, int, repr='4'), Delta(5, int, repr='5'),
-    Delta(6, int, repr='6'), Delta(7, int, repr='7'),
-    Delta(8, int, repr='8'), Delta(9, int, repr='9'),
 ]
 
 ig = task_terminals(Xs, mode='full')

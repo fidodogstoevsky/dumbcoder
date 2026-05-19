@@ -28,9 +28,9 @@ from ecd import (
     normalize, mat_key,
 )
 from dsl import (
-    mat, grid, fn,
-    unfold_auto, gset, approach,
-    approach_from,
+    mat, grid, fn, util,
+    unfold_auto, gset,
+    neg_distance, optimize,
 )
 
 # ── Tasks ──────────────────────────────────────────────────────────────────
@@ -46,15 +46,13 @@ print(f"\n{len(Xs_nav)} nav tasks + {len(Xs_des)} desire tasks "
 
 # ── DSL ────────────────────────────────────────────────────────────────────
 core_prims = [
-    Delta(unfold_auto,      mat,  [grid, fn],            repr='unfold'),
-    Delta(gset,             grid, [grid, int, int, int],  repr='gset'),
-    Delta(approach, fn,   [int,int],                  repr='approach'),
-    #Delta(approach_from(1), fn,   [int],                  repr='approach_1'),
+    Delta(unfold_auto,  mat,  [grid, fn],            repr='unfold'),
+    Delta(gset,         grid, [grid, int, int, int],  repr='gset'),
+    Delta(optimize,     fn,   [util, int],            repr='optimize'),
+    Delta(neg_distance, util, [int],                  repr='neg_dist'),
     Delta(0, int, repr='0'), Delta(1, int, repr='1'),
     Delta(2, int, repr='2'), Delta(3, int, repr='3'),
     Delta(4, int, repr='4'), Delta(5, int, repr='5'),
-    Delta(6, int, repr='6'), Delta(7, int, repr='7'),
-    Delta(8, int, repr='8'), Delta(9, int, repr='9'),
 ]
 
 # Nav terminals: mode='full' (goal visible) → solution needs no gset.

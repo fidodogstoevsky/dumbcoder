@@ -8,6 +8,8 @@ grid     = 'grid'     # 2d numpy array (H, W)
 fn       = 'fn'       # grid -> grid
 fn2      = 'fn2'      # grid -> grid -> grid
 fn_pred  = 'fn_pred'  # grid -> bool
+util     = 'util'     # (grid, int, int) -> float  — positional utility
+belief   = 'belief'   # agent's subjective world model (structurally a grid)
 
 # int is used as a type string too
 # direction is used as a type string
@@ -124,6 +126,115 @@ def approach(agent_val, goal_val):
     def _approach(g):
         return _approach_grid(g, agent_val, goal_val)
     return _approach
+
+# ── utility-based motion ────────────────────────────────────────────────────────
+# approach(av, gv) = optimize(neg_distance(gv), av)
+# Greedy on negative BFS distance is equivalent to BFS-optimal first step:
+# optimal neighbours have distance d-1, all others d+1 or more, so the
+# greedy choice always picks an optimal first move.
+
+def _bfs_distance(g, r, c, target_val):
+    "BFS distance from (r,c) to nearest target_val cell; inf if unreachable."
+    from collections import deque
+    h, w = g.shape
+    if g[r, c] == target_val:
+        return 0
+    queue = deque([(r, c, 0)])
+    visited = {(r, c)}
+    while queue:
+        cr, cc, d = queue.popleft()
+        for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            nr, nc = cr + dr, cc + dc
+            if 0 <= nr < h and 0 <= nc < w and (nr, nc) not in visited:
+                if g[nr, nc] == target_val:
+                    return d + 1
+                if g[nr, nc] != 3:
+                    visited.add((nr, nc))
+                    queue.append((nr, nc, d + 1))
+    return float('inf')
+
+def neg_distance(target_val):
+    "int -> util: u(g,r,c) = -(BFS distance from (r,c) to nearest target_val cell)"
+    def _u(g, r, c):
+        return -_bfs_distance(g, r, c, target_val)
+    return _u
+
+def optimize(u, agent_val):
+    "util, int -> fn: move agent_val one greedy step maximising u at the landing cell"
+    def _step(g):
+        h, w = g.shape
+        agents = [(r, c) for r in range(h) for c in range(w) if g[r, c] == agent_val]
+        if not agents:
+            return g.copy()
+        ar, ac = agents[0]
+        best_r, best_c, best_u = ar, ac, u(g, ar, ac)
+        for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            nr, nc = ar + dr, ac + dc
+            if 0 <= nr < h and 0 <= nc < w and g[nr, nc] != 3:
+                uu = u(g, nr, nc)
+                if uu > best_u:
+                    best_u, best_r, best_c = uu, nr, nc
+        if best_r == ar and best_c == ac:
+            return g.copy()
+        out = g.copy()
+        out[ar, ac] = 0
+        out[best_r, best_c] = agent_val
+        return out
+    return _step
+
+# ── belief-based motion ────────────────────────────────────────────────────────
+# unfold_belief separates the agent's subjective model (belief) from the actual
+# world.  The step function runs on the believed grid; the resulting move is
+# extracted and applied to the actual grid.  The output trajectory shows the
+# actual world — no mask needed, because the phantom wall never existed there.
+
+def add_phantom_wall(g, r, c):
+    "grid, int, int -> belief: agent's false model — actual grid plus a wall at (r,c)"
+    b = g.copy()
+    if 0 <= r < g.shape[0] and 0 <= c < g.shape[1]:
+        b[r, c] = 3
+    return b
+
+def _step_belief(actual_g, believed_g, f):
+    "apply f on believed_g, extract the agent's move, replay it on actual_g"
+    new_believed = f(believed_g)
+    h, w = believed_g.shape
+    # find the cell that was vacated (non-zero → 0): that's the agent's old position
+    old_pos = agent_val = None
+    for r in range(h):
+        for c in range(w):
+            if believed_g[r, c] != 0 and new_believed[r, c] == 0:
+                old_pos, agent_val = (r, c), int(believed_g[r, c])
+                break
+        if old_pos is not None:
+            break
+    if old_pos is None:
+        return actual_g.copy(), new_believed
+    # find where agent_val newly appeared (agent's new position)
+    new_pos = None
+    for r in range(h):
+        for c in range(w):
+            if new_believed[r, c] == agent_val and believed_g[r, c] != agent_val:
+                new_pos = (r, c)
+                break
+        if new_pos is not None:
+            break
+    if new_pos is None:
+        return actual_g.copy(), new_believed
+    out = actual_g.copy()
+    out[old_pos] = 0
+    out[new_pos] = agent_val
+    return out, new_believed
+
+def unfold_belief(actual_g, believed_g, f):
+    "grid, belief, fn -> mat: navigate using believed world, record actual world"
+    if _unfold_steps is None:
+        raise ValueError("unfold_belief: _unfold_steps not set")
+    frames = [actual_g.copy()]
+    for _ in range(_unfold_steps - 1):
+        actual_g, believed_g = _step_belief(actual_g, believed_g, f)
+        frames.append(actual_g.copy())
+    return np.stack(frames)
 
 # ── conditionals ───────────────────────────────────────────────────────────────
 

@@ -694,7 +694,7 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
 
 
-def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, seeds=None, run_dream=True):
+def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, seeds=None, run_dream=True, max_arity=6):
     # when ECD is first run, reset the DSL
     D.reset()
 
@@ -772,7 +772,7 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
 
         soltrees = [s for s in sols.values() if s is not None]
         if len(soltrees) > 0:
-            trees, rewritten_strs = saturate_stitch(D, sols, iterations=2)
+            trees, rewritten_strs = saturate_stitch(D, sols, iterations=2, max_arity=max_arity)
         else:
             trees, rewritten_strs = [], []
 

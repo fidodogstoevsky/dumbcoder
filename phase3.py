@@ -67,6 +67,12 @@ for i, d in enumerate(ig_des):
     d.repr = f'ig_{len(Xs_nav) + i}'
 
 Xs = Xs_nav + Xs_des
+
+for idx, task in enumerate(Xs):
+    print('-----------------')
+    print(f'task no.: {idx}')
+    print(task)
+
 ig = ig_nav + ig_des
 D  = Deltas(core_prims + ig)
 print(f"DSL: {len(core_prims)} core prims + {len(ig)} task terminals = {len(D)} total\n")

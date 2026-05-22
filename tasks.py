@@ -456,6 +456,106 @@ def make_physics_task(direction, size=4, seed=None):
     return np.stack(frames), {'direction': direction, 'agent': (ar, ac), 'goal': (gr, gc)}
 
 
+def make_sequential_desire_task(gv1, gv2, size=4, seed=None, min_dist=None):
+    """Sequential desire task: agent(1) approaches goal(gv1) then goal(gv2).
+
+    Both goals are placed in the initial frame. The step function
+      if_fn(exists(gv1), approach_1(gv1), approach_1(gv2))
+    pursues gv1 while it exists; once consumed, switches to gv2.
+
+    gv1 appears 3× in the solution (gset + exists + approach_1):
+      world, trigger, and behaviour share the same value — sequential desire.
+    gv2 appears 2× (gset + approach_1).
+
+    Requires gv1 ≠ gv2 and neither equal to 1 (agent) or 3 (wall).
+
+    Returns (x, meta) or None on failure.
+    """
+    from dsl import _approach_grid
+    assert gv1 != gv2, "gv1 must differ from gv2"
+    assert gv1 not in (1, 3) and gv2 not in (1, 3), \
+        "goal vals cannot be 1 (agent) or 3 (wall)"
+    if min_dist is None:
+        min_dist = size // 2
+
+    rng = np.random.default_rng(seed)
+    cells = [(r, c) for r in range(size) for c in range(size)]
+
+    for _ in range(500):
+        rng.shuffle(cells)
+        a_pos, g1_pos, g2_pos = cells[0], cells[1], cells[2]
+
+        if abs(a_pos[0] - g1_pos[0]) + abs(a_pos[1] - g1_pos[1]) < min_dist:
+            continue
+
+        # Build initial grid: agent at a_pos, gv1 at g1_pos, gv2 at g2_pos
+        g = np.zeros((size, size), dtype=int)
+        g[a_pos[0], a_pos[1]] = 1
+        g[g1_pos[0], g1_pos[1]] = gv1
+        g[g2_pos[0], g2_pos[1]] = gv2
+
+        # Simulate: if gv1 exists → approach gv1, else → approach gv2
+        frames = [g.copy()]
+        curr = g.copy()
+
+        for _ in range(size * 6):
+            if bool(np.any(curr == gv1)):
+                nxt = _approach_grid(curr, 1, gv1)
+            else:
+                nxt = _approach_grid(curr, 1, gv2)
+
+            if np.array_equal(nxt, curr):
+                break  # stuck — no reachable goal
+
+            curr = nxt
+            frames.append(curr.copy())
+
+            if not bool(np.any(curr == gv2)):
+                break  # agent consumed gv2 — done
+
+        # Valid only if agent consumed both goals in order
+        if bool(np.any(frames[-1] == gv1)) or bool(np.any(frames[-1] == gv2)):
+            continue
+        if len(frames) < 3:
+            continue
+
+        x = np.stack(frames)
+        meta = {
+            'agent': a_pos,
+            'goal1': g1_pos, 'gv1': gv1,
+            'goal2': g2_pos, 'gv2': gv2,
+            'T': len(frames),
+        }
+        return x, meta
+
+    return None
+
+
+def make_sequential_desire_tasks(n_per_combo, goal_combos=((2, 4), (4, 5), (2, 5)),
+                                   size=4, seed=0):
+    """Generate sequential desire tasks for each (gv1, gv2) goal combo.
+
+    n_per_combo tasks per combo. goal_combos: pairs (gv1, gv2) with gv1≠gv2,
+    neither 1 (agent) nor 3 (wall). Stitch discovers fn_cond_desire from the
+    variation in gv1/gv2 across combos.
+    """
+    rng = np.random.default_rng(seed)
+    tasks = []
+    for gv1, gv2 in goal_combos:
+        count = 0
+        while count < n_per_combo:
+            result = make_sequential_desire_task(
+                gv1, gv2, size=size, seed=int(rng.integers(1 << 31))
+            )
+            if result is not None:
+                tasks.append(result)
+                count += 1
+    combos_str = ', '.join(f'({gv1},{gv2})' for gv1, gv2 in goal_combos)
+    print(f"generated {len(tasks)} sequential desire tasks "
+          f"({n_per_combo}/combo, combos=[{combos_str}], {size}x{size})")
+    return tasks
+
+
 def make_physics_tasks(n_per_dir, directions=None, size=4, seed=0):
     """Generate physics tasks: agent drifts linearly to goal, one per direction bucket.
 

@@ -273,3 +273,73 @@ so `step(agent, dir)` is a shorter explanation since it's simpler internally (do
 Semantic evaluation:
 - for belief: does mask wrap a grid with extra content?
 - for desire: does a hole appear in both a world-placement position and a step-function position?
+
+= May 17: decomposing "approach"
+
+```python
+core_prims = [
+    Delta(unfold_auto,  mat,  [grid, fn],             repr='unfold'),
+    Delta(gset,         grid, [grid, int, int, int],  repr='gset'),
+    Delta(optimize,     fn,   [util, int],            repr='optimize'),
+    Delta(neg_distance, util, [int],                  repr='neg_dist'),
+    Delta(distance,     util, [int],                  repr='distance'),
+    Delta(neg_util,     util, [util],                 repr='neg_util'),
+    Delta(add_util,     util, [util, util],           repr='add_util'),
+    Delta(0, int, repr='0'), Delta(1, int, repr='1'),
+    Delta(2, int, repr='2'), Delta(3, int, repr='3'),
+    Delta(4, int, repr='4'), Delta(5, int, repr='5'),
+]
+```
+
+*desire tasks*: navigation towards goal, but paramterized by goal value (could be 2,4,5)
+
+stitch finds `(unfold (gset $3 $2 $1 $0) (optimize (neg_dist $0) 1))`
+
+e.g.`
+goal_val=4  agent=(3, 1)  goal=(3, 3)
+    found:     (unfold (gset ig_15 3 3 4) (optimize (neg_dist 4) 1))
+    rewritten: (fn_0 4 3 3 ig_15)`
+
+this all happens in the first enumeration
+
+= May 19: phase 5
+
+*Sequential desire tasks* agent(1) approaches goal(gv1) then goal(gv2)
+
+added primitive `if_fn(exists(gv1), optimize(neg_dist(gv1),1), optimize(neg_dist(gv2),1))`
+
+Hope:
+
+1. `neg_dist($gv)` desire as utility
+2. `fn_want($gv)=optimize(neg_dist($gv), 1)` desire compiled to action
+3. `fn_cond_desire($gv1,$gv2)=if_fn(exists($gv1), fn_want($gv1), fn_want($gv2))` goal ordering combinator
+4. `fn_seq_desire(...)` full task
+
+*RESULTS:* ran for 8 iterations. only found simple desire, and accidentally some sequential ones that matched.
+
+So added `fn_want` which wraps `approach(1, goal_val)`. So `fn_want =  fn_want = optimize(neg_dist($0), 1)`. 
+
+```python
+core_prims = [
+    Delta(unfold_auto,  mat,     [grid, fn],           repr='unfold'),
+    Delta(gset,         grid,    [grid, int, int, int], repr='gset'),
+    Delta(fn_want,      fn,      [int],                 repr='fn_want'),
+    Delta(optimize,     fn,      [util, int],           repr='optimize'),
+    Delta(neg_distance, util,    [int],                 repr='neg_dist'),
+    Delta(distance,     util,    [int],                 repr='distance'),
+    Delta(neg_util,     util,    [util],                repr='neg_util'),
+    Delta(add_util,     util,    [util, util],          repr='add_util'),
+    Delta(if_fn,        fn,      [fn_pred, fn, fn],     repr='if_fn'),
+    Delta(exists,       fn_pred, [int],                 repr='exists'),
+    Delta(0, int, repr='0'), Delta(1, int, repr='1'),
+    Delta(2, int, repr='2'), Delta(3, int, repr='3'),
+    Delta(4, int, repr='4'), Delta(5, int, repr='5'),
+]
+```
+
+
+hope:
+
+1. `fn_desire($ig,$gr,$gc,$gv)` from simple desire `(fn_want ×1, gv ×2)`
+2. `fn_cond_desire($gv1,$gv2)=if_fn(exists($gv1), fn_want($gv1), fn_want($gv2))` from sequential desire
+3. `fn_seq_desire($ig,$r1,$c1,$gv1,$r2,$c2,$gv2)` from sequential desire (full task)

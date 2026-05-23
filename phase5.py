@@ -66,12 +66,11 @@ from collections import Counter
 from ecd import (
     Deltas, Delta, ECD,
     make_desire_tasks, make_sequential_desire_tasks,
-    task_terminals,
     normalize, mat_key,
 )
 from dsl import (
-    mat, grid, fn, fn_pred, util,
-    unfold_auto, gset, approach_from,
+    fn, fn_pred, util,
+    approach_from,
     optimize, neg_distance, distance, neg_util, add_util,
     if_fn, exists,
 )
@@ -103,9 +102,6 @@ print(f"{len(Xs_seq)} sequential desire tasks (combos {list(SEQ_COMBOS)})")
 fn_want = approach_from(1)
 
 core_prims = [
-    Delta(unfold_auto,  mat,     [grid, fn],           repr='unfold'),
-    Delta(gset,         grid,    [grid, int, int, int], repr='gset'),
-    #Delta(fn_want,      fn,      [int],                 repr='fn_want'),
     Delta(optimize,     fn,      [util, int],           repr='optimize'),
     Delta(neg_distance, util,    [int],                 repr='neg_dist'),
     Delta(distance,     util,    [int],                 repr='distance'),
@@ -118,24 +114,17 @@ core_prims = [
     Delta(4, int, repr='4'), Delta(5, int, repr='5'),
 ]
 
-# mode='agent' zeros out all non-agent, non-wall cells.
-# Simple desire: one goal zeroed → ECD enumerates (gr, gc, gv).
-# Sequential desire: two goals zeroed → ECD enumerates (r1, c1, gv1, r2, c2, gv2).
-Xs     = Xs_simple + Xs_seq
-ig_sim = task_terminals(Xs_simple, mode='agent')
-ig_seq = task_terminals(Xs_seq,    mode='agent')
-for i, d in enumerate(ig_seq):
-    d.repr = f'ig_{len(Xs_simple) + i}'
-
-ig = ig_sim + ig_seq
-D  = Deltas(core_prims + ig)
-print(f"\nDSL: {len(core_prims)} core prims + {len(ig)} task terminals = {len(D)} total")
-print(f"  simple desire:  7 nodes/solution, 3 ints to enumerate")
-print(f"  sequential:    14 nodes/solution, 6 ints to enumerate\n")
+# unfold and gset are implicit: solve_enumeration enumerates fn programs and
+# wraps each with unfold(x[0], T, fn) for evaluation against task trajectories.
+Xs = Xs_simple + Xs_seq
+D  = Deltas(core_prims)
+print(f"\nDSL: {len(core_prims)} core prims (unfold/gset implicit)")
+print(f"  simple desire:  4 nodes/fn  (optimize (neg_dist gv) 1)")
+print(f"  sequential:     7 nodes/fn after fn_want  (if_fn (exists gv1) (fn_want gv1) (fn_want gv2))\n")
 
 # ── ECD ───────────────────────────────────────────────────────────────────────
 print("Running ECD…\n")
-Z, rewritten = ECD(Xs, D, per_task_timeout=60, max_iterations=8, max_arity=8)
+Z, rewritten = ECD(Xs, D, per_task_timeout=60, max_iterations=8, max_arity=8, root_type=fn)
 
 # ── Report ────────────────────────────────────────────────────────────────────
 n_simple = sum(1 for x in Xs_simple if mat_key(x) in Z and Z[mat_key(x)] is not None)

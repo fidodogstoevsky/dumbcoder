@@ -343,3 +343,17 @@ hope:
 1. `fn_desire($ig,$gr,$gc,$gv)` from simple desire `(fn_want ×1, gv ×2)`
 2. `fn_cond_desire($gv1,$gv2)=if_fn(exists($gv1), fn_want($gv1), fn_want($gv2))` from sequential desire
 3. `fn_seq_desire($ig,$r1,$c1,$gv1,$r2,$c2,$gv2)` from sequential desire (full task)
+
+= May 22
+
+Ran phase5 on a mix of simple nav tasks and multi step nav tasks, in the hope that it would abstract `(optimize (neg distance $gv))` from all the solutions `(unfold grid (optimize (neg distance goal)))`. But that didn't happen because the solutions were all of the same form, they all have `unfold` as their root, so it abstracts the full `(unfold (gset #3 #2 #1 #0) (optimize (neg_dist #0) 1))` which is too specific.
+
+So I changed it so that now the enumerator is trying to find an `fn` and the system implicitly unfolds the `fn` when evaluating it against the target matrix. 
+
+- solve_enumeration: enumerates fn-type programs; callback evaluates each as `unfold(x[0], T, fn_val)`
+per task, keyed by ig_map. `_unfold_steps` global is no longer touched here.
+- dream: takes training_Xs=None; generates random fn trees (depth 5 instead of 10); evaluates by
+picking a random training frame as the initial grid and calling unfold(ig, T, fn_val) directly.
+- ECD: passes training_Xs=Xs to dream.
+- phase5.py: core_prims drops unfold_auto and gset; ig terminal generation removed; D = 
+Deltas(core_prims) only. Unused imports (mat, grid, unfold_auto, gset, task_terminals) cleaned up.

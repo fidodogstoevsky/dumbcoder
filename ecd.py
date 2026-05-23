@@ -599,16 +599,24 @@ def newtree(D, type, paths, paths_terminal, depth=6, q=None):
 class _EnumDone(Exception):
     pass
 
-def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0):
+def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0, root_type=None):
     """runs for each unsolved task
     systematically enumerates programs from the DSL, evaluating each one.
     If a program evaluates to a full task matrix in Xs, it's saved in solutions.
     The enumeration is budget-based: it iterates over increasingly wide
     probability budgets (LOGPGAP * idx to LOGPGAP * (idx+1)), so it tries
     the most probable programs first and fans out.
-    Stops when all matrices in Xs are solved or timeout is hit."""
+    Stops when all matrices in Xs are solved or timeout is hit.
+
+    root_type: type of program to enumerate.
+      mat (default) — programs produce mat directly; unfold_auto is an explicit primitive.
+      fn  — programs produce a transition fn; evaluation wraps as unfold(x[0], T, fn).
+    """
     import dsl as _dsl
-    if len(Xs) == 1:
+    if root_type is None:
+        root_type = mat
+
+    if root_type == mat and len(Xs) == 1:
         _dsl._unfold_steps = Xs[0].shape[0]
 
     print(f'{len(D)=}')
@@ -620,10 +628,10 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
     LOGPGAP = 2
     done = False
     targets = {mat_key(x): x for x in Xs}
+    ig_map  = {mat_key(x): (x[0], x.shape[0]) for x in Xs} if root_type == fn else {}
 
     def cb(tree, logp):
-        """called once per enumerated program.
-        checks if the output matches any full task matrix in Xs."""
+        """called once per enumerated program."""
         nonlocal cnt, all_cnt, done, stime
 
         all_cnt += 1
@@ -631,15 +639,31 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
             done = True
             raise _EnumDone()
 
-        try:
-            out = tree()
-        except Exception as e:
-            return
-
-        if not isinstance(out, np.ndarray) or 0 in out.shape:
-            return
-
-        cnt += 1
+        if root_type == fn:
+            try:
+                fn_val = tree()
+            except Exception:
+                return
+            if not callable(fn_val):
+                return
+            cnt += 1
+            candidates = []
+            for tkey, (ig, T) in ig_map.items():
+                try:
+                    out = _dsl.unfold(ig, T, fn_val)
+                    if isinstance(out, np.ndarray) and 0 not in out.shape:
+                        candidates.append(mat_key(out))
+                except Exception:
+                    pass
+        else:
+            try:
+                out = tree()
+            except Exception:
+                return
+            if not isinstance(out, np.ndarray) or 0 in out.shape:
+                return
+            cnt += 1
+            candidates = [mat_key(out)]
 
         if not(cnt % 10000) and cnt > 0:
             print(f'! {cnt} trees, {cnt/(time()-stime):.0f}/s', flush=True)
@@ -648,16 +672,14 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
             done = True
             raise _EnumDone()
 
-        okey = mat_key(out)
-        if okey in targets:
-            if okey not in solutions:
-                print(f'[{cnt:6d}] caught {tree}', flush=True)
-
-            if okey not in solutions or length(tree) < length(solutions[okey]):
-                solutions[okey] = deepcopy(tree)
-
-            if all(mat_key(x) in solutions for x in Xs):
-                done = True
+        for okey in candidates:
+            if okey in targets:
+                if okey not in solutions:
+                    print(f'[{cnt:6d}] caught {tree}', flush=True)
+                if okey not in solutions or length(tree) < length(solutions[okey]):
+                    solutions[okey] = deepcopy(tree)
+                if all(mat_key(x) in solutions for x in Xs):
+                    done = True
 
         if done:
             raise _EnumDone()
@@ -667,12 +689,12 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
         deadline = stime + timeout
         while not done and time() < deadline:
             try:
-                cenumerate(D, Q, mat, (LOGPGAP * idx, LOGPGAP * (idx+1)), maxdepth, cb, deadline)
+                cenumerate(D, Q, root_type, (LOGPGAP * idx, LOGPGAP * (idx+1)), maxdepth, cb, deadline)
             except _EnumDone:
                 pass
             idx += 1
     else:
-        ephermal = Delta('root', ishole=True, tailtypes=[mat])
+        ephermal = Delta('root', ishole=True, tailtypes=[root_type])
         D.add(ephermal)
         Q = th.hstack((Q, tensor([0])))
 
@@ -685,7 +707,8 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
         D.pop(ephermal)
 
-    _dsl._unfold_steps = None
+    if root_type == mat:
+        _dsl._unfold_steps = None
 
     took = time() - stime
     print(f'total: {cnt}, took: {took/60:.1f}m, iter: {cnt/(took+1e-9):.0f}/s', flush=True)
@@ -694,9 +717,11 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
 
 
-def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, seeds=None, run_dream=True, max_arity=6):
+def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, seeds=None, run_dream=True, max_arity=6, root_type=None):
     # when ECD is first run, reset the DSL
     D.reset()
+    if root_type is None:
+        root_type = mat
 
     Qmodel = None  # no model on the first iteration; use uniform Q
     idx = 0
@@ -768,7 +793,8 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
             # so that all program structures remain reachable.
             q = task_Q(x) if idx < 3 else uniform_type_q()
             sols = solve_enumeration([x], D, q, sols,
-                                     maxdepth=10, timeout=t, budget=budget)
+                                     maxdepth=10, timeout=t, budget=budget,
+                                     root_type=root_type)
 
         soltrees = [s for s in sols.values() if s is not None]
         if len(soltrees) > 0:
@@ -778,7 +804,7 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
 
         idx += 1
 
-        Qmodel = dream(D, trees) if run_dream else None
+        Qmodel = dream(D, trees, training_Xs=Xs, root_type=root_type) if run_dream else None
 
         if all_solved():
             break
@@ -915,8 +941,11 @@ def tc_mat(x, vocabsize=10):
     "convert a numpy matrix to a (T, H, W) long tensor, clamping to valid range"
     return th.from_numpy(np.clip(x, 0, vocabsize - 1).astype(np.int64))
 
-def dream(D, soltrees=[]):
+def dream(D, soltrees=[], training_Xs=None, root_type=None):
     import dsl as _dsl
+    if root_type is None:
+        root_type = mat
+
     device = th.device('cuda' if th.cuda.is_available() else 'cpu')
 
     qmodel = MatRecognitionModel(len(D)).to(device)
@@ -931,7 +960,9 @@ def dream(D, soltrees=[]):
             # Random trees add noise that competes with the solution signal.
             trees = [soltrees[i] for i in randint(len(soltrees), size=8)]
         else:
-            trees = [newtree(D, mat, paths, paths_terminal, depth=10) for _ in range(8)]
+            tree_type = fn if root_type == fn else mat
+            trees = [newtree(D, tree_type, paths, paths_terminal,
+                             depth=5 if root_type == fn else 10) for _ in range(8)]
 
         opt.zero_grad()
 
@@ -940,12 +971,21 @@ def dream(D, soltrees=[]):
 
         for tree in trees:
             try:
-                _dsl._unfold_steps = int(randint(2, 9))
-                out = tree()
+                if root_type == fn:
+                    fn_val = tree()
+                    if not callable(fn_val):
+                        continue
+                    T  = int(randint(2, 9))
+                    ig = training_Xs[randint(len(training_Xs))][0] if training_Xs else _dsl.blank44.copy()
+                    out = _dsl.unfold(ig, T, fn_val)
+                else:
+                    try:
+                        _dsl._unfold_steps = int(randint(2, 9))
+                        out = tree()
+                    finally:
+                        _dsl._unfold_steps = None
             except Exception:
                 continue
-            finally:
-                _dsl._unfold_steps = None
 
             if not isinstance(out, np.ndarray) or 0 in out.shape or out.shape[0] < 2:
                 continue

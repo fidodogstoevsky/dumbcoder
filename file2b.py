@@ -1,6 +1,6 @@
-"""Phase 2b: false-belief tasks with a belief-attributing DSL.
+"""File 2b: false-belief tasks with a belief-attributing DSL.
 
-Same tasks as phase2.py but the DSL replaces mask+place_wall with two primitives
+Same tasks as file2.py but the DSL replaces mask+place_wall with two primitives
 that make the agent's mental model explicit:
 
   add_phantom_wall(g, r, c) -> belief
@@ -24,12 +24,12 @@ Stitch discovers:
 $ig appearing twice is the structural signature of belief: the agent's model is
 not arbitrary — it is grounded in the actual world with a single false addition.
 
-Compare to phase2.py:
+Compare to file2.py:
   fn_belief($grid, $r, $c) = (mask (unfold (place_wall $grid $r $c) (approach 1 2)) 3)
   → world-level description: "navigate a modified world, hide the modification"
 
 Run:
-  python phase2b.py
+  python file2b.py
 """
 
 from copy import deepcopy

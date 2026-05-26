@@ -556,6 +556,216 @@ def make_sequential_desire_tasks(n_per_combo, goal_combos=((2, 4), (4, 5), (2, 5
     return tasks
 
 
+def make_multi_agent_false_belief_task(size=5, seed=None, min_dist=None):
+    """Two agents with different phantom wall beliefs navigate to their goals.
+
+    Agent 1 (val=1) → goal (val=2), phantom wall at PW1.
+    Agent 2 (val=4) → goal (val=5), phantom wall at PW2.
+    PW1 ≠ PW2 so each agent's detour can only be explained by their own belief.
+
+    Agents move simultaneously each frame; observed trajectory shows the actual
+    world (no phantom walls). Both agents' suboptimal paths appear in the output.
+
+    Returns (x, meta) or None on failure.
+    """
+    from collections import deque
+    from dsl import _step_belief, approach
+
+    if min_dist is None:
+        min_dist = size // 2
+
+    rng = np.random.default_rng(seed)
+
+    def bfs(start, end, wall_set, sz):
+        q = deque([(start, [start])])
+        vis = {start}
+        while q:
+            pos, path = q.popleft()
+            if pos == end:
+                return path
+            for dr, dc in ((-1,0),(1,0),(0,-1),(0,1)):
+                nb = (pos[0]+dr, pos[1]+dc)
+                if 0<=nb[0]<sz and 0<=nb[1]<sz and nb not in wall_set and nb not in vis:
+                    vis.add(nb)
+                    q.append((nb, path+[nb]))
+        return None
+
+    for _ in range(2000):
+        cells = [(r,c) for r in range(size) for c in range(size)]
+        rng.shuffle(cells)
+
+        # Need 4 distinct positions
+        a1, a2, g1, g2 = cells[0], cells[1], cells[2], cells[3]
+
+        if (abs(a1[0]-g1[0]) + abs(a1[1]-g1[1]) < min_dist or
+                abs(a2[0]-g2[0]) + abs(a2[1]-g2[1]) < min_dist):
+            continue
+
+        # Optimal paths on blank grid
+        opt1 = bfs(a1, g1, set(), size)
+        opt2 = bfs(a2, g2, set(), size)
+        if not opt1 or not opt2:
+            continue
+
+        # Phantom wall candidates: interior cells, not occupied by the other agent/goal
+        interior1 = [p for p in opt1[1:-1] if p not in (a2, g2)]
+        interior2 = [p for p in opt2[1:-1] if p not in (a1, g1)]
+        if not interior1 or not interior2:
+            continue
+
+        rng.shuffle(interior1)
+        rng.shuffle(interior2)
+
+        pw1 = pw2 = bel1 = bel2 = None
+        for p1 in interior1:
+            b1 = bfs(a1, g1, {p1}, size)
+            if not b1 or b1 == opt1:
+                continue
+            for p2 in interior2:
+                if p2 == p1:
+                    continue
+                b2 = bfs(a2, g2, {p2}, size)
+                if b2 and b2 != opt2:
+                    pw1, pw2, bel1, bel2 = p1, p2, b1, b2
+                    break
+            if pw1:
+                break
+        if not pw1:
+            continue
+
+        # Ensure believed paths don't collide at any timestep
+        max_t = max(len(bel1), len(bel2))
+        ext1 = bel1 + [bel1[-1]] * (max_t - len(bel1))
+        ext2 = bel2 + [bel2[-1]] * (max_t - len(bel2))
+        if any(p1 == p2 for p1, p2 in zip(ext1, ext2)):
+            continue
+
+        # Build initial grid (no phantom walls visible)
+        ig = np.zeros((size, size), dtype=int)
+        ig[a1[0], a1[1]] = 1
+        ig[a2[0], a2[1]] = 4
+        ig[g1[0], g1[1]] = 2
+        ig[g2[0], g2[1]] = 5
+
+        # Believed grids: actual grid + each agent's phantom wall
+        bg1 = ig.copy(); bg1[pw1[0], pw1[1]] = 3
+        bg2 = ig.copy(); bg2[pw2[0], pw2[1]] = 3
+
+        step1, step2 = approach(1, 2), approach(4, 5)
+        act = ig.copy()
+        b1, b2 = bg1.copy(), bg2.copy()
+
+        frames = [act.copy()]
+        for _ in range(size * 4):
+            act, b1 = _step_belief(act, b1, step1)
+            act, b2 = _step_belief(act, b2, step2)
+            frames.append(act.copy())
+            if not np.any(act == 2) and not np.any(act == 5):
+                break
+
+        if len(frames) < 3:
+            continue
+
+        x = np.stack(frames)
+        meta = {
+            'agent1': a1, 'goal1': g1, 'pw1': pw1,
+            'agent2': a2, 'goal2': g2, 'pw2': pw2,
+        }
+        return x, meta
+
+    return None
+
+
+def make_multi_agent_false_belief_tasks(n=20, size=5, seed=0):
+    "Generate n multi-agent false-belief tasks (two agents, two distinct phantom walls)."
+    rng = np.random.default_rng(seed)
+    tasks = []
+    attempts = 0
+    while len(tasks) < n:
+        t = make_multi_agent_false_belief_task(size=size, seed=int(rng.integers(1<<31)))
+        attempts += 1
+        if t is not None:
+            tasks.append(t)
+    print(f"generated {n} multi-agent false-belief tasks ({attempts} attempts, {size}x{size})")
+    return tasks
+
+
+def make_multi_agent_desire_task(agent_goal_pairs, size=5, seed=None, min_dist=None):
+    """Two agents navigate toward assigned goals on a blank grid (no walls).
+
+    agent_goal_pairs: [(av1, gv1), (av2, gv2)] — agent av_i seeks goal gv_i.
+    Agents move sequentially each frame in the order given.
+    Returns (x, meta) or None.
+    """
+    from dsl import _approach_grid
+    if min_dist is None:
+        min_dist = size // 2
+
+    rng = np.random.default_rng(seed)
+
+    for _ in range(500):
+        cells = [(r, c) for r in range(size) for c in range(size)]
+        rng.shuffle(cells)
+
+        n = len(agent_goal_pairs)
+        if len(cells) < 2 * n:
+            return None
+
+        agent_pos = cells[:n]
+        goal_pos  = cells[n:2*n]
+
+        if len(set(agent_pos + goal_pos)) < 2 * n:
+            continue
+
+        if not all(abs(ap[0]-gp[0]) + abs(ap[1]-gp[1]) >= min_dist
+                   for ap, gp in zip(agent_pos, goal_pos)):
+            continue
+
+        ig = np.zeros((size, size), dtype=int)
+        for (av, gv), ap, gp in zip(agent_goal_pairs, agent_pos, goal_pos):
+            ig[ap[0], ap[1]] = av
+            ig[gp[0], gp[1]] = gv
+
+        frames = [ig.copy()]
+        curr = ig.copy()
+        for _ in range(size * 4):
+            prev = curr.copy()
+            for av, gv in agent_goal_pairs:
+                curr = _approach_grid(curr, av, gv)
+            frames.append(curr.copy())
+            if np.array_equal(curr, prev):
+                break
+
+        if len(frames) < 3:
+            continue
+
+        return np.stack(frames), {
+            'agent_goal_pairs': agent_goal_pairs,
+            'agent_pos': agent_pos,
+            'goal_pos': goal_pos,
+        }
+
+    return None
+
+
+def make_multi_agent_desire_tasks(n, agent_goal_pairs, size=5, seed=0):
+    """Generate n multi-agent desire tasks for given agent_goal_pairs."""
+    rng = np.random.default_rng(seed)
+    tasks = []
+    attempts = 0
+    while len(tasks) < n:
+        t = make_multi_agent_desire_task(
+            agent_goal_pairs, size=size, seed=int(rng.integers(1 << 31))
+        )
+        attempts += 1
+        if t is not None:
+            tasks.append(t)
+    pairs_str = ', '.join(f'{av}→{gv}' for av, gv in agent_goal_pairs)
+    print(f"generated {n} multi-agent desire tasks ({attempts} attempts, "
+          f"pairs=[{pairs_str}], {size}x{size})")
+    return tasks
+
+
 def make_physics_tasks(n_per_dir, directions=None, size=4, seed=0):
     """Generate physics tasks: agent drifts linearly to goal, one per direction bucket.
 

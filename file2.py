@@ -1,4 +1,4 @@
-"""Phase 2: false-belief tasks, discovered from scratch.
+"""File 2: false-belief tasks, discovered from scratch.
 
 No bootstrapping.  ECD searches from the ground up.
 
@@ -25,7 +25,7 @@ The mask(…, 3) wrapper is the semantic signature of belief:
   "navigate on the believed grid (with phantom wall), hide the wall from output"
 
 Run:
-  python phase2.py
+  python file2.py
 """
 
 from copy import deepcopy

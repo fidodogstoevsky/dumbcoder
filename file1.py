@@ -1,4 +1,4 @@
-"""Phase 1 MVP: simple structural abstraction, no bootstrapping.
+"""File 1 MVP: simple structural abstraction, no bootstrapping.
 
 Tasks: nav on a 4×4 grid with a fixed 2-cell vertical barrier at (1,2)+(2,2).
 Each task gets a task-specific terminal ig_i = x[0] (agent + goal + walls).
@@ -14,7 +14,7 @@ the initial grid and path length.  The walls are already encoded in ig_i, so
 stitch doesn't need to see place_wall at all to compress these programs.
 
 Run:
-  python phase1.py
+  python file1.py
 """
 
 from copy import deepcopy

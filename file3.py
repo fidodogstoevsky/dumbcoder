@@ -1,4 +1,4 @@
-"""Phase 3: desire tasks, bootstrapped with nav tasks.
+"""File 3: desire tasks, bootstrapped with nav tasks.
 
 Nav tasks (mode='full') give ECD easy wins in iteration 1.  Stitch creates
 fn_0($grid) = (unfold $grid (approach_1 2)), which acts as a building block.
@@ -14,7 +14,7 @@ $gv appears TWICE — in gset (world) and approach_1 (behaviour).  That
 shared variable is desire.
 
 Run:
-  python phase3.py
+  python file3.py
 """
 
 from copy import deepcopy

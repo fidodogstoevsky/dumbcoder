@@ -599,18 +599,22 @@ def newtree(D, type, paths, paths_terminal, depth=6, q=None):
 class _EnumDone(Exception):
     pass
 
-def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0, root_type=None):
-    """runs for each unsolved task
-    systematically enumerates programs from the DSL, evaluating each one.
-    If a program evaluates to a full task matrix in Xs, it's saved in solutions.
-    The enumeration is budget-based: it iterates over increasingly wide
-    probability budgets (LOGPGAP * idx to LOGPGAP * (idx+1)), so it tries
-    the most probable programs first and fans out.
-    Stops when all matrices in Xs are solved or timeout is hit.
+def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0,
+                      root_type=None, step_fn=None, agents=None):
+    """Enumerate programs from the DSL and match against task trajectories.
 
-    root_type: type of program to enumerate.
-      mat (default) — programs produce mat directly; unfold_auto is an explicit primitive.
-      fn  — programs produce a transition fn; evaluation wraps as unfold(x[0], T, fn).
+    root_type controls what programs produce and how they are evaluated:
+      mat        — programs produce mat directly; unfold_auto is an explicit primitive.
+      fn         — programs produce a transition fn; wrapped as unfold(x[0], T, fn).
+      grid       — programs produce a believed initial grid; wrapped as
+                   unfold_belief_steps(x[0], believed_g, T, step_fn).
+                   step_fn must be supplied (e.g. approach(1, 2)).
+      agent_step — programs produce int->fn (desire assignment); wrapped as
+                   unfold_multiagent_desire_steps(x[0], T, desire_fn, agent_vals).
+                   agents must be supplied (e.g. [(1, 2), (4, 5)]).
+      fn_belief  — programs produce int->fn (belief assignment); wrapped as
+                   unfold_multiagent_fn_belief_steps(x[0], T, fn_belief_fn, agents).
+                   agents must be supplied (e.g. [(1, 2), (4, 5)]).
     """
     import dsl as _dsl
     if root_type is None:
@@ -628,7 +632,7 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
     LOGPGAP = 2
     done = False
     targets = {mat_key(x): x for x in Xs}
-    ig_map  = {mat_key(x): (x[0], x.shape[0]) for x in Xs} if root_type == fn else {}
+    ig_map = {mat_key(x): (x[0], x.shape[0]) for x in Xs} if root_type in (fn, grid, agent_step, fn_belief) else {}
 
     def cb(tree, logp):
         """called once per enumerated program."""
@@ -655,6 +659,59 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
                         candidates.append(mat_key(out))
                 except Exception:
                     pass
+
+        elif root_type == grid:
+            try:
+                believed_g = tree()
+            except Exception:
+                return
+            if not isinstance(believed_g, np.ndarray) or believed_g.ndim != 2:
+                return
+            cnt += 1
+            candidates = []
+            for tkey, (actual_g, T) in ig_map.items():
+                try:
+                    out = _dsl.unfold_belief_steps(actual_g, believed_g, T, step_fn)
+                    if isinstance(out, np.ndarray) and 0 not in out.shape:
+                        candidates.append(mat_key(out))
+                except Exception:
+                    pass
+
+        elif root_type == agent_step:
+            try:
+                desire_fn = tree()
+            except Exception:
+                return
+            if not callable(desire_fn):
+                return
+            cnt += 1
+            agent_vals = [av for av, _ in agents] if agents else []
+            candidates = []
+            for tkey, (actual_g, T) in ig_map.items():
+                try:
+                    out = _dsl.unfold_multiagent_desire_steps(actual_g, T, desire_fn, agent_vals)
+                    if isinstance(out, np.ndarray) and 0 not in out.shape:
+                        candidates.append(mat_key(out))
+                except Exception:
+                    pass
+
+        elif root_type == fn_belief:
+            try:
+                fn_belief_val = tree()
+            except Exception:
+                return
+            if not callable(fn_belief_val):
+                return
+            cnt += 1
+            candidates = []
+            for tkey, (actual_g, T) in ig_map.items():
+                try:
+                    out = _dsl.unfold_multiagent_fn_belief_steps(actual_g, T, fn_belief_val, agents)
+                    if isinstance(out, np.ndarray) and 0 not in out.shape:
+                        candidates.append(mat_key(out))
+                except Exception:
+                    pass
+
         else:
             try:
                 out = tree()
@@ -717,11 +774,14 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
 
 
-def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, seeds=None, run_dream=True, max_arity=6, root_type=None):
+def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, seeds=None,
+        run_dream=True, max_arity=6, stitch_iterations=None, root_type=None, step_fn=None, agents=None):
     # when ECD is first run, reset the DSL
     D.reset()
     if root_type is None:
         root_type = mat
+
+    _run_dream = run_dream and root_type in (mat, fn)
 
     Qmodel = None  # no model on the first iteration; use uniform Q
     idx = 0
@@ -794,17 +854,19 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
             q = task_Q(x) if idx < 3 else uniform_type_q()
             sols = solve_enumeration([x], D, q, sols,
                                      maxdepth=10, timeout=t, budget=budget,
-                                     root_type=root_type)
+                                     root_type=root_type,
+                                     step_fn=step_fn, agents=agents)
 
         soltrees = [s for s in sols.values() if s is not None]
+        _si = stitch_iterations if stitch_iterations is not None else 2
         if len(soltrees) > 0:
-            trees, rewritten_strs = saturate_stitch(D, sols, iterations=2, max_arity=max_arity)
+            trees, rewritten_strs = saturate_stitch(D, sols, iterations=_si, max_arity=max_arity)
         else:
             trees, rewritten_strs = [], []
 
         idx += 1
 
-        Qmodel = dream(D, trees, training_Xs=Xs, root_type=root_type) if run_dream else None
+        Qmodel = dream(D, trees, training_Xs=Xs, root_type=root_type) if _run_dream else None
 
         if all_solved():
             break

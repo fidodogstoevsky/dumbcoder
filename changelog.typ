@@ -150,7 +150,7 @@ increased to 12 nav seeds. But stitch didn't discover abstractions. all 12 progr
 
 Belief: a primitive that captures which grid drives the agent's trajectory
 
-== phases
+== files
 
 == primitive encoding of grids, remove bootstrapping
 
@@ -172,7 +172,7 @@ rather than needing to enumerate ints to find the timespan `T` over which to unf
 - in dreaming, set `_unfold_steps` to a sampled `T` when evaluating solution trees (dream just needs a valid input, it doesn't need a precise T)
 - so instead of `Delta(unfold, mat, [grid, int, fn])` we have `Delta(unfold_auto, mat, [grid, fn])` (but for simplicty we rename `unfold_auto` to `unfold`)
 
-=== phase 1
+=== file 1
 
 mvp
 
@@ -203,7 +203,7 @@ and programs are rewritten
 
 it's just a nav primitive paramterised over the initial grid. 
 
-=== phase 2
+=== file 2
 
 dataset:
 - 8 nav tasks $4 times 4$, one wall
@@ -223,7 +223,7 @@ then to solve the false belief tasks, it enumerates about 1.2 million trees. it 
 
 _Compress 0_
 
-stitch abstracts `fn_0: (unfold #0 navigate)  [mat]` as it did in phase 1. 
+stitch abstracts `fn_0: (unfold #0 navigate)  [mat]` as it did in file 1. 
 
 _Explore 1_
 
@@ -302,7 +302,7 @@ goal_val=4  agent=(3, 1)  goal=(3, 3)
 
 this all happens in the first enumeration
 
-= May 19: phase 5
+= May 19: file 5
 
 *Sequential desire tasks* agent(1) approaches goal(gv1) then goal(gv2)
 
@@ -346,7 +346,7 @@ hope:
 
 = May 22
 
-Ran phase5 on a mix of simple nav tasks and multi step nav tasks, in the hope that it would abstract `(optimize (neg distance $gv))` from all the solutions `(unfold grid (optimize (neg distance goal)))`. But that didn't happen because the solutions were all of the same form, they all have `unfold` as their root, so it abstracts the full `(unfold (gset #3 #2 #1 #0) (optimize (neg_dist #0) 1))` which is too specific.
+Ran file5 on a mix of simple nav tasks and multi step nav tasks, in the hope that it would abstract `(optimize (neg distance $gv))` from all the solutions `(unfold grid (optimize (neg distance goal)))`. But that didn't happen because the solutions were all of the same form, they all have `unfold` as their root, so it abstracts the full `(unfold (gset #3 #2 #1 #0) (optimize (neg_dist #0) 1))` which is too specific.
 
 So I changed it so that now the enumerator is trying to find an `fn` and the system implicitly unfolds the `fn` when evaluating it against the target matrix. 
 
@@ -355,5 +355,70 @@ per task, keyed by ig_map. `_unfold_steps` global is no longer touched here.
 - dream: takes training_Xs=None; generates random fn trees (depth 5 instead of 10); evaluates by
 picking a random training frame as the initial grid and calling unfold(ig, T, fn_val) directly.
 - ECD: passes training_Xs=Xs to dream.
-- phase5.py: core_prims drops unfold_auto and gset; ig terminal generation removed; D = 
-Deltas(core_prims) only. Unused imports (mat, grid, unfold_auto, gset, task_terminals) cleaned up.
+- file5.py: core_prims drops unfold_auto and gset; ig terminal generation removed; D = Deltas(core_prims) only. Unused imports (mat, grid, unfold_auto, gset, task_terminals) cleaned up.
+
+And indeed that does fix the problem. It first finds `(optimize (neg_dist 2) 1)` for a simple desire task, then finds `(if_fn (exists 2) (optimize (neg_dist 2) 1) (optimize (neg_dist 4) 1))` for multi-goal tasks. In fact it finds it quite quickly, solutions for both types of tasks within the first enumeration. So I can make things more complicated. 
+
+So yeah it successfully abstracts `(if_fn (exists $1) (optimize (neg_dist $1) 1) (optimize (neg_dist $0) 1))` so it can do
+
+`
+(2→4)  agent=(1, 2)  goal1=(0, 3) goal2=(3, 2)  T=7
+    found:     (if_fn (exists 2) (optimize (neg_dist 2) 1) (optimize (neg_dist 4) 1))
+    rewritten: (fn_0 4 2)
+`
+
+= May 24
+
+The problem with making `unfold` implicit and searching for an `fn` rather than a `grid` is that now we have to take the initial grid as a given and we can't search over possible different ways for the starting grid to be - we can't `mask`, we can't posit other possible states of the world
+
+initial fix: two modes of ECD, the classic one where the resulting program is a `grid`, and the new one (just for file 5) where the resulting program is an `fn`. So then for file 5 it'll find `optimize(neg_dist($gv), $av)` or something, but for all the rest it'll find `unfold(grid, fn)` like it did previously
+
+but of course that's not the point. the goal is to enumerate over a combination of initial grid states and transition functions, to find the pair that yields the best explanation. 
+
+a `belief` function would look something like `believes(agent, grid)` associating an agent with the grid that they believe represents the real world, the grid according to which they navigate. For example, if agent 1 navigates according to a grid that's just like the initial grid but has a wall placed at (1,2) it'd be `(believes 1 (place_wall ig 1 2))`.
+
+= May 25
+
+making `unfold` explicit opened up a new variable to play with: not just choosing the DSL and choosing the data, but choosing the root type. i.e. choosing the type of the final programs, the programs to enumerate over. previously it was just generating `mat` type, but in the version of file5 without unfold it's generating `fn` type. 
+
+Delete *file7*, it is stupid and useless. It has root type `grid` and evaluator `unfold_belief_steps(actual_g, believed_g, T, approach(agent_val, goal_val))`. Its DSL is just `place_wall`. So it just searches over possible wall placements to find the matching initial grid. For two-agent tasks, it's hard coded to separate them out into separate tasks and then runs ECD on each and then abstracts `place_wall($ig, $r, $c)`. 
+
+Delete *file8* it's something like that but for desire, finding the goal for each agent, it's also stupid and useless. 
+
+Then I tried with *file6* originally it was finding `fn_belief`, which is a function `int -> (grid -> grid)`, given an agent returns a grid to grid transformation function `fn`, i.e. a function for augmenting the initial grid (adding a wall somewhere) to make the navigation optimal, i.e. a function that given the initial grid returns the grid according to which the agent is navigating optimally. 
+
+The actual grid is passed at evaluation time. So there are no task-specific grid primitives, it's passed in. So the primitives are
+
+Delta(assign_belief, fn_belief, [int, fn, fn_belief], repr='assign_belief'),
+Delta(no_belief_fn,  fn_belief,                       repr='no_belief_fn'),
+Delta(set_at,        fn,        [int, int, int],      repr='set_at'),
+
+the solution to simple nav tasks is `assign_belief($av, set_at($r, $c, 3), no_belief_fn)`
+
+so stitch should abstract `assign_belief($av, set_at($r, $c, 3), no_belief_fn)` as a function that assigns a singular belief to one agent (`no_belief_fn` is the zero case, i.e. for all other agents if any they just navigate on the standard grid)
+
+then for two agents the solution would be `assign_belief(1, set_at(r1, c1, 3), fn_one_belief(4, r2, c2))`, it's nested. Agent 1 navigates according to the grid given a wall at (r1, c1), and agent 4 navigates according to the grid given a wall at (r2, c2), and if there are any other agents they navigate according to the default grid. 
+
+= May 26
+
+The above is garbage. file6 produces programs of type fn_belief. But my goal is for ECD to discover that structure by itself. I want it to discover the very notion of assigning an fn (or grid) to an int, assigning a proposition to an agent (i.e. a belief). I want it to discover that structure, not just to discover for particular tasks what the correct assignment is.  
+
+so ECD just discovers the correct _values_ (which agent, which coordinate) not the _structure_(that beliefs are `int -> grid -> grid`) assignments
+
+`assign_belief` is what I want to abstract. I don't want it as a DSL primitive. then what's the point. 
+
+`assign_belief` can be decomposed with lambda abstraction `lam a. if a == av then f else id_fn`
+
+Ideally it'd abstract something like `unfold(ig_i, pair(av1, f1), pair(av2, f2))`
+
+The problem is that stitch finds repeated subtrees. So for stitch to discover `pair(av, f)` (the belief function, pairing an agent with a transformation function), then `(av, f)` would need to appear as a subtree, not just as arguments in `unfold`. With flat `unfold(ig_i, av1, f1, av2, f2)`, `av` and `f` are siblings. So stitch wouldn't abstract their connection. 
+
+So I could just accept `pair` as a primitive and treat it like `cons` in a list or something, and then argue that `pair(av, f)` is belief. But that's not satisfying. 
+
+or I could use flat `unfold(ig_i, av1, f1, av2, f2)` and when stitch finds a partial application abstraction say that it's belief. but then it's not general, it's just about those specific agents
+
+*SOOO* obviously what I should do is lambda abstraction. then `pair` is found as "the function that, given an agent, returns this transformation", i.e. `λa. if a==av then f else id_fn`
+
+problem is that `Delta.__call__` strictly evaluates arguments. So by the time `lam(body)` runs, `body`'s already been evaluated. So there's nowhere to substitute `a`. 
+
+So I need to add an explicit binder in the tree. 

@@ -3,13 +3,13 @@ import numpy as np
 from copy import deepcopy
 
 # types
-mat      = 'mat'      # 3d numpy array (T, H, W)
-grid     = 'grid'     # 2d numpy array (H, W)
-fn       = 'fn'       # grid -> grid
-fn2      = 'fn2'      # grid -> grid -> grid
-fn_pred  = 'fn_pred'  # grid -> bool
-util     = 'util'     # (grid, int, int) -> float  — positional utility
-belief   = 'belief'   # agent's subjective world model (structurally a grid)
+mat          = 'mat'          # 3d numpy array (T, H, W)
+grid         = 'grid'         # 2d numpy array (H, W)
+fn           = 'fn'           # grid -> grid
+fn2          = 'fn2'          # grid -> grid -> grid
+fn_pred      = 'fn_pred'      # grid -> bool
+util         = 'util'         # (grid, int, int) -> float  — positional utility
+belief       = 'belief'       # agent's subjective world model (structurally a grid)
 
 # int is used as a type string too
 # direction is used as a type string
@@ -251,6 +251,95 @@ def unfold_belief(actual_g, believed_g, f):
     frames = [actual_g.copy()]
     for _ in range(_unfold_steps - 1):
         actual_g, believed_g = _step_belief(actual_g, believed_g, f)
+        frames.append(actual_g.copy())
+    return np.stack(frames)
+
+def unfold_belief_steps(actual_g, believed_g, T, f):
+    "grid, grid, int, fn -> mat: unfold under belief for T frames (no global needed)"
+    frames = [actual_g.copy()]
+    for _ in range(T - 1):
+        actual_g, believed_g = _step_belief(actual_g, believed_g, f)
+        frames.append(actual_g.copy())
+    return np.stack(frames)
+
+# ── agent_step primitives (int -> fn) ─────────────────────────────────────────
+# Desire assignment: maps each agent to the step function it should execute.
+# assign_step(av, f, rest)(av) = f; assign_step(av, f, rest)(x) = rest(x) for x≠av.
+# no_step: identity step for any agent (agent doesn't move).
+
+agent_step = 'agent_step'  # int -> fn
+fn_belief  = 'fn_belief'   # int -> fn  (agent -> world-transformation function)
+
+def set_at(r, c, v):
+    "int, int, int -> fn: set cell (r,c) to value v"
+    def _f(g): return gset(g, r, c, v)
+    return _f
+
+def assign_belief(agent_val, transform_fn, fallback_fn):
+    "int, fn, fn_belief -> fn_belief: assign a grid transformation to one agent"
+    def _ab(a):
+        return transform_fn if a == agent_val else fallback_fn(a)
+    return _ab
+
+def _no_belief_fn(a):
+    return lambda g: g.copy()
+
+no_belief_fn = _no_belief_fn
+
+def unfold_multiagent_fn_belief_steps(actual_g, T, fn_belief_fn, agents):
+    """grid, int, agent_step, [(int,int)] -> mat
+
+    fn_belief_fn :: int -> fn: maps agent_val to a Grid->Grid world transformation.
+    Each agent's believed initial grid = fn_belief_fn(av)(actual_g).
+    """
+    believed_gs = [fn_belief_fn(av)(actual_g) for av, _ in agents]
+
+    if len(believed_gs) > 1 and all(np.array_equal(believed_gs[0], bg) for bg in believed_gs[1:]):
+        raise ValueError("all agents hold identical beliefs — program rejected")
+
+    step_fns = [approach(av, gv) for av, gv in agents]
+
+    frames = [actual_g.copy()]
+    for _ in range(T - 1):
+        for i, step_fn in enumerate(step_fns):
+            actual_g, new_bg = _step_belief(actual_g, believed_gs[i], step_fn)
+            believed_gs[i] = new_bg
+        frames.append(actual_g.copy())
+    return np.stack(frames)
+
+def assign_step(agent_val, step_fn, fallback_fn):
+    "int, fn, agent_step -> agent_step: assign a step function to one agent"
+    def _as(a):
+        if a == agent_val:
+            return step_fn
+        return fallback_fn(a)
+    return _as
+
+def _no_step_fn(a):
+    def _id(g): return g.copy()
+    return _id
+
+no_step = _no_step_fn  # agent_step terminal
+
+def seek(agent_val, goal_val):
+    "int, int -> fn: BFS-optimal step for agent_val toward goal_val (= optimize(neg_dist(gv), av))"
+    return optimize(neg_distance(goal_val), agent_val)
+
+def unfold_multiagent_desire_steps(actual_g, T, desire_fn, agent_vals):
+    """grid, int, agent_step, [int] -> mat
+
+    Each agent's step function is provided by desire_fn(av).
+    Only agents actually present in actual_g are simulated — this ensures that
+    bootstrap tasks (single-agent) reject programs that assign the step function
+    to the wrong agent slot.
+    Agents apply steps sequentially each frame, preserving the order of agent_vals.
+    """
+    present = [av for av in agent_vals if np.any(actual_g == av)]
+    step_fns = [desire_fn(av) for av in present]
+    frames = [actual_g.copy()]
+    for _ in range(T - 1):
+        for step_fn in step_fns:
+            actual_g = step_fn(actual_g)
         frames.append(actual_g.copy())
     return np.stack(frames)
 

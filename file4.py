@@ -1,4 +1,4 @@
-"""Phase 4: simpler programs discovered first — physics before intention.
+"""File 4: simpler programs discovered first — physics before intention.
 
 Each task shows agent (1) drifting in a straight line to goal (2) at the
 opposite edge.  Both explanations produce the exact same trajectory:
@@ -23,7 +23,7 @@ Assembling the intentional equivalent would require stitch to also discover:
 which is a strictly deeper tree.
 
 Run:
-  python phase4.py
+  python file4.py
 """
 
 from copy import deepcopy

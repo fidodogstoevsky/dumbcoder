@@ -1,6 +1,6 @@
-"""Phase 5: goal algebra — sequential desire, utility-decomposed DSL.
+"""File 5: goal algebra — sequential desire, utility-decomposed DSL.
 
-The DSL uses phase 3's utility layer: desires are assembled from composable
+The DSL uses file 3's utility layer: desires are assembled from composable
 utility primitives before being compiled into actions.
 
   neg_dist($gv)       → util    "proximity to gv" — a desire as utility
@@ -56,7 +56,7 @@ Goal algebra hierarchy:
   fn_seq_desire(...)        — full task abstraction (level 4, discovered)
 
 Run:
-  python phase5.py
+  python file5.py
 """
 
 from copy import deepcopy
@@ -92,15 +92,6 @@ print(f"\n{len(Xs_simple)} simple desire tasks (goal_vals {list(GOAL_VALS)})")
 print(f"{len(Xs_seq)} sequential desire tasks (combos {list(SEQ_COMBOS)})")
 
 # ── DSL ───────────────────────────────────────────────────────────────────────
-# fn_want = approach_from(1): goal_val → fn.
-# Semantically: fn_want(gv) = optimize(neg_dist(gv), 1).
-# It is a CORE PRIMITIVE so ECD doesn't need to assemble it from scratch each
-# time, keeping sequential desire programs at 14 nodes (tractable) rather than
-# 21 (too long to enumerate within the per-task timeout).
-# The full optimize/neg_dist layer is also present so stitch can discover
-# fn_want = optimize(neg_dist($gv), 1) and future tasks can compose utilities.
-fn_want = approach_from(1)
-
 core_prims = [
     Delta(optimize,     fn,      [util, int],           repr='optimize'),
     Delta(neg_distance, util,    [int],                 repr='neg_dist'),

@@ -422,3 +422,9 @@ or I could use flat `unfold(ig_i, av1, f1, av2, f2)` and when stitch finds a par
 problem is that `Delta.__call__` strictly evaluates arguments. So by the time `lam(body)` runs, `body`'s already been evaluated. So there's nowhere to substitute `a`. 
 
 So I need to add an explicit binder in the tree. 
+
+<<< lambda implementation >>>
+
+problem is that `sim` is still top level primitive always, since root type is `mat`. So once again the discovered abstractions are too specific because they include `sim`, we need a component of it. So maybe ditch stitch or change it or something, so that it abstracts just components and not the whole thing? i.e. make the abstraction shittier. Or vary the data more. but any mat type will have sim at the root. like, say fn0 is the abstraction. take every subtree of fn0 and make that an abstraction too. 
+
+building data structures using lambda calculus?

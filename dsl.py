@@ -2,6 +2,15 @@ from operator import add, mul
 import numpy as np
 from copy import deepcopy
 
+class _VarSentinel:
+    "Marker for lambda-bound variable nodes; deepcopy returns the same object."
+    def __deepcopy__(self, memo):
+        return self
+    def __repr__(self):
+        return 'var'
+
+_var_sentinel = _VarSentinel()
+
 # types
 mat          = 'mat'          # 3d numpy array (T, H, W)
 grid         = 'grid'         # 2d numpy array (H, W)
@@ -67,6 +76,11 @@ def compose(f, g):
     def _composed(x):
         return g(f(x))
     return _composed
+
+def _id_fn_impl(g):
+    return g.copy()
+
+id_fn = _id_fn_impl
 
 def approach_from(agent_val):
     "int -> fn→fn: partially apply approach, fixing the agent value"
@@ -357,6 +371,10 @@ def if_fn(pred, f1, f2):
         return f1(g) if pred(g) else f2(g)
     return _if
 
+def _if_int_eq(a, b, f_true, f_false):
+    "int, int, fn, fn -> fn: return f_true if a==b else f_false"
+    return f_true if a == b else f_false
+
 # ── fn2 terminals (grid -> grid -> grid) ──────────────────────────────────────
 
 def _overlay(g1, g2):
@@ -485,7 +503,10 @@ class Delta:
         tails = []
         for a in self.tails:
             if isinstance(a, Delta):
-                tails.append(a())
+                if self.head is _lam_impl:
+                    tails.append(a)  # lazy: pass unevaluated Delta tree to _lam_impl
+                else:
+                    tails.append(a())
             else:
                 tails.append(a)
 
@@ -525,6 +546,34 @@ class Delta:
             tails = self.tails
 
         return f'({self.repr} {" ".join(map(str, tails))})'
+
+def _sub_var(node, value):
+    "Substitute all var-sentinel leaves in tree with value, in-place."
+    if node.head is _var_sentinel:
+        node.head = value
+        return
+    if node.hiddentail:
+        _sub_var(node.hiddentail, value)
+    if node.tails:
+        for tail in node.tails:
+            if isinstance(tail, Delta):
+                _sub_var(tail, value)
+
+def _lam_impl(body_delta):
+    "fn -> fn_belief: lambda over int, binding var in body"
+    def _lam(a):
+        body = deepcopy(body_delta)
+        _sub_var(body, a)
+        return body()
+    return _lam
+
+_sim_agents = None
+
+def sim(actual_g, wm):
+    "grid, fn_belief -> mat: simulate agents under their believed worlds"
+    if _sim_agents is None:
+        raise ValueError("sim: _sim_agents not set")
+    return unfold_multiagent_fn_belief_steps(actual_g, _unfold_steps, wm, _sim_agents)
 
 def isterminal(d: Delta) -> bool:
     if d.tailtypes == None:

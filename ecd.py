@@ -622,6 +622,8 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
     if root_type == mat and len(Xs) == 1:
         _dsl._unfold_steps = Xs[0].shape[0]
+    if root_type == mat and agents:
+        _dsl._sim_agents = agents
 
     print(f'{len(D)=}')
 
@@ -766,6 +768,7 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
     if root_type == mat:
         _dsl._unfold_steps = None
+        _dsl._sim_agents = None
 
     took = time() - stime
     print(f'total: {cnt}, took: {took/60:.1f}m, iter: {cnt/(took+1e-9):.0f}/s', flush=True)

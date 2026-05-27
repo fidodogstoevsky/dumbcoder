@@ -1,34 +1,32 @@
-"""File 6: multi-agent false belief — lambda abstraction.
+"""File 6: multi-agent false belief — fn-body enumeration.
 
-Programs are mat (root_type=mat).  The belief function emerges from lambda abstraction
-over the agent value — ECD must discover the pairing structure itself.
+Programs are fn-typed lam bodies (root_type='fn_lam_body').  Each program is
+evaluated by wrapping it in lam and simulating via unfold_multiagent_fn_belief_steps.
+This lets stitch find reusable fn-level abstractions that nest naturally:
 
 DSL:
-  sim(g, wm)               :: grid, fn_belief -> mat
-  lam(body)                :: fn -> fn_belief      (body contains var)
-  var                      :: int                  (lambda-bound agent value)
-  if_int_eq(a,b,ft,ff)     :: int,int,fn,fn -> fn
-  set_at(r,c,v)            :: int,int,int -> fn
-  id_fn                    :: fn                   (identity transform)
+  if_int_eq(a,b,ft,ff)  :: int,int,fn,fn -> fn
+  set_at(r,c,v)         :: int,int,int -> fn
+  var                   :: int   (lambda-bound agent value, substituted at sim time)
+  id_fn                 :: fn    (identity transform)
 
 ─────────────────────────────────────────────────────────────────────────────
 Tier 1 (single-agent false belief):
 
-  Solution (11 nodes):
-    sim(ig_i, lam(if_int_eq(var, $av, set_at($r, $c, 3), id_fn)))
+  Body (7 nodes):
+    if_int_eq(var, $av, set_at($r, $c, 3), id_fn)
 
-  Stitch discovers:
+  Stitch discovers (fn type, 4 holes — fallback is free):
     fn_cond($av, $r, $c, $fallback) = if_int_eq(var, $av, set_at($r, $c, 3), $fallback)
 
 ─────────────────────────────────────────────────────────────────────────────
 Tier 2 (two-agent false belief):
 
-  Solution (18 nodes):
-    sim(ig_i, lam(if_int_eq(var, av1, set_at(r1,c1,3),
-                  if_int_eq(var, av2, set_at(r2,c2,3), id_fn))))
+  Body (13 nodes):
+    if_int_eq(var, av1, set_at(r1,c1,3), if_int_eq(var, av2, set_at(r2,c2,3), id_fn))
 
   After fn_cond available (8 nodes):
-    sim(ig_i, lam(fn_cond(av1, r1, c1, fn_cond(av2, r2, c2, id_fn))))
+    fn_cond(av1, r1, c1, fn_cond(av2, r2, c2, id_fn))
 
 Run:
   python file6.py
@@ -40,11 +38,11 @@ from collections import Counter
 
 from ecd import (
     Deltas, Delta, ECD,
-    normalize, mat_key, task_terminals,
+    normalize, mat_key,
 )
 from dsl import (
-    mat, fn, fn_belief, grid,
-    sim, _lam_impl, _if_int_eq, _var_sentinel,
+    fn,
+    _if_int_eq, _var_sentinel,
     id_fn, set_at,
 )
 from tasks import make_multi_agent_false_belief_tasks, make_false_belief_tasks
@@ -53,7 +51,7 @@ from tasks import make_multi_agent_false_belief_tasks, make_false_belief_tasks
 AGENTS = [(1, 2), (4, 5)]   # (agent_val, goal_val) pairs
 
 # Tier 1a: single-agent false belief, agent 1 (val=1, goal=2)
-Xs_a1 = make_false_belief_tasks(n=10, size=5, seed=10)
+Xs_a1 = make_false_belief_tasks(n=3, size=5, seed=10)
 
 # Tier 1b: single-agent false belief, agent 4 (val=4, goal=5)
 def remap_agents(Xs, av_from, av_to, gv_from, gv_to):
@@ -65,52 +63,50 @@ def remap_agents(Xs, av_from, av_to, gv_from, gv_to):
         out.append(x2)
     return out
 
-raw_a4 = make_false_belief_tasks(n=10, size=5, seed=20)
+raw_a4 = make_false_belief_tasks(n=3, size=5, seed=20)
 Xs_a4  = remap_agents(raw_a4, av_from=1, av_to=4, gv_from=2, gv_to=5)
 
 # Tier 2: two agents, two distinct phantom walls
-raw_multi = make_multi_agent_false_belief_tasks(n=20, size=5, seed=0)
+raw_multi = make_multi_agent_false_belief_tasks(n=5, size=5, seed=0)
 Xs_multi  = [x for x, _ in raw_multi]
 meta      = [m for _, m in raw_multi]
 
 Xs = Xs_a1 + Xs_a4 + Xs_multi
+for idx, task in enumerate(Xs):
+    print("----------")
+    print(f"task no. {idx}")
+    print(task)
 print(f"\n{len(Xs_a1)} single-agent false-belief tasks (agent 1, 5×5)")
 print(f"{len(Xs_a4)} single-agent false-belief tasks (agent 4, 5×5)")
 print(f"{len(Xs_multi)} two-agent false-belief tasks (5×5, agents {AGENTS})")
 print(f"{len(Xs)} total tasks\n")
 
-# ── Task terminals ──────────────────────────────────────────────────────────
-ig_terminals = task_terminals(Xs, mode='full')
-
 # ── DSL ────────────────────────────────────────────────────────────────────
 core_prims = [
-    Delta(sim,           mat,       [grid, fn_belief],  repr='sim'),
-    Delta(_lam_impl,     fn_belief, [fn],               repr='lam'),
-    Delta(_if_int_eq,    fn,        [int, int, fn, fn], repr='if_int_eq'),
-    Delta(set_at,        fn,        [int, int, int],    repr='set_at'),
-    Delta(_var_sentinel, int,                           repr='var'),
-    Delta(id_fn,         fn,                            repr='id_fn'),
+    Delta(_if_int_eq,    fn,  [int, int, fn, fn], repr='if_int_eq'),
+    Delta(set_at,        fn,  [int, int, int],    repr='set_at'),
+    Delta(_var_sentinel, int,                     repr='var'),
+    Delta(id_fn,         fn,                      repr='id_fn'),
     Delta(0, int, repr='0'), Delta(1, int, repr='1'),
     Delta(2, int, repr='2'), Delta(3, int, repr='3'),
     Delta(4, int, repr='4'), Delta(5, int, repr='5'),
-] + ig_terminals
+]
 
 D = Deltas(core_prims)
-print(f"DSL: {len(core_prims)} primitives ({len(ig_terminals)} ig terminals)")
-print("  tier-1 target (11 nodes):")
-print("    sim(ig_i, lam(if_int_eq(var, $av, set_at($r, $c, 3), id_fn)))")
-print("  tier-2 target (18 nodes, 8 after fn_cond):")
-print("    sim(ig_i, lam(if_int_eq(var, av1, set_at(r1,c1,3),")
-print("                  if_int_eq(var, av2, set_at(r2,c2,3), id_fn))))\n")
+print(f"DSL: {len(core_prims)} primitives (fn-body enumeration, no sim/lam/ig_i)")
+print("  tier-1 body (7 nodes):  if_int_eq(var, $av, set_at($r, $c, 3), id_fn)")
+print("  tier-2 body (13 nodes): if_int_eq(var, av1, set_at(r1,c1,3),")
+print("                            if_int_eq(var, av2, set_at(r2,c2,3), id_fn))")
+print("  after fn_cond (8 nodes): fn_cond(av1, r1, c1, fn_cond(av2, r2, c2, id_fn))\n")
 
 # ── ECD ────────────────────────────────────────────────────────────────────
 print("Running ECD…\n")
 Z, rewritten = ECD(
     Xs, D,
-    per_task_timeout=60,
-    max_iterations=8,
+    per_task_timeout=20,
+    max_iterations=4,
     max_arity=4,
-    root_type=mat,
+    root_type='fn_lam_body',
     agents=AGENTS,
 )
 
@@ -134,7 +130,10 @@ else:
         print(f"  {d.repr}  [{argtypes}]  -> {d.type}")
         print(f"    body: {body_str}")
         if 'if_int_eq' in body_str and 'var' in body_str and 'set_at' in body_str:
-            print(f"    *** BELIEF STRUCTURE — if_int_eq(var, agent, set_at(...)) ***")
+            parts_after_set_at = body_str.split('set_at', 1)
+            fallback_is_hole = len(parts_after_set_at) > 1 and '$' in parts_after_set_at[1]
+            tag = '*** fn_cond WITH FREE FALLBACK ***' if fallback_is_hole else '*** belief structure ***'
+            #print(f"    {tag}")
 
 print("\n=== Two-agent solutions (first 4) ===")
 for x, m in list(zip(Xs_multi, meta))[:4]:
@@ -145,7 +144,7 @@ for x, m in list(zip(Xs_multi, meta))[:4]:
         sol = normalize(deepcopy(Z[k]))
         rw  = rewritten.get(k, '')
         print(f"  {tag}")
-        print(f"    found:     {sol}")
+        print(f"    body:      {sol}")
         if rw:
             print(f"    rewritten: {rw}")
     else:

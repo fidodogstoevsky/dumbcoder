@@ -620,6 +620,9 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
     if root_type is None:
         root_type = mat
 
+    # fn_lam_body: enumerate fn-typed programs; evaluate each by wrapping in lam
+    _enum_type = fn if root_type == 'fn_lam_body' else root_type
+
     if root_type == mat and len(Xs) == 1:
         _dsl._unfold_steps = Xs[0].shape[0]
     if root_type == mat and agents:
@@ -634,7 +637,7 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
     LOGPGAP = 2
     done = False
     targets = {mat_key(x): x for x in Xs}
-    ig_map = {mat_key(x): (x[0], x.shape[0]) for x in Xs} if root_type in (fn, grid, agent_step, fn_belief) else {}
+    ig_map = {mat_key(x): (x[0], x.shape[0]) for x in Xs} if root_type in (fn, grid, agent_step, fn_belief, 'fn_lam_body') else {}
 
     def cb(tree, logp):
         """called once per enumerated program."""
@@ -714,6 +717,24 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
                 except Exception:
                     pass
 
+        elif root_type == 'fn_lam_body':
+            # tree is an unevaluated fn-typed Delta; wrap lazily in lam for evaluation
+            try:
+                wm = _dsl._lam_impl(tree)
+            except Exception:
+                return
+            if not callable(wm):
+                return
+            cnt += 1
+            candidates = []
+            for tkey, (actual_g, T) in ig_map.items():
+                try:
+                    out = _dsl.unfold_multiagent_fn_belief_steps(actual_g, T, wm, agents)
+                    if isinstance(out, np.ndarray) and 0 not in out.shape:
+                        candidates.append(mat_key(out))
+                except Exception:
+                    pass
+
         else:
             try:
                 out = tree()
@@ -748,12 +769,12 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
         deadline = stime + timeout
         while not done and time() < deadline:
             try:
-                cenumerate(D, Q, root_type, (LOGPGAP * idx, LOGPGAP * (idx+1)), maxdepth, cb, deadline)
+                cenumerate(D, Q, _enum_type, (LOGPGAP * idx, LOGPGAP * (idx+1)), maxdepth, cb, deadline)
             except _EnumDone:
                 pass
             idx += 1
     else:
-        ephermal = Delta('root', ishole=True, tailtypes=[root_type])
+        ephermal = Delta('root', ishole=True, tailtypes=[_enum_type])
         D.add(ephermal)
         Q = th.hstack((Q, tensor([0])))
 
@@ -875,7 +896,7 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
             break
 
         unsolved = [x for x in Xs if mat_key(x) not in sols]
-        print(f'--- ECD iteration {idx}, {len(unsolved)}/{len(Xs)} unsolved, Q task-specific ---', flush=True)
+        print(f'--- ECD iteration {idx}, {len(unsolved)}/{len(Xs)} unsolved ---', flush=True)
 
     full_keys = {mat_key(x) for x in Xs}
 

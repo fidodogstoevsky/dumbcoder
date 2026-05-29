@@ -45,29 +45,28 @@ from dsl import (
     _if_int_eq, _var_sentinel,
     id_fn, set_at,
 )
-from tasks import make_multi_agent_false_belief_tasks, make_false_belief_tasks
+from tasks import (
+    make_multi_agent_false_belief_tasks,
+    make_two_agent_one_false_belief_tasks,
+)
 
 # ── Tasks ──────────────────────────────────────────────────────────────────
 AGENTS = [(1, 2), (4, 5)]   # (agent_val, goal_val) pairs
 
-# Tier 1a: single-agent false belief, agent 1 (val=1, goal=2)
-Xs_a1 = make_false_belief_tasks(n=3, size=5, seed=10)
+# Tier 1a: agent 1 has false belief, agent 4 navigates directly
+raw_a1 = make_two_agent_one_false_belief_tasks(
+    n=3, false_agent_val=1, false_agent_goal_val=2,
+    direct_agent_val=4, direct_agent_goal_val=5, size=5, seed=10)
+Xs_a1 = [x for x, _ in raw_a1]
 
-# Tier 1b: single-agent false belief, agent 4 (val=4, goal=5)
-def remap_agents(Xs, av_from, av_to, gv_from, gv_to):
-    out = []
-    for x in Xs:
-        x2 = x.copy()
-        x2[x == av_from] = av_to
-        x2[x == gv_from] = gv_to
-        out.append(x2)
-    return out
-
-raw_a4 = make_false_belief_tasks(n=3, size=5, seed=20)
-Xs_a4  = remap_agents(raw_a4, av_from=1, av_to=4, gv_from=2, gv_to=5)
+# Tier 1b: agent 4 has false belief, agent 1 navigates directly
+raw_a4 = make_two_agent_one_false_belief_tasks(
+    n=20, false_agent_val=4, false_agent_goal_val=5,
+    direct_agent_val=1, direct_agent_goal_val=2, size=5, seed=20)
+Xs_a4 = [x for x, _ in raw_a4]
 
 # Tier 2: two agents, two distinct phantom walls
-raw_multi = make_multi_agent_false_belief_tasks(n=5, size=5, seed=0)
+raw_multi = make_multi_agent_false_belief_tasks(n=20, size=5, seed=0)
 Xs_multi  = [x for x, _ in raw_multi]
 meta      = [m for _, m in raw_multi]
 
@@ -104,7 +103,7 @@ print("Running ECD…\n")
 Z, rewritten = ECD(
     Xs, D,
     per_task_timeout=20,
-    max_iterations=4,
+    max_iterations=8,
     max_arity=4,
     root_type='fn_lam_body',
     agents=AGENTS,

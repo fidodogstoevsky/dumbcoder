@@ -556,6 +556,142 @@ def make_sequential_desire_tasks(n_per_combo, goal_combos=((2, 4), (4, 5), (2, 5
     return tasks
 
 
+def make_two_agent_one_false_belief_task(false_agent_val, false_agent_goal_val,
+                                          direct_agent_val, direct_agent_goal_val,
+                                          size=5, seed=None, min_dist=None):
+    """Two agents present; only one has a phantom wall (false belief).
+
+    false_agent navigates on its believed grid (actual + phantom wall).
+    direct_agent navigates optimally on the actual grid (no phantom wall).
+    Both agents are visible in every frame, so the enumerator must assign
+    beliefs correctly per-agent: wm(false_agent_val) = set_at(pw_r, pw_c, 3)
+    and wm(direct_agent_val) = id_fn.
+
+    Returns (x, meta) or None on failure.
+    """
+    from collections import deque
+    from dsl import _step_belief, approach, _approach_grid
+
+    if min_dist is None:
+        min_dist = size // 2
+
+    rng = np.random.default_rng(seed)
+
+    def bfs(start, end, wall_set, sz):
+        q = deque([(start, [start])])
+        vis = {start}
+        while q:
+            pos, path = q.popleft()
+            if pos == end:
+                return path
+            for dr, dc in ((-1,0),(1,0),(0,-1),(0,1)):
+                nb = (pos[0]+dr, pos[1]+dc)
+                if 0<=nb[0]<sz and 0<=nb[1]<sz and nb not in wall_set and nb not in vis:
+                    vis.add(nb)
+                    q.append((nb, path+[nb]))
+        return None
+
+    for _ in range(2000):
+        cells = [(r,c) for r in range(size) for c in range(size)]
+        rng.shuffle(cells)
+
+        # 4 distinct positions: false_agent, direct_agent, false_goal, direct_goal
+        fa_pos, da_pos, fg_pos, dg_pos = cells[0], cells[1], cells[2], cells[3]
+        if len({fa_pos, da_pos, fg_pos, dg_pos}) < 4:
+            continue
+
+        if (abs(fa_pos[0]-fg_pos[0]) + abs(fa_pos[1]-fg_pos[1]) < min_dist or
+                abs(da_pos[0]-dg_pos[0]) + abs(da_pos[1]-dg_pos[1]) < min_dist):
+            continue
+
+        opt_fa = bfs(fa_pos, fg_pos, set(), size)
+        opt_da = bfs(da_pos, dg_pos, set(), size)
+        if not opt_fa or not opt_da:
+            continue
+
+        # Phantom wall candidates: interior of false_agent's optimal path,
+        # not occupying direct_agent or direct_goal positions
+        interior = [p for p in opt_fa[1:-1] if p not in (da_pos, dg_pos)]
+        if not interior:
+            continue
+
+        rng.shuffle(interior)
+        pw = bel_path = None
+        for p in interior:
+            b = bfs(fa_pos, fg_pos, {p}, size)
+            if b and b != opt_fa:
+                pw, bel_path = p, b
+                break
+        if not pw:
+            continue
+
+        # Reject if paths collide at any timestep
+        max_t = max(len(bel_path), len(opt_da))
+        ext_fa = bel_path + [bel_path[-1]] * (max_t - len(bel_path))
+        ext_da = opt_da  + [opt_da[-1]]  * (max_t - len(opt_da))
+        if any(p1 == p2 for p1, p2 in zip(ext_fa, ext_da)):
+            continue
+
+        ig = np.zeros((size, size), dtype=int)
+        ig[fa_pos[0], fa_pos[1]] = false_agent_val
+        ig[da_pos[0], da_pos[1]] = direct_agent_val
+        ig[fg_pos[0], fg_pos[1]] = false_agent_goal_val
+        ig[dg_pos[0], dg_pos[1]] = direct_agent_goal_val
+
+        # false agent's believed grid: actual + phantom wall
+        bg_fa = ig.copy(); bg_fa[pw[0], pw[1]] = 3
+
+        step_fa = approach(false_agent_val, false_agent_goal_val)
+        act = ig.copy()
+        bfa = bg_fa.copy()
+
+        frames = [act.copy()]
+        for _ in range(size * 4):
+            act, bfa = _step_belief(act, bfa, step_fa)
+            act = _approach_grid(act, direct_agent_val, direct_agent_goal_val)
+            frames.append(act.copy())
+            false_done  = not np.any(act == false_agent_goal_val)
+            direct_done = not np.any(act == direct_agent_goal_val)
+            if false_done and direct_done:
+                break
+
+        if len(frames) < 3:
+            continue
+
+        x = np.stack(frames)
+        meta = {
+            'false_agent': fa_pos, 'false_goal': fg_pos, 'phantom_wall': pw,
+            'direct_agent': da_pos, 'direct_goal': dg_pos,
+            'false_agent_val': false_agent_val,
+            'direct_agent_val': direct_agent_val,
+        }
+        return x, meta
+
+    return None
+
+
+def make_two_agent_one_false_belief_tasks(n, false_agent_val, false_agent_goal_val,
+                                           direct_agent_val, direct_agent_goal_val,
+                                           size=5, seed=0):
+    """Generate n tasks: false_agent has a phantom wall, direct_agent navigates directly."""
+    rng = np.random.default_rng(seed)
+    tasks = []
+    attempts = 0
+    while len(tasks) < n:
+        t = make_two_agent_one_false_belief_task(
+            false_agent_val, false_agent_goal_val,
+            direct_agent_val, direct_agent_goal_val,
+            size=size, seed=int(rng.integers(1<<31))
+        )
+        attempts += 1
+        if t is not None:
+            tasks.append(t)
+    print(f"generated {n} two-agent-one-false-belief tasks ({attempts} attempts, {size}x{size}, "
+          f"false={false_agent_val}→{false_agent_goal_val}, "
+          f"direct={direct_agent_val}→{direct_agent_goal_val})")
+    return tasks
+
+
 def make_multi_agent_false_belief_task(size=5, seed=None, min_dist=None):
     """Two agents with different phantom wall beliefs navigate to their goals.
 

@@ -428,3 +428,147 @@ So I need to add an explicit binder in the tree.
 problem is that `sim` is still top level primitive always, since root type is `mat`. So once again the discovered abstractions are too specific because they include `sim`, we need a component of it. So maybe ditch stitch or change it or something, so that it abstracts just components and not the whole thing? i.e. make the abstraction shittier. Or vary the data more. but any mat type will have sim at the root. like, say fn0 is the abstraction. take every subtree of fn0 and make that an abstraction too. 
 
 building data structures using lambda calculus?
+
+= May 27
+
+nested conditional if statements. lambda DSL. everything is an `fn` except int terminals and variable sentinel.
+
+*enumeration*
+
+root type: `fn`, so enumerates over functions
+
+but it can't just evaluate the program tree directly because it might have `var` in it
+
+so it passes the unevaluated tree to `_lam_impl`, which returns a closure (the expression with the original value with which to evaluate it, according to when it was created)
+
+then it replaces each `var` with the agent value at the time of simulation
+
+so the beta-reduced expression `wm` is of type `int -> fn`. It maps an agent to its belief. That gets passed to `unfold_multiagent_fn_belief_steps`, which calls `wm` for each agent as `wm(1)` and `wm(4)`. That gets each agent's world transformation.
+
+Then it simulates both agents navigating under their respective worlds, and checks if that produces the grid. 
+
+*DSL*
+
+`Delta(_if_int_eq,    fn,  [int, int, fn, fn], repr='cond'),`
+
+conditional. takes two ints and two fns. if the ints are equal, return the first function. otherwise return the second function. the ints are for comparing which agent the given agent is. The fns are for choosing the corresponding grid transformation, whether to transform the grid for that agent or not (or to check the other agents). 
+
+`Delta(set_at,        fn,  [int, int, int],    repr='set'),`
+
+grid transformation function. takes the coordinates at which to place a wall, and the value to place there. since the value is irrelevant anyway I might as well just hardcode this as 3, do that later
+
+`Delta(_var_sentinel, int,                     repr='var'),`
+
+the sentinel value in which to place the agent value when we do the beta reduction at evaluation
+
+`Delta(id_fn,         fn,                      repr='id'),`
+
+just the id function. in principle the id function and conditional can be found from pure lambda calculus but they're given as primitives to make search easier
+
+*solution to 1-agent task:*
+
+`(cond var 1 (set 1 2 3) id)`
+
+if the agent (`var`) is agent 1, apply `(set 1 2 3)` to the default grid (i.e place a wall at 1,2) otherwise, apply `id` to the grid (so any other agent, in this case none, operates based on the default grid)
+
+finds solutions like this within $~2000$ enumerations. also finds some solutions like `(set_at 4 var 3)` but those are degenerate
+
+abstracts
+
+`fn_0: (if_int_eq var 1 id_fn (set_at #2 #1 #0))  [fn]`
+
+*solution to 2-agent task:*
+
+`
+a1=(4, 2) pw1=(3, 2)  a2=(1, 2) pw2=(1, 3)  T=5
+    body:      (if_int_eq var 1 (set_at 3 2 3) (if_int_eq var 1 id_fn (set_at 1 3 3)))
+    rewritten: (fn_2 3 2)
+`
+
+abstracts
+
+`(if_int_eq var 1 (set_at $0 $1 $0) (if_int_eq var 1 id_fn (set_at 1 3 3)))`
+
+*summary of the implementation so far*
+
+over the last few days I've discovered that a recursive/nested list data structure makes sense for associating grid states with agents, to form beliefs. 
+
+a candidate program is a `fn`, it's a chain of conditionals where each conditional checks the agent being evaluated and if it's that corresponding agent returns the transformation function `fn` that will transform the grid into the grid according to which the agent is navigating optimally. So if the agent is seemingly navigating suboptimally because it takes a detour at (3,3), the corresponding transformation function is one that takes the intial grid and places a wall at that coordinate. 
+
+The whole program is a lambda expression that takes an `int` agent value, since it's evaluated for each agent
+
+To evaluate/simulate the program, replace `var` with each possible agent (or other) value. 
+
+So for example, to evaluate the program
+
+`(cond var 1 (set 1 2 3) (cond var 4 (set 2 2 3) id)))`
+
+first replace all instances of `var` with `1` for agent 1 (beta reduction). So the first condition is met, since `var` is now `1` so `var==1`. So the expression evaluates to `(set 1 2 3)`, which is the grid transformation function for agent 1. So agent 1 navigates on a grid just like the initial grid but with a wall `3` at coordinate `1,2`. 
+
+Now replace all instances of `var` with 4 for agent 4. The first condition isn't met since `var!=1`, so move to the fallback value which itself is another conditional. This time the predicate is true `var==4`, so we return grid transformation function `(set 2 2 3)` for agent 4
+
+now say there's also agent 6. we replace all var instances, and it doesn't meet any of the predicates. So we return the fallback value of the second conditional, `id`. So agent 6 simply navigates on the unchanged initial grid. 
+
+so agent 1 and agent 4 have false beliefs, they operate based on altered grids. But agent 6 has a true belief, operating based on the actual grid. 
+
+(it's hard to say what's a false and what's a true belief. it's relative, to the other agents. it's more like just all the agents have different beleifs you need to account for.)
+
+So now that we have a grid function for each agent (i.e. each agent's belief), we need to check whether these functions are correct. to check this, we need to use the functions to generate the data, the grids. 
+
+simulation: we assume that the agents move optimally toward their goal, we take movement as a given. then to evaluate the functions, we hand them to the simulator and see whether ideal navigation on such transformed grids would yield the target grid. The simulator unfolds based on optimal navigation on the corresponding grid for each agent.  
+
+= May 28: after the meeting
+
+in the above implementation we take movement as a given, we just search over grid transformations. but what I really want is to also search over movement. I want there to also be the option of physical explanations, non-mental. And I want it all to be on one grid at the same time. Three cases for example:
+
+- You see agent $1$ optimally navigating towards goal $2$. to understand this you just need to posit `optimize(neg_dist(2), 1)`, that at each timestep $1$ becomes slightly closer to $2$. this isn't mental
+- You see agent $1$ seemingly suboptimally navigating towards goal $2$. to understand this you can't just posit that it's an agent navigating to a goal (as above), since if it were an agent it'd be navigating optimally. so you also need to posit that it's navigating according to `fn(grid)`, a different grid than the actual grid, transformed by grid transformation function `fn`. 
+- You see object `4` moving left. To understand this you can just posit `step(left, 4)`
+
+So for an agent with a false belief you need to posit that it has a belief
+
+my new goal is to synthesize both the believed grid (transformation function), and the movement (transition function). It'll be in the same format as above, nested conditionals. 
+
+importantly, I want it to only assign a believed grid to agents, not to inanimate objects
+
+so take a scene where $1$ is navigating to goal $2$ by true belief (empty grid), $4$ is navigating to goal $5$ by false belief (wall at 2,2), $3$ is the wall, and $6$ is a non agent that just moves down (affected by gravity or somethign). So I'd want the conditional chain to look something like
+
+so now, the grid transformation function takes the movement transition function as an argument. 
+
+`(cond var 1 
+// condition for object 1
+
+    (id (opt (negd 2))) 
+    // object 1 navigates to goal 2 based on the default grid
+
+    (cond var 4 
+    // condition for object 4
+
+        ((set 2 2 3) (opt (negd 5))) 
+        // object 2 navigates to goal 5 based on a grid given by adding a wall to
+        // the default grid at (2,2)
+
+        (cond var 6
+        // condition for object 6
+            
+            (step left)
+            // object 6 moves left
+            
+            id
+            // else condition. for any object other than 1,4,6, at each new timestep it's the same as the previous timestep. So it's just static. 
+        )
+    )
+)`
+
+- In the case of object 1, its transition function is `(id (opt (negd 2)))` meaning that it moves towards $2$ on an unmodified grid (`id`). 
+- For object 4, it moves towards 2 on a grid modified with a wall at 2,2
+- for object 6, it moves left
+- for all other objects, they don't move at all
+
+my hope is that for agents we'll always see the movement function wrapped in a grid modification function, even when that function is `id`, to account for the agents having a representation of the world (even when the representation is correct). whereas for non-agents, I'd hope that we wouldn't see wrapping like `(id (step left))` since there wouldn't be solutions that would require a moving non-agent to navigate over something that isn't the actual world. 
+
+the challenge with this (enumerating over both possible grids and possible movement functions) is that currently in simulation it assumes optimal navigation when unfolding. we run `opt(neg_dist(goal))` (with goal and agent values handed in freely as an argument), so we run an optimal agent on the transformed grid (and then mask the walls), and then if that path matches the path in the target task then we know that the posited grid was the one that it was actually navigating on (since we assume it's navigating optimally)
+
+so the change is that now in the simulation we need to unfold based on the particular movement function itself that we found, not just on the default optimize function
+
+so then to actually generate the grid from a program, we need to loop through each timestep, for each timestep initializing an empty grid with unknown values. then within the timestep loop, loop through each object on the grid (each int value). then we augment the previous timestep's grid with the transformed grid, transformed by `fn` which is the nested transition function (which is at least `id` and at most `(grid_transformation movement_transition)`). We build up the new timestep object by object, only adding the values that are relevant to that specific object so we avoid collisions. Then we add it to the history, and then we move on to the next timestep. 

@@ -718,6 +718,16 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
                     pass
 
         elif root_type == 'fn_lam_body':
+            # Canonical form: if the root is if_int_eq, its true branch must not be id_fn.
+            # Without this, a4 tasks (direct agent=1) are solved as
+            # if_int_eq(var, 1, id_fn, set_at(...)) — equivalent but puts the
+            # direct-agent value in the condition.  Stitch then sees av=1 across all
+            # tasks and cannot abstract it as a hole.  Rejecting non-canonical programs
+            # forces the false-belief agent's value into the condition, so stitch sees
+            # av vary (1 for a1 tasks, 4 for a4 tasks) and discovers fn_cond correctly.
+            if (tree.repr == 'if_int_eq' and tree.tails is not None and
+                    len(tree.tails) >= 3 and tree.tails[2].repr == 'id_fn'):
+                return
             # tree is an unevaluated fn-typed Delta; wrap lazily in lam for evaluation
             try:
                 wm = _dsl._lam_impl(tree)

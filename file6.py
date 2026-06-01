@@ -55,7 +55,7 @@ AGENTS = [(1, 2), (4, 5)]   # (agent_val, goal_val) pairs
 
 # Tier 1a: agent 1 has false belief, agent 4 navigates directly
 raw_a1 = make_two_agent_one_false_belief_tasks(
-    n=3, false_agent_val=1, false_agent_goal_val=2,
+    n=20, false_agent_val=1, false_agent_goal_val=2,
     direct_agent_val=4, direct_agent_goal_val=5, size=5, seed=10)
 Xs_a1 = [x for x, _ in raw_a1]
 
@@ -71,6 +71,7 @@ Xs_multi  = [x for x, _ in raw_multi]
 meta      = [m for _, m in raw_multi]
 
 Xs = Xs_a1 + Xs_a4 + Xs_multi
+Xs = Xs_a1 + Xs_a4
 for idx, task in enumerate(Xs):
     print("----------")
     print(f"task no. {idx}")

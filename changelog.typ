@@ -572,3 +572,7 @@ the challenge with this (enumerating over both possible grids and possible movem
 so the change is that now in the simulation we need to unfold based on the particular movement function itself that we found, not just on the default optimize function
 
 so then to actually generate the grid from a program, we need to loop through each timestep, for each timestep initializing an empty grid with unknown values. then within the timestep loop, loop through each object on the grid (each int value). then we augment the previous timestep's grid with the transformed grid, transformed by `fn` which is the nested transition function (which is at least `id` and at most `(grid_transformation movement_transition)`). We build up the new timestep object by object, only adding the values that are relevant to that specific object so we avoid collisions. Then we add it to the history, and then we move on to the next timestep. 
+
+= June 2
+
+I had this hardcoded assumption `step_fns = [approach(av,gv) for av, _ in agents]`

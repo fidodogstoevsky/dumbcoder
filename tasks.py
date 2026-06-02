@@ -928,3 +928,236 @@ def make_physics_tasks(n_per_dir, directions=None, size=4, seed=0):
     print(f"generated {len(tasks)} physics tasks "
           f"({n_per_dir}/dir, dirs={names}, {size}x{size})")
     return tasks
+
+
+def make_false_belief_desire_task(agent_val, goal_val, size=5, seed=None, min_dist=None):
+    """Single-agent false-belief + variable desire.
+
+    Agent agent_val navigates on a believed grid (actual + phantom wall) toward goal_val.
+    The observed trajectory shows the actual world — phantom wall is hidden.
+    agent_val and goal_val must differ and neither may be 3 (reserved for walls).
+
+    Returns (x, meta) or None.
+    """
+    from collections import deque
+
+    assert agent_val != goal_val, "agent_val and goal_val must differ"
+    assert 3 not in (agent_val, goal_val), "3 is reserved for walls"
+
+    if min_dist is None:
+        min_dist = size // 2
+
+    rng = np.random.default_rng(seed)
+
+    def bfs(start, end, walls):
+        queue = deque([(start, [start])])
+        visited = {start}
+        while queue:
+            pos, path = queue.popleft()
+            if pos == end:
+                return path
+            for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                nb = (pos[0] + dr, pos[1] + dc)
+                if (0 <= nb[0] < size and 0 <= nb[1] < size
+                        and nb not in walls and nb not in visited):
+                    visited.add(nb)
+                    queue.append((nb, path + [nb]))
+        return None
+
+    for _ in range(200):
+        cells = [(r, c) for r in range(size) for c in range(size)]
+        rng.shuffle(cells)
+
+        agent = goal = None
+        for i, a in enumerate(cells):
+            for g in cells[i + 1:]:
+                if abs(a[0] - g[0]) + abs(a[1] - g[1]) >= min_dist:
+                    agent, goal = a, g
+                    break
+            if agent:
+                break
+        if agent is None:
+            continue
+
+        optimal = bfs(agent, goal, set())
+        if not optimal:
+            continue
+
+        interior = [p for p in optimal[1:-1] if p != agent and p != goal]
+        if not interior:
+            continue
+
+        rng.shuffle(interior)
+        phantom_wall = believed_path = None
+        for pw in interior:
+            b = bfs(agent, goal, {pw})
+            if b and b != optimal:
+                phantom_wall, believed_path = pw, b
+                break
+
+        if phantom_wall is None:
+            continue
+
+        T = len(believed_path)
+        x = np.zeros((T, size, size), dtype=int)
+        for t, (ar, ac) in enumerate(believed_path):
+            x[t, goal[0], goal[1]] = goal_val if (ar, ac) != goal else agent_val
+            x[t, ar, ac] = agent_val
+
+        meta = {
+            'agent': agent, 'goal': goal,
+            'agent_val': agent_val, 'goal_val': goal_val,
+            'phantom_wall': phantom_wall, 'T': T,
+        }
+        return x, meta
+
+    return None
+
+
+def make_false_belief_desire_tasks(n_per_combo, agent_goal_combos, size=5, seed=0):
+    """Generate false-belief+desire tasks for each (agent_val, goal_val) combo."""
+    rng = np.random.default_rng(seed)
+    tasks = []
+    for av, gv in agent_goal_combos:
+        count = 0
+        while count < n_per_combo:
+            result = make_false_belief_desire_task(
+                av, gv, size=size, seed=int(rng.integers(1 << 31))
+            )
+            if result is not None:
+                tasks.append(result)
+                count += 1
+    combos_str = ', '.join(f'av={av}→gv={gv}' for av, gv in agent_goal_combos)
+    print(f"generated {len(tasks)} false-belief+desire tasks "
+          f"({n_per_combo}/combo, combos=[{combos_str}], {size}x{size})")
+    return tasks
+
+
+def make_joint_false_belief_desire_task(agent_goal_pairs, size=5, seed=None, min_dist=None):
+    """Two agents each with a phantom wall and a variable desired goal.
+
+    agent_goal_pairs: [(av1, gv1), (av2, gv2)] — agent avi seeks goal gvi.
+    Each agent navigates on its believed grid (actual + its own phantom wall).
+    Returns (x, meta) or None.
+    """
+    from collections import deque
+    from dsl import seek as _seek, _step_belief
+
+    if min_dist is None:
+        min_dist = size // 2
+
+    rng = np.random.default_rng(seed)
+    (av1, gv1), (av2, gv2) = agent_goal_pairs
+
+    def bfs(start, end, wall_set):
+        q = deque([(start, [start])])
+        vis = {start}
+        while q:
+            pos, path = q.popleft()
+            if pos == end:
+                return path
+            for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                nb = (pos[0] + dr, pos[1] + dc)
+                if (0 <= nb[0] < size and 0 <= nb[1] < size
+                        and nb not in wall_set and nb not in vis):
+                    vis.add(nb)
+                    q.append((nb, path + [nb]))
+        return None
+
+    for _ in range(2000):
+        cells = [(r, c) for r in range(size) for c in range(size)]
+        rng.shuffle(cells)
+
+        a1, a2, g1, g2 = cells[0], cells[1], cells[2], cells[3]
+        if len({a1, a2, g1, g2}) < 4:
+            continue
+        if (abs(a1[0] - g1[0]) + abs(a1[1] - g1[1]) < min_dist or
+                abs(a2[0] - g2[0]) + abs(a2[1] - g2[1]) < min_dist):
+            continue
+
+        opt1 = bfs(a1, g1, set())
+        opt2 = bfs(a2, g2, set())
+        if not opt1 or not opt2:
+            continue
+
+        interior1 = [p for p in opt1[1:-1] if p not in (a2, g2)]
+        interior2 = [p for p in opt2[1:-1] if p not in (a1, g1)]
+        if not interior1 or not interior2:
+            continue
+
+        rng.shuffle(interior1)
+        rng.shuffle(interior2)
+        pw1 = pw2 = bel1 = bel2 = None
+        for p1 in interior1:
+            b1 = bfs(a1, g1, {p1})
+            if not b1 or b1 == opt1:
+                continue
+            for p2 in interior2:
+                if p2 == p1:
+                    continue
+                b2 = bfs(a2, g2, {p2})
+                if b2 and b2 != opt2:
+                    pw1, pw2, bel1, bel2 = p1, p2, b1, b2
+                    break
+            if pw1:
+                break
+        if not pw1:
+            continue
+
+        max_t = max(len(bel1), len(bel2))
+        ext1 = bel1 + [bel1[-1]] * (max_t - len(bel1))
+        ext2 = bel2 + [bel2[-1]] * (max_t - len(bel2))
+        if any(p1 == p2 for p1, p2 in zip(ext1, ext2)):
+            continue
+
+        ig = np.zeros((size, size), dtype=int)
+        ig[a1[0], a1[1]] = av1
+        ig[a2[0], a2[1]] = av2
+        ig[g1[0], g1[1]] = gv1
+        ig[g2[0], g2[1]] = gv2
+
+        bg1 = ig.copy(); bg1[pw1[0], pw1[1]] = 3
+        bg2 = ig.copy(); bg2[pw2[0], pw2[1]] = 3
+
+        step1, step2 = _seek(av1, gv1), _seek(av2, gv2)
+        act = ig.copy()
+        b1, b2 = bg1.copy(), bg2.copy()
+
+        frames = [act.copy()]
+        for _ in range(size * 4):
+            act, b1 = _step_belief(act, b1, step1)
+            act, b2 = _step_belief(act, b2, step2)
+            frames.append(act.copy())
+            if not np.any(act == gv1) and not np.any(act == gv2):
+                break
+
+        if len(frames) < 3:
+            continue
+
+        x = np.stack(frames)
+        meta = {
+            'agent_goal_pairs': agent_goal_pairs,
+            'agent_pos': [a1, a2], 'goal_pos': [g1, g2],
+            'phantom_walls': [pw1, pw2],
+        }
+        return x, meta
+
+    return None
+
+
+def make_joint_false_belief_desire_tasks(n, agent_goal_pairs, size=5, seed=0):
+    """Generate n two-agent false-belief+desire tasks."""
+    rng = np.random.default_rng(seed)
+    tasks = []
+    attempts = 0
+    while len(tasks) < n:
+        t = make_joint_false_belief_desire_task(
+            agent_goal_pairs, size=size, seed=int(rng.integers(1 << 31))
+        )
+        attempts += 1
+        if t is not None:
+            tasks.append(t)
+    pairs_str = ', '.join(f'av={av}→gv={gv}' for av, gv in agent_goal_pairs)
+    print(f"generated {n} joint false-belief+desire tasks ({attempts} attempts, "
+          f"pairs=[{pairs_str}], {size}x{size})")
+    return tasks

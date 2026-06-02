@@ -637,7 +637,7 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
     LOGPGAP = 2
     done = False
     targets = {mat_key(x): x for x in Xs}
-    ig_map = {mat_key(x): (x[0], x.shape[0]) for x in Xs} if root_type in (fn, grid, agent_step, fn_belief, 'fn_lam_body') else {}
+    ig_map = {mat_key(x): (x[0], x.shape[0]) for x in Xs} if root_type in (fn, grid, agent_step, fn_belief, 'fn_lam_body', scene_model) else {}
 
     def cb(tree, logp):
         """called once per enumerated program."""
@@ -712,6 +712,27 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
             for tkey, (actual_g, T) in ig_map.items():
                 try:
                     out = _dsl.unfold_multiagent_fn_belief_steps(actual_g, T, fn_belief_val, agents)
+                    if isinstance(out, np.ndarray) and 0 not in out.shape:
+                        candidates.append(mat_key(out))
+                except Exception:
+                    pass
+
+        elif root_type == scene_model:
+            try:
+                val = tree()
+            except Exception:
+                return
+            if not isinstance(val, tuple) or len(val) != 2:
+                return
+            wm_fn, desire_fn = val
+            if not callable(wm_fn) or not callable(desire_fn):
+                return
+            cnt += 1
+            agent_vals = [av for av, _ in agents] if agents else []
+            candidates = []
+            for tkey, (actual_g, T) in ig_map.items():
+                try:
+                    out = _dsl.unfold_scene(actual_g, T, val, agent_vals)
                     if isinstance(out, np.ndarray) and 0 not in out.shape:
                         candidates.append(mat_key(out))
                 except Exception:

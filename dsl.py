@@ -335,6 +335,55 @@ def _no_step_fn(a):
 
 no_step = _no_step_fn  # agent_step terminal
 
+# ── scene_model product type ───────────────────────────────────────────────────
+# scene_model = (fn_belief, agent_step) — packages both per-agent belief transforms
+# and per-agent step functions into a single jointly-synthesized object.
+
+scene_model = 'scene_model'
+
+def mk_agent_scene(av, belief_fn, step_fn, rest):
+    """int, fn, fn, scene_model -> scene_model
+
+    Add one agent to a scene model.
+    belief_fn: grid -> grid  (transforms actual_g to the agent's believed grid)
+    step_fn:   grid -> grid  (navigation function run on the believed grid)
+    rest: scene_model for the remaining agents
+    """
+    wm_rest, desire_rest = rest
+    return (assign_belief(av, belief_fn, wm_rest),
+            assign_step(av, step_fn, desire_rest))
+
+empty_scene = (no_belief_fn, no_step)
+
+def unfold_scene(actual_g, T, scene, agent_vals):
+    """grid, int, scene_model, [int] -> mat
+
+    Simulate T frames under a joint (belief, desire) scene model.
+    Only agents present in actual_g are simulated; agent_vals fixes ordering.
+    """
+    wm_fn, desire_fn = scene
+
+    present = [av for av in agent_vals if np.any(actual_g == av)]
+    if not present:
+        raise ValueError("unfold_scene: no agents in initial grid")
+
+    believed_gs = {av: wm_fn(av)(actual_g) for av in present}
+
+    if len(present) > 1:
+        bg_list = [believed_gs[av] for av in present]
+        if all(np.array_equal(bg_list[0], bg) for bg in bg_list[1:]):
+            raise ValueError("unfold_scene: all agents hold identical beliefs — rejected")
+
+    step_fns = {av: desire_fn(av) for av in present}
+
+    frames = [actual_g.copy()]
+    for _ in range(T - 1):
+        for av in present:
+            actual_g, new_bg = _step_belief(actual_g, believed_gs[av], step_fns[av])
+            believed_gs[av] = new_bg
+        frames.append(actual_g.copy())
+    return np.stack(frames)
+
 def seek(agent_val, goal_val):
     "int, int -> fn: BFS-optimal step for agent_val toward goal_val (= optimize(neg_dist(gv), av))"
     return optimize(neg_distance(goal_val), agent_val)

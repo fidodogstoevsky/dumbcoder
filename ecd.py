@@ -11,6 +11,8 @@ from torch import tensor
 
 from itertools import chain
 
+import os
+from concurrent.futures import ProcessPoolExecutor
 
 from tqdm import trange
 from copy import deepcopy
@@ -331,8 +333,6 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
         fallback = [normalize(s) for s in sols.values() if s]
         return fallback, [str(t) for t in fallback]
 
-    ghosttime = time()
-
     # Always pass fully-expanded (normalized) programs to stitch.
     # Using compressed programs (with fn_0 as an opaque token) causes a
     # naming collision: stitch names its new discoveries fn_0, fn_1, etc.,
@@ -351,8 +351,23 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
 
     programs = [str(t) for t in trees]
 
+    # Fresh-rest trick: replace empty_scene in each program with a unique per-program
+    # placeholder before calling stitch. Stitch sees variation in the rest position
+    # across programs → makes it a hole → abstractions get a free scene_model rest arg
+    # instead of baking in empty_scene. Single-agent programs alone are then sufficient
+    # to discover composable abstractions (fn_agent takes rest as a free hole).
+    _rest_subst = any('empty_scene' in p for p in programs)
+    if _rest_subst:
+        programs = [p.replace('empty_scene', f'_rest_{i}') for i, p in enumerate(programs)]
+
+    def restore_rest(s):
+        """Replace _rest_N placeholders with empty_scene after stitch."""
+        import re as _re2
+        return _re2.sub(r'_rest_\d+', 'empty_scene', s)
+
     print(f"running stitch_core.compress on {len(programs)} programs "
-          f"(iterations={iterations}, max_arity={max_arity})")
+          f"(iterations={iterations}, max_arity={max_arity})"
+          f"{' [fresh-rest trick active]' if _rest_subst else ''}")
 
     result = stitch_core.compress(programs, iterations=iterations,
                                   max_arity=max_arity, silent=True)
@@ -474,6 +489,10 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
 
         # stitch uses #i for argument holes; todelta() expects $i
         body_str = abs_result.body
+        # Restore any _rest_N placeholders that stitch did not abstract (kept as constants).
+        # When stitch does abstract the rest slot it becomes #j — restore_rest is a no-op.
+        if _rest_subst:
+            body_str = restore_rest(body_str)
         body_str_dollar = body_str  # preserve #i version for skipped_bodies
 
         # Inline-expand any skipped abstractions referenced inside this body
@@ -505,10 +524,37 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
         # Mark $i placeholders as typed holes so typize() can collect them
         _annotate_holes(D, hiddentail)
 
+        # Inject explicit $i isarg nodes for any partial-application slots.
+        # Stitch uses MDL-optimal encoding: when the rest arg is a single unique
+        # token per program (_rest_i), adding #3 to the body costs 1 token but
+        # saves 0 per rewrite, so stitch omits it. The result is a 3-arity body
+        # `(mk_agent_scene 1 (set_at #2 #1 3) (seek 1 #0))` with the 4th arg
+        # passed as an "extra" beyond the explicit arity. Without an explicit $3
+        # in the hiddentail, Delta.__call__ drops it via replace_hidden (no match).
+        # Injecting isarg nodes fixes evaluation so fn_0(gv,c,r,rest) correctly
+        # produces mk_agent_scene(1,set_at(r,c,3),seek(1,gv),rest).
+        _partial_types = _unsatisfied_tailtypes(hiddentail)
+        if _partial_types:
+            hole_idx = len(typize(hiddentail))   # next available $i index
+            remaining = list(_partial_types)
+            qq = [hiddentail]
+            while qq and remaining:
+                n = qq.pop(0)
+                if n.tailtypes:
+                    n_filled = len(n.tails) if n.tails else 0
+                    while n_filled < len(n.tailtypes) and remaining:
+                        new_hole = Delta(f'${hole_idx}', ishole=True, type=n.tailtypes[n_filled])
+                        if n.tails is None:
+                            n.tails = []
+                        n.tails.append(new_hole)
+                        n_filled += 1
+                        hole_idx += 1
+                        remaining.pop(0)
+                if n.tails:
+                    for t in n.tails:
+                        qq.append(t)
+
         tailtypes = typize(hiddentail)
-        # Append types for any arg slots left unsatisfied in the hiddentail
-        # (e.g. unfold's fn slot when stitch creates a partial-application body).
-        tailtypes = tailtypes + _unsatisfied_tailtypes(hiddentail)
         if len(tailtypes) == 0:
             # 0-arity stitch abstractions are either partial applications of
             # multi-arg primitives (e.g. (iterate 1 (gset ...)) with only 2 of
@@ -524,7 +570,8 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
 
         freeze(df)
         D.add(df)
-        print(f"added abstraction {name}: {abs_result.body}  [{df.type}]")
+        _argtypes_str = ', '.join(str(t) for t in (df.tailtypes or []))
+        print(f"added abstraction {name}: {abs_result.body}  [{_argtypes_str}] -> {df.type}")
 
     def remap_names(s):
         "Remap stitch's fn_i references to globally-unique fn_{i+offset} names."
@@ -537,6 +584,8 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
     new_trees = []
     for prog_str in result.rewritten:
         expanded = expand_skipped(remap_names(prog_str))
+        if _rest_subst:
+            expanded = restore_rest(expanded)
         try:
             tree = tr(D, expanded)
             freeze(tree)
@@ -548,12 +597,9 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
             else:
                 print(f"could not parse rewritten program '{prog_str}': {e}")
 
-    print(f"stitch compression took {(time() - ghosttime)/60:.2f}m")
     # Fall back to original trees for Q training if most rewrites failed to parse
     # (stitch often references abstractions that were skipped, making rewrites unparseable)
     training_trees = new_trees if len(new_trees) * 2 >= len(trees) else trees
-    print(f"using {len(training_trees)}/{len(trees)} trees for Q training "
-          f"({'rewritten' if training_trees is new_trees else 'original'})")
     return training_trees, [str(t) for t in new_trees]
 
 
@@ -615,6 +661,9 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
       fn_belief  — programs produce int->fn (belief assignment); wrapped as
                    unfold_multiagent_fn_belief_steps(x[0], T, fn_belief_fn, agents).
                    agents must be supplied (e.g. [(1, 2), (4, 5)]).
+      sfn        — programs produce a state transition fn over (world, model);
+                   wrapped as unfold_state(x[0], T, sf).  No agents needed —
+                   the simulator is purely mechanical (file11).
     """
     import dsl as _dsl
     if root_type is None:
@@ -628,8 +677,6 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
     if root_type == mat and agents:
         _dsl._sim_agents = agents
 
-    print(f'{len(D)=}')
-
     cnt = 0
     all_cnt = 0
     stime = time()
@@ -637,7 +684,7 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
     LOGPGAP = 2
     done = False
     targets = {mat_key(x): x for x in Xs}
-    ig_map = {mat_key(x): (x[0], x.shape[0]) for x in Xs} if root_type in (fn, grid, agent_step, fn_belief, 'fn_lam_body', scene_model) else {}
+    ig_map = {mat_key(x): (x[0], x.shape[0]) for x in Xs} if root_type in (fn, grid, agent_step, fn_belief, 'fn_lam_body', scene_model, sfn) else {}
 
     def cb(tree, logp):
         """called once per enumerated program."""
@@ -738,6 +785,23 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
                 except Exception:
                     pass
 
+        elif root_type == sfn:
+            try:
+                sf = tree()
+            except Exception:
+                return
+            if not callable(sf):
+                return
+            cnt += 1
+            candidates = []
+            for tkey, (actual_g, T) in ig_map.items():
+                try:
+                    out = _dsl.unfold_state(actual_g, T, sf)
+                    if isinstance(out, np.ndarray) and 0 not in out.shape:
+                        candidates.append(mat_key(out))
+                except Exception:
+                    pass
+
         elif root_type == 'fn_lam_body':
             # Canonical form: if the root is if_int_eq, its true branch must not be id_fn.
             # Without this, a4 tasks (direct agent=1) are solved as
@@ -775,9 +839,6 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
                 return
             cnt += 1
             candidates = [mat_key(out)]
-
-        if not(cnt % 10000) and cnt > 0:
-            print(f'! {cnt} trees, {cnt/(time()-stime):.0f}/s', flush=True)
 
         if not(cnt % 100) and time() - stime > timeout:
             done = True
@@ -822,21 +883,49 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
         _dsl._unfold_steps = None
         _dsl._sim_agents = None
 
-    took = time() - stime
-    print(f'total: {cnt}, took: {took/60:.1f}m, iter: {cnt/(took+1e-9):.0f}/s', flush=True)
-    print(f'solved: {sum(mat_key(x) in solutions for x in Xs)}/{len(Xs)}', flush=True)
     return solutions
 
 
 
+def _worker_init():
+    """Run in each worker process: limit to 1 thread to prevent OpenMP oversubscription.
+    On Linux, fork inherits the parent's thread pool state; without this every worker
+    spawns a full OpenMP team and all workers compete for the same cores."""
+    import torch
+    torch.set_num_threads(1)
+    for var in ('OMP_NUM_THREADS', 'MKL_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'NUMEXPR_NUM_THREADS'):
+        os.environ[var] = '1'
+
+
+def _n_cpus_available():
+    """CPUs actually allocated to this process.
+    Uses sched_getaffinity on Linux (respects SLURM cgroups), falls back to cpu_count on macOS."""
+    try:
+        return len(os.sched_getaffinity(0))
+    except AttributeError:
+        return os.cpu_count()
+
+
+def _solve_one_task(args):
+    """Worker for parallel task enumeration. Must be module-level for pickling."""
+    x, D, q, sols_snapshot, timeout, budget, root_type, step_fn, agents = args
+    result = solve_enumeration([x], D, q, dict(sols_snapshot),
+                               maxdepth=10, timeout=timeout, budget=budget,
+                               root_type=root_type, step_fn=step_fn, agents=agents)
+    return mat_key(x), result.get(mat_key(x))
+
+
 def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, seeds=None,
-        run_dream=True, max_arity=6, stitch_iterations=None, root_type=None, step_fn=None, agents=None):
+        run_dream=True, max_arity=6, stitch_iterations=None, root_type=None, step_fn=None, agents=None, n_workers=None,
+        content_aware_q=True):
     # when ECD is first run, reset the DSL
     D.reset()
     if root_type is None:
         root_type = mat
 
-    _run_dream = run_dream and root_type in (mat, fn)
+    _run_dream = run_dream and root_type in (mat, fn, scene_model)
+    _n_workers = n_workers if n_workers is not None else _n_cpus_available()
+    print(f'ECD: using {_n_workers} workers (allocated CPUs: {_n_cpus_available()})', flush=True)
 
     Qmodel = None  # no model on the first iteration; use uniform Q
     idx = 0
@@ -859,6 +948,15 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
         "return a flat log-prob tensor for this task's matrix"
         if Qmodel is None:
             q = uniform_type_q()
+            if content_aware_q:
+                # Boost integer literals whose value appears in x[0] to log-prob 0
+                # (cost-free). For an av=4 task this drops the target program from
+                # window 7 (~14 nats) to window ~9 nats, so both av=1 and av=4
+                # tasks are solved quickly and proportionally in iteration 1.
+                visible = {int(v) for v in np.unique(x[0]) if v not in (0, 3)}
+                for d in D.ds:
+                    if d.tailtypes is None and isinstance(d.head, int) and d.head in visible:
+                        q[D.index(d)] = 0.0
         else:
             with th.no_grad():
                 logits = Qmodel(tc_mat(x)[None])          # (1, nd)
@@ -894,40 +992,40 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
 
         return q
 
-    while idx < max_iterations:
-        unsolved = [x for x in Xs if mat_key(x) not in sols]
-        # use fixed per_task_timeout if given, else divide global budget evenly
-        t = per_task_timeout if per_task_timeout is not None else timeout / len(unsolved)
+    with ProcessPoolExecutor(max_workers=_n_workers, initializer=_worker_init) as pool:
+        while idx < max_iterations:
+            unsolved = [x for x in Xs if mat_key(x) not in sols]
+            # use fixed per_task_timeout if given, else divide global budget evenly
+            t = per_task_timeout if per_task_timeout is not None else timeout / len(unsolved)
 
-        for x in unsolved:
-            if mat_key(x) in sols:
-                continue  # may have been solved by an earlier task in this round
-            # After several iterations a task-specific Q can actively hurt
-            # exploration by concentrating mass far from the solution.
-            # Fall back to a type-uniform Q for persistently unsolved tasks
-            # so that all program structures remain reachable.
-            q = task_Q(x) if idx < 3 else uniform_type_q()
-            sols = solve_enumeration([x], D, q, sols,
-                                     maxdepth=10, timeout=t, budget=budget,
-                                     root_type=root_type,
-                                     step_fn=step_fn, agents=agents)
+            # Compute Q tensors in the main process (avoids sending Qmodel to workers),
+            # then dispatch all unsolved tasks in parallel.
+            # After several iterations fall back to uniform Q for persistently unsolved tasks.
+            _uniform_q = uniform_type_q()
+            _args = [
+                (x, D, task_Q(x) if idx < 3 else _uniform_q, dict(sols), t, budget, root_type, step_fn, agents)
+                for x in unsolved
+            ]
+            for k, sol in pool.map(_solve_one_task, _args):
+                if sol is not None:
+                    sols[k] = sol
 
-        soltrees = [s for s in sols.values() if s is not None]
-        _si = stitch_iterations if stitch_iterations is not None else 2
-        if len(soltrees) > 0:
-            trees, rewritten_strs = saturate_stitch(D, sols, iterations=_si, max_arity=max_arity)
-        else:
-            trees, rewritten_strs = [], []
+            soltrees = [s for s in sols.values() if s is not None]
+            _si = stitch_iterations if stitch_iterations is not None else 2
+            if len(soltrees) > 0:
+                trees, rewritten_strs = saturate_stitch(D, sols, iterations=_si, max_arity=max_arity)
+            else:
+                trees, rewritten_strs = [], []
 
-        idx += 1
+            idx += 1
 
-        Qmodel = dream(D, trees, training_Xs=Xs, root_type=root_type) if _run_dream else None
+            Qmodel = dream(D, trees, training_Xs=Xs, root_type=root_type, agents=agents) if _run_dream else None
 
-        if all_solved():
-            break
+            if all_solved():
+                break
 
-        unsolved = [x for x in Xs if mat_key(x) not in sols]
-        print(f'--- ECD iteration {idx}, {len(unsolved)}/{len(Xs)} unsolved ---', flush=True)
+            unsolved = [x for x in Xs if mat_key(x) not in sols]
+            print(f'--- ECD iteration {idx}, {len(unsolved)}/{len(Xs)} unsolved ---', flush=True)
 
     full_keys = {mat_key(x) for x in Xs}
 
@@ -1058,7 +1156,7 @@ def tc_mat(x, vocabsize=10):
     "convert a numpy matrix to a (T, H, W) long tensor, clamping to valid range"
     return th.from_numpy(np.clip(x, 0, vocabsize - 1).astype(np.int64))
 
-def dream(D, soltrees=[], training_Xs=None, root_type=None):
+def dream(D, soltrees=[], training_Xs=None, root_type=None, agents=None):
     import dsl as _dsl
     if root_type is None:
         root_type = mat
@@ -1070,23 +1168,35 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None):
     opt = th.optim.Adam(qmodel.parameters())
     paths, paths_terminal = makepaths(D, th.ones(len(D)))
 
+    _fantasy_type = fn if root_type == fn else (scene_model if root_type == scene_model else mat)
+
+    # Pre-compute grid parameters for fantasy generation (scene_model only).
+    # Infer grid size and goal values from training tasks so nothing is hardcoded.
+    _av_list = [av for av, _ in agents] if agents else [1]
+    _sz      = training_Xs[0].shape[1] if training_Xs else 5
+    _gv_list = sorted({int(v) for x in (training_Xs or [])
+                       for v in np.unique(x[0])
+                       if v not in (0, 3) and int(v) not in _av_list}) or [2]
+
     tbar = trange(600)
-    for _ in tbar:
-        if len(soltrees) > 0:
-            # Train purely on solution trees so Q concentrates on task structure.
-            # Random trees add noise that competes with the solution signal.
-            trees = [soltrees[i] for i in randint(len(soltrees), size=8)]
-        else:
-            tree_type = fn if root_type == fn else mat
-            trees = [newtree(D, tree_type, paths, paths_terminal,
-                             depth=5 if root_type == fn else 10) for _ in range(8)]
+    for _dream_iter in tbar:
+        n_replay  = min(4, len(soltrees))
+        replays   = [soltrees[i] for i in randint(len(soltrees), size=n_replay)] if n_replay else []
+        fantasies = [newtree(D, _fantasy_type, paths, paths_terminal,
+                             depth=5 if root_type == fn else 10) for _ in range(8 - n_replay)]
+        tagged    = [(t, False) for t in replays] + [(t, True) for t in fantasies]
+
+        if _dream_iter == 0:
+            print(f'[dream] first batch — {n_replay} replays + {len(fantasies)} fantasies:')
+            for _t in fantasies:
+                print(f'  fantasy: {_t}', flush=True)
 
         opt.zero_grad()
 
         node_loss = tensor(0.0, device=device)
         n_nodes = 0
 
-        for tree in trees:
+        for tree, is_fantasy in tagged:
             try:
                 if root_type == fn:
                     fn_val = tree()
@@ -1095,6 +1205,29 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None):
                     T  = int(randint(2, 9))
                     ig = training_Xs[randint(len(training_Xs))][0] if training_Xs else _dsl.blank44.copy()
                     out = _dsl.unfold(ig, T, fn_val)
+                elif root_type == scene_model:
+                    val = tree()
+                    if not isinstance(val, tuple) or len(val) != 2:
+                        continue
+                    agent_vals = [av for av, _ in agents] if agents else []
+                    if is_fantasy:
+                        # Generate a fresh grid: place all agent and goal values at
+                        # random non-overlapping positions so the fantasy program has
+                        # real agents/goals to interact with, and the trajectory is
+                        # genuinely informative about what the program does.
+                        ig = np.zeros((_sz, _sz), dtype=int)
+                        cells = [(r, c) for r in range(_sz) for c in range(_sz)]
+                        np.random.shuffle(cells)
+                        for _i, _v in enumerate(_av_list + _gv_list):
+                            ig[cells[_i][0], cells[_i][1]] = _v
+                        T = int(randint(3, 8))
+                    else:
+                        src = training_Xs[randint(len(training_Xs))] if training_Xs else None
+                        if src is None:
+                            continue
+                        ig = src[0]
+                        T  = src.shape[0]
+                    out = _dsl.unfold_scene(ig, T, val, agent_vals)
                 else:
                     try:
                         _dsl._unfold_steps = int(randint(2, 9))

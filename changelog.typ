@@ -573,6 +573,10 @@ so the change is that now in the simulation we need to unfold based on the parti
 
 so then to actually generate the grid from a program, we need to loop through each timestep, for each timestep initializing an empty grid with unknown values. then within the timestep loop, loop through each object on the grid (each int value). then we augment the previous timestep's grid with the transformed grid, transformed by `fn` which is the nested transition function (which is at least `id` and at most `(grid_transformation movement_transition)`). We build up the new timestep object by object, only adding the values that are relevant to that specific object so we avoid collisions. Then we add it to the history, and then we move on to the next timestep. 
 
-= June 2
+= June 3
 
-I had this hardcoded assumption `step_fns = [approach(av,gv) for av, _ in agents]`
+The `av=4` discovery problem: The enumeration order in cenumerate iterates DSL primitives by index — so integer 1 is tried before integer 4. In window 7 (where the solution programs live), av=1 programs come before av=4 programs. If the 120s timeout hits in the middle of that window, av=4 tasks never get solved, so stitch sees only av=1 programs and bakes in av=1 as a constant.
+
+the `rest` hack to prevent `empty_scene` from being baked in to the abstraction
+
+fantasies

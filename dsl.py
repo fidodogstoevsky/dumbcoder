@@ -406,6 +406,74 @@ def unfold_multiagent_desire_steps(actual_g, T, desire_fn, agent_vals):
         frames.append(actual_g.copy())
     return np.stack(frames)
 
+# ── state-threading combinator calculus (file11) ──────────────────────────────
+# The non-mental substrate for synthesizing the agent structure itself.
+# A scene unfolds as the iteration of a synthesized transition function over
+# state = (world, model), a pair of grids.  The simulator is purely mechanical:
+# it initializes the model as a copy of the world, applies the sfn each frame,
+# and renders the world channel.  Belief semantics lives nowhere in here — a
+# program that modifies the model channel and acts through sync_w implements
+# it; a program that ignores the model channel is ordinary physics.
+
+sfn = 'sfn'  # state -> state, where state = (world grid, model grid)
+
+def on_world(f):
+    "fn -> sfn: apply a grid transformation to the world channel only"
+    def _s(s):
+        w, m = s
+        return f(w), m
+    return _s
+
+def on_model(f):
+    "fn -> sfn: apply a grid transformation to the model channel only"
+    def _s(s):
+        w, m = s
+        return w, f(m)
+    return _s
+
+def sync_w(v):
+    "int -> sfn: move value v in the world to its position in the model"
+    def _s(s):
+        w, m = s
+        mpos = np.argwhere(m == v)
+        wpos = np.argwhere(w == v)
+        if len(mpos) == 0 or len(wpos) == 0:
+            return w, m
+        mr, mc = int(mpos[0][0]), int(mpos[0][1])
+        wr, wc = int(wpos[0][0]), int(wpos[0][1])
+        if (mr, mc) == (wr, wc):
+            return w, m
+        out = w.copy()
+        out[wr, wc] = 0
+        out[mr, mc] = v
+        return out, m
+    return _s
+
+def compose_s(a, b):
+    "sfn, sfn -> sfn: apply a, then b"
+    def _s(s):
+        return b(a(s))
+    return _s
+
+def wall_at(r, c):
+    "int, int -> fn: a wall (value 3) appears at (r, c)"
+    def _f(g):
+        return gset(g, r, c, 3)
+    return _f
+
+def unfold_state(g, T, sf):
+    """grid, int, sfn -> mat: iterate sf from (g, copy(g)); render the world.
+
+    The model channel starts as a copy of the world (memory initialized from
+    the senses) and is never rendered.
+    """
+    s = (g.copy(), g.copy())
+    frames = [s[0].copy()]
+    for _ in range(T - 1):
+        s = sf(s)
+        frames.append(s[0].copy())
+    return np.stack(frames)
+
 # ── conditionals ───────────────────────────────────────────────────────────────
 
 def exists(v):

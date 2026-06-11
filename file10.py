@@ -5,6 +5,20 @@ to run (file3=desire, file6=false-belief, file9=joint), the system maintains
 a posterior over competing DSL hypotheses and updates it with each round of
 enumeration.
 
+Level-2 model: HierarchicalBeliefs
+
+For each task key it accumulates log-likelihoods per class. The MDL approximation is log p(x | H_k) ≈ -cost_k where cost_k = -D_k.logp(Q_k, sol). When no solution is found, it charges a flat 80-nat penalty. The posterior is log p(H_k | X) ∝ log_prior_k + Σ_i log_lik_k(x_i). shared_agent=True aggregates evidence across tasks (same agent type produced all of them); shared_agent=False gives each task its own posterior — useful for the mixed-corpus demo.
+
+The gating logic in ECD_hierarchical
+
+The core loop is: enumerate under each D_k → update beliefs → pick the MAP class → run stitch + dream only on the MAP class's solutions. This is the key hierarchical coupling: the level-2 posterior gates which primitives get compressed and which Q model gets refined. Minority-class Q models are frozen — they can still beat the MAP class in future rounds if evidence shifts.
+
+Three things still rough in this sketch:
+
+1. _model_q assumes the stored Q was from a previous round with the same D size. The _flat_q hack on the dream model is ugly — cleaner would be a wrapper that stores (model, D_snapshot) and reindexes properly when D grows via stitch.
+2. The cross-class primitive propagation (invented terms from MAP class → simpler classes) is a placeholder with a rough type filter. The right semantics is: if stitch discovers fn_desire($ig, $gv) under H_desire, H_nav shouldn't inherit it — but a future H_nav+bonus run might usefully see it as a fixed terminal.
+3. dream isn't wired for scene_model root type (only for mat/fn), so the belief class's Q stays uniform. This is probably fine initially — the belief solutions are structurally distinctive enough that uniform Q still wins on cost.
+
 ─────────────────────────────────────────────────────────────────────────────
 Architecture:
 

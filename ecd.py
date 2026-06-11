@@ -923,7 +923,7 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
     if root_type is None:
         root_type = mat
 
-    _run_dream = run_dream and root_type in (mat, fn, scene_model)
+    _run_dream = run_dream and root_type in (mat, fn, scene_model, sfn)
     _n_workers = n_workers if n_workers is not None else _n_cpus_available()
     print(f'ECD: using {_n_workers} workers (allocated CPUs: {_n_cpus_available()})', flush=True)
 
@@ -1168,15 +1168,26 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, agents=None):
     opt = th.optim.Adam(qmodel.parameters())
     paths, paths_terminal = makepaths(D, th.ones(len(D)))
 
-    _fantasy_type = fn if root_type == fn else (scene_model if root_type == scene_model else mat)
+    _fantasy_type = root_type if root_type in (fn, scene_model, sfn) else mat
 
-    # Pre-compute grid parameters for fantasy generation (scene_model only).
+    # Pre-compute grid parameters for fantasy generation (scene_model and sfn).
     # Infer grid size and goal values from training tasks so nothing is hardcoded.
     _av_list = [av for av, _ in agents] if agents else [1]
     _sz      = training_Xs[0].shape[1] if training_Xs else 5
     _gv_list = sorted({int(v) for x in (training_Xs or [])
                        for v in np.unique(x[0])
                        if v not in (0, 3) and int(v) not in _av_list}) or [2]
+
+    def _fresh_ig():
+        """Fresh fantasy grid: all agent and goal values at random non-overlapping
+        positions, so the fantasy program has real entities to interact with and
+        its trajectory is genuinely informative about what the program does."""
+        ig = np.zeros((_sz, _sz), dtype=int)
+        cells = [(r, c) for r in range(_sz) for c in range(_sz)]
+        np.random.shuffle(cells)
+        for _i, _v in enumerate(_av_list + _gv_list):
+            ig[cells[_i][0], cells[_i][1]] = _v
+        return ig
 
     tbar = trange(600)
     for _dream_iter in tbar:
@@ -1185,11 +1196,6 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, agents=None):
         fantasies = [newtree(D, _fantasy_type, paths, paths_terminal,
                              depth=5 if root_type == fn else 10) for _ in range(8 - n_replay)]
         tagged    = [(t, False) for t in replays] + [(t, True) for t in fantasies]
-
-        if _dream_iter == 0:
-            print(f'[dream] first batch — {n_replay} replays + {len(fantasies)} fantasies:')
-            for _t in fantasies:
-                print(f'  fantasy: {_t}', flush=True)
 
         opt.zero_grad()
 
@@ -1211,16 +1217,8 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, agents=None):
                         continue
                     agent_vals = [av for av, _ in agents] if agents else []
                     if is_fantasy:
-                        # Generate a fresh grid: place all agent and goal values at
-                        # random non-overlapping positions so the fantasy program has
-                        # real agents/goals to interact with, and the trajectory is
-                        # genuinely informative about what the program does.
-                        ig = np.zeros((_sz, _sz), dtype=int)
-                        cells = [(r, c) for r in range(_sz) for c in range(_sz)]
-                        np.random.shuffle(cells)
-                        for _i, _v in enumerate(_av_list + _gv_list):
-                            ig[cells[_i][0], cells[_i][1]] = _v
-                        T = int(randint(3, 8))
+                        ig = _fresh_ig()
+                        T  = int(randint(3, 8))
                     else:
                         src = training_Xs[randint(len(training_Xs))] if training_Xs else None
                         if src is None:
@@ -1228,6 +1226,20 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, agents=None):
                         ig = src[0]
                         T  = src.shape[0]
                     out = _dsl.unfold_scene(ig, T, val, agent_vals)
+                elif root_type == sfn:
+                    sf = tree()
+                    if not callable(sf):
+                        continue
+                    if is_fantasy:
+                        ig = _fresh_ig()
+                        T  = int(randint(3, 8))
+                    else:
+                        src = training_Xs[randint(len(training_Xs))] if training_Xs else None
+                        if src is None:
+                            continue
+                        ig = src[0]
+                        T  = src.shape[0]
+                    out = _dsl.unfold_state(ig, T, sf)
                 else:
                     try:
                         _dsl._unfold_steps = int(randint(2, 9))

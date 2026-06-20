@@ -1,4 +1,3 @@
-from operator import add, mul
 import numpy as np
 from copy import deepcopy
 
@@ -12,13 +11,8 @@ class _VarSentinel:
 _var_sentinel = _VarSentinel()
 
 # types
-mat          = 'mat'          # 3d numpy array (T, H, W)
-grid         = 'grid'         # 2d numpy array (H, W)
 fn           = 'fn'           # grid -> grid
-fn2          = 'fn2'          # grid -> grid -> grid
-fn_pred      = 'fn_pred'      # grid -> bool
 util         = 'util'         # (grid, int, int) -> float  — positional utility
-belief       = 'belief'       # agent's subjective world model (structurally a grid)
 
 # int is used as a type string too
 # direction is used as a type string
@@ -32,18 +26,6 @@ DOWN    = ( 1,  0)
 
 # ── grid primitives ────────────────────────────────────────────────────────────
 
-def zeros(h, w):
-    "int, int -> grid: blank h×w grid"
-    if h <= 0 or w <= 0:
-        raise ValueError(f"zeros: need positive dims, got h={h} w={w}")
-    return np.zeros((h, w), dtype=int)
-
-# Common blank grids as terminals (saves 2 int-holes compared to zeros(h,w))
-blank33 = np.zeros((3, 3), dtype=int)
-blank44 = np.zeros((4, 4), dtype=int)
-blank55 = np.zeros((5, 5), dtype=int)
-blank66 = np.zeros((6, 6), dtype=int)
-
 def gset(g, r, c, v):
     "grid, int, int, int -> grid: set cell (r,c) to v"
     if r < 0 or r >= g.shape[0] or c < 0 or c >= g.shape[1]:
@@ -51,9 +33,6 @@ def gset(g, r, c, v):
     out = g.copy()
     out[r, c] = v
     return out
-
-# ── int arithmetic ─────────────────────────────────────────────────────────────
-# add and mul are imported from operator: add(a,b) = a+b, mul(a,b) = a*b
 
 # ── fn constructors (grid -> grid) ────────────────────────────────────────────
 
@@ -82,67 +61,13 @@ def _id_fn_impl(g):
 
 id_fn = _id_fn_impl
 
-def approach_from(agent_val):
-    "int -> fn→fn: partially apply approach, fixing the agent value"
-    def _approach_from(goal_val):
-        return approach(agent_val, goal_val)
-    return _approach_from
-
 def step(v, d):
     "int, dir -> fn: move all cells with value v one step in direction d"
     def _step(g):
         return _step_grid(g, v, d)
     return _step
 
-# ── intentional motion ─────────────────────────────────────────────────────────
-
-def _approach_grid(g, agent_val, goal_val):
-    "move agent_val one BFS-optimal step toward goal_val, treating value 3 as walls"
-    from collections import deque
-    h, w = g.shape
-    agents = [(r, c) for r in range(h) for c in range(w) if g[r, c] == agent_val]
-    goals  = [(r, c) for r in range(h) for c in range(w) if g[r, c] == goal_val]
-    if not agents or not goals:
-        return g.copy()
-    agent = agents[0]
-    goal  = goals[0]
-    if agent == goal:
-        return g.copy()
-    queue   = deque([(agent, None)])   # (pos, first_step)
-    visited = {agent}
-    first_step = None
-    while queue:
-        pos, step = queue.popleft()
-        if pos == goal:
-            first_step = step
-            break
-        for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-            nb = (pos[0] + dr, pos[1] + dc)
-            if (0 <= nb[0] < h and 0 <= nb[1] < w and nb not in visited
-                    and (g[nb[0], nb[1]] != 3 or nb == goal)):
-                visited.add(nb)
-                queue.append((nb, (dr, dc) if step is None else step))
-    if first_step is None:
-        return g.copy()
-    dr, dc = first_step
-    nr, nc = agent[0] + dr, agent[1] + dc
-    out = g.copy()
-    out[agent[0], agent[1]] = 0
-    out[nr, nc] = agent_val
-    return out
-
-def place_wall(g, r, c):
-    "grid, int, int -> grid: place a wall (value 3) at (r, c)"
-    return gset(g, r, c, 3)
-
-def approach(agent_val, goal_val):
-    "int, int -> fn: move agent_val one BFS step toward goal_val each frame"
-    def _approach(g):
-        return _approach_grid(g, agent_val, goal_val)
-    return _approach
-
 # ── utility-based motion ────────────────────────────────────────────────────────
-# approach(av, gv) = optimize(neg_distance(gv), av)
 # Greedy on negative BFS distance is equivalent to BFS-optimal first step:
 # optimal neighbours have distance d-1, all others d+1 or more, so the
 # greedy choice always picks an optimal first move.
@@ -173,24 +98,6 @@ def neg_distance(target_val):
         return -_bfs_distance(g, r, c, target_val)
     return _u
 
-def distance(target_val):
-    "int -> util: u(g,r,c) = BFS distance from (r,c) to nearest target_val cell"
-    def _u(g, r, c):
-        return _bfs_distance(g, r, c, target_val)
-    return _u
-
-def neg_util(u):
-    "util -> util: negate a utility function"
-    def _u(g, r, c):
-        return -u(g, r, c)
-    return _u
-
-def add_util(u1, u2):
-    "util, util -> util: additive combination of two utility functions"
-    def _u(g, r, c):
-        return u1(g, r, c) + u2(g, r, c)
-    return _u
-
 def optimize(u, agent_val):
     "util, int -> fn: move agent_val one greedy step maximising u at the landing cell"
     def _step(g):
@@ -213,198 +120,6 @@ def optimize(u, agent_val):
         out[best_r, best_c] = agent_val
         return out
     return _step
-
-# ── belief-based motion ────────────────────────────────────────────────────────
-# unfold_belief separates the agent's subjective model (belief) from the actual
-# world.  The step function runs on the believed grid; the resulting move is
-# extracted and applied to the actual grid.  The output trajectory shows the
-# actual world — no mask needed, because the phantom wall never existed there.
-
-def add_phantom_wall(g, r, c):
-    "grid, int, int -> belief: agent's false model — actual grid plus a wall at (r,c)"
-    b = g.copy()
-    if 0 <= r < g.shape[0] and 0 <= c < g.shape[1]:
-        b[r, c] = 3
-    return b
-
-def _step_belief(actual_g, believed_g, f):
-    "apply f on believed_g, extract the agent's move, replay it on actual_g"
-    new_believed = f(believed_g)
-    h, w = believed_g.shape
-    # find the cell that was vacated (non-zero → 0): that's the agent's old position
-    old_pos = agent_val = None
-    for r in range(h):
-        for c in range(w):
-            if believed_g[r, c] != 0 and new_believed[r, c] == 0:
-                old_pos, agent_val = (r, c), int(believed_g[r, c])
-                break
-        if old_pos is not None:
-            break
-    if old_pos is None:
-        return actual_g.copy(), new_believed
-    # find where agent_val newly appeared (agent's new position)
-    new_pos = None
-    for r in range(h):
-        for c in range(w):
-            if new_believed[r, c] == agent_val and believed_g[r, c] != agent_val:
-                new_pos = (r, c)
-                break
-        if new_pos is not None:
-            break
-    if new_pos is None:
-        return actual_g.copy(), new_believed
-    out = actual_g.copy()
-    out[old_pos] = 0
-    out[new_pos] = agent_val
-    return out, new_believed
-
-def unfold_belief(actual_g, believed_g, f):
-    "grid, belief, fn -> mat: navigate using believed world, record actual world"
-    if _unfold_steps is None:
-        raise ValueError("unfold_belief: _unfold_steps not set")
-    frames = [actual_g.copy()]
-    for _ in range(_unfold_steps - 1):
-        actual_g, believed_g = _step_belief(actual_g, believed_g, f)
-        frames.append(actual_g.copy())
-    return np.stack(frames)
-
-def unfold_belief_steps(actual_g, believed_g, T, f):
-    "grid, grid, int, fn -> mat: unfold under belief for T frames (no global needed)"
-    frames = [actual_g.copy()]
-    for _ in range(T - 1):
-        actual_g, believed_g = _step_belief(actual_g, believed_g, f)
-        frames.append(actual_g.copy())
-    return np.stack(frames)
-
-# ── agent_step primitives (int -> fn) ─────────────────────────────────────────
-# Desire assignment: maps each agent to the step function it should execute.
-# assign_step(av, f, rest)(av) = f; assign_step(av, f, rest)(x) = rest(x) for x≠av.
-# no_step: identity step for any agent (agent doesn't move).
-
-agent_step = 'agent_step'  # int -> fn
-fn_belief  = 'fn_belief'   # int -> fn  (agent -> world-transformation function)
-
-def set_at(r, c, v):
-    "int, int, int -> fn: set cell (r,c) to value v"
-    def _f(g): return gset(g, r, c, v)
-    return _f
-
-def assign_belief(agent_val, transform_fn, fallback_fn):
-    "int, fn, fn_belief -> fn_belief: assign a grid transformation to one agent"
-    def _ab(a):
-        return transform_fn if a == agent_val else fallback_fn(a)
-    return _ab
-
-def _no_belief_fn(a):
-    return lambda g: g.copy()
-
-no_belief_fn = _no_belief_fn
-
-def unfold_multiagent_fn_belief_steps(actual_g, T, fn_belief_fn, agents):
-    """grid, int, agent_step, [(int,int)] -> mat
-
-    fn_belief_fn :: int -> fn: maps agent_val to a Grid->Grid world transformation.
-    Each agent's believed initial grid = fn_belief_fn(av)(actual_g).
-    """
-    believed_gs = [fn_belief_fn(av)(actual_g) for av, _ in agents]
-
-    if len(believed_gs) > 1 and all(np.array_equal(believed_gs[0], bg) for bg in believed_gs[1:]):
-        raise ValueError("all agents hold identical beliefs — program rejected")
-
-    step_fns = [approach(av, gv) for av, gv in agents]
-
-    frames = [actual_g.copy()]
-    for _ in range(T - 1):
-        for i, step_fn in enumerate(step_fns):
-            actual_g, new_bg = _step_belief(actual_g, believed_gs[i], step_fn)
-            believed_gs[i] = new_bg
-        frames.append(actual_g.copy())
-    return np.stack(frames)
-
-def assign_step(agent_val, step_fn, fallback_fn):
-    "int, fn, agent_step -> agent_step: assign a step function to one agent"
-    def _as(a):
-        if a == agent_val:
-            return step_fn
-        return fallback_fn(a)
-    return _as
-
-def _no_step_fn(a):
-    def _id(g): return g.copy()
-    return _id
-
-no_step = _no_step_fn  # agent_step terminal
-
-# ── scene_model product type ───────────────────────────────────────────────────
-# scene_model = (fn_belief, agent_step) — packages both per-agent belief transforms
-# and per-agent step functions into a single jointly-synthesized object.
-
-scene_model = 'scene_model'
-
-def mk_agent_scene(av, belief_fn, step_fn, rest):
-    """int, fn, fn, scene_model -> scene_model
-
-    Add one agent to a scene model.
-    belief_fn: grid -> grid  (transforms actual_g to the agent's believed grid)
-    step_fn:   grid -> grid  (navigation function run on the believed grid)
-    rest: scene_model for the remaining agents
-    """
-    wm_rest, desire_rest = rest
-    return (assign_belief(av, belief_fn, wm_rest),
-            assign_step(av, step_fn, desire_rest))
-
-empty_scene = (no_belief_fn, no_step)
-
-def unfold_scene(actual_g, T, scene, agent_vals):
-    """grid, int, scene_model, [int] -> mat
-
-    Simulate T frames under a joint (belief, desire) scene model.
-    Only agents present in actual_g are simulated; agent_vals fixes ordering.
-    """
-    wm_fn, desire_fn = scene
-
-    present = [av for av in agent_vals if np.any(actual_g == av)]
-    if not present:
-        raise ValueError("unfold_scene: no agents in initial grid")
-
-    believed_gs = {av: wm_fn(av)(actual_g) for av in present}
-
-    if len(present) > 1:
-        bg_list = [believed_gs[av] for av in present]
-        if all(np.array_equal(bg_list[0], bg) for bg in bg_list[1:]):
-            raise ValueError("unfold_scene: all agents hold identical beliefs — rejected")
-
-    step_fns = {av: desire_fn(av) for av in present}
-
-    frames = [actual_g.copy()]
-    for _ in range(T - 1):
-        for av in present:
-            actual_g, new_bg = _step_belief(actual_g, believed_gs[av], step_fns[av])
-            believed_gs[av] = new_bg
-        frames.append(actual_g.copy())
-    return np.stack(frames)
-
-def seek(agent_val, goal_val):
-    "int, int -> fn: BFS-optimal step for agent_val toward goal_val (= optimize(neg_dist(gv), av))"
-    return optimize(neg_distance(goal_val), agent_val)
-
-def unfold_multiagent_desire_steps(actual_g, T, desire_fn, agent_vals):
-    """grid, int, agent_step, [int] -> mat
-
-    Each agent's step function is provided by desire_fn(av).
-    Only agents actually present in actual_g are simulated — this ensures that
-    bootstrap tasks (single-agent) reject programs that assign the step function
-    to the wrong agent slot.
-    Agents apply steps sequentially each frame, preserving the order of agent_vals.
-    """
-    present = [av for av in agent_vals if np.any(actual_g == av)]
-    step_fns = [desire_fn(av) for av in present]
-    frames = [actual_g.copy()]
-    for _ in range(T - 1):
-        for step_fn in step_fns:
-            actual_g = step_fn(actual_g)
-        frames.append(actual_g.copy())
-    return np.stack(frames)
 
 # ── state-threading combinator calculus (file11) ──────────────────────────────
 # The non-mental substrate for synthesizing the agent structure itself.
@@ -474,100 +189,231 @@ def unfold_state(g, T, sf):
         frames.append(s[0].copy())
     return np.stack(frames)
 
-# ── conditionals ───────────────────────────────────────────────────────────────
+# ── single-grid calculus (file13) ───────────────────────────────────────────────
+# file11/12 hardwired a second grid into the interpreter's state (the pair) so
+# that intensionality could be *expressed as a compound* and then discovered by
+# compression.  Here the interpreter shrinks to threading a single grid; programs
+# are plain fn = grid -> grid.  The second grid (the agent's private model) is no
+# longer interpreter state — it is introduced *locally in program space* by a
+# general, non-mental combinator `fork`, computed over, and collapsed back to one
+# grid in the same step.  No primitive on its own denotes a mental state: `fork`
+# is the S/fork combinator (apply a derived transform to a copy, then reconcile
+# against the original) and `sync_to_world` is a grid-diff that transfers one
+# value's position.  Belief is the *composition* fork(policy-on-modified-copy,
+# sync_to_world av) — which is exactly what stitch is meant to extract as fn_agent.
 
-def exists(v):
-    "int -> fn_pred: True if any cell in the grid equals v"
-    def _exists(g):
-        return bool(np.any(g == v))
-    return _exists
+def fork(derive, commit):
+    """fn, fn_p_g -> fn: w |-> commit((w, derive(w))).
 
-def if_fn(pred, f1, f2):
-    "fn_pred, fn, fn -> fn: apply f1 if pred(grid) else f2"
-    def _if(g):
-        return f1(g) if pred(g) else f2(g)
-    return _if
+    `derive` builds a private grid from a copy of the world (e.g. stamp a phantom
+    wall and run the policy on it); `commit` reconciles the (world, derived) pair
+    back to a single grid (e.g. move the agent to the position it reached in the
+    derived grid).  The second grid lives only for the duration of this call.
+    """
+    def _f(w):
+        return commit((w.copy(), derive(w.copy())))
+    return _f
 
-def _if_int_eq(a, b, f_true, f_false):
-    "int, int, fn, fn -> fn: return f_true if a==b else f_false"
-    return f_true if a == b else f_false
+def sync_to_world(v):
+    "int -> fn_p_g: move value v in world (first) to its position in derived (second)"
+    def _c(p):
+        w, m = p
+        wpos = np.argwhere(w == v)
+        mpos = np.argwhere(m == v)
+        if len(wpos) == 0 or len(mpos) == 0:
+            return w.copy()
+        wr, wc = int(wpos[0][0]), int(wpos[0][1])
+        mr, mc = int(mpos[0][0]), int(mpos[0][1])
+        if (wr, wc) == (mr, mc):
+            return w.copy()
+        out = w.copy()
+        out[wr, wc] = 0
+        out[mr, mc] = v
+        return out
+    return _c
 
-# ── fn2 terminals (grid -> grid -> grid) ──────────────────────────────────────
+# ── non-mental inhabitants of the pair interface (file14) ───────────────────────
+# fork produces pairs; fn_p_g consumes them.  If fork only ever fed sync_to_world
+# (and sync only ever ate fork), the fork/sync split would be a disguised belief
+# primitive.  These give the interface independent extension: `overlay` is a second
+# commit (graphics, not mind), and `unfold_with_template` is a second producer of
+# pairs (two given grids, not a derived private model).  Belief is then just one
+# path through a general pair-calculus, not a reverse-engineered decomposition.
 
-def _overlay(g1, g2):
-    "element-wise maximum of two grids (union / overlay)"
-    if g1.shape != g2.shape:
-        raise ValueError(f"overlay shape mismatch {g1.shape} {g2.shape}")
-    return np.maximum(g1, g2)
+def overlay(p):
+    "pair_gg -> grid (fn_p_g): union the channels — model's nonzero cells win ties"
+    w, m = p
+    out = w.copy()
+    out[m != 0] = m[m != 0]
+    return out
 
-overlay = _overlay   # fn2 terminal
+def then_sync(c, v):
+    "fn_p_g, int -> fn_p_g: run commit c on the working channel, then sync v"
+    def _c(p):
+        w, m = p
+        return sync_to_world(v)((c((w, m)), m))
+    return _c
 
-# ── fn_pred terminals (grid -> bool) ──────────────────────────────────────────
-
-def _nonempty(g):
-    "True if grid has any nonzero cell"
-    return bool(np.any(g != 0))
-
-nonempty = _nonempty  # fn_pred terminal
-
-# ── mat construction ───────────────────────────────────────────────────────────
-
-def place_agent_goal(g, ar, ac, gr, gc):
-    "grid, int,int,int,int -> grid: place agent(1) at (ar,ac) and goal(2) at (gr,gc) on g"
-    return gset(gset(g, ar, ac, 1), gr, gc, 2)
-
-def unfold(g, n, f):
-    "grid, int, fn -> mat: produce n frames [g, f(g), f²(g), …, f^(n-1)(g)]"
-    if n <= 0:
-        raise ValueError(f"unfold: need n>0, got {n}")
+def unfold_with_template(g, template, T, c):
+    """grid, grid, int, fn_p_g -> mat: thread g; each frame pair it with a
+    *constant external* template and apply commit c.  Unlike fork, the second
+    channel is a given input, not a privately derived model — so a program that
+    uses sync_to_world here is doing registration, not holding a belief.
+    """
     frames = [g.copy()]
-    for _ in range(n - 1):
+    for _ in range(T - 1):
+        g = c((g, template))
+        frames.append(g.copy())
+    return np.stack(frames)
+
+def unfold(g, T, f):
+    "grid, int, fn -> mat: iterate f:grid->grid from g, rendering each frame."
+    frames = [g.copy()]
+    for _ in range(T - 1):
         g = f(g)
         frames.append(g.copy())
     return np.stack(frames)
 
-# Set by solve_enumeration to the current task's T before each enumeration.
-_unfold_steps = None
+# ── monomorphic pair-calculus (file12) ─────────────────────────────────────────
+# file11 buried "state = (world, model), init by copy, render world" inside
+# unfold_state.  Here that triple is exposed as program data, with two
+# monomorphic state shapes: grid (no private channel) and pair_gg (one
+# private channel).  Whether a synthesized program *uses* a private channel
+# becomes a structural feature of the program — namely, which mk_machine_*
+# constructor it picks — instead of a type-system commitment in the interpreter.
 
-def unfold_auto(g, f):
-    "grid, fn -> mat: unfold for _unfold_steps frames (T injected by solve_enumeration)"
-    if _unfold_steps is None:
-        raise ValueError("unfold_auto: _unfold_steps not set")
-    return unfold(g, _unfold_steps, f)
+pair_gg = 'pair_gg'   # (grid, grid)
+fn_g_p  = 'fn_g_p'    # grid -> pair_gg   (init for pair machines)
+fn_p_g  = 'fn_p_g'    # pair_gg -> grid   (render for pair machines)
+machine = 'machine'   # bundled (kind, init, step, render)
 
-def predict_auto(g, f):
-    "grid, fn -> grid: apply f (_unfold_steps - 1) times to predict the last frame"
-    if _unfold_steps is None:
-        raise ValueError("predict_auto: _unfold_steps not set")
-    for _ in range(_unfold_steps - 1):
-        g = f(g)
-    return g
+def _dup_g(g):
+    "grid -> pair_gg: model channel starts as a copy of the world"
+    return (g.copy(), g.copy())
 
-# ── mat transformations ────────────────────────────────────────────────────────
+dup_g = _dup_g
 
-def mask(m, v):
-    "mat, int -> mat: zero out all cells with value v across all frames"
-    out = m.copy()
-    out[out == v] = 0
-    return out
+def _fst_gg(p):
+    "pair_gg -> grid: render the world (first) channel"
+    return p[0].copy()
 
-def replace_val(src, dst):
-    "int, int -> fn: replace all cells of value src with dst in a grid"
-    def _replace(g):
+fst_gg = _fst_gg
+
+def _snd_gg(p):
+    "pair_gg -> grid: render the model (second) channel"
+    return p[1].copy()
+
+snd_gg = _snd_gg
+
+# ── decomposed fork: product-category combinators (file15) ───────────────────────
+# file13's `fork(derive, commit)` hides two operations inside one closure: the
+# private copy (`w.copy()`) and the application of `derive` to it.  Spelled out,
+#
+#     fork(derive, commit)(w) = commit((w, derive(w)))
+#                             ≡ (commit ∘ mapsnd(derive) ∘ dup)(w)
+#
+# which is three textbook combinators of the product (×) category:
+#
+#     dup      :: grid -> pair     w |-> (w, w)         -- diagonal Δ      (= dup_g)
+#     mapsnd f :: pair -> pair     (a,b) |-> (a, f(b))  -- bifunctor second (= on_model)
+#     commit   :: pair -> grid                          -- product eliminator (sync/…)
+#
+# Exposing these as DSL primitives turns the implicit copy into a discoverable
+# `dup` node and "run the policy on the copy" into a `mapsnd` node.  `fork` is then
+# no longer a primitive but a compound the searcher builds and stitch re-extracts.
+# Wiring needs two typed composers (the monomorphic type system has no generic
+# `compose` across grid/pair arrows): `compose_gp` chains a pair-producer with a
+# pair-endomorphism, and `pipe_gpg` runs a pair-producer into a pair-consumer.
+
+fn_p_p = 'fn_p_p'   # pair_gg -> pair_gg
+
+dup = dup_g         # grid -> pair_gg: the diagonal Δ; the private copy made explicit
+
+mapsnd = on_model   # fn -> fn_p_p: (a,b) |-> (a, f(b)) — bifunctor 'second'.
+                    # Literally the file11 model-channel map, reused verbatim: the
+                    # second grid is computed over while the first is carried along.
+
+def compose_gp(produce, endo):
+    "fn_g_p, fn_p_p -> fn_g_p: (grid -> pair) then (pair -> pair)"
+    def _f(g):
+        return endo(produce(g))
+    return _f
+
+def pipe_gpg(produce, commit):
+    "fn_g_p, fn_p_g -> fn: w |-> commit(produce(w)) — pair-producer then -consumer"
+    def _f(g):
+        return commit(produce(g))
+    return _f
+
+def fork_decomposed(derive, commit):
+    "the decomposition identity (for ground-truth checks): == fork(derive, commit)"
+    return pipe_gpg(compose_gp(dup, mapsnd(derive)), commit)
+
+# ── decomposed sync: locate / place (file15 — defined, but kept atomic) ──────────
+# sync_to_world(v) decomposes the same way on the key v: read v's coordinate
+# through one channel, impose it on the other —
+#
+#     sync_to_world(v) ≡ place(v) ∘ ⟨ fst , locate(v) ∘ snd ⟩
+#
+#     locate(v) :: grid -> coord     argwhere(g == v)
+#     place(v)  :: grid, coord -> grid    move v to that cell, clearing its old one
+#
+# These are honest, non-mental parts (a find and a move).  We DEFINE them and
+# prove the identity, but DELIBERATELY keep `sync_to_world` a single DSL node (see
+# file15's docstring): folding the committer into a 4-node subtree would bury the
+# shared-`av` coincidence — av in the actor `(optimize … av)` AND the committer
+# `(sync_to_world av)` — which is the structural signature of agency that stitch
+# is meant to surface.  The sweet spot is to decompose fork (cheap; `dup` is a
+# great independent primitive) while leaving the agent signature one node deep.
+
+def locate(v):
+    "int -> (grid -> coord): position of value v, or None if absent"
+    def _l(g):
+        pos = np.argwhere(g == v)
+        return (int(pos[0][0]), int(pos[0][1])) if len(pos) else None
+    return _l
+
+def place(v):
+    "int -> (grid, coord -> grid): move value v to coord, clearing its old cell"
+    def _p(g, coord):
+        if coord is None:
+            return g.copy()
         out = g.copy()
-        out[out == src] = dst
+        wpos = np.argwhere(g == v)
+        if len(wpos):
+            out[int(wpos[0][0]), int(wpos[0][1])] = 0
+        out[coord[0], coord[1]] = v
         return out
-    return _replace
+    return _p
 
-def map_mat(f, m):
-    "fn, mat -> mat: apply grid→grid function f to every frame of mat m"
-    return np.stack([f(m[t]) for t in range(m.shape[0])])
+def sync_decomposed(v):
+    "the decomposition identity (for checks): == sync_to_world(v)"
+    def _c(p):
+        w, m = p
+        if not len(np.argwhere(w == v)):
+            return w.copy()
+        return place(v)(w, locate(v)(m))
+    return _c
 
-def filter_mat(pred, m):
-    "fn_pred, mat -> mat: keep only frames where pred(frame) is True"
-    frames = [m[t] for t in range(m.shape[0]) if pred(m[t])]
-    if not frames:
-        raise ValueError("filter_mat: no frames passed predicate")
+def mk_machine_g(init, step, render):
+    "fn, fn, fn -> machine: grid-state machine (no private channel)"
+    return ('machine_g', init, step, render)
+
+def mk_machine_gg(init, step, render):
+    "fn_g_p, sfn, fn_p_g -> machine: pair_gg-state machine (one private channel)"
+    return ('machine_gg', init, step, render)
+
+def unfold_m(g, T, m):
+    """grid, int, machine -> mat: thread g through init, iterate step (T-1)x,
+    render each frame.  The machine encodes its own state init and projection;
+    the interpreter is identical for both state shapes.
+    """
+    _kind, init, step, render = m
+    s = init(g)
+    frames = [np.asarray(render(s))]
+    for _ in range(T - 1):
+        s = step(s)
+        frames.append(np.asarray(render(s)))
     return np.stack(frames)
 
 # ── Delta expression tree ──────────────────────────────────────────────────────
@@ -629,21 +475,6 @@ class Delta:
 
         return self.head(*tails)
 
-    def balance(self):
-        if not self.tails:
-            return self
-
-        if not any(map(isterminal, self.tails)):
-            self.tails = sorted(self.tails, key=str)
-
-        if self.hiddentail:
-            self.hiddentail.balance()
-
-        for tail in self.tails:
-            tail.balance()
-
-        return self
-
     def __eq__(self, other):
         if other is None:
             return False
@@ -677,20 +508,12 @@ def _sub_var(node, value):
                 _sub_var(tail, value)
 
 def _lam_impl(body_delta):
-    "fn -> fn_belief: lambda over int, binding var in body"
+    "fn -> fn: lambda over int, binding var in body"
     def _lam(a):
         body = deepcopy(body_delta)
         _sub_var(body, a)
         return body()
     return _lam
-
-_sim_agents = None
-
-def sim(actual_g, wm):
-    "grid, fn_belief -> mat: simulate agents under their believed worlds"
-    if _sim_agents is None:
-        raise ValueError("sim: _sim_agents not set")
-    return unfold_multiagent_fn_belief_steps(actual_g, _unfold_steps, wm, _sim_agents)
 
 def isterminal(d: Delta) -> bool:
     if d.tailtypes == None:
@@ -714,18 +537,6 @@ def length(tree: Delta) -> int:
         return 1
 
     return 1 + sum(map(length, tree.tails))
-
-def countholes(tree: Delta) -> int:
-    if not tree:
-        return 0
-
-    if tree.ishole:
-        return 1
-
-    if not tree.tails:
-        return 0
-
-    return sum(map(countholes, tree.tails))
 
 
 def getast(expr):
@@ -836,27 +647,6 @@ def isequal(n1, n2):
 
     return False
 
-def extract_matches(tree, treeholed):
-    """
-    given a healthy tree, find in it part covering holes in a given treeholed
-    return pairs of holes and covered parts
-    """
-    if not tree or not treeholed:
-        return []
-
-    if treeholed.ishole or treeholed.isarg:
-        return [(treeholed.head, deepcopy(tree))]
-
-    out = []
-    if not tree.tails:
-        return []
-
-    for tail, holedtail in zip(tree.tails, treeholed.tails):
-        out += extract_matches(tail, holedtail)
-
-    return out
-
-
 def replace_hidden(tree, arg, tail):
     if isequal(tree, arg):
         return deepcopy(tail)
@@ -874,35 +664,6 @@ def replace_hidden(tree, arg, tail):
                 n.tails[idx] = deepcopy(tail)
             else:
                 qq.append(nt)
-
-    return tree
-
-def replace(tree, matchbranch, newbranch):
-    if isequal(tree, matchbranch):
-        branch = deepcopy(newbranch)
-
-        if not tree.tails:
-            return branch
-
-        args = {arg: tail for arg, tail in extract_matches(tree, matchbranch)}
-        if len(args) > 0:
-            branch.tails = list(args.values())
-
-        return branch
-
-    qq = [tree]
-    while len(qq) > 0:
-        n = qq.pop(0)
-        if not n.tails: continue
-
-        for i in range(len(n.tails)):
-            if isequal(n.tails[i], matchbranch):
-                branch = deepcopy(newbranch)
-                args = {arg: tail for arg, tail in extract_matches(n.tails[i], matchbranch)}
-                branch.tails = list(args.values())
-                n.tails[i] = branch
-            else:
-                qq.append(n.tails[i])
 
     return tree
 
@@ -951,6 +712,43 @@ def normalize(tree):
     return tree
 
 
+def simplify(tree):
+    """Collapse spurious nesting in a (normalized) Delta tree, semantics-preserving.
+
+    Rewrite (applied bottom-up, to fixpoint):
+
+        (fork (fork X (sync_to_world v)) (sync_to_world v))
+            ->  (fork X (sync_to_world v))
+
+    The inner fork's commit, sync_to_world(v), produces "world with v moved to its
+    position in X(world)" — i.e. it already moves only v.  The outer fork then
+    re-commits the *same* entity v, re-deriving and re-applying the identical move,
+    so it is a no-op wrapper.  (When the two sync values differ the outer commit is
+    not a no-op, so the rule requires them equal and leaves such trees untouched.)
+
+    This is a structural rewrite over fork/sync_to_world (file13's DSL); trees from
+    other DSLs contain no such nodes and pass through unchanged.
+    """
+    if not isinstance(tree, Delta):
+        return tree
+
+    if tree.tails:
+        tree.tails = [simplify(t) for t in tree.tails]
+
+    while (tree.repr == 'fork' and tree.tails and len(tree.tails) == 2):
+        derive, commit = tree.tails
+        if (commit.repr == 'sync_to_world' and commit.tails and
+                derive.repr == 'fork' and derive.tails and len(derive.tails) == 2):
+            inner_commit = derive.tails[1]
+            if (inner_commit.repr == 'sync_to_world' and inner_commit.tails and
+                    inner_commit.tails[0].repr == commit.tails[0].repr):
+                tree = derive          # drop the redundant outer fork
+                continue
+        break
+
+    return tree
+
+
 # not reentrant
 def typize(tree: Delta):
     """Collect types of $i holes keyed by stitch's own index; do NOT rename.
@@ -982,16 +780,3 @@ def typize(tree: Delta):
         return []
     max_i = max(int(k[1:]) for k in seen)
     return [seen.get(f'${i}') for i in range(max_i + 1)]
-
-
-def alld(tree):
-    "enumerate all heads in tree"
-    if not tree.tails:
-        return [tree]
-
-    heads = [tree]
-
-    for t in tree.tails:
-        heads.extend(alld(t))
-
-    return heads

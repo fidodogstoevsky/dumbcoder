@@ -117,40 +117,6 @@ class Deltas:
         self.infer()
 
 
-def task_terminals(Xs, mode='full'):
-    """Create one task-specific grid terminal per task.
-
-    Each terminal evaluates to a slice of the task's first frame, giving ECD
-    the initial world state without requiring coordinate enumeration.
-
-    mode='full'  — terminal = x[0]  (agent + goal + walls)
-                   Use for nav and false-belief tasks.
-                   Solution: (unfold ig_i T navigate) or
-                             (mask (unfold (place_wall ig_i pwr pwc) T navigate) 3)
-
-    mode='agent' — terminal = x[0] with goal cells zeroed out  (agent + walls only)
-                   Use for desire tasks.
-                   Solution: (unfold (gset ig_i gr gc gv) T (approach 1 gv))
-                   This preserves the shared gv variable — it appears in both
-                   gset (world representation) and approach (behaviour), which is
-                   the structural signature of desire.
-
-    Returns a list of Delta terminals in the same order as Xs.
-    Repr is 'ig_{i}' so stitch treats each as a distinct token and creates
-    a grid-typed hole when the same program structure recurs across tasks.
-    """
-    terminals = []
-    for i, x in enumerate(Xs):
-        frame = x[0].copy()
-        if mode == 'agent':
-            # zero out all non-agent, non-wall cells so goal_val is not baked in
-            agent_val = 1
-            wall_val  = 3
-            frame[(frame != agent_val) & (frame != wall_val)] = 0
-        terminals.append(Delta(frame, grid, repr=f'ig_{i}'))
-    return terminals
-
-
 def makepaths(D, Q):
     Paths = [[] for i in range(len(D))]
     Paths_terminal = [[] for i in range(len(D))]
@@ -330,7 +296,7 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
     except ImportError:
         print("stitch_core not installed; no compression performed")
         D.reset()
-        fallback = [normalize(s) for s in sols.values() if s]
+        fallback = [simplify(normalize(s)) for s in sols.values() if s]
         return fallback, [str(t) for t in fallback]
 
     # Always pass fully-expanded (normalized) programs to stitch.
@@ -343,7 +309,9 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
     # With normalized programs stitch sees only primitive operations — no fn_i
     # tokens — so its discoveries are always fresh with clean intra-stitch deps.
     n_already_invented = len(D.invented)
-    trees = [normalize(s) for s in sols.values() if s]
+    # normalize then collapse spurious nesting, so stitch compresses minimal forms
+    # and never invents (or propagates) redundant fork wrappers.
+    trees = [simplify(normalize(s)) for s in sols.values() if s]
     D.reset()
 
     if not trees:
@@ -351,23 +319,8 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
 
     programs = [str(t) for t in trees]
 
-    # Fresh-rest trick: replace empty_scene in each program with a unique per-program
-    # placeholder before calling stitch. Stitch sees variation in the rest position
-    # across programs → makes it a hole → abstractions get a free scene_model rest arg
-    # instead of baking in empty_scene. Single-agent programs alone are then sufficient
-    # to discover composable abstractions (fn_agent takes rest as a free hole).
-    _rest_subst = any('empty_scene' in p for p in programs)
-    if _rest_subst:
-        programs = [p.replace('empty_scene', f'_rest_{i}') for i, p in enumerate(programs)]
-
-    def restore_rest(s):
-        """Replace _rest_N placeholders with empty_scene after stitch."""
-        import re as _re2
-        return _re2.sub(r'_rest_\d+', 'empty_scene', s)
-
     print(f"running stitch_core.compress on {len(programs)} programs "
-          f"(iterations={iterations}, max_arity={max_arity})"
-          f"{' [fresh-rest trick active]' if _rest_subst else ''}")
+          f"(iterations={iterations}, max_arity={max_arity})")
 
     result = stitch_core.compress(programs, iterations=iterations,
                                   max_arity=max_arity, silent=True)
@@ -489,10 +442,6 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
 
         # stitch uses #i for argument holes; todelta() expects $i
         body_str = abs_result.body
-        # Restore any _rest_N placeholders that stitch did not abstract (kept as constants).
-        # When stitch does abstract the rest slot it becomes #j — restore_rest is a no-op.
-        if _rest_subst:
-            body_str = restore_rest(body_str)
         body_str_dollar = body_str  # preserve #i version for skipped_bodies
 
         # Inline-expand any skipped abstractions referenced inside this body
@@ -584,8 +533,6 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
     new_trees = []
     for prog_str in result.rewritten:
         expanded = expand_skipped(remap_names(prog_str))
-        if _rest_subst:
-            expanded = restore_rest(expanded)
         try:
             tree = tr(D, expanded)
             freeze(tree)
@@ -646,36 +593,27 @@ class _EnumDone(Exception):
     pass
 
 def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0,
-                      root_type=None, step_fn=None, agents=None):
+                      root_type=None, templates=None):
     """Enumerate programs from the DSL and match against task trajectories.
 
-    root_type controls what programs produce and how they are evaluated:
-      mat        — programs produce mat directly; unfold_auto is an explicit primitive.
-      fn         — programs produce a transition fn; wrapped as unfold(x[0], T, fn).
-      grid       — programs produce a believed initial grid; wrapped as
-                   unfold_belief_steps(x[0], believed_g, T, step_fn).
-                   step_fn must be supplied (e.g. approach(1, 2)).
-      agent_step — programs produce int->fn (desire assignment); wrapped as
-                   unfold_multiagent_desire_steps(x[0], T, desire_fn, agent_vals).
-                   agents must be supplied (e.g. [(1, 2), (4, 5)]).
-      fn_belief  — programs produce int->fn (belief assignment); wrapped as
-                   unfold_multiagent_fn_belief_steps(x[0], T, fn_belief_fn, agents).
-                   agents must be supplied (e.g. [(1, 2), (4, 5)]).
-      sfn        — programs produce a state transition fn over (world, model);
-                   wrapped as unfold_state(x[0], T, sf).  No agents needed —
-                   the simulator is purely mechanical (file11).
+    root_type=sfn      : programs are state transition fns over (world, model);
+                         wrapped as unfold_state(x[0], T, sf) (file11).
+    root_type=machine  : programs are explicit (init, step, render) bundles;
+                         wrapped as unfold_m(x[0], T, machine) (file12).
+                         The state shape (grid vs pair_gg) is a program choice.
+    root_type=fn_p_g   : programs are pair->grid commits; wrapped as
+                         unfold_with_template(x[0], templates[key], T, c) (file14).
+                         The second grid is a given template, not a derived model.
     """
     import dsl as _dsl
     if root_type is None:
-        root_type = mat
+        root_type = sfn
 
-    # fn_lam_body: enumerate fn-typed programs; evaluate each by wrapping in lam
-    _enum_type = fn if root_type == 'fn_lam_body' else root_type
-
-    if root_type == mat and len(Xs) == 1:
-        _dsl._unfold_steps = Xs[0].shape[0]
-    if root_type == mat and agents:
-        _dsl._sim_agents = agents
+    _enum_type = root_type
+    _is_machine = (root_type == machine)
+    _is_fn = (root_type == fn)
+    _is_pair = (root_type == _dsl.fn_p_g)
+    templates = templates or {}
 
     cnt = 0
     all_cnt = 0
@@ -684,7 +622,7 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
     LOGPGAP = 2
     done = False
     targets = {mat_key(x): x for x in Xs}
-    ig_map = {mat_key(x): (x[0], x.shape[0]) for x in Xs} if root_type in (fn, grid, agent_step, fn_belief, 'fn_lam_body', scene_model, sfn) else {}
+    ig_map = {mat_key(x): (x[0], x.shape[0]) for x in Xs}
 
     def cb(tree, logp):
         """called once per enumerated program."""
@@ -695,150 +633,29 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
             done = True
             raise _EnumDone()
 
-        if root_type == fn:
-            try:
-                fn_val = tree()
-            except Exception:
+        try:
+            val = tree()
+        except Exception:
+            return
+        if _is_machine:
+            if not (isinstance(val, tuple) and len(val) == 4
+                    and val[0] in ('machine_g', 'machine_gg')):
                 return
-            if not callable(fn_val):
-                return
-            cnt += 1
-            candidates = []
-            for tkey, (ig, T) in ig_map.items():
-                try:
-                    out = _dsl.unfold(ig, T, fn_val)
-                    if isinstance(out, np.ndarray) and 0 not in out.shape:
-                        candidates.append(mat_key(out))
-                except Exception:
-                    pass
-
-        elif root_type == grid:
-            try:
-                believed_g = tree()
-            except Exception:
-                return
-            if not isinstance(believed_g, np.ndarray) or believed_g.ndim != 2:
-                return
-            cnt += 1
-            candidates = []
-            for tkey, (actual_g, T) in ig_map.items():
-                try:
-                    out = _dsl.unfold_belief_steps(actual_g, believed_g, T, step_fn)
-                    if isinstance(out, np.ndarray) and 0 not in out.shape:
-                        candidates.append(mat_key(out))
-                except Exception:
-                    pass
-
-        elif root_type == agent_step:
-            try:
-                desire_fn = tree()
-            except Exception:
-                return
-            if not callable(desire_fn):
-                return
-            cnt += 1
-            agent_vals = [av for av, _ in agents] if agents else []
-            candidates = []
-            for tkey, (actual_g, T) in ig_map.items():
-                try:
-                    out = _dsl.unfold_multiagent_desire_steps(actual_g, T, desire_fn, agent_vals)
-                    if isinstance(out, np.ndarray) and 0 not in out.shape:
-                        candidates.append(mat_key(out))
-                except Exception:
-                    pass
-
-        elif root_type == fn_belief:
-            try:
-                fn_belief_val = tree()
-            except Exception:
-                return
-            if not callable(fn_belief_val):
-                return
-            cnt += 1
-            candidates = []
-            for tkey, (actual_g, T) in ig_map.items():
-                try:
-                    out = _dsl.unfold_multiagent_fn_belief_steps(actual_g, T, fn_belief_val, agents)
-                    if isinstance(out, np.ndarray) and 0 not in out.shape:
-                        candidates.append(mat_key(out))
-                except Exception:
-                    pass
-
-        elif root_type == scene_model:
-            try:
-                val = tree()
-            except Exception:
-                return
-            if not isinstance(val, tuple) or len(val) != 2:
-                return
-            wm_fn, desire_fn = val
-            if not callable(wm_fn) or not callable(desire_fn):
-                return
-            cnt += 1
-            agent_vals = [av for av, _ in agents] if agents else []
-            candidates = []
-            for tkey, (actual_g, T) in ig_map.items():
-                try:
-                    out = _dsl.unfold_scene(actual_g, T, val, agent_vals)
-                    if isinstance(out, np.ndarray) and 0 not in out.shape:
-                        candidates.append(mat_key(out))
-                except Exception:
-                    pass
-
-        elif root_type == sfn:
-            try:
-                sf = tree()
-            except Exception:
-                return
-            if not callable(sf):
-                return
-            cnt += 1
-            candidates = []
-            for tkey, (actual_g, T) in ig_map.items():
-                try:
-                    out = _dsl.unfold_state(actual_g, T, sf)
-                    if isinstance(out, np.ndarray) and 0 not in out.shape:
-                        candidates.append(mat_key(out))
-                except Exception:
-                    pass
-
-        elif root_type == 'fn_lam_body':
-            # Canonical form: if the root is if_int_eq, its true branch must not be id_fn.
-            # Without this, a4 tasks (direct agent=1) are solved as
-            # if_int_eq(var, 1, id_fn, set_at(...)) — equivalent but puts the
-            # direct-agent value in the condition.  Stitch then sees av=1 across all
-            # tasks and cannot abstract it as a hole.  Rejecting non-canonical programs
-            # forces the false-belief agent's value into the condition, so stitch sees
-            # av vary (1 for a1 tasks, 4 for a4 tasks) and discovers fn_cond correctly.
-            if (tree.repr == 'if_int_eq' and tree.tails is not None and
-                    len(tree.tails) >= 3 and tree.tails[2].repr == 'id_fn'):
-                return
-            # tree is an unevaluated fn-typed Delta; wrap lazily in lam for evaluation
-            try:
-                wm = _dsl._lam_impl(tree)
-            except Exception:
-                return
-            if not callable(wm):
-                return
-            cnt += 1
-            candidates = []
-            for tkey, (actual_g, T) in ig_map.items():
-                try:
-                    out = _dsl.unfold_multiagent_fn_belief_steps(actual_g, T, wm, agents)
-                    if isinstance(out, np.ndarray) and 0 not in out.shape:
-                        candidates.append(mat_key(out))
-                except Exception:
-                    pass
-
         else:
+            if not callable(val):
+                return
+        cnt += 1
+        candidates = []
+        for tkey, (actual_g, T) in ig_map.items():
             try:
-                out = tree()
+                out = (_dsl.unfold_m(actual_g, T, val) if _is_machine else
+                       _dsl.unfold_with_template(actual_g, templates[tkey], T, val) if _is_pair else
+                       _dsl.unfold(actual_g, T, val) if _is_fn else
+                       _dsl.unfold_state(actual_g, T, val))
+                if isinstance(out, np.ndarray) and 0 not in out.shape:
+                    candidates.append(mat_key(out))
             except Exception:
-                return
-            if not isinstance(out, np.ndarray) or 0 in out.shape:
-                return
-            cnt += 1
-            candidates = [mat_key(out)]
+                pass
 
         if not(cnt % 100) and time() - stime > timeout:
             done = True
@@ -846,10 +663,14 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
         for okey in candidates:
             if okey in targets:
+                # collapse spurious nesting before storing, so the length tiebreak
+                # below compares minimal forms and stitch never sees redundant
+                # wrappers (which it would otherwise abstract and propagate).
+                stree = simplify(deepcopy(tree))
                 if okey not in solutions:
-                    print(f'[{cnt:6d}] caught {tree}', flush=True)
-                if okey not in solutions or length(tree) < length(solutions[okey]):
-                    solutions[okey] = deepcopy(tree)
+                    print(f'[{cnt:6d}] caught {stree}', flush=True)
+                if okey not in solutions or length(stree) < length(solutions[okey]):
+                    solutions[okey] = stree
                 if all(mat_key(x) in solutions for x in Xs):
                     done = True
 
@@ -879,10 +700,6 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
         D.pop(ephermal)
 
-    if root_type == mat:
-        _dsl._unfold_steps = None
-        _dsl._sim_agents = None
-
     return solutions
 
 
@@ -908,22 +725,22 @@ def _n_cpus_available():
 
 def _solve_one_task(args):
     """Worker for parallel task enumeration. Must be module-level for pickling."""
-    x, D, q, sols_snapshot, timeout, budget, root_type, step_fn, agents = args
+    x, D, q, sols_snapshot, timeout, budget, root_type = args
     result = solve_enumeration([x], D, q, dict(sols_snapshot),
                                maxdepth=10, timeout=timeout, budget=budget,
-                               root_type=root_type, step_fn=step_fn, agents=agents)
+                               root_type=root_type)
     return mat_key(x), result.get(mat_key(x))
 
 
 def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, seeds=None,
-        run_dream=True, max_arity=6, stitch_iterations=None, root_type=None, step_fn=None, agents=None, n_workers=None,
+        run_dream=True, max_arity=6, stitch_iterations=None, root_type=None, n_workers=None,
         content_aware_q=True):
     # when ECD is first run, reset the DSL
     D.reset()
     if root_type is None:
-        root_type = mat
+        root_type = sfn
 
-    _run_dream = run_dream and root_type in (mat, fn, scene_model, sfn)
+    _run_dream = run_dream and root_type in (sfn, machine, fn)
     _n_workers = n_workers if n_workers is not None else _n_cpus_available()
     print(f'ECD: using {_n_workers} workers (allocated CPUs: {_n_cpus_available()})', flush=True)
 
@@ -962,34 +779,6 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
                 logits = Qmodel(tc_mat(x)[None])          # (1, nd)
                 q = F.log_softmax(logits.squeeze(0), dim=-1)   # (nd,)
 
-        # # Mask out ig terminals that don't belong to this task, then renormalize
-        # # within the grid type so the valid ig_i gets logp=0 (certainty).
-        # # Without renormalization, ig_i retains logp=-log(n_ig_terminals) even
-        # # though it's the only valid option — inflating solution cost by ~3.5
-        # # nats and pushing solutions into later budget windows.
-        # q = q.clone()
-        # for d in D.ds:
-        #     if getattr(d, 'repr', '').startswith('ig_') and d.tailtypes is None:
-        #         if not np.array_equal(d.head, x[0]):
-        #             q[D.index(d)] = -np.inf
-        #         else:
-        #             q[D.index(d)] = 0.0  # certain choice within grid type
-
-        # Mask out ig terminals that don't belong to this task, then renormalize
-        # within the grid type so the valid ig_i gets logp=0 (certainty).
-        # Without renormalization, ig_i retains logp=-log(n_ig_terminals) even
-        # though it's the only valid option — inflating solution cost and
-        # pushing solutions into later budget windows.
-        q = q.clone()
-        x0_agent = x[0].copy()
-        x0_agent[(x0_agent != 1) & (x0_agent != 3)] = 0  # agent-mode view of this frame
-        for d in D.ds:
-            if getattr(d, 'repr', '').startswith('ig_') and d.tailtypes is None:
-                if np.array_equal(d.head, x[0]) or np.array_equal(d.head, x0_agent):
-                    q[D.index(d)] = 0.0  # certain: only valid grid terminal
-                else:
-                    q[D.index(d)] = -np.inf
-
         return q
 
     with ProcessPoolExecutor(max_workers=_n_workers, initializer=_worker_init) as pool:
@@ -1003,7 +792,7 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
             # After several iterations fall back to uniform Q for persistently unsolved tasks.
             _uniform_q = uniform_type_q()
             _args = [
-                (x, D, task_Q(x) if idx < 3 else _uniform_q, dict(sols), t, budget, root_type, step_fn, agents)
+                (x, D, task_Q(x) if idx < 3 else _uniform_q, dict(sols), t, budget, root_type)
                 for x in unsolved
             ]
             for k, sol in pool.map(_solve_one_task, _args):
@@ -1019,7 +808,7 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
 
             idx += 1
 
-            Qmodel = dream(D, trees, training_Xs=Xs, root_type=root_type, agents=agents) if _run_dream else None
+            Qmodel = dream(D, trees, training_Xs=Xs, root_type=root_type) if _run_dream else None
 
             if all_solved():
                 break
@@ -1156,10 +945,10 @@ def tc_mat(x, vocabsize=10):
     "convert a numpy matrix to a (T, H, W) long tensor, clamping to valid range"
     return th.from_numpy(np.clip(x, 0, vocabsize - 1).astype(np.int64))
 
-def dream(D, soltrees=[], training_Xs=None, root_type=None, agents=None):
+def dream(D, soltrees=[], training_Xs=None, root_type=None):
     import dsl as _dsl
     if root_type is None:
-        root_type = mat
+        root_type = sfn
 
     device = th.device('cuda' if th.cuda.is_available() else 'cpu')
 
@@ -1168,11 +957,13 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, agents=None):
     opt = th.optim.Adam(qmodel.parameters())
     paths, paths_terminal = makepaths(D, th.ones(len(D)))
 
-    _fantasy_type = root_type if root_type in (fn, scene_model, sfn) else mat
+    _fantasy_type = root_type
+    _is_machine   = (root_type == machine)
+    _is_fn        = (root_type == fn)
 
-    # Pre-compute grid parameters for fantasy generation (scene_model and sfn).
+    # Pre-compute grid parameters for fantasy generation.
     # Infer grid size and goal values from training tasks so nothing is hardcoded.
-    _av_list = [av for av, _ in agents] if agents else [1]
+    _av_list = [1]
     _sz      = training_Xs[0].shape[1] if training_Xs else 5
     _gv_list = sorted({int(v) for x in (training_Xs or [])
                        for v in np.unique(x[0])
@@ -1193,8 +984,8 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, agents=None):
     for _dream_iter in tbar:
         n_replay  = min(4, len(soltrees))
         replays   = [soltrees[i] for i in randint(len(soltrees), size=n_replay)] if n_replay else []
-        fantasies = [newtree(D, _fantasy_type, paths, paths_terminal,
-                             depth=5 if root_type == fn else 10) for _ in range(8 - n_replay)]
+        fantasies = [newtree(D, _fantasy_type, paths, paths_terminal, depth=10)
+                     for _ in range(8 - n_replay)]
         tagged    = [(t, False) for t in replays] + [(t, True) for t in fantasies]
 
         opt.zero_grad()
@@ -1204,48 +995,26 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, agents=None):
 
         for tree, is_fantasy in tagged:
             try:
-                if root_type == fn:
-                    fn_val = tree()
-                    if not callable(fn_val):
+                val = tree()
+                if _is_machine:
+                    if not (isinstance(val, tuple) and len(val) == 4
+                            and val[0] in ('machine_g', 'machine_gg')):
                         continue
-                    T  = int(randint(2, 9))
-                    ig = training_Xs[randint(len(training_Xs))][0] if training_Xs else _dsl.blank44.copy()
-                    out = _dsl.unfold(ig, T, fn_val)
-                elif root_type == scene_model:
-                    val = tree()
-                    if not isinstance(val, tuple) or len(val) != 2:
-                        continue
-                    agent_vals = [av for av, _ in agents] if agents else []
-                    if is_fantasy:
-                        ig = _fresh_ig()
-                        T  = int(randint(3, 8))
-                    else:
-                        src = training_Xs[randint(len(training_Xs))] if training_Xs else None
-                        if src is None:
-                            continue
-                        ig = src[0]
-                        T  = src.shape[0]
-                    out = _dsl.unfold_scene(ig, T, val, agent_vals)
-                elif root_type == sfn:
-                    sf = tree()
-                    if not callable(sf):
-                        continue
-                    if is_fantasy:
-                        ig = _fresh_ig()
-                        T  = int(randint(3, 8))
-                    else:
-                        src = training_Xs[randint(len(training_Xs))] if training_Xs else None
-                        if src is None:
-                            continue
-                        ig = src[0]
-                        T  = src.shape[0]
-                    out = _dsl.unfold_state(ig, T, sf)
                 else:
-                    try:
-                        _dsl._unfold_steps = int(randint(2, 9))
-                        out = tree()
-                    finally:
-                        _dsl._unfold_steps = None
+                    if not callable(val):
+                        continue
+                if is_fantasy:
+                    ig = _fresh_ig()
+                    T  = int(randint(3, 8))
+                else:
+                    src = training_Xs[randint(len(training_Xs))] if training_Xs else None
+                    if src is None:
+                        continue
+                    ig = src[0]
+                    T  = src.shape[0]
+                out = (_dsl.unfold_m(ig, T, val) if _is_machine else
+                       _dsl.unfold(ig, T, val) if _is_fn else
+                       _dsl.unfold_state(ig, T, val))
             except Exception:
                 continue
 
@@ -1285,6 +1054,3 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, agents=None):
         tbar.set_description(f'{loss=:.2f} nodes={n_nodes}')
 
     return qmodel.to('cpu')
-
-
-from tasks import *  # task generators live in tasks.py; re-exported for backward compat

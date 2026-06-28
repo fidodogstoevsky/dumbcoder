@@ -14,7 +14,18 @@ _var_sentinel = _VarSentinel()
 fn           = 'fn'           # grid -> grid
 util         = 'util'         # (grid, int, int) -> float  — positional utility
 
-# int is used as a type string too
+# Integer literals are split into two distinct value types so that dataset
+# diversity and the latent (wall) search are decoupled:
+#   coord     — a grid POSITION (wall_at / clear_at args).  Terminals range over
+#               0..SIZE-1, fixed by grid geometry; never grows with the corpus, so
+#               the invisible wall coordinate is a bounded latent.
+#   cellvalue — a cell VALUE (agent/goal id, step magnitude, …).  Visible in the
+#               grid, so content_q prices it ~0; diversifying these costs nothing at
+#               the coord slot.  (Was a single overloaded `int` type, whose shared
+#               terminal pool made value-diversity inflate the coord branching.)
+coord        = 'coord'
+cellvalue    = 'cellvalue'
+
 # direction is used as a type string
 direction = 'dir'
 
@@ -365,6 +376,18 @@ def fork_decomposed(derive, commit):
 # `(sync_to_world av)` — which is the structural signature of agency that stitch
 # is meant to surface.  The sweet spot is to decompose fork (cheap; `dup` is a
 # great independent primitive) while leaving the agent signature one node deep.
+#
+# file15 (search-path variant) wires the decomposition in anyway, to *measure*
+# whether the prediction holds: `register(loc, plc)` is the av-free plumbing of
+# the commit (the analog of pipe_gpg/compose_gp for fork), so the committer
+# becomes `(register (locate av) (place av))` and av now appears 3× — in optimize,
+# locate, and place.  The question is whether stitch still re-extracts a single
+# agent constructor binding that shared av, or fragments it into a generic
+# `register`/locate/place idiom that buries the signature.
+
+coord   = 'coord'    # (row, col) — a position read off a grid
+fn_g_c  = 'fn_g_c'   # grid -> coord          (locate v)
+fn_gc_g = 'fn_gc_g'  # (grid, coord) -> grid  (place v)
 
 def locate(v):
     "int -> (grid -> coord): position of value v, or None if absent"
@@ -386,6 +409,20 @@ def place(v):
         return out
     return _p
 
+def register(loc, plc):
+    """fn_g_c, fn_gc_g -> fn_p_g: (w, m) |-> plc(w, loc(m)).
+
+    The av-free plumbing of the commit: read a coordinate off the model channel
+    with `loc`, impose it on the world with `plc`.  This is exactly registration
+    (alignment) — a generic, non-mental pair-consumer, the commit-side analog of
+    pipe_gpg/compose_gp.  `sync_to_world(v) ≡ register(locate(v), place(v))` on any
+    trajectory where v is present in the world (always true for the agent av).
+    """
+    def _c(p):
+        w, m = p
+        return plc(w, loc(m))
+    return _c
+
 def sync_decomposed(v):
     "the decomposition identity (for checks): == sync_to_world(v)"
     def _c(p):
@@ -394,6 +431,256 @@ def sync_decomposed(v):
             return w.copy()
         return place(v)(w, locate(v)(m))
     return _c
+
+# ── symmetric complements (file16 — the "cube") ─────────────────────────────────
+# Every commit/combinator above bakes in a *choice* that belief happens to want:
+# sync_to_world reads the coordinate off the MODEL, writes it into the WORLD,
+# returns the WORLD, and moves exactly ONE value.  Those are independent axes
+#
+#     direction   : read model→write world (sync_to_world)  vs  read world→write model (sync_to_model)
+#     scope       : one value (sync_to_world)  vs  all (sync_all)  vs  all-but-one (sync_except)
+#     z-order     : model wins ties (overlay)   vs  world wins ties (underlay)
+#     projection  : keep world (fst_gg)         vs  keep model (snd_gg)
+#     bifunctor   : map second (mapsnd/on_model) vs map first (mapfst/on_world) vs both (bimap)
+#     pairing     : diagonal (dup)              vs  fresh scratch (pair_blank)
+#     utility     : attract (neg_distance)      vs  repel (distance)
+#     grid edit   : add a wall (wall_at)        vs  remove a cell (clear_at / erase)
+#
+# Populating the DSL with the *other* corners gives the searcher the full
+# symmetric field.  None of these help a theory-of-mind task; each is the natural
+# tool for some non-mental one (perception/recording, multi-object registration,
+# inpainting, motion away from a hazard, denoising).  If joint MDL still selects
+# exactly the (read-model, write-world, single-av) corner for belief while these
+# corners attach to their non-mental tasks, the agency signature is discovered,
+# not gerrymandered into the primitive set.
+
+def sync_to_model(v):
+    """int -> fn_p_g: the DIRECTION complement of sync_to_world.
+
+    Read v's coordinate off the WORLD (first), impose it on the MODEL (second),
+    and return the MODEL.  Where sync_to_world commits a belief to the world,
+    this records a sensation into the private channel — perception, not action.
+    """
+    def _c(p):
+        w, m = p
+        wpos = np.argwhere(w == v)
+        mpos = np.argwhere(m == v)
+        if len(wpos) == 0 or len(mpos) == 0:
+            return m.copy()
+        wr, wc = int(wpos[0][0]), int(wpos[0][1])
+        mr, mc = int(mpos[0][0]), int(mpos[0][1])
+        if (wr, wc) == (mr, mc):
+            return m.copy()
+        out = m.copy()
+        out[mr, mc] = 0
+        out[wr, wc] = v
+        return out
+    return _c
+
+def sync_all(p):
+    """pair_gg -> grid (fn_p_g): the SCOPE complement of sync_to_world.
+
+    Move EVERY value shared by both channels to its model-position (wholesale
+    state adoption / multi-object registration).  Clear-all-then-place so swaps
+    don't clobber.  No single value is privileged — the agency signature, which
+    needs av to be the *one* committed value, cannot hide in here.
+    """
+    w, m = p
+    out = w.copy()
+    moves = []
+    for v in (int(x) for x in np.unique(w) if x != 0):
+        wpos = np.argwhere(w == v)
+        mpos = np.argwhere(m == v)
+        if len(wpos) and len(mpos):
+            moves.append((v, (int(wpos[0][0]), int(wpos[0][1])),
+                             (int(mpos[0][0]), int(mpos[0][1]))))
+    for _v, (wr, wc), _t in moves:
+        out[wr, wc] = 0
+    for v, _s, (mr, mc) in moves:
+        out[mr, mc] = v
+    return out
+
+def sync_except(v):
+    "int -> fn_p_g: SCOPE complement — sync every shared value EXCEPT v (the set complement of sync_to_world)"
+    def _c(p):
+        w, m = p
+        out = w.copy()
+        moves = []
+        for u in (int(x) for x in np.unique(w) if x != 0 and x != v):
+            wpos = np.argwhere(w == u)
+            mpos = np.argwhere(m == u)
+            if len(wpos) and len(mpos):
+                moves.append((u, (int(wpos[0][0]), int(wpos[0][1])),
+                                 (int(mpos[0][0]), int(mpos[0][1]))))
+        for _u, (wr, wc), _t in moves:
+            out[wr, wc] = 0
+        for u, _s, (mr, mc) in moves:
+            out[mr, mc] = u
+        return out
+    return _c
+
+def underlay(p):
+    "pair_gg -> grid (fn_p_g): the Z-ORDER complement of overlay — WORLD's nonzero cells win ties (model only fills holes / inpainting)"
+    w, m = p
+    out = m.copy()
+    out[w != 0] = w[w != 0]
+    return out
+
+def mapfst(f):
+    "fn -> fn_p_p: the BIFUNCTOR complement of mapsnd — (a,b) |-> (f(a), b); transform world, carry model as pristine reference.  (== on_world)"
+    return on_world(f)
+
+def bimap(f, g):
+    "fn, fn -> fn_p_p: the full product bifunctor map — (a,b) |-> (f(a), g(b))"
+    def _s(p):
+        a, b = p
+        return f(a), g(b)
+    return _s
+
+def swap(p):
+    "pair_gg -> pair_gg (fn_p_p): the symmetry witness — exchange the two channels so neither is privileged as 'the world'"
+    a, b = p
+    return (b.copy(), a.copy())
+
+def via_swap(c):
+    """fn_p_g -> fn_p_g: run commit c on the swapped pair.
+
+    Makes channel direction a search *choice* rather than a hardwired privilege:
+    via_swap(sync_to_world(v)) == sync_to_model(v).  Lets the searcher express
+    belief through the 'wrong' channel, so picking the direct wiring is informative.
+    """
+    def _c(p):
+        return c((p[1], p[0]))
+    return _c
+
+def pair_blank(g):
+    "grid -> pair_gg (fn_g_p): the PAIRING complement of dup — pair g with a fresh empty scratch channel instead of a copy of itself"
+    return (g.copy(), np.zeros_like(g))
+
+def distance(target_val):
+    "int -> util: the UTILITY complement of neg_distance — +BFS distance, so maximising it flees the nearest target_val (predator/prey, hazard avoidance)"
+    def _u(g, r, c):
+        return _bfs_distance(g, r, c, target_val)
+    return _u
+
+def clear_at(r, c):
+    "int, int -> fn: the EDIT complement of wall_at — clear cell (r,c) (write 0) instead of stamping a blocker"
+    def _f(g):
+        return gset(g, r, c, 0)
+    return _f
+
+def erase(v):
+    "int -> fn: EDIT complement — remove every cell of value v (denoising / deletion)"
+    def _f(g):
+        out = g.copy()
+        out[out == v] = 0
+        return out
+    return _f
+
+# ── arity generalization: the cons/nil grid-stack (file17) ───────────────────────
+# The cube above introduces *role* symmetry (every choice baked into the two
+# channels gets its complementary corner), but every cube combinator is hardwired
+# to ARITY 2: pair_gg = (grid, grid), `swap` exchanges "the two" channels, `dup`
+# makes a binary product.  The number of private channels is held fixed, so "why
+# one world + one model, not three?" is answered by an interpreter commitment (the
+# pair_gg type), not by search.
+#
+# Replacing the fixed pair with a single recursive grid-stack makes the *number of
+# private channels* a discoverable structural feature.  Belief's private channel is
+# within-step (atomic `fork` is fn = grid->grid; the model is rederived each frame
+# by dup INSIDE the step and collapsed back by the commit), so "arity" here is the
+# arity of fork's product.  One type, one combinator set, any depth:
+#
+#     gstack ::= ()  |  (grid, *gstack)        -- a stack of grids; index 0 = top
+#
+# Each combinator below is the n-ary, depth-polymorphic lift of a cube op (dup,
+# pair_blank, on_model/mapsnd, swap, overlay, sync_to_world, fst_gg).  depth-1
+# reproduces fork+sync exactly (see fork_stack_decomposed); depth-0 is a bare fn
+# (no stack); depth-2 is the natural home of a two-buffer non-mental task.
+
+gstack = 'gstack'   # a tuple of grids; index 0 is the top (most-recent private channel)
+fn_g_s = 'fn_g_s'   # grid   -> gstack   (lift / base)
+fn_s_s = 'fn_s_s'   # gstack -> gstack   (stack endomorphism)
+fn_s_g = 'fn_s_g'   # gstack -> grid     (render / peek)
+
+def base(g):
+    "grid -> gstack (fn_g_s): the world as a 1-element stack (0 private channels)"
+    return (g.copy(),)
+
+def dup_top(s):
+    "gstack -> gstack (fn_s_s): the diagonal Δ at the top — n-ary `dup` (push a copy of the head)"
+    return (s[0].copy(),) + s
+
+def blank_top(s):
+    "gstack -> gstack (fn_s_s): the PAIRING complement of dup_top — push a fresh empty scratch channel (n-ary `pair_blank`)"
+    return (np.zeros_like(s[0]),) + s
+
+def swap_top(s):
+    "gstack -> gstack (fn_s_s): exchange the top two channels — n-ary `swap`; the symmetry witness and the only way to reach a non-top channel"
+    if len(s) < 2:
+        return s
+    return (s[1], s[0]) + s[2:]
+
+def map_top(f):
+    "fn -> fn_s_s: run a grid policy on the head only — n-ary `mapsnd`/`on_model` (the world below is carried untouched)"
+    def _s(s):
+        return (f(s[0]),) + s[1:]
+    return _s
+
+def zip_top(c):
+    """fn_p_g -> fn_s_s: binary combine of the top two channels, popping one.
+
+    `c` is any pair-consumer (overlay is the canonical one); the top two grids are
+    fed in as (head, next).  This is what makes depth>1 genuinely necessary: two
+    derived views must both be live before they can be combined.
+    """
+    def _s(s):
+        return (c((s[0], s[1])),) + s[2:]
+    return _s
+
+def commit_top(v):
+    """int -> fn_s_s: the n-ary `sync_to_world`.
+
+    Read v's coordinate off the TOP private channel, impose it on the channel
+    BELOW (the world), pop the top.  Collapses depth by one.  At depth-1 this is
+    exactly fork's commit: sync_to_world(v) applied to (world-below, model-top).
+    """
+    def _s(s):
+        return (sync_to_world(v)((s[1], s[0])),) + s[2:]
+    return _s
+
+def peek(s):
+    "gstack -> grid (fn_s_g): render the top of the stack — n-ary `fst_gg`"
+    return s[0].copy()
+
+def compose_gs(produce, endo):
+    "fn_g_s, fn_s_s -> fn_g_s: (grid -> stack) then (stack -> stack); n-ary `compose_gp`"
+    def _f(g):
+        return endo(produce(g))
+    return _f
+
+def pipe_gsg(produce, render):
+    "fn_g_s, fn_s_g -> fn: w |-> render(produce(w)); n-ary `pipe_gpg`"
+    def _f(g):
+        return render(produce(g))
+    return _f
+
+def fork_stack_decomposed(derive, av):
+    """the decomposition identity (for checks): == fork(derive, sync_to_world(av)).
+
+        pipe_gsg(compose_gs(compose_gs(compose_gs(base, dup_top),
+                                       map_top(derive)),
+                            commit_top(av)),
+                peek)
+
+    Trace on w:  base→[w]  dup_top→[w,w]  map_top(derive)→[derive(w),w]
+                 commit_top(av)→[sync_to_world(av)(w, derive(w))]  peek→that world.
+    """
+    return pipe_gsg(
+        compose_gs(compose_gs(compose_gs(base, dup_top),
+                              map_top(derive)),
+                   commit_top(av)),
+        peek)
 
 def mk_machine_g(init, step, render):
     "fn, fn, fn -> machine: grid-state machine (no private channel)"

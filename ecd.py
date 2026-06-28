@@ -375,16 +375,42 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
            → no #i holes, extra args appended inside body's outermost parens
            → (place_ag blank 0 3 3 1)
 
+        3. Bare reference: fn_3: (fn_0 2 1), used as a value, e.g.
+           (compose (wall_at c0 c3) fn_3)
+           → no parens, no args → substitute the body in place
+           → (compose (wall_at c0 c3) (fn_0 2 1))
+
         Uses a proper s-expression parser so nested parens in arguments are
         handled correctly (unlike regex which misidentifies ) as a non-whitespace
         argument token and swallows the tail of the enclosing expression).
         """
+        def _subst(body, args):
+            """Substitute a skipped abstraction's body for a use site.
+
+            #i holes are filled from args positionally; any args beyond the
+            body's #-arity are appended inside the body's outermost parens
+            (partial-application case).  A bare reference passes args=[] and so
+            yields the body unchanged.
+            """
+            arity = 0
+            while f'#{arity}' in body:
+                arity += 1
+            expanded = body
+            for j in range(min(arity, len(args))):
+                expanded = expanded.replace(f'#{j}', args[j])
+            extra = args[arity:]
+            if extra and expanded.startswith('(') and expanded.endswith(')'):
+                expanded = expanded[:-1] + ' ' + ' '.join(extra) + ')'
+            return expanded
+
         def expand_once(s):
             result = []
             i = 0
             while i < len(s):
-                if s[i] == '(':
+                c = s[i]
+                if c == '(':
                     # check whether this is a call to a skipped abstraction
+                    matched = False
                     for name, body in skipped_bodies.items():
                         prefix = '(' + name
                         end_name = i + len(prefix)
@@ -399,30 +425,27 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
                                     break
                                 args.append(arg)
                             if pos < len(s) and s[pos] == ')':
-                                end = pos + 1
-                                # count #i holes in body
-                                arity = 0
-                                while f'#{arity}' in body:
-                                    arity += 1
-                                # substitute #i → args[i]
-                                expanded = body
-                                for j in range(min(arity, len(args))):
-                                    expanded = expanded.replace(f'#{j}', args[j])
-                                # extra args beyond arity: append into body's
-                                # outermost (...) — handles partial applications
-                                # like (fn_6 a b c) where fn_6 = (place_ag blank)
-                                extra = args[arity:]
-                                if extra and expanded.startswith('(') and expanded.endswith(')'):
-                                    expanded = expanded[:-1] + ' ' + ' '.join(extra) + ')'
-                                result.append(expanded)
-                                i = end
+                                result.append(_subst(body, args))
+                                i = pos + 1
+                                matched = True
                                 break
-                    else:
-                        result.append(s[i])
+                    if not matched:
+                        result.append(c)
                         i += 1
-                else:
-                    result.append(s[i])
+                elif c in ' )':
+                    result.append(c)
                     i += 1
+                else:
+                    # bare atom token: a skipped abstraction can appear as a
+                    # value (no parens, no args), e.g. (compose f fn_3).  The
+                    # call-form scan above never sees these, so match the whole
+                    # atom and substitute its body with no args.
+                    atom, j = _parse_sexp(s, i)
+                    if atom in skipped_bodies:
+                        result.append(_subst(skipped_bodies[atom], []))
+                    else:
+                        result.append(atom)
+                    i = j
             return ''.join(result)
 
         changed = True
@@ -772,7 +795,7 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
                 # tasks are solved quickly and proportionally in iteration 1.
                 visible = {int(v) for v in np.unique(x[0]) if v not in (0, 3)}
                 for d in D.ds:
-                    if d.tailtypes is None and isinstance(d.head, int) and d.head in visible:
+                    if d.tailtypes is None and d.type == cellvalue and d.head in visible:
                         q[D.index(d)] = 0.0
         else:
             with th.no_grad():
@@ -831,11 +854,14 @@ def mat_key(x):
 class MatRecognitionModel(nn.Module):
     """Recognition model: flat matrix-conditioned Q.
 
-    Grid encoder:
-      h_agent0    = mean(row_embed + col_embed) over FRAME-0 agent cells  (start pos)
-      h_goal0     = mean(row_embed + col_embed) over FRAME-0 goal cells   (start pos)
+    Grid encoder (roles identified by MOTION, not by hardcoded values — the corpus
+    uses diverse agent/goal ids, so "agent"=the cell vacated between frame 0 and the
+    last frame, "goal"=the non-bg cell occupied at both ends):
+      h_agent0    = mean(row_embed + col_embed) over FRAME-0 agent (mover) start cell
+      h_goal0     = mean(row_embed + col_embed) over the stationary (goal) cell
       h_wall      = mean(row_embed + col_embed) over ALL-frame wall cells  (wall pos)
-      h_agent_all = mean(row_embed + col_embed) over ALL-frame agent cells (traj mean)
+      h_agent_all = mean(row_embed + col_embed) over ALL-frame non-goal entity cells
+                                                                            (traj mean)
       h_T         = t_embed[T-1]                                           (path length)
       h_matrix = concat([h_agent0, h_goal0, h_wall, h_agent_all, h_T])  — (B, 5*nembd)
 
@@ -889,27 +915,33 @@ class MatRecognitionModel(nn.Module):
 
         # frame-0 position embeddings (B, 1, H, W, nembd)
         pos_e0 = pos_e[:, :1, :, :, :]
-        x0 = x[:, :1, :, :]   # (B, 1, H, W)
+
+        # Roles by MOTION, not by hardcoded values (the corpus uses diverse agent/goal
+        # ids): an entity cell occupied in frame 0 but VACATED by the last frame is the
+        # mover (agent); one occupied at both ends is stationary (goal — the agent ends
+        # on it).  Keeps the encoder correct whatever the actual av/gv literals are.
+        WALL, EMPTY = 3, 0
+        entity = (x != EMPTY) & (x != WALL)                     # (B,T,H,W) non-bg cells
+        f0, fl = entity[:, 0], entity[:, -1]                    # (B,H,W) first / last
+        agent_start = (f0 & ~fl).unsqueeze(1)                   # vacated start (B,1,H,W)
+        goal_pos    = (f0 &  fl).unsqueeze(1)                   # stationary entity
+
+        def _pool(mask, pe):
+            m = mask.float().unsqueeze(-1)
+            return (pe * m).sum(dim=(1, 2, 3)) / m.sum(dim=(1, 2, 3)).clamp(min=1)
 
         parts = []
-        # agent and goal: pool from frame 0 only (unambiguous start positions)
-        for val in (1, 2):
-            mask = (x0 == val).float().unsqueeze(-1)             # (B,1,H,W,1)
-            h = (pos_e0 * mask).sum(dim=(1,2,3)) / mask.sum(dim=(1,2,3)).clamp(min=1)
-            parts.append(h)                                       # (B, nembd)
-
-        # walls: pool from all frames (walls are static; all-frame sum just reinforces)
-        mask_w = (x == 3).float().unsqueeze(-1)                  # (B,T,H,W,1)
-        h_wall = (pos_e * mask_w).sum(dim=(1,2,3)) / mask_w.sum(dim=(1,2,3)).clamp(min=1)
-        parts.append(h_wall)                                      # (B, nembd)
-
-        # all-frame agent mean: encodes trajectory shape (differs between detour and
-        # straight path even when T and start/goal positions are the same).
-        # e.g. detour (0,3)→(0,2)→(1,2)→(2,2) has mean (0.75, 2.25) while
-        # straight (0,3)→(1,3)→(2,3)→(2,2) has mean (1.25, 2.75).
-        mask_a = (x == 1).float().unsqueeze(-1)                  # (B,T,H,W,1)
-        h_agent_all = (pos_e * mask_a).sum(dim=(1,2,3)) / mask_a.sum(dim=(1,2,3)).clamp(min=1)
-        parts.append(h_agent_all)                                 # (B, nembd)
+        parts.append(_pool(agent_start, pos_e0))                # h_agent0 (start pos)
+        parts.append(_pool(goal_pos,    pos_e0))                # h_goal0
+        # walls: all frames (value 3 is the fixed wall rendering; empty for belief,
+        # whose wall is invisible — the model must read the detour instead).
+        parts.append(_pool((x == WALL), pos_e))                 # h_wall
+        # agent trajectory across ALL frames (the detour signal), value-agnostically:
+        # every non-bg cell except the stationary goal.  Differs between a detour and a
+        # straight path even when T and start/goal coincide — the key wall-coord cue.
+        # e.g. detour (0,3)→(0,2)→(1,2)→(2,2) mean (0.75,2.25) vs straight
+        # (0,3)→(1,3)→(2,3)→(2,2) mean (1.25,2.75).
+        parts.append(_pool(entity & ~goal_pos, pos_e))          # h_agent_all (traj mean)
 
         # T embedding: direct path-length signal for detour detection
         t_idx = th.full((B,), T - 1, dtype=th.long, device=device).clamp(
@@ -945,7 +977,64 @@ def tc_mat(x, vocabsize=10):
     "convert a numpy matrix to a (T, H, W) long tensor, clamping to valid range"
     return th.from_numpy(np.clip(x, 0, vocabsize - 1).astype(np.int64))
 
-def dream(D, soltrees=[], training_Xs=None, root_type=None):
+def model_q(qmodel, x):
+    """Per-task GLOBAL log-prob tensor from a recognition model (ECD.task_Q's form).
+
+    One matrix-conditioned forward pass gives a flat (nd,) distribution over the
+    whole DSL.  NOTE: this is normalized GLOBALLY, not per type, so its costs are on
+    a different scale from uniform_type_q / content_q.  The phases use dreamed_q()
+    instead, which puts the model on the enumeration cost model's own (type-
+    conditional) scale; this raw form is kept for ECD-compatibility/reference."""
+    with th.no_grad():
+        logits = qmodel(tc_mat(x)[None])                 # (1, nd)
+        return F.log_softmax(logits.squeeze(0), dim=-1)  # (nd,)
+
+
+def uniform_type_q(D):
+    "type-conditioned uniform log-prob tensor: logp[i] = -log(#symbols of i's type)."
+    import math
+    q = th.zeros(len(D))
+    for _tp, idxs in D.bytype.items():
+        lp = -math.log(len(idxs))
+        for i in idxs:
+            q[i] = lp
+    return q
+
+
+def dreamed_q(qmodel, D, x):
+    """Recognition-model Q for one task, on the SAME cost scale as content_q.
+
+    A bare model_q is mis-scaled for the budget enumerator and, trained only on the
+    families solved so far, can suppress the rare primitives a still-unsolved family
+    (belief) needs.  dreamed_q fixes both so dreaming can only *help*:
+
+      * TYPE-CONDITIONAL: the model's logits are re-softmaxed within each type group,
+        so a program's summed cost is comparable to the uniform/content prior rather
+        than living on the model's global scale (a ~10-node program would otherwise
+        land many budget windows later and time out before it's reached).
+      * FLOORED AT UNIFORM: q = max(model, uniform_type_q).  The model can make a
+        primitive CHEAPER (tried earlier) but never push one below its uniform
+        reachability — so the model's confident guesses are explored first while every
+        program reachable under the uniform baseline stays reachable.
+      * VISIBLE-LITERAL BOOST: integer literals present in frame 0 are forced to cost
+        0, the content trick the uniform baseline depends on (which a bare model Q,
+        replacing content_q, would otherwise discard).
+    """
+    with th.no_grad():
+        logits = qmodel(tc_mat(x)[None]).squeeze(0)        # (nd,)
+    q = th.full((len(D),), -float('inf'))
+    for _tp, idxs in D.bytype.items():                     # per-type renormalize
+        idxs_t = th.tensor(idxs)
+        q[idxs_t] = F.log_softmax(logits[idxs_t], dim=-1)
+    q = th.maximum(q, uniform_type_q(D))                   # model can only help
+    visible = {int(v) for v in np.unique(x[0]) if v not in (0, 3)}
+    for d in D.ds:
+        # only cellvalue literals are content-priced; coord is a latent (see dsl.py)
+        if d.tailtypes is None and d.type == cellvalue and d.head in visible:
+            q[D.index(d)] = 0.0                            # content literal boost
+    return q
+
+def dream(D, soltrees=[], training_Xs=None, root_type=None, n_iters=600):
     import dsl as _dsl
     if root_type is None:
         root_type = sfn
@@ -980,7 +1069,7 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None):
             ig[cells[_i][0], cells[_i][1]] = _v
         return ig
 
-    tbar = trange(600)
+    tbar = trange(n_iters)
     for _dream_iter in tbar:
         n_replay  = min(4, len(soltrees))
         replays   = [soltrees[i] for i in randint(len(soltrees), size=n_replay)] if n_replay else []

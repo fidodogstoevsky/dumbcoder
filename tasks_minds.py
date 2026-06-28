@@ -41,9 +41,8 @@ The hoped-for stitch discovery is the agent type constructor:
     (fork (compose (wall_at $r $c) (optimize (neg_dist $gv) $av))
           (sync_to_world $av))
 
-Run:
-    python file13.py            # full run
-    python file13.py --smoke    # tiny corpus, short timeouts
+This is a library module — the minds-task generators (physics / desire / belief /
+witness-belief) imported by the phase drivers.  Run a phase via `python phase1.py`.
 """
 
 import sys
@@ -58,12 +57,18 @@ from dsl import (
     fn, util, direction, fn_p_g,
     RIGHT, LEFT, UP, DOWN,
     fork, sync_to_world,
-    compose, step, optimize, neg_distance, wall_at,
+    compose, step, optimize, neg_distance, wall_at, clear_at,
     unfold, tr, simplify,
 )
 
-# ── Configuration (same combos as file11/12) ────────────────────────────────────
-COMBOS = [(1, 2), (1, 5), (4, 2), (4, 5)]
+# ── Configuration ────────────────────────────────────────────────────────────
+# (av, gv) combos.  Deliberately diverse: every value in 1,2,4,5,6,7,8,9 (3 = wall,
+# 0 = empty are reserved) appears across the set, and several appear in BOTH the
+# agent and goal role, so no single literal — and no role-position — dominates the
+# corpus.  That is what pushes stitch to keep (gv,av) as HOLES in the seek/policy
+# abstractions instead of baking them; with the coord/cellvalue type split (dsl.py)
+# this added value-diversity costs nothing at the latent wall-coordinate slot.
+COMBOS = [(1, 2), (4, 5), (6, 7), (8, 9), (2, 6), (5, 8), (7, 1), (9, 4)]
 SIZE   = 5
 DIRS   = {'right': RIGHT, 'left': LEFT, 'up': UP, 'down': DOWN}
 
@@ -237,164 +242,113 @@ def make_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=8):
     return tasks
 
 
-# ── DSL ────────────────────────────────────────────────────────────────────────
+def _witness_belief_program(av, gv, aw, gw, pr, pc):
+    """Per-frame transition for false-belief WITH a non-believing witness:
 
-def make_core_prims():
-    return [
-        # Fork combinator + commit (program-space pair plumbing; no interpreter state)
-        Delta(fork,          fn,     [fn, fn_p_g],       repr='fork'),
-        Delta(sync_to_world, fn_p_g, [int],              repr='sync_to_world'),
+        (compose (fork (compose (wall_at r c) (optimize (neg_dist gv) av))
+                       (sync_to_world av))
+                 (optimize (neg_dist gw) aw))
 
-        # Grid-state primitives (fn = grid -> grid)
-        Delta(compose,      fn,   [fn, fn],          repr='compose'),
-        Delta(step,         fn,   [int, direction],  repr='step'),
-        Delta(optimize,     fn,   [util, int],       repr='optimize'),
-        Delta(wall_at,      fn,   [int, int],        repr='wall_at'),
+    av acts on a PRIVATE walled copy (the belief); the witness aw seeks gw on the
+    real, wall-free grid.  Composed so av's belief-move happens, then the witness
+    moves on the committed world.
+    """
+    return compose(
+        fork(compose(wall_at(pr, pc), optimize(neg_distance(gv), av)),
+             sync_to_world(av)),
+        optimize(neg_distance(gw), aw))
 
-        # Utility
-        Delta(neg_distance, util, [int],             repr='neg_dist'),
 
-        # Direction terminals
-        Delta(RIGHT, direction, repr='right'),
-        Delta(LEFT,  direction, repr='left'),
-        Delta(UP,    direction, repr='up'),
-        Delta(DOWN,  direction, repr='down'),
-
-        # Int terminals
-        *[Delta(i, int, repr=str(i)) for i in range(6)],
+def _witness_rival_explainable(x, g, av, gv, aw, gw, pr, pc):
+    """True if any frame-invariant non-mental program reproduces the witnessed
+    scene — the transient-wall family (stamp wall / act / erase, in every order),
+    the no-wall physics, and the av-only program.  When the witness *traverses*
+    the phantom-wall cell these all fail (the unconditional per-frame wall stamp
+    clobbers the witness), so a surviving scene is uniquely the private-belief one.
+    """
+    T = x.shape[0]
+    oa = optimize(neg_distance(gv), av)
+    ow = optimize(neg_distance(gw), aw)
+    W, C = wall_at(pr, pc), clear_at(pr, pc)
+    rivals = [
+        compose(oa, ow),                                    # no wall (pure physics)
+        compose(compose(W, oa), C),                         # transient wall, witness ignored
+        compose(compose(compose(W, oa), C), ow),            # stamp/act/erase, then witness
+        compose(compose(compose(ow, W), oa), C),            # witness, then stamp/act/erase
+        compose(compose(compose(W, ow), oa), C),            # stamp, witness, av, erase
+        compose(compose(compose(W, oa), ow), C),            # stamp, av, witness, erase
     ]
+    for r in rivals:
+        try:
+            if np.array_equal(unfold(g, T, r), x):
+                return True
+        except Exception:
+            pass
+    return False
 
 
-def verify_ground_truth(D, tasks_meta):
-    """Re-express each kind's ground truth as a Delta tree (the searcher's own
-    encoding) and check it reproduces the task — catches eager/typing mistakes
-    in the Delta encoding rather than in the raw python closures."""
-    for x, m in tasks_meta:
-        if m['kind'] == 'physics':
-            prog = f"(step {m['val']} {m['dir']})"
-        elif m['kind'] == 'desire':
-            prog = f"(optimize (neg_dist {m['gv']}) {m['av']})"
-        else:
-            pr, pc = m['pw']
-            prog = (f"(fork (compose (wall_at {pr} {pc}) "
-                    f"(optimize (neg_dist {m['gv']}) {m['av']})) "
-                    f"(sync_to_world {m['av']}))")
-        tree = tr(D, prog)
-        out  = unfold(x[0], x.shape[0], tree())
-        assert np.array_equal(out, x), f"ground truth failed for {m}: {prog}"
-    print(f"ground-truth check: {len(tasks_meta)} tasks verified via Delta trees")
+def make_witness_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=8):
+    """False-belief hardened against the transient-wall rival by a witness agent.
 
+    A second agent aw (seeking its own goal gw) traverses the phantom-wall cell on
+    the real grid.  Because `unfold` iterates one fixed per-frame fn, any program
+    that makes av detour by stamping a *real* wall must stamp it every frame and so
+    clobbers the witness as it crosses — only a private-copy `fork` lets av see the
+    wall while the witness passes through.  Scenes are kept only if a battery of
+    transient/physical rivals all fail, so the private-belief program is the sole
+    explanation (cf. why Sally-Anne needs a second observer).
+    """
+    rng = np.random.default_rng(seed)
+    tasks = []
+    pool = [1, 2, 4, 5]
+    for av, gv in combos:
+        rest = [v for v in pool if v not in (av, gv)]
+        made, attempts = 0, 0
+        while made < n_per_combo and attempts < 40000:
+            attempts += 1
+            perm = rng.permutation(rest)
+            aw, gw = int(perm[0]), int(perm[1])
+            allcells = [(r, c) for r in range(size) for c in range(size)]
+            idx = rng.permutation(len(allcells))
+            (ar, ac), (gr, gc), (wr, wc), (wgr, wgc) = [allcells[i] for i in idx[:4]]
+            if abs(ar - gr) + abs(ac - gc) < 3:
+                continue
+            g = np.zeros((size, size), dtype=int)
+            g[ar, ac] = av; g[gr, gc] = gv; g[wr, wc] = aw; g[wgr, wgc] = gw
 
-# ── Main ───────────────────────────────────────────────────────────────────────
+            # clean single-agent trajectories (agents are transparent to each
+            # other's BFS, which blocks only on walls=3) — sources of the wall cell.
+            av_clean = unfold(g, max_T, optimize(neg_distance(gv), av))
+            aw_clean = unfold(g, max_T, optimize(neg_distance(gw), aw))
+            av_cells = {_agent_pos(av_clean[t], av) for t in range(max_T)}
+            aw_cells = {_agent_pos(aw_clean[t], aw) for t in range(max_T)}
+            occupied = {(ar, ac), (gr, gc), (wr, wc), (wgr, wgc)}
+            cand = [p for p in (av_cells & aw_cells)
+                    if p and p not in occupied and g[p[0], p[1]] == 0]
+            if not cand:
+                continue
+            pr, pc = cand[int(rng.integers(len(cand)))]
 
-def main(smoke=False):
-    n_phys = 2 if smoke else 6
-    n_des  = 1 if smoke else 2   # per combo
-    n_bel  = 1 if smoke else 6   # per combo
-    per_task_timeout = 10 if smoke else 300
-    max_iterations   = 2  if smoke else 10
+            prog = _witness_belief_program(av, gv, aw, gw, pr, pc)
+            x_full = unfold(g, max_T, prog)
+            t_arrive = next((t for t in range(max_T)
+                             if _agent_pos(x_full[t], av) == (gr, gc)), None)
+            if t_arrive is None or t_arrive < 3:
+                continue
+            T = t_arrive + 1
+            x = x_full[:T].copy()
+            if np.array_equal(x, av_clean[:T]):                 # av must really detour
+                continue
+            if not any(_agent_pos(x[t], aw) == (pr, pc) for t in range(T)):
+                continue                                         # witness must cross the wall cell
+            # all four values present and distinct up to (not incl.) av's arrival
+            if not all((x[t] == v).sum() == 1
+                       for t in range(T - 1) for v in (av, gv, aw, gw)):
+                continue                                         # reject collisions/clobbers
+            if _witness_rival_explainable(x, g, av, gv, aw, gw, pr, pc):
+                continue                                         # private belief must be unique
+            tasks.append((x, {'kind': 'belief', 'av': av, 'gv': gv,
+                              'aw': aw, 'gw': gw, 'pw': (pr, pc)}))
+            made += 1
+    return tasks
 
-    print("Generating tasks…")
-    phys = make_physics_tasks(n_phys, seed=0)
-    des  = make_desire_tasks(n_des, COMBOS, seed=1)
-    bel  = make_belief_tasks(n_bel, COMBOS, seed=2)
-
-    # dedupe across the whole corpus (identical mats would skew counts)
-    seen, all_tasks = set(), []
-    for x, m in phys + des + bel:
-        k = mat_key(x)
-        if k in seen:
-            continue
-        seen.add(k)
-        all_tasks.append((x, m))
-
-    Xs   = [x for x, _ in all_tasks]
-    meta = [m for _, m in all_tasks]
-    by_kind = Counter(m['kind'] for m in meta)
-    print(f"  {by_kind['physics']} physics, {by_kind['desire']} desire, "
-          f"{by_kind['belief']} belief — {len(Xs)} total\n")
-
-    D = Deltas(make_core_prims())
-    print(f"DSL: {len(D)} primitives")
-    print("  expected physics solution (3 nodes):  (step v d)")
-    print("  expected desire solution  (4 nodes):  (optimize (neg_dist gv) av)")
-    print("  expected belief solution (11 nodes):")
-    print("    (fork (compose (wall_at r c) (optimize (neg_dist gv) av))")
-    print("          (sync_to_world av))")
-    print("  expected stitch discovery — the agent type constructor:")
-    print("    fn_agent($r,$c,$gv,$av) with $av shared ×2 (optimize + sync_to_world)\n")
-
-    verify_ground_truth(D, all_tasks)
-
-    print("\nRunning ECD…\n")
-    Z, rewritten = ECD(
-        Xs, D,
-        per_task_timeout=per_task_timeout,
-        max_iterations=max_iterations,
-        max_arity=5,
-        stitch_iterations=4,
-        root_type=fn,
-    )
-
-    # ── Report ─────────────────────────────────────────────────────────────────
-    print(f"\n=== Results ===")
-    for kind in ('physics', 'desire', 'belief'):
-        ks = [x for x, m in all_tasks if m['kind'] == kind]
-        n  = sum(1 for x in ks if mat_key(x) in Z and Z[mat_key(x)] is not None)
-        print(f"  {kind:8s}: {n}/{len(ks)}")
-
-    print("\n=== Invented primitives ===")
-    if not D.invented:
-        print("  (none)")
-    for d in D.invented:
-        argtypes = ', '.join(str(t) for t in (d.tailtypes or []))
-        body_str = str(simplify(normalize(deepcopy(d))))
-        shared   = {v: c for v, c in Counter(_re.findall(r'\$\d+', body_str)).items() if c > 1}
-        print(f"  {d.repr}  [{argtypes}]  -> {d.type}")
-        print(f"    body: {body_str}")
-        if 'fork' in body_str and 'sync_to_world' in body_str:
-            print(f"    *** AGENT TYPE CONSTRUCTOR (belief) ***")
-            print(f"        policy runs on a private model, move committed via sync_to_world")
-            if shared:
-                shared_str = ', '.join(f'{v} (×{c})' for v, c in shared.items())
-                print(f"        shared: {shared_str}  — actor AND committer")
-        elif 'optimize' in body_str or 'neg_dist' in body_str:
-            print(f"    *** desire fragment (goal-directed motion) ***")
-        elif 'step' in body_str:
-            print(f"    *** physics fragment ***")
-
-    # Structural census of the belief solutions: programs with ints stripped.
-    print("\n=== Belief solution shapes ===")
-    skeletons = Counter()
-    for x, m in all_tasks:
-        if m['kind'] != 'belief':
-            continue
-        k = mat_key(x)
-        if k in Z and Z[k] is not None:
-            sol = simplify(normalize(deepcopy(Z[k])))
-            skeletons[_re.sub(r'\b\d+\b', '_', str(sol))] += 1
-    for shape, cnt in skeletons.most_common():
-        print(f"  ×{cnt}  {shape}")
-
-    print("\n=== Sample solutions ===")
-    kind_seen = Counter()
-    for x, m in all_tasks:
-        # print all belief solutions (to see shape variants); 2 samples otherwise
-        if m['kind'] != 'belief' and kind_seen[m['kind']] >= 2:
-            continue
-        kind_seen[m['kind']] += 1
-        k = mat_key(x)
-        tag = {k2: v for k2, v in m.items() if k2 != 'kind'}
-        if k in Z and Z[k] is not None:
-            sol = simplify(normalize(deepcopy(Z[k])))
-            rw  = rewritten.get(k, '')
-            print(f"  [{m['kind']}] {tag}")
-            print(f"    found:     {sol}")
-            if rw:
-                print(f"    rewritten: {rw}")
-        else:
-            print(f"  [{m['kind']}] {tag}  → unsolved")
-
-
-if __name__ == '__main__':
-    main(smoke='--smoke' in sys.argv)

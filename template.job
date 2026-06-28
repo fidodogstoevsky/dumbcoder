@@ -1,0 +1,48 @@
+#!/bin/bash
+
+#SBATCH --partition=genoa
+#SBATCH --job-name=dumbcoder
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --time=08:00:00
+#SBATCH --output=slurm_%A.out
+
+# CPU-only run on the `genoa` partition: a phase is CPU enumeration
+# (ProcessPoolExecutor) + stitch; torch is used only for CPU Q tensors, nothing
+# touches a GPU — so no --gpus, and no GPU-rate billing.  32 cores covers all ~24
+# belief tasks in a single enumeration wave (the fn search dispatches one task per
+# worker, and belief is the long pole), so round-1 belief wall-time ≈ one --t-fn.
+#
+# (To go back to the GPU partition, swap the partition line for:
+#     #SBATCH --partition=gpu_a100
+#     #SBATCH --gpus=1
+#  and drop cpus-per-task to 18 — the max per GPU on an a100 node.)
+#
+# Walltime covers THREE phases run back-to-back below, each doing several ECD rounds
+# at --t-fn 1200; phase 2 (decomposed) is the slowest.  The wake-sleep stall-guard
+# caps wasted rounds, but leave headroom — SLURM kills the whole job at the limit.
+
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+# Our job starts in the directory where we call sbatch.
+# Adjust this path to wherever the repo lives on Snellius.
+cd $HOME/dumbcoder
+
+# Activate our environment (replace dumbcoder with the actual env name on Snellius).
+source activate dumbcoder
+
+# Each phase runs several full ECD rounds: enumerate the still-unsolved tasks
+# against the current library, then ONE joint stitch over all solutions; the
+# invented abstractions feed the next round.  The corpus includes the `obstacle`
+# family (real wall + navigate), so belief's policy recurs in a solved non-mental
+# task and the stitch abstracts it — lowering belief's first-solve to ~7.3 bands.
+# Belief is still the long pole, hence the generous --t-fn.  The drivers read the
+# CPU allocation from SLURM (sched_getaffinity) automatically — no worker flags.
+#
+# Flags: --t-fn N (per-task fn timeout, sec)  --ecd-iters N (wake-sleep rounds,
+#        default 4)  --smoke (tiny/fast)  --samples (one trajectory per family).
+srun python phase1.py --t-fn 1200
+srun python phase2.py --t-fn 1200
+srun python phase3_arity.py

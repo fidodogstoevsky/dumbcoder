@@ -1,0 +1,40 @@
+#!/bin/bash
+
+#SBATCH --partition=genoa
+#SBATCH --job-name=dumbcoder
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --time=08:00:00
+#SBATCH --output=slurm_%A.out
+
+# Parameterized single-phase runner.  Everything after the job file on the sbatch
+# command line is forwarded verbatim to python, so this one file runs any phase
+# with any flags:
+#
+#     sbatch --job-name=phase1 run.job phase1.py --t-fn 1200
+#     sbatch --job-name=phase2 run.job phase2.py --t-fn 1200
+#     sbatch --job-name=phase3 --time=02:00:00 run.job phase3_arity.py
+#
+# sbatch CLI flags override the #SBATCH directives above, so set --job-name per
+# phase (keeps squeue/sacct readable) and give shorter phases a tighter --time.
+# %A in --output is the job ID, so each submission gets its own slurm file.
+#
+# The header matches template.job (genoa, 32 cores, CPU-only — torch uses CPU Q
+# tensors, nothing touches a GPU).  Use template.job to run all three phases back
+# to back; use this to run one phase at a time.
+#
+# Phase flags: --t-fn N (per-task fn timeout, sec)  --ecd-iters N (wake-sleep
+#              rounds)  --smoke (tiny/fast)  --samples (one trajectory per family).
+
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+# Our job starts in the directory where we call sbatch.
+cd $HOME/dumbcoder
+
+# Activate our environment.
+source activate dumbcoder
+
+# Forward the phase script + all its flags (sbatch passes them as positional args).
+srun python "$@"

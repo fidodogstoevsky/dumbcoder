@@ -427,6 +427,14 @@ goal:
 
 #pagebreak()
 
+== Implementation
+
+`normalize`:
+
+Stitch names its newly discovered fragments `fn_0`, `fn_1`, etc. 
+
+#pagebreak()
+
 == arity-generalization: discovering the number of grids needed, discovering that you even need a private channel for belief
 
 #all-tasks()

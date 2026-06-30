@@ -954,6 +954,41 @@ def replace_hidden(tree, arg, tail):
 
     return tree
 
+
+def replace_hidden_multi(tree, subs):
+    """Apply several hole->tail substitutions in ONE pass (simultaneously).
+
+    `subs` is a list of (arg_template, tail) pairs; an arg node is matched the same
+    way replace_hidden matches (isequal on head + type).  Unlike calling
+    replace_hidden once per pair, a hole *introduced* by one substitution is never
+    revisited, so it cannot be captured by a later substitution.  This matters when
+    an abstraction passes argument holes whose indices overlap an inner abstraction's
+    own holes — e.g. fn_2 = (compose (wall_at #3 #2) (fn_0 #1 #0)) feeding #1 #0 into
+    fn_0's internal #0 #1.  Sequential substitution there aliases the goal hole onto
+    the agent hole (gv collapses to av); simultaneous substitution keeps them distinct.
+    """
+    for arg, tail in subs:
+        if isequal(tree, arg):
+            return deepcopy(tail)
+
+    if not tree.tails:
+        return tree
+
+    qq = [tree]
+    while len(qq) > 0:
+        n = qq.pop(0)
+        if not n.tails: continue
+
+        for idx, nt in enumerate(n.tails):
+            for arg, tail in subs:
+                if isequal(nt, arg):
+                    n.tails[idx] = deepcopy(tail)
+                    break
+            else:
+                qq.append(nt)
+
+    return tree
+
 # d.type $ has property of wildcard matching
 # making it impossible to modify hiddentails
 def freeze(tree: Delta):
@@ -973,8 +1008,9 @@ def normalize(tree):
         ht = normalize(deepcopy(tree.hiddentail))
 
         if tree.tails:
-            for tidx, tail in enumerate(tree.tails):
-                replace_hidden(ht, Delta(f'${tidx}', isarg=True, type=tail.type), normalize(tail))
+            subs = [(Delta(f'${tidx}', isarg=True, type=tail.type), normalize(tail))
+                    for tidx, tail in enumerate(tree.tails)]
+            ht = replace_hidden_multi(ht, subs)
 
         return ht
 
@@ -991,8 +1027,9 @@ def normalize(tree):
                 n.tails[idx] = normalize(deepcopy(n.tails[idx].hiddentail))
 
                 if tails:
-                    for tidx, tail in enumerate(tails):
-                        n.tails[idx] = replace_hidden(n.tails[idx], Delta(f'${tidx}', isarg=True, type=tail.type), normalize(tail))
+                    subs = [(Delta(f'${tidx}', isarg=True, type=tail.type), normalize(tail))
+                            for tidx, tail in enumerate(tails)]
+                    n.tails[idx] = replace_hidden_multi(n.tails[idx], subs)
             else:
                 qq.append(normalize(n.tails[idx]))
 

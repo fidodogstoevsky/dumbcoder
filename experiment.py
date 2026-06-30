@@ -72,7 +72,7 @@ from ecd import (
     dream, dreamed_q,
 )
 from dsl import (
-    fn, fn_p_g, cellvalue,
+    fn, fn_p_g, cellvalue, coord,
     unfold, unfold_with_template, tr, simplify, length,
     # used by check_decomposition_identities (phase 2)
     compose, wall_at, optimize, neg_distance,
@@ -84,6 +84,7 @@ from dsl import (
 from tasks_minds import (
     make_physics_tasks, make_desire_tasks, make_belief_tasks,
     make_witness_belief_tasks,
+    make_goal_displacement_tasks, make_dual_belief_tasks,
     COMBOS, SIZE, DIRS,
 )
 from tasks_world import (
@@ -168,10 +169,19 @@ def content_q(D, x):
     "uniform type Q, with integer literals visible in frame 0 boosted to cost 0"
     q = uniform_type_q(D)
     visible = {int(v) for v in np.unique(x[0]) if v not in (0, 3)}
+    # A wall (value 3) anywhere in the trajectory is a REAL, visible obstacle (the
+    # obstacle family), not belief's phantom wall — so its row/col are not a latent.
+    # Boost the matching coord terminals so obstacle need not brute-force all SIZE×SIZE
+    # wall positions (~5k programs → ~tens).  We scan ALL frames, not just frame 0: the
+    # wall is stamped during the trajectory (unfold starts on a wall-free grid), so it
+    # is absent from x[0].  Belief never renders its wall into the world frames, so this
+    # never fires there — belief's wall coordinate stays a uniform-cost latent, as it
+    # must, and the cheap-obstacle path can never leak into the belief search.
+    wall_coords = {int(k) for trc in np.argwhere(x == 3) for k in trc[1:]}
     for d in D.ds:
-        # only cellvalue literals are content-priced; coord (wall position) is a
-        # latent absent from the grid, so it must keep its uniform type cost.
         if d.tailtypes is None and d.type == cellvalue and d.head in visible:
+            q[D.index(d)] = 0.0
+        elif d.tailtypes is None and d.type == coord and d.head in wall_coords:
             q[D.index(d)] = 0.0
     return q
 
@@ -249,7 +259,21 @@ def verify_ground_truth(D, tasks):
         elif k == 'readout':
             tree = tr(D, "snd_gg")
             out  = unfold_with_template(x[0], m['template'], x.shape[0], tree())
-        else:  # belief
+        elif 'pw2' in m:  # belief: two agents, contradictory false beliefs
+            d1 = (f"(compose (wall_at c{m['pw'][0]} c{m['pw'][1]}) "
+                  f"(optimize (neg_dist {m['gv']}) {m['av']}))")
+            d2 = (f"(compose (wall_at c{m['pw2'][0]} c{m['pw2'][1]}) "
+                  f"(optimize (neg_dist {m['gv2']}) {m['av2']}))")
+            f1 = _forks(D, d1, _sync(D, m['av']))
+            f2 = _forks(D, d2, _sync(D, m['av2']))
+            tree = tr(D, f"(compose {f1} {f2})")
+            out  = unfold(x[0], x.shape[0], tree())
+        elif 'displaced_to' in m:  # belief: false belief about the goal's location
+            derive = (f"(compose (step {m['gv']} {m['dir']}) "
+                      f"(optimize (neg_dist {m['gv']}) {m['av']}))")
+            tree = tr(D, _forks(D, derive, _sync(D, m['av'])))
+            out  = unfold(x[0], x.shape[0], tree())
+        else:  # belief: phantom wall, optionally hardened with a witness
             pr, pc = m['pw']
             derive = (f"(compose (wall_at c{pr} c{pc}) "
                       f"(optimize (neg_dist {m['gv']}) {m['av']}))")
@@ -303,6 +327,23 @@ def _side_by_side(grids, labels, gap='   ', indent='    '):
     return '\n'.join(indent + line for line in out)
 
 
+_BELIEF_VARIANTS = ['belief_wall', 'belief_witness', 'belief_goal', 'belief_dual']
+
+
+def _sample_kind(m):
+    """Finer label for sampling only — the belief variants all share kind='belief'
+    (so they feed one unified verdict), but should display as separate panels."""
+    if m['kind'] != 'belief':
+        return m['kind']
+    if 'pw2' in m:
+        return 'belief_dual'
+    if 'displaced_to' in m:
+        return 'belief_goal'
+    if 'aw' in m:
+        return 'belief_witness'
+    return 'belief_wall'
+
+
 def _select_samples(tasks, max_frames=6):
     """One example per kind (first seen, in _ALL_KINDS order) as labelled panels.
 
@@ -310,14 +351,19 @@ def _select_samples(tasks, max_frames=6):
     successive `unfold` frames t0…; fn_p_g families show world | template | result,
     surfacing the otherwise-invisible constant template channel.  The rendered
     grids are exactly what the searcher sees — belief's phantom wall lives only in
-    the private model, so it never appears here."""
+    the private model, so it never appears here.  The single kind='belief' is split
+    into its variants (wall / witness / goal-displacement / dual) for display."""
     seen = {}
     for x, m in tasks:
-        seen.setdefault(m['kind'], (x, m))
-    out = []
+        seen.setdefault(_sample_kind(m), (x, m))
+    order = []
     for kind in _ALL_KINDS:
-        if kind not in seen:
-            continue
+        if kind == 'belief':
+            order += [k for k in _BELIEF_VARIANTS if k in seen]
+        elif kind in seen:
+            order.append(kind)
+    out = []
+    for kind in order:
         x, m = seen[kind]
         tag = ', '.join(f"{k}={v}" for k, v in m.items()
                         if k not in ('kind', 'template'))
@@ -479,7 +525,7 @@ def check_decomposition_identities(tasks):
 
 
 def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn=None,
-              dream_on=True):
+              dream_on=True, plain_belief=False, curriculum=False):
     """One phase of the curriculum (phase 1 = atomic, phase 2 = decomposed).
 
     Both phases run the full symmetric cube over the mixed minds/minds-free corpus
@@ -504,9 +550,11 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     cube = True
     if smoke:
         n_phys, n_des, n_ov, n_reg, n_bel, n_corner = 2, 1, 2, 2, 1, 2
+        n_belvar = 1
         _t_fn, t_reg, stitch_iters, _ecd_iters = 15, 8, 3, 2
     else:
         n_phys, n_des, n_ov, n_reg, n_bel, n_corner = 4, 2, 4, 4, 6, 4
+        n_belvar = 3
         _t_fn, t_reg, stitch_iters, _ecd_iters = 180, 30, 6, 4
     t_fn = _t_fn if t_fn is None else t_fn
     ecd_iters = _ecd_iters if ecd_iters is None else ecd_iters
@@ -520,8 +568,52 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     # In a --cube run the DSL contains clear_at, which lets a non-mental
     # "transient wall" (stamp / act / erase) reproduce single-agent belief.  Use
     # witness-belief tasks there so the private-copy fork is the unique explanation.
-    bel  = (make_witness_belief_tasks(n_bel, COMBOS, seed=2) if cube
+    # `--plain-belief` overrides this to the shallower single-agent belief even in a
+    # cube run: a DIAGNOSTIC to separate search budget from structure (plain belief
+    # is ~8 nodes vs. witness ~12+).  It WEAKENS the uniqueness claim (transient-wall
+    # rivals are no longer excluded), so it is for isolating the first-solve blocker,
+    # not for headline results.
+    use_witness = cube and not plain_belief
+    if plain_belief and cube:
+        print("  [--plain-belief] using single-agent belief in a cube run — DIAGNOSTIC "
+              "only; transient-wall rivals are NOT excluded.")
+    bel  = (make_witness_belief_tasks(n_bel, COMBOS, seed=2) if use_witness
             else make_belief_tasks(n_bel, COMBOS, seed=2))
+    # Two further belief families (kind='belief'), so the unified verdict tests
+    # whether ONE fork(policy, sync_to_world av) agent constructor generalizes
+    # across belief about an obstacle, about an object's location (goal-displacement),
+    # and across two contradictory beliefs at once (dual).  See tasks_minds.py.
+    gdb  = make_goal_displacement_tasks(n_belvar, COMBOS, seed=23)
+    dual = make_dual_belief_tasks(n_belvar, COMBOS, seed=24)
+    print(f"  belief variants: +{len(gdb)} goal-displacement, +{len(dual)} dual "
+          f"(both kind=belief)")
+
+    # ── curriculum scaffold (--curriculum) ────────────────────────────────────────
+    # Witness-belief is deep — compose(fork(policy, sync), seek) — so its FIRST solve
+    # is out of budget even once the policy is a cheap token (the fork∧sync block is
+    # still searched from scratch).  Plain single-agent belief is the SAME inner block
+    # without the outer witness seek, and it is shallow (the --plain-belief diagnostic
+    # solves it at tiny t_fn).  We add it purely as a teacher: once it solves, the joint
+    # stitch sees fork(policy, sync) recur across the (gv,av) combos and abstracts it
+    # into one token — and then witness-belief = compose(<that token>, seek) is shallow
+    # enough to reach, exactly as obstacle's policy lowered plain belief's first-solve.
+    #
+    # Tagged 'belief_scaffold' (a kind absent from the reporting lists at module top) so
+    # it feeds the stitch but never counts toward the headline witness-belief verdict.
+    # Sound because once the policy is a token, fork(policy, sync) is strictly cheaper
+    # than the transient-wall rival (which additionally pays clear_at + two coords), so
+    # the searcher returns the genuine compound — see the --plain-belief census, which
+    # solves via fork/sync_to_world, not clear_at.  The headline claim still rests only
+    # on the witness tasks, where the transient-wall rival is excluded by construction.
+    scaffold = []
+    if curriculum and use_witness:
+        n_scaffold = max(1, n_bel // 2)
+        scaffold = make_belief_tasks(n_scaffold, COMBOS, seed=22)
+        for _, m in scaffold:
+            m['kind'] = 'belief_scaffold'
+        print(f"  [--curriculum] +{len(scaffold)} plain-belief scaffold tasks "
+              f"(kind=belief_scaffold) to seed the fork(policy, sync) abstraction; "
+              f"excluded from the witness-belief verdict.")
 
     # One minds-free task per symmetric corner, so every complement the cube adds
     # is *useful somewhere* — otherwise "belief avoids the complements" is vacuous
@@ -546,7 +638,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                        + make_readout_tasks(n_corner, seed=17))
 
     # fn-rooted families share the `unfold` interpreter; pair families are fn_p_g.
-    fn_tasks = phys + des + ov + bel + fn_corner
+    fn_tasks = phys + des + ov + bel + gdb + dual + scaffold + fn_corner
     reg_tasks = reg + pair_corner
 
     # dedupe across the whole corpus (identical mats would skew stitch counts)
@@ -620,13 +712,40 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
           f"; registration Q: uniform")
     print("=" * 72)
 
+    # Curriculum dependency gate.  Belief programs are deep from primitives, so they
+    # cannot solve until the abstractions they reuse have been compressed:
+    #   • plain belief / scaffold  needs the POLICY  (abstracted once obstacle/desire solve)
+    #   • witness belief           needs the fork∧sync BLOCK (abstracted once plain belief solves)
+    # Enumerating them before then only burns the full --t-fn timeout on guaranteed
+    # misses — the bulk of early-round wall-time, which also starves the shallow tasks
+    # (e.g. obstacle) of workers.  We gate ADAPTIVELY on what has actually solved, so the
+    # chain neither wastes early rounds nor defers a task past the round its deps appear.
+    kind_by_key = {mat_key(x): m['kind'] for x, m in fn_tasks}
+    has_scaffold = any(m['kind'] == 'belief_scaffold' for _, m in fn_tasks)
+
+    def _eligible(m, solved_kinds):
+        k = m['kind']
+        if k == 'belief_scaffold' or (k == 'belief' and 'aw' not in m):
+            return bool({'obstacle', 'desire'} & solved_kinds)   # policy is available
+        if k == 'belief':                                        # witness belief
+            # needs the fork∧sync block (abstracted once plain belief solves); with no
+            # scaffold in the corpus (baseline), fall back to attempting it normally.
+            return ('belief_scaffold' in solved_kinds) or (not has_scaffold)
+        return True
+
     for it in range(1, ecd_iters + 1):
-        unsolved_fn  = [x for x, _ in fn_tasks  if mat_key(x) not in sols]
+        solved_kinds = {kind_by_key[k] for k, v in sols.items()
+                        if v is not None and k in kind_by_key}
+        unsolved_fn  = [x for x, m in fn_tasks
+                        if mat_key(x) not in sols and _eligible(m, solved_kinds)]
+        n_deferred   = sum(1 for x, m in fn_tasks
+                           if mat_key(x) not in sols and not _eligible(m, solved_kinds))
         unsolved_reg = [x for x, _ in reg_tasks if mat_key(x) not in sols]
         n_before = len(sols)
         use_model = dream_on and qmodel is not None and it <= 1 + DREAM_USE_ROUNDS
+        _defer = f", {n_deferred} fn deferred (deps not yet learned)" if n_deferred else ""
         print(f"\n--- round {it}/{ecd_iters}: {len(unsolved_fn)} fn + {len(unsolved_reg)} "
-              f"fn_p_g unsolved; |D|={len(D)} ({len(D.invented)} invented); "
+              f"fn_p_g unsolved{_defer}; |D|={len(D)} ({len(D.invented)} invented); "
               f"fn Q={'dreamed' if use_model else 'uniform/content'} ---", flush=True)
 
         if unsolved_fn:
@@ -886,7 +1005,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
 
 
 def cli_kwargs(argv):
-    "shared CLI parsing for the phase wrappers: --smoke --samples --ecd-iters N --t-fn N --no-dream"
+    "shared CLI parsing for the phase wrappers: --smoke --samples --ecd-iters N --t-fn N --no-dream --plain-belief --curriculum"
     def _opt(flag, cast):
         if flag in argv:
             return cast(argv[argv.index(flag) + 1])
@@ -895,7 +1014,9 @@ def cli_kwargs(argv):
                 samples='--samples' in argv,
                 ecd_iters=_opt('--ecd-iters', int),
                 t_fn=_opt('--t-fn', float),
-                dream_on='--no-dream' not in argv)
+                dream_on='--no-dream' not in argv,
+                plain_belief='--plain-belief' in argv,
+                curriculum='--curriculum' in argv)
 
 
 if __name__ == '__main__':

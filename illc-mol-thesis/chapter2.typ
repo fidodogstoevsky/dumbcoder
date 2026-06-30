@@ -2,6 +2,20 @@
 
 #mol-chapter("Bayesian Model")
 
+== The tradeoff
+
+choose one:
+- simple learning over rich structured representations
+- statistical learning over unstructured representations (weights)
+
+== Bayesian Learning
+
+an instantiation of neoconstructivism
+
+- learning theory has progressed since Chomsky
+- we now know of algorithms that can learn abstract structure more efficiently from sparse data
+- maybe at the time it seemed that the grammars are too abstract to be learned
+
 search over hypothesis space
 
 == DreamCoder
@@ -12,20 +26,3 @@ search over hypothesis space
 
 === Dream
 
-- enumerate typed program trees by probability 
-- enumeration weighed by description length
-- goal is MDL
-- wake/sleep library learning by compression
-- I'm doing inductive synthesis on I/O pairs, not deductive
-
-types
-- I've got a simply-typed and monomorphic DSL
-- the types are only used to prune enumeration
-- so they just constrain which wirings are legal
-- they don't constrain what the program must prove
-- no generic composer
-- type-pruned, example-driven, compression-based synthesis
-
-goal:
-- show that "belief"/ToM can be a discoverable compound under MDL rather than a built-in primitive
-- 

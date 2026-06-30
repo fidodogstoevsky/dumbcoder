@@ -2,6 +2,12 @@
 
 #mol-chapter("Origins of Knowledge")
 
+== Theory of Mind
+
+ability to theorize about minds, to see entities as rational agents, to attribute beliefs, desires, and intentions to them
+
+"does the chimpanzee have a theory of mind"
+
 == Nativism
 
 - poverty of stimulus argument
@@ -11,23 +17,12 @@
 
 == Empiricism
 
+assocationism/connectionism
 
-
-== (Neo)-Constructivism
+== Constructivism
 
 - piaget
 - theory theory
 - child as scientist
-
-== The tradeoff
-
-choose one:
-- 
-
-== Bayesian Learning
-
-- learning theory has progressed since Chomsky
-- we now know of algorithms that can learn abstract structure more efficiently from sparse data
-- maybe at the time it seemed that the grammars are too abstract to be learned
 
 

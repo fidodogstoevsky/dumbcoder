@@ -56,7 +56,7 @@ from ecd import Deltas, Delta, ECD, normalize, mat_key
 from dsl import (
     fn, util, direction, fn_p_g,
     RIGHT, LEFT, UP, DOWN,
-    fork, sync_to_world,
+    fork, sync_to_world, sync_all, sync_except,
     compose, step, optimize, neg_distance, wall_at, clear_at,
     unfold, tr, simplify,
 )
@@ -349,6 +349,266 @@ def make_witness_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max
                 continue                                         # private belief must be unique
             tasks.append((x, {'kind': 'belief', 'av': av, 'gv': gv,
                               'aw': aw, 'gw': gw, 'pw': (pr, pc)}))
+            made += 1
+    return tasks
+
+
+# ── Task family 1: goal-displacement false belief (Sally-Anne) ──────────────────
+# False belief about an OBJECT'S LOCATION rather than about an obstacle.  The
+# agent acts as if the goal sits one cell from where it really is; the true goal
+# never moves in the world, so a stationary object is the witness that defeats the
+# single-grid rival (a program that genuinely shoves the goal would render the
+# goal drifting).  Crucially `move_goal_in_model` is NOT a new primitive — it is
+# `(step gv d)`, an ordinary physics fn, sitting in fork's derive slot.  This is
+# the same construction the wall-belief generator already rejects as a rival via
+# `_displaced_goal_explainable`; here we PROMOTE it to its own belief family.
+
+def _goal_displacement_program(av, gv, d):
+    """Per-frame transition for a displaced-goal false belief:
+
+        (fork (compose (step gv d) (optimize (neg_dist gv) av)) (sync_to_world av))
+
+    Each frame the agent privately shoves the goal one cell in direction d on a
+    copy of the world (`step gv d` — a stale belief about where gv sits), seeks
+    the displaced goal on that copy, and commits only its own move.  The true goal
+    is never touched in the world.  step + optimize are ordinary primitives: the
+    displacement is a COMPOUND, not a `move_goal` primitive.
+    """
+    return fork(compose(step(gv, d), optimize(neg_distance(gv), av)),
+                sync_to_world(av))
+
+
+def _wall_explainable(x, g, size=SIZE):
+    "True if any phantom-WALL belief reproduces x (keeps the goal family distinct)."
+    T = x.shape[0]
+    vals = [int(v) for v in np.unique(g) if v != 0]
+    for av in vals:
+        for gv in vals:
+            if av == gv:
+                continue
+            seek = optimize(neg_distance(gv), av)
+            for pr in range(size):
+                for pc in range(size):
+                    if g[pr, pc] != 0:
+                        continue
+                    prog = fork(compose(wall_at(pr, pc), seek), sync_to_world(av))
+                    try:
+                        if np.array_equal(unfold(g, T, prog), x):
+                            return True
+                    except Exception:
+                        pass
+    return False
+
+
+def make_goal_displacement_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=8):
+    """Sally-Anne: the agent walks to where it *believes* the goal is — one cell
+    displaced from its true position — while the true goal sits still.
+
+    Necessity (the scene survives only if all hold):
+      * the agent settles exactly on the believed (displaced) cell, never on the
+        true goal cell — so it is not plain desire (`optimize (neg_dist gv) av`),
+        which settles ON the goal;
+      * the true goal keeps its value & position in every frame — the stationary
+        witness that rules out any program that *actually* moves the goal;
+      * no single physical fn reproduces it (`_physically_explainable`);
+      * no phantom wall reproduces it (`_wall_explainable`) — keeps this family
+        structurally distinct from `make_belief_tasks`.
+    """
+    rng = np.random.default_rng(seed)
+    tasks = []
+    for av, gv in combos:
+        made, attempts = 0, 0
+        while made < n_per_combo and attempts < 8000:
+            attempts += 1
+            ar, ac = int(rng.integers(size)), int(rng.integers(size))
+            gr, gc = int(rng.integers(size)), int(rng.integers(size))
+            if (ar, ac) == (gr, gc):
+                continue
+            dname = str(rng.choice(list(DIRS)))
+            dr, dc = DIRS[dname]
+            br, bc = gr + dr, gc + dc                 # believed (displaced) goal cell
+            if not (0 <= br < size and 0 <= bc < size):
+                continue
+            if (br, bc) in ((ar, ac), (gr, gc)):
+                continue
+            if abs(ar - br) + abs(ac - bc) < 3:       # need a real trajectory to the belief
+                continue
+            g = np.zeros((size, size), dtype=int)
+            g[ar, ac] = av
+            g[gr, gc] = gv
+
+            prog = _goal_displacement_program(av, gv, DIRS[dname])
+            x_full = unfold(g, max_T, prog)
+            t_arrive = next((t for t in range(max_T)
+                             if _agent_pos(x_full[t], av) == (br, bc)), None)
+            if t_arrive is None or t_arrive < 3:
+                continue
+            T = t_arrive + 1
+            x = x_full[:T].copy()
+            # true goal must stay put (stationary witness) and never be clobbered
+            if any(_agent_pos(x[t], gv) != (gr, gc) for t in range(T)):
+                continue
+            # agent must never step onto the true goal cell
+            if any(_agent_pos(x[t], av) == (gr, gc) for t in range(T)):
+                continue
+            # must diverge from a plain goal-seek (else it is mere desire)
+            direct = unfold(g, T, optimize(neg_distance(gv), av))
+            if np.array_equal(x, direct):
+                continue
+            if _physically_explainable(x, g):
+                continue
+            if _wall_explainable(x, g, size):
+                continue
+            tasks.append((x, {'kind': 'belief', 'av': av, 'gv': gv,
+                              'displaced_to': (br, bc), 'dir': dname}))
+            made += 1
+    return tasks
+
+
+# ── Task family 2: two agents with contradictory false beliefs ──────────────────
+# Two agents each detour around their OWN phantom wall on one shared world; the
+# two walls never coexist in any rendered frame.  This is the witness trick made
+# symmetric: each agent crosses the OTHER's phantom-wall cell, so any single
+# per-frame world-stamp that creates one detour clobbers the agent standing on
+# the other's cell.  No passive bystander needed — each agent is the other's
+# witness, and two private models must be live at once.
+
+def _dual_belief_program(av1, gv1, pw1, av2, gv2, pw2):
+    """Per-frame transition for two contradictory false beliefs:
+
+        (compose (fork (compose (wall_at r1 c1) (optimize (neg_dist gv1) av1))
+                       (sync_to_world av1))
+                 (fork (compose (wall_at r2 c2) (optimize (neg_dist gv2) av2))
+                       (sync_to_world av2)))
+
+    Agent1 acts on its own walled copy and commits only av1; then agent2 acts on a
+    copy of the resulting world with ITS wall and commits only av2.  Neither wall
+    ever appears in the world.
+    """
+    r1, c1 = pw1
+    r2, c2 = pw2
+    return compose(
+        fork(compose(wall_at(r1, c1), optimize(neg_distance(gv1), av1)),
+             sync_to_world(av1)),
+        fork(compose(wall_at(r2, c2), optimize(neg_distance(gv2), av2)),
+             sync_to_world(av2)))
+
+
+def _seq(*fs):
+    "left-fold compose: _seq(a, b, c)(x) = c(b(a(x)))"
+    prog = fs[0]
+    for f in fs[1:]:
+        prog = compose(prog, f)
+    return prog
+
+
+def _dual_rival_explainable(x, g, av1, gv1, pw1, av2, gv2, pw2):
+    """True if any frame-invariant single-grid program reproduces the scene.
+
+    The discriminating rival is `_seq(W1, o1, C1, W2, o2, C2)` — a transient
+    schedule where each wall is up only while its own agent moves.  It would match
+    were it not that each agent OCCUPIES the other's wall cell: stamping a real
+    wall there overwrites that agent (value -> 3), and the cleared cell renders it
+    gone, so the witness is lost.  All wall-bearing rivals fail for the same
+    reason; the no-wall rival fails because both agents detour.
+    """
+    T = x.shape[0]
+    o1 = optimize(neg_distance(gv1), av1)
+    o2 = optimize(neg_distance(gv2), av2)
+    W1, C1 = wall_at(*pw1), clear_at(*pw1)
+    W2, C2 = wall_at(*pw2), clear_at(*pw2)
+    rivals = [
+        _seq(o1, o2),                          # no walls (pure physics)
+        _seq(W1, W2, o1, o2),                  # both walls permanent
+        _seq(W1, W2, o1, o2, C1, C2),          # both walls transient, up for both moves
+        _seq(W1, o1, C1, W2, o2, C2),          # each wall up only for its own agent
+        _seq(W2, o2, C2, W1, o1, C1),          # reverse order
+        _seq(W1, W2, o2, o1, C1, C2),          # acts reordered
+    ]
+    for r in rivals:
+        try:
+            if np.array_equal(unfold(g, T, r), x):
+                return True
+        except Exception:
+            pass
+    return False
+
+
+def make_dual_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=8):
+    """Two agents holding contradictory false beliefs, simultaneously.
+
+    Each phantom wall is placed on its own agent's true-belief path (so it forces
+    a detour) AND on a cell the *other* agent traverses (so it acts as the other's
+    witness).  Scenes survive only if: both agents detour; each agent really
+    occupies the other's wall cell in the realised trajectory; all four values stay
+    present & distinct (no clobber); and the single-grid rival battery all fail.
+    """
+    rng = np.random.default_rng(seed)
+    tasks = []
+    pool = [1, 2, 4, 5, 6, 7, 8, 9]
+    for av1, gv1 in combos:
+        rest = [v for v in pool if v not in (av1, gv1)]
+        made, attempts = 0, 0
+        while made < n_per_combo and attempts < 80000:
+            attempts += 1
+            perm = rng.permutation(rest)
+            av2, gv2 = int(perm[0]), int(perm[1])
+            allcells = [(r, c) for r in range(size) for c in range(size)]
+            idx = rng.permutation(len(allcells))
+            (a1r, a1c), (g1r, g1c), (a2r, a2c), (g2r, g2c) = [allcells[i] for i in idx[:4]]
+            if abs(a1r - g1r) + abs(a1c - g1c) < 3:
+                continue
+            if abs(a2r - g2r) + abs(a2c - g2c) < 3:
+                continue
+            g = np.zeros((size, size), dtype=int)
+            g[a1r, a1c] = av1; g[g1r, g1c] = gv1
+            g[a2r, a2c] = av2; g[g2r, g2c] = gv2
+
+            # clean single-agent paths (agents transparent to each other's BFS)
+            c1 = unfold(g, max_T, optimize(neg_distance(gv1), av1))
+            c2 = unfold(g, max_T, optimize(neg_distance(gv2), av2))
+            cells1 = [_agent_pos(c1[t], av1) for t in range(max_T)]
+            cells2 = [_agent_pos(c2[t], av2) for t in range(max_T)]
+            occ = {(a1r, a1c), (g1r, g1c), (a2r, a2c), (g2r, g2c)}
+            # wall on own path AND on the other's path; an empty cell
+            cand1 = [p for p in cells1 if p and p in cells2 and p not in occ and g[p[0], p[1]] == 0]
+            cand2 = [p for p in cells2 if p and p in cells1 and p not in occ and g[p[0], p[1]] == 0]
+            if not cand1 or not cand2:
+                continue
+            pw1 = cand1[int(rng.integers(len(cand1)))]
+            pw2_opts = [p for p in cand2 if p != pw1]
+            if not pw2_opts:
+                continue
+            pw2 = pw2_opts[int(rng.integers(len(pw2_opts)))]
+
+            prog = _dual_belief_program(av1, gv1, pw1, av2, gv2, pw2)
+            x_full = unfold(g, max_T, prog)
+            t1 = next((t for t in range(max_T) if _agent_pos(x_full[t], av1) == (g1r, g1c)), None)
+            t2 = next((t for t in range(max_T) if _agent_pos(x_full[t], av2) == (g2r, g2c)), None)
+            if t1 is None or t2 is None:
+                continue
+            T = max(t1, t2) + 1
+            if T < 4 or T > max_T:
+                continue
+            x = x_full[:T].copy()
+            # both must really detour
+            if all(_agent_pos(x[t], av1) == cells1[t] for t in range(T)):
+                continue
+            if all(_agent_pos(x[t], av2) == cells2[t] for t in range(T)):
+                continue
+            # each agent must occupy the OTHER's wall cell (mutual witnessing)
+            if not any(_agent_pos(x[t], av2) == pw1 for t in range(T)):
+                continue
+            if not any(_agent_pos(x[t], av1) == pw2 for t in range(T)):
+                continue
+            # all four present & distinct up to (not incl.) the last frame
+            if not all((x[t] == v).sum() == 1
+                       for t in range(T - 1) for v in (av1, gv1, av2, gv2)):
+                continue
+            if _dual_rival_explainable(x, g, av1, gv1, pw1, av2, gv2, pw2):
+                continue
+            tasks.append((x, {'kind': 'belief', 'av': av1, 'gv': gv1, 'pw': pw1,
+                              'av2': av2, 'gv2': gv2, 'pw2': pw2}))
             made += 1
     return tasks
 

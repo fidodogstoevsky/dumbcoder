@@ -56,11 +56,21 @@
 
 == Objective
 
+Research question: can the structure 
+
 Modularity-nativists argue for the existence of a Theory of Mind Module (ToMM), a natively-endowed domain-specific system for understanding the behavior of intentional agents. In Alan Leslie's characterization the ToMM introduces attitude concepts like _Believes_ and uses a "proprietary representational system" for ascribing attitudes to agents @leslie_pretending_1994.
 
 Our goal is to demonstrate that, in princple, a system does not need a native ToMM to develop the ability to theorize about minds. We will show that a system can utilize domain-general cognitive equipment @margolis_oxford_2012 to formulate hypotheses that correctly solve false belief tasks [CITE]. In the first iteration of the implementation, we show that attitude concepts like _Believes_ need not be primitive concepts provided by an innate ToMM but rather can be constructed as compositions of domain-general functions. In the second iteration, we show that the implementation can arrive at an abstracted notion of belief starting from an even more basic language of 2-ary combinators. 
 
-== First implementation: 
+== ECD architecture 
+
+ECD is a wake-sleep library-learning loop inspired by the DreamCoder @ellis_dreamcoder_2020. Each iteration of the loop consists of an enumeration phase, a compression phase, and a dreaming phase. In enumeration, the system generates candidate programs to solve tasks 
+
+=== Enumeration
+
+Enumeration produces candidate programs cheapest-first under a cost model $Q$. A program's cost is the summed $-log p$ of its nodes. $Q$ is either the type-conditioned uniform prior, the content-aware prior, or the dreamed recognition model. For example, a program like `(step 4 right)` vs. `(fork (compose (wall_at c2 c3) (optimize(neg_dist 2) 1)) (sync_to_world 1))`
+
+best-first enumeration by description length: `cenumerate` walks the search in expanding $-log p$ bands $("LOGPGAP"*"idx", "LOGPGAP"*("idx"+1))$
 
 
 
@@ -85,7 +95,36 @@ components of intensionality:
 fn_0  [<class 'int'>, <class 'int'>, <class 'int'>, <class 'int'>] -> fn
       body: (fork (compose (wall_at $3 $2) (optimize (neg_dist $1) $0)) (sync_to_world $0))")
 
+== Primitives
+
+`sync_to_world(w)` bakes in three choices
+1. read coordinate from model channel
+2. find one particular value, transfer that
+3. transfer it to the world, discard the model
+
+
+
+- compose
+- step
+- optimize
+- wall_at
+- neg_distance
+- direction terminals right/left/up/down
+- coord terminals c0..c{SIZE-1}
+- cellvalue terminals 0..9.
+
 == Tasks
+
+the curriculum scaffold:
+- overlay → the fork skeleton (fork `$f` overlay) (fork + a commit)
+- registration → sync_to_world as a commit
+- obstacle → policy = (compose (wall_at) (seek))
+- desire → seek
+
+fn-rooted:
+
+
+WITNESS false belief tasks, to avoid extensional explanations
 
 Physical: rising
 

@@ -97,6 +97,125 @@ def make_overlay_tasks(n, size=SIZE, vals=(1, 4), seed=0, max_T=6):
     return tasks
 
 
+def _overlay_trail_explainable(x, g):
+    """True if a fork(step v d, OVERLAY) trail reproduces x for any (v, d).
+
+    The overlay and underlay trails are extensionally IDENTICAL for a lone mover
+    (the union of trail cells is the same) and diverge only where the trail crosses
+    a bystander of another value: overlay lets the shifted copy paint over it,
+    underlay keeps the world's pixel.  A scene the overlay commit also reproduces
+    therefore fails to make underlay necessary, so we reject it — the same 'reject
+    any scene a cheaper rival explains' discipline as `_physically_explainable`.
+    """
+    T = x.shape[0]
+    for v in _grid_vals(g):
+        for d in DIRS.values():
+            try:
+                if np.array_equal(unfold(g, T, fork(step(v, d), overlay)), x):
+                    return True
+            except Exception:
+                pass
+    return False
+
+
+def make_underlay_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0, max_T=6):
+    """z-order complement of overlay in a FORK context: a world-wins motion trail.
+
+        (fork (step v d) underlay)
+
+    Same fork-required motion blur as make_overlay_tasks, but the commit is
+    `underlay` (the WORLD's nonzero cells win ties) instead of `overlay` (the
+    derived copy wins).  For a lone mover the two are indistinguishable, so each
+    scene puts an occluding bystander of a *different* value on the mover's path:
+    when the trail reaches it, overlay overwrites the bystander and the trail runs
+    on, while underlay preserves the bystander and the trail flows *under* it (and
+    is blocked there).  We reject any scene the OVERLAY commit also reproduces
+    (`_overlay_trail_explainable` — the crossing must actually happen within T
+    frames) and any scene a bare physical fn explains (`_physically_explainable`),
+    so both fork AND underlay are necessary.  Pure graphics (z-order); no mind.
+    """
+    rng = np.random.default_rng(seed)
+    tasks, attempts = [], 0
+    while len(tasks) < n and attempts < 8000:
+        attempts += 1
+        v, b = (int(u) for u in rng.permutation(vals)[:2])   # distinct mover & bystander
+        dname = str(rng.choice(list(DIRS)))
+        dr, dc = DIRS[dname]
+        sign = dr + dc                              # ±1; exactly one of dr,dc is nonzero
+        k = int(rng.integers(1, size - 1))          # mover→bystander gap along the path
+        T = int(rng.integers(k + 2, max_T + 1))     # enough frames for the trail to reach it
+        if T < 3:
+            continue
+        # place mover and bystander colinearly along d, both on-grid, bystander ahead
+        lo, hi = (0, size - 1 - k) if sign > 0 else (k, size - 1)
+        if lo > hi:
+            continue
+        m_idx = int(rng.integers(lo, hi + 1))
+        b_idx = m_idx + sign * k
+        L = int(rng.integers(0, size))              # fixed perpendicular line
+        g = np.zeros((size, size), dtype=int)
+        if dc != 0:                                 # horizontal travel: vary column
+            g[L, m_idx], g[L, b_idx] = v, b
+        else:                                       # vertical travel: vary row
+            g[m_idx, L], g[b_idx, L] = v, b
+
+        x = unfold(g, T, fork(step(v, DIRS[dname]), underlay))
+        if np.array_equal(x[0], x[-1]):             # something must move
+            continue
+        if _physically_explainable(x, g):           # fork must be required
+            continue
+        if _overlay_trail_explainable(x, g):        # underlay must be required (crossing occurs)
+            continue
+        tasks.append((x, {'kind': 'underlay', 'val': v, 'dir': dname, 'bystander': b}))
+    return tasks
+
+
+def make_comet_tasks(n, size=SIZE, combos=COMBOS, seed=0):
+    """fork without sync, VARYING THE DERIVE: a goal-seeker leaves a comet trail.
+
+        (fork (optimize (neg_dist gv) av) overlay)
+
+    Same overlay commit as make_overlay_tasks, but the derive is a goal-directed
+    seek (desire's `optimize (neg_dist gv) av`) instead of a fixed `step v d`.  The
+    agent av greedily approaches goal gv and overlay unions each step onto the
+    trail, so av's whole L-shaped path is rendered — a comet trail.  The seek bends
+    (the goal is off-axis), so no fixed-direction step-trail reproduces it
+    (`_overlay_trail_explainable`) and no bare physical fn does either
+    (`_physically_explainable`) — fork AND the seek-derive are both necessary.  This
+    exhibits fork's derive slot as a *general* fn, not one wired to `step`: the same
+    fork/overlay motion-blur wrapper carries desire's utility policy.  Nothing
+    mental (utility-driven motion + graphics).
+
+    Geometry: the goal sits strictly up-LEFT of the agent so the row-major-first av
+    cell is always the moving FRONT (`optimize` advances `agents[0]`); other
+    orientations make agents[0] the tail and the trail collapses instead of growing.
+    """
+    rng = np.random.default_rng(seed)
+    tasks, attempts = [], 0
+    while len(tasks) < n and attempts < 8000:
+        attempts += 1
+        av, gv = (int(u) for u in combos[int(rng.integers(len(combos)))])
+        ar, ac = int(rng.integers(2, size)), int(rng.integers(2, size))
+        gr, gc = int(rng.integers(0, ar)), int(rng.integers(0, ac))   # strictly up-left
+        L = (ar - gr) + (ac - gc)
+        if not (3 <= L <= 5):
+            continue
+        g = np.zeros((size, size), dtype=int)
+        g[ar, ac], g[gr, gc] = av, gv
+        T = L + 1
+        x = unfold(g, T, fork(optimize(neg_distance(gv), av), overlay))
+        if x[-1][gr, gc] != av:                       # the comet head must reach the goal
+            continue
+        if int((x[-1] == av).sum()) != L + 1:         # clean trail: one cell per step, no collapse
+            continue
+        if _physically_explainable(x, g):             # fork must be required
+            continue
+        if _overlay_trail_explainable(x, g):          # the seek-bend must be required (not a fixed step)
+            continue
+        tasks.append((x, {'kind': 'comet', 'av': av, 'gv': gv}))
+    return tasks
+
+
 def make_registration_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0, n_distract=2):
     """sync without fork: snap ONE named object onto an external template.
 

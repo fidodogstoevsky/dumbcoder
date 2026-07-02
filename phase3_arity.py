@@ -42,10 +42,20 @@ overlay/crossblur), discovered as the minimal sufficient channel count rather th
 imposed by a pair_gg type.  What distinguishes belief is the commit DIRECTION (the
 file16 cube axis), not the channel COUNT.
 
+The joint run reports two things that separate an MDL PREFERENCE from a SEARCH failure
+(otherwise "arity 2 never selected" is indistinguishable from "never enumerated that
+deep"): (A″) the arity census, plus (C) the MDL MARGIN — for a crossblur task it prices
+the found arity-1 program and the ground-truth arity-2 program under the FINAL library
+and prints the description-length gap, turning "absent from the results" into a measured
+preference.  The `--ablate-atomic` run is the complementary control: with atomic fork/
+sync_to_world deleted, belief is solvable ONLY via the depth-1 stack and a clean-original
+crossblur ONLY via the depth-2 stack, so a solve there is a positive reachability proof.
+
 Run:
-    python phase3_arity.py            # full run (generous timeouts; deep stack search)
-    python phase3_arity.py --smoke    # tiny corpus, short timeouts
-    python phase3_arity.py --no-dream # uniform-Q baseline (no recognition model)
+    python phase3_arity.py                 # full run (deep stack search); prints (A″)+(C)
+    python phase3_arity.py --smoke         # tiny corpus, short timeouts
+    python phase3_arity.py --no-dream      # uniform-Q baseline (no recognition model)
+    python phase3_arity.py --ablate-atomic # (a) control: fork/sync removed, stack-only path
 
 Sleep also DREAMS: between wake-sleep rounds a recognition model is trained on
 replays (solved programs) + fantasies (sampled programs), and the next rounds
@@ -244,31 +254,181 @@ def _uses(sol):
     return {p for p in _INTERFACE if _re.search(rf'\b{p}\b', s)}
 
 
-def _arity(sol):
-    """private-channel arity = (max grids held SIMULTANEOUSLY) - 1.
+# ── semantic arity: instrument the stack combinators and measure peak height ───────
+# The old metric scanned tokens (base=1, dup_top/blank_top=+1, commit_top/zip_top=−1)
+# assuming textual order == application order and that `base` starts the one and only
+# stack.  Both break on NESTED stacks: `map_top` takes an fn and `pipe_gsg(...)` IS an
+# fn, so a whole stack program can sit inside a `map_top`; its inner `base` then resets
+# the counter and corrupts the outer height.  normalize does inline invented
+# abstractions, but the robust fix is not to trust the text at all — run the program on
+# a probe grid with every stack combinator wrapped to record the live stack length, and
+# take the peak.  Arity is then peak height − 1, read off the actual data flow.
 
-    This is the honest depth: not how many channels a program creates over its
-    run, but how many it must hold at once.  Atomic `fork`s never coexist (each
-    model is created and collapsed within one fork, even when nested or composed),
-    so any fork-based program holds at most {world, model} = 2 grids → arity 1;
-    physics/desire transform in place → arity 0.  Stack programs hold whatever
-    height they reach: the textual token order of the left-nested compose_gs spine
-    IS application order (base leftmost), so a single scan gives the peak height.
+_STACK_DIRECT   = {'base', 'dup_top', 'blank_top', 'swap_top'}  # head(...) -> gstack
+_STACK_BUILDERS = {'map_top', 'zip_top', 'commit_top'}          # head(x) -> (gstack -> gstack)
+
+
+def _instrumented_stack_prims(peak):
+    "make_stack_prims with the gstack-producing combinators wrapped to record peak len(s)."
+    def rec(t):
+        if isinstance(t, tuple):
+            peak[0] = max(peak[0], len(t))
+        return t
+
+    def wrap_direct(f):          # base/dup_top/blank_top/swap_top return a gstack
+        def g(*a):
+            return rec(f(*a))
+        return g
+
+    def wrap_builder(b):         # map_top/zip_top/commit_top return an fn_s_s closure
+        def g(*a):
+            inner = b(*a)
+            def s_(s):
+                return rec(inner(s))
+            return s_
+        return g
+
+    prims = make_stack_prims()
+    for d in prims:
+        if d.repr in _STACK_DIRECT:
+            d.head = wrap_direct(d.head)
+        elif d.repr in _STACK_BUILDERS:
+            d.head = wrap_builder(d.head)
+    return prims
+
+
+def _probe_grid():
+    "a small grid carrying the values programs act on (agent 1, goal 2, blur val 4)."
+    g = np.zeros((SIZE, SIZE), dtype=int)
+    g[0, 0] = 1
+    g[SIZE - 1, SIZE - 1] = 2
+    g[0, SIZE - 1] = 4
+    return g
+
+
+def _semantic_arity(s):
+    """Run the (normalized) stack program on a probe grid; arity = peak live height − 1.
+
+    One application of the program's fn traverses the entire combinator spine once, so
+    every intermediate gstack is produced and its length recorded — including any stack
+    nested inside a map_top, which the token scan miscounts.
+    """
+    peak = [0]
+    D_inst = Deltas(_instrumented_stack_prims(peak))
+    f = tr(D_inst, s)()
+    unfold(_probe_grid(), 3, f)          # a couple of frames, in case height is data-dependent
+    return max(peak[0] - 1, 0)
+
+
+def _arity(sol):
+    """private-channel arity = (max grids held SIMULTANEOUSLY) − 1.
+
+    This is the honest depth: not how many channels a program creates over its run,
+    but how many it must hold at once.  Atomic `fork`s never coexist (each model is
+    created and collapsed within one fork, even when nested or composed), so any
+    fork-based program holds at most {world, model} = 2 grids → arity 1; physics/desire
+    transform in place → arity 0.  Stack programs are measured SEMANTICALLY: the program
+    is run and the peak live stack height is observed (see _semantic_arity), which is
+    robust to nested stacks that fool a token scan.
     """
     s = _normstr(sol)
     if _re.search(r'\bbase\b', s):                      # a grid-stack program
-        h = mx = 0
-        for t in _re.findall(r'[A-Za-z_]+', s):
-            if t == 'base':       h = 1; mx = max(mx, h)
-            elif t in _PUSH:      h += 1; mx = max(mx, h)
-            elif t in _POP:       h -= 1
-        return max(mx - 1, 0)
+        try:
+            return _semantic_arity(s)
+        except Exception:
+            # conservative token-scan fallback (only if the probe run fails to build)
+            h = mx = 0
+            for t in _re.findall(r'[A-Za-z_]+', s):
+                if t == 'base':       h = 1; mx = max(mx, h)
+                elif t in _PUSH:      h += 1; mx = max(mx, h)
+                elif t in _POP:       h -= 1
+            return max(mx - 1, 0)
     return 1 if 'fork' in s else 0                       # atomic: 1 model, or none
 
 
 def _shared_holes(body_str):
     c = Counter(_re.findall(r'\$\d+', body_str))
     return {v: n for v, n in c.items() if n > 1}
+
+
+def _dl(D, Q, prog):
+    """Description length (nats) of a program under library D and prior Q.
+
+    D.logp sums the per-node log-probabilities (all ≤ 0); the description length is
+    the negation.  A program written in the invented abstractions of the FINAL library
+    is priced with those abstractions' (cheap) tokens, so the library's compression of
+    the corpus is reflected directly in the number.
+    """
+    t = tr(D, prog) if isinstance(prog, str) else prog
+    return float(-D.logp(Q, t))
+
+
+# ── shared wake-sleep solve loop (used by the main run AND the ablation) ────────────
+
+def _wake_sleep_solve(D, tasks, *, t_fn, maxdepth, rounds, stitch_iters,
+                      dream_iters, dream_on):
+    """Several ECD rounds: enumerate ↦ joint stitch ↦ dream, returning (sols, rewritten).
+
+    After each stitch a recognition model is trained on the round's replays (solved
+    programs, rewritten through the learned abstractions) + fantasies, and the next
+    rounds enumerate under that learned Q rather than the uniform/content prior.  A
+    uniform mop-up after DREAM_USE_ROUNDS keeps the search complete (so a model that
+    mis-prioritises a deep stack program can never make it unreachable).
+    """
+    sols = {}
+    nw = _n_cpus_available()
+    DREAM_USE_ROUNDS = 2
+    qmodel = None
+    all_Xs = [x for x, _ in tasks]
+    rewritten = {}
+    print(f"  enumerating on {nw} workers (maxdepth={maxdepth}, timeout={t_fn}s)…", flush=True)
+    for it in range(1, rounds + 1):
+        unsolved = [x for x in all_Xs if mat_key(x) not in sols]
+        if not unsolved:
+            break
+        n_before = len(sols)
+        use_model = dream_on and qmodel is not None and it <= 1 + DREAM_USE_ROUNDS
+        print(f"\n--- round {it}/{rounds}: {len(unsolved)} unsolved; |D|={len(D)} "
+              f"({len(D.invented)} invented); Q={'dreamed' if use_model else 'uniform/content'} ---",
+              flush=True)
+        with ProcessPoolExecutor(max_workers=nw, initializer=_worker_init) as pool:
+            args = [(x, D, (dreamed_q(qmodel, D, x) if use_model else content_q(D, x)),
+                     t_fn, fn, maxdepth) for x in unsolved]
+            for k, sol in pool.map(_solve_task_md, args):
+                if sol is not None:
+                    sols[k] = sol
+        print(f"    solved {len(sols)}/{len(tasks)} (+{len(sols) - n_before} this round)", flush=True)
+
+        # joint stitch over ALL solutions; abstractions are registered in D for the
+        # next round's enumeration (and reported as-is in (B) below).
+        sol_keys = [k for k, v in sols.items() if v is not None]
+        _trees, rewritten_strs = saturate_stitch(D, sols, iterations=stitch_iters, max_arity=5)
+        rewritten = dict(zip(sol_keys, rewritten_strs))
+
+        if len(sols) == len(tasks):
+            print("    all tasks solved — wake-sleep converged.")
+            break
+        if len(sols) == n_before and it > 1:
+            print("    no new tasks solved this round — stopping.")
+            break
+
+        # SLEEP-dream: train next round's recognition model on replays + fantasies.
+        # Skip on the final round and past the use window (the model would go unused).
+        if dream_on and it < rounds and it <= DREAM_USE_ROUNDS:
+            replays = []
+            for k in sol_keys:
+                s = rewritten.get(k)
+                if s:
+                    try:
+                        replays.append(tr(D, s))
+                    except Exception:
+                        pass
+            if not replays:
+                replays = [sols[k] for k in sol_keys if sols.get(k) is not None]
+            print(f"    dreaming: training recognition Q on {len(replays)} replays "
+                  f"+ fantasies ({dream_iters} steps)…", flush=True)
+            qmodel = dream(D, replays, training_Xs=all_Xs, root_type=fn, n_iters=dream_iters)
+    return sols, rewritten
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────────
@@ -323,59 +483,9 @@ def main(smoke=False, dream_on=True):
     print(f"SOLVE — wake-sleep over root_type=fn, {rounds} rounds "
           f"(dreaming {'on' if dream_on else 'off'})")
     print("=" * 72)
-    sols = {}
-    nw = _n_cpus_available()
-    DREAM_USE_ROUNDS = 2
-    qmodel = None
-    all_Xs = [x for x, _ in tasks]
-    rewritten = {}
-    print(f"  enumerating on {nw} workers (maxdepth={maxdepth}, timeout={t_fn}s)…", flush=True)
-    for it in range(1, rounds + 1):
-        unsolved = [x for x in all_Xs if mat_key(x) not in sols]
-        if not unsolved:
-            break
-        n_before = len(sols)
-        use_model = dream_on and qmodel is not None and it <= 1 + DREAM_USE_ROUNDS
-        print(f"\n--- round {it}/{rounds}: {len(unsolved)} unsolved; |D|={len(D)} "
-              f"({len(D.invented)} invented); Q={'dreamed' if use_model else 'uniform/content'} ---",
-              flush=True)
-        with ProcessPoolExecutor(max_workers=nw, initializer=_worker_init) as pool:
-            args = [(x, D, (dreamed_q(qmodel, D, x) if use_model else content_q(D, x)),
-                     t_fn, fn, maxdepth) for x in unsolved]
-            for k, sol in pool.map(_solve_task_md, args):
-                if sol is not None:
-                    sols[k] = sol
-        print(f"    solved {len(sols)}/{len(tasks)} (+{len(sols) - n_before} this round)", flush=True)
-
-        # joint stitch over ALL solutions; abstractions are registered in D for the
-        # next round's enumeration (and reported as-is in (B) below).
-        sol_keys = [k for k, v in sols.items() if v is not None]
-        _trees, rewritten_strs = saturate_stitch(D, sols, iterations=stitch_iters, max_arity=5)
-        rewritten = dict(zip(sol_keys, rewritten_strs))
-
-        if len(sols) == len(tasks):
-            print("    all tasks solved — wake-sleep converged.")
-            break
-        if len(sols) == n_before and it > 1:
-            print("    no new tasks solved this round — stopping.")
-            break
-
-        # SLEEP-dream: train next round's recognition model on replays + fantasies.
-        # Skip on the final round and past the use window (the model would go unused).
-        if dream_on and it < rounds and it <= DREAM_USE_ROUNDS:
-            replays = []
-            for k in sol_keys:
-                s = rewritten.get(k)
-                if s:
-                    try:
-                        replays.append(tr(D, s))
-                    except Exception:
-                        pass
-            if not replays:
-                replays = [sols[k] for k in sol_keys if sols.get(k) is not None]
-            print(f"    dreaming: training recognition Q on {len(replays)} replays "
-                  f"+ fantasies ({dream_iters} steps)…", flush=True)
-            qmodel = dream(D, replays, training_Xs=all_Xs, root_type=fn, n_iters=dream_iters)
+    sols, rewritten = _wake_sleep_solve(
+        D, tasks, t_fn=t_fn, maxdepth=maxdepth, rounds=rounds,
+        stitch_iters=stitch_iters, dream_iters=dream_iters, dream_on=dream_on)
 
     # ── (A″) ARITY CENSUS — which private-channel arity did MDL select per family? ────
     print("\n" + "=" * 72)
@@ -408,11 +518,7 @@ def main(smoke=False, dream_on=True):
     # solved the same family at arity-1 (it serializes).  Expressible, not selected.
     cb_meta = next((m for _, m in tasks if m['kind'] == 'crossblur'), None)
     if cb_meta is not None:
-        stack_str = (f"(pipe_gsg (compose_gs (compose_gs (compose_gs (compose_gs "
-                     f"(compose_gs (compose_gs (compose_gs base dup_top) dup_top) "
-                     f"(map_top (step {cb_meta['val']} {cb_meta['d1']}))) swap_top) "
-                     f"(map_top (step {cb_meta['val']} {cb_meta['d2']}))) (zip_top overlay)) "
-                     f"(zip_top overlay)) peek)")
+        stack_str = _crossblur_stack_str(cb_meta)
         expressible_arity = _arity(stack_str)
     else:
         expressible_arity = None
@@ -433,6 +539,47 @@ def main(smoke=False, dream_on=True):
         print("     minimal sufficient arity, discovered — not a pair_gg stipulation.")
         print("     (belief shares arity-1 with non-mental overlay/crossblur; what makes")
         print("      it belief is the commit DIRECTION — the cube axis — not the COUNT.)")
+
+    # ── (C) MDL MARGIN — quantify "never selected" as a description-length gap ─────────
+    # (A″) reports which arity the searcher SETTLED on; but "MDL never selects arity 2"
+    # only means something if arity 2 is actually pricier.  Here we price both programs
+    # for the SAME crossblur task under the final library: the arity-1 program the search
+    # found (serialised, one live model) vs the ground-truth height-3 stack program (two
+    # live models).  A positive margin is a direct MDL statement — the arity-1 encoding is
+    # shorter — turning "absent from the results" into a measured preference.
+    print("\n" + "=" * 72)
+    print("(C) MDL MARGIN — arity-1 (found) vs arity-2 (ground-truth) description length")
+    print("=" * 72)
+    Q_dl = uniform_type_q(D)                       # structural prior over the FINAL library
+    cb_solved = next(((x, m) for x, m in tasks
+                      if m['kind'] == 'crossblur' and sols.get(mat_key(x)) is not None), None)
+    if cb_meta is None:
+        print("  no crossblur task in corpus — skipping.")
+    elif cb_solved is None:
+        # arity-2 program is still priceable even if the search never solved crossblur.
+        dl2 = _dl(D, Q_dl, stack_str)
+        print(f"  crossblur unsolved this run; arity-2 ground-truth DL = {dl2:.2f} nats")
+        print("  (no arity-1 program found to compare against — see the ablation for reachability)")
+    else:
+        x_cb, _ = cb_solved
+        k_cb = mat_key(x_cb)
+        found_raw   = _normstr(sols[k_cb])                 # arity-1 program, base primitives
+        found_lib   = rewritten.get(k_cb, found_raw)       # …rewritten through the library
+        dl1_raw = _dl(D, Q_dl, found_raw)
+        dl1_lib = _dl(D, Q_dl, found_lib)
+        dl2     = _dl(D, Q_dl, stack_str)                  # arity-2 height-3 ground truth
+        a1, a2 = _arity(found_raw), _arity(stack_str)
+        print(f"  found arity-{a1} program (base prims)   DL = {dl1_raw:6.2f} nats   {found_raw}")
+        if found_lib != found_raw:
+            print(f"  found arity-{a1} program (library)     DL = {dl1_lib:6.2f} nats   {found_lib}")
+        print(f"  ground-truth arity-{a2} program         DL = {dl2:6.2f} nats   {stack_str}")
+        margin_raw = dl2 - dl1_raw
+        margin_lib = dl2 - dl1_lib
+        print(f"\n  MDL margin (arity-{a2} − arity-{a1}, base prims) = {margin_raw:+.2f} nats")
+        print(f"  MDL margin (arity-{a2} − arity-{a1}, library)   = {margin_lib:+.2f} nats")
+        if margin_lib > 0:
+            print(f"  => the arity-{a1} encoding is strictly shorter; MDL's avoidance of the second")
+            print(f"     private channel is a quantified preference, not merely an absence of evidence.")
 
     # ── (B) joint compression — the final library learned across the wake-sleep rounds ─
     print("\n" + "=" * 72)
@@ -469,5 +616,148 @@ def main(smoke=False, dream_on=True):
         print(f"       shared-av signature survives                                : True")
 
 
+# ── stack spellings (shared by the ablation and its ground-truth check) ────────────
+
+def _belief_stack_str(m):
+    "depth-1 stack belief == fork(derive, sync_to_world av); see fork_stack_decomposed."
+    pr, pc = m['pw']
+    return (f"(pipe_gsg (compose_gs (compose_gs (compose_gs base dup_top) "
+            f"(map_top (compose (wall_at c{pr} c{pc}) (optimize (neg_dist {m['gv']}) {m['av']})))) "
+            f"(commit_top {m['av']})) peek)")
+
+
+def _overlay_stack_str(m):
+    "depth-1 stack overlay == fork(step v d, overlay); one derived view, unioned back."
+    return (f"(pipe_gsg (compose_gs (compose_gs (compose_gs base dup_top) "
+            f"(map_top (step {m['val']} {m['dir']}))) (zip_top overlay)) peek)")
+
+
+def _crossblur_stack_str(m):
+    "depth-2 (height-3) stack crossblur; two derived views live before the union folds."
+    return (f"(pipe_gsg (compose_gs (compose_gs (compose_gs (compose_gs "
+            f"(compose_gs (compose_gs (compose_gs base dup_top) dup_top) "
+            f"(map_top (step {m['val']} {m['d1']}))) swap_top) "
+            f"(map_top (step {m['val']} {m['d2']}))) (zip_top overlay)) "
+            f"(zip_top overlay)) peek)")
+
+
+# ── (a) ABLATION — remove atomic fork/sync_to_world, so the stack is the ONLY path ──
+# "MDL never selects arity 2" is only meaningful if arity-2 stack programs are
+# REACHABLE by the enumerator at all.  In the joint run belief takes the cheap atomic
+# fork and crossblur serialises through atomic fork too, so no task is ever solved
+# THROUGH the stack — the searcher's ability to reach depth-2 stack programs is never
+# exercised.  Delete atomic fork and sync_to_world from the DSL and the only spelling
+# left for belief is the depth-1 stack (base▸dup_top▸map_top(derive)▸commit_top), and
+# the only spelling for a clean-original crossblur is the depth-2 height-3 stack (two
+# views held live).  If the searcher finds those under this ablated DSL, stack programs
+# — including arity 2 — are demonstrably reachable, and the joint run's arity-1 choice
+# is a genuine MDL preference rather than a search failure.
+
+def run_ablation(smoke=False, dream_on=True):
+    if smoke:
+        n_phys, n_des, n_ov, n_bel, n_cb = 2, 1, 2, 1, 2
+        t_fn, stitch_iters, maxdepth = 60, 3, 13
+        rounds, dream_iters = 3, 120
+    else:
+        # Deeper budget than the joint run: belief's depth-1 stack (~18 nodes) and
+        # crossblur's depth-2 height-3 stack are the search targets here, and unlike
+        # the joint run there is no cheap atomic-fork shortcut to fall back on.  More
+        # wall-clock per task (t_fn) and more rounds give stitch repeated chances to
+        # factor the shared base▸dup_top▸map_top prefix out of the overlay/crossblur
+        # solves, which is what brings the deep belief program into reach.
+        n_phys, n_des, n_ov, n_bel, n_cb = 4, 2, 4, 6, 4
+        t_fn, stitch_iters, maxdepth = 1200, 8, 16
+        rounds, dream_iters = 6, 800
+
+    print("=" * 72)
+    print("ABLATION — atomic fork/sync_to_world REMOVED; stack is the only channel path")
+    print("=" * 72)
+
+    D = Deltas([d for d in make_stack_prims() if d.repr not in ('fork', 'sync_to_world')])
+    assert D.index('fork') is None and D.index('sync_to_world') is None
+    print(f"DSL: {len(D)} primitives (no atomic fork / sync_to_world)")
+    print("  belief is now reachable ONLY via the depth-1 stack (base▸dup_top▸map_top▸")
+    print("  commit_top); a clean-original crossblur ONLY via the depth-2 height-3 stack.")
+    print("  physics/desire/overlay stay shallow — they bootstrap the stack-prefix")
+    print("  abstractions that make the deep belief/crossblur programs reachable.\n")
+
+    # SAME mixed corpus as the joint run; only the DSL is ablated.
+    phys = make_physics_tasks(n_phys, seed=0)
+    des  = make_desire_tasks(n_des, COMBOS, seed=1)
+    ov   = make_overlay_tasks(n_ov, seed=3)
+    bel  = make_belief_tasks(n_bel, COMBOS, seed=2)
+    cb   = make_crossblur_tasks(n_cb, seed=5)
+    seen, tasks = set(), []
+    for x, m in phys + des + ov + bel + cb:
+        k = mat_key(x)
+        if k in seen:
+            continue
+        seen.add(k)
+        tasks.append((x, m))
+    by_kind = Counter(m['kind'] for _, m in tasks)
+    print(f"  {by_kind['physics']} physics, {by_kind['desire']} desire, "
+          f"{by_kind['overlay']} overlay, {by_kind['belief']} belief, "
+          f"{by_kind['crossblur']} crossblur — {len(tasks)} total")
+
+    # ground truth via the ablated DSL: physics/desire unchanged, but overlay, belief and
+    # crossblur must now spell out through the stack (a solve failure is then search, not
+    # encoding).
+    for x, m in tasks:
+        k = m['kind']
+        if k == 'physics':
+            s = f"(step {m['val']} {m['dir']})"
+        elif k == 'desire':
+            s = f"(optimize (neg_dist {m['gv']}) {m['av']})"
+        elif k == 'overlay':
+            s = _overlay_stack_str(m)
+        elif k == 'crossblur':
+            s = _crossblur_stack_str(m)
+        else:
+            s = _belief_stack_str(m)
+        out = unfold(x[0], x.shape[0], tr(D, s)())
+        assert np.array_equal(out, x), f"ablation ground-truth failed for {k}: {m}"
+    print(f"  ground-truth check: {len(tasks)} tasks reproduced through the ablated DSL\n")
+
+    print("SOLVE — wake-sleep over the ablated DSL (same machinery as the joint run)")
+    sols, _rewritten = _wake_sleep_solve(
+        D, tasks, t_fn=t_fn, maxdepth=maxdepth, rounds=rounds,
+        stitch_iters=stitch_iters, dream_iters=dream_iters, dream_on=dream_on)
+
+    print("\n" + "-" * 72)
+    print("ABLATION RESULT — solved THROUGH the stack (reachability of arity-≥1 programs)")
+    print("-" * 72)
+    solved = Counter(); total = Counter()
+    reached = {}
+    for x, m in tasks:
+        total[m['kind']] += 1
+        sol = sols.get(mat_key(x))
+        if sol is None:
+            continue
+        solved[m['kind']] += 1
+        a = _arity(sol)
+        reached.setdefault(m['kind'], Counter())[a] += 1
+    for kind in ('physics', 'desire', 'overlay', 'belief', 'crossblur'):
+        ar = reached.get(kind)
+        astr = ', '.join(f'arity {a}×{n}' for a, n in sorted(ar.items())) if ar else '(none found)'
+        print(f"  {kind:10s} {solved[kind]}/{total[kind]} solved via stack   {astr}")
+
+    bel_reached = bool(reached.get('belief'))
+    cb_arity2   = bool(reached.get('crossblur')) and 2 in reached['crossblur']
+    print(f"\n  belief solved via the depth-1 stack path                 : {bel_reached}")
+    print(f"  crossblur solved via a depth-2 (arity-2) stack program    : {cb_arity2}")
+    if bel_reached and cb_arity2:
+        print("  => depth-2 stack programs ARE reachable by the enumerator, so the joint run's")
+        print("     arity-1 choice is a genuine MDL preference, not an unreached search depth.")
+    elif bel_reached:
+        print("  => the depth-1 stack is reachable; crossblur's depth-2 program was not found")
+        print("     within the timeout (raise t_fn / maxdepth to probe reachability further).")
+    else:
+        print("  => stack programs not reached within the timeout — inconclusive; raise budgets.")
+    return sols
+
+
 if __name__ == '__main__':
-    main(smoke='--smoke' in sys.argv, dream_on='--no-dream' not in sys.argv)
+    if '--ablate-atomic' in sys.argv:
+        run_ablation(smoke='--smoke' in sys.argv, dream_on='--no-dream' not in sys.argv)
+    else:
+        main(smoke='--smoke' in sys.argv, dream_on='--no-dream' not in sys.argv)

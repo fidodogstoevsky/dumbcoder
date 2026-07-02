@@ -612,3 +612,237 @@ def make_dual_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=
             made += 1
     return tasks
 
+
+# ── non-mental rival SPELLINGS, as priceable strings ────────────────────────────
+# The `_*_rival_explainable` batteries above build EXECUTABLE closures to reject scenes
+# a non-mental program reproduces; task generation keeps only scenes where they all fail.
+# For the MDL-margin experiment we need the same rivals as PRICEABLE s-expressions — the
+# non-mental programs a skeptic would offer as "almost as short" as the belief compound.
+# These builders mirror the closure batteries one-for-one (keep them in sync), emitting
+# base-primitive strings in the same token conventions as `experiment.gt_program_str`
+# (coords as c{r}/c{c}, `neg_dist`, directions by name).  Only NON-MENTAL rivals are
+# listed: a fork/sync rival would itself be a belief reading, so it cannot bear on the
+# "a non-mental program was almost as short" objection.
+
+_DIR_NAME = {v: k for k, v in DIRS.items()}   # (dr,dc) vector -> 'right'/'left'/...
+
+
+def belief_variant(m):
+    "Fine label for a kind='belief' task (wall / witness / goal / dual)."
+    if 'pw2' in m:
+        return 'belief_dual'
+    if 'displaced_to' in m:
+        return 'belief_goal'
+    if 'aw' in m:
+        return 'belief_witness'
+    return 'belief_wall'
+
+
+def _seek(gv, av):   return f"(optimize (neg_dist {gv}) {av})"
+def _wall(pr, pc):   return f"(wall_at c{pr} c{pc})"
+def _clear(pr, pc):  return f"(clear_at c{pr} c{pc})"
+def _stepstr(v, dn): return f"(step {v} {dn})"
+
+
+def _seq_str(*ss):
+    "left-fold compose to match tasks_minds._seq: _seq_str(a,b,c) = (compose (compose a b) c)"
+    prog = ss[0]
+    for s in ss[1:]:
+        prog = f"(compose {prog} {s})"
+    return prog
+
+
+def belief_rival_specs(m):
+    """Non-mental rival spellings for a belief task, as (label, s-expression) pairs.
+
+    Wall/witness/dual rivals are the transient-wall family (stamp / act / erase, in the
+    interpreter's one fixed per-frame fn) plus the no-wall physics — the exact programs
+    the corresponding `_*_rival_explainable` battery enumerated.  Goal-displacement's
+    rival genuinely shoves the goal in the WORLD (no private copy), the spelling the
+    stationary-goal witness rules out.  All are priced against the found belief program.
+    """
+    var = belief_variant(m)
+    if var == 'belief_dual':
+        av1, gv1, pw1 = m['av'], m['gv'], m['pw']
+        av2, gv2, pw2 = m['av2'], m['gv2'], m['pw2']
+        o1, o2 = _seek(gv1, av1), _seek(gv2, av2)
+        W1, C1 = _wall(*pw1), _clear(*pw1)
+        W2, C2 = _wall(*pw2), _clear(*pw2)
+        return [
+            ('no walls (physics)',        _seq_str(o1, o2)),
+            ('both walls permanent',      _seq_str(W1, W2, o1, o2)),
+            ('both walls transient',      _seq_str(W1, W2, o1, o2, C1, C2)),
+            ('each wall for own agent',   _seq_str(W1, o1, C1, W2, o2, C2)),
+            ('reverse order',             _seq_str(W2, o2, C2, W1, o1, C1)),
+            ('acts reordered',            _seq_str(W1, W2, o2, o1, C1, C2)),
+        ]
+    if var == 'belief_witness':
+        av, gv, aw, gw, pw = m['av'], m['gv'], m['aw'], m['gw'], m['pw']
+        oa, ow = _seek(gv, av), _seek(gw, aw)
+        W, C = _wall(*pw), _clear(*pw)
+        return [
+            ('no wall (physics)',          _seq_str(oa, ow)),
+            ('transient, witness ignored', _seq_str(W, oa, C)),
+            ('stamp/act/erase then witness', _seq_str(W, oa, C, ow)),
+            ('witness then stamp/act/erase', _seq_str(ow, W, oa, C)),
+            ('stamp, witness, act, erase', _seq_str(W, ow, oa, C)),
+            ('stamp, act, witness, erase', _seq_str(W, oa, ow, C)),
+        ]
+    if var == 'belief_goal':
+        av, gv, dn = m['av'], m['gv'], m['dir']
+        return [
+            ('pure desire (no belief)',   _seek(gv, av)),
+            ('shove goal in world',       _seq_str(_stepstr(gv, dn), _seek(gv, av))),
+        ]
+    # belief_wall: transient real wall (the tightest single-grid analogue) + no-wall physics
+    av, gv, pw = m['av'], m['gv'], m['pw']
+    W, C = _wall(*pw), _clear(*pw)
+    return [
+        ('no wall (physics)',                _seek(gv, av)),
+        ('transient wall (stamp/act/erase)', _seq_str(W, _seek(gv, av), C)),
+    ]
+
+
+# ── Task family: DUAL false belief (obstacle + goal) — forbids the degenerate commit ──
+# The single-agent belief scenes above are, on the world, extensionally solved by a
+# SCOPE complement (sync_all / sync_except gv) as well as by sync_to_world(av): when
+# the only world-value that ends up moved is the agent, "move all-but-goal" == "move
+# the agent" and the cheaper complement wins (see the (A) disclosure in experiment.py).
+# That is why the invented constructor commits via sync_all and carries no shared av
+# hole.  This family removes the degeneracy at its root: the agent is wrong about the
+# obstacle's location AND the goal's location, and the obstacle is a REAL wall in the
+# world (value 3, a committable world-value).  av's realised detour is therefore bent
+# by two UNCOMMITTED relocations of world-values (the wall and the goal), so every
+# scope complement must drag at least one of {gv, 3} to its model-position and fails.
+# Only sync_to_world(av) — the single-value agency commit whose av is shared with the
+# policy — leaves both put.  Solutions here must use the literal commit, so stitch can
+# recover the agency signature as a shared hole.
+
+def _false_obstacle_program(av, gv, real_w, bel_w, dg):
+    """Per-frame transition for a dual false belief (wrong obstacle + wrong goal):
+
+        (fork (_seq (clear_at Wr) (wall_at Wb) (step gv dg)
+                    (optimize (neg_dist gv) av))
+              (sync_to_world av))
+
+    On its private copy the agent erases the real wall Wr, stamps the wall where it
+    (falsely) believes it to be (Wb), shoves the goal one cell toward where it
+    (falsely) believes it sits, then seeks that believed goal around that believed
+    wall — committing only its own move.  The world's real wall and goal never move.
+    """
+    (wr, wc), (br, bc) = real_w, bel_w
+    return fork(_seq(clear_at(wr, wc), wall_at(br, bc), step(gv, dg),
+                     optimize(neg_distance(gv), av)),
+                sync_to_world(av))
+
+
+def _scope_complements_all_fail(x, g, derive, av, world_vals):
+    """True iff sync_to_world(av) reproduces x from g under `derive` but NO scope
+    complement does — i.e. the single-value agency commit is the unique commit.
+    `world_vals` are the values sync_all / sync_except range over (nonzero cells,
+    which here include the real wall 3)."""
+    def repro(commit):
+        try:
+            return np.array_equal(unfold(g, x.shape[0], fork(derive, commit)), x)
+        except Exception:
+            return False
+    if not repro(sync_to_world(av)):        # must be a valid literal-commit scene
+        return False
+    if repro(sync_all):                     # wholesale adoption must be WRONG
+        return False
+    for k in set(world_vals):               # every all-but-one commit must be WRONG
+        if repro(sync_except(k)):
+            return False
+    return True
+
+
+def make_false_obstacle_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE,
+                                     seed=0, max_T=8):
+    """Single agent, false about BOTH the obstacle and the goal location.
+
+    Forces the literal single-value commit sync_to_world(av): the agent detours
+    around a wall it mis-locates while heading for a goal it mis-locates, and both
+    the real wall (value 3) and the real goal stay put in the world.  A scene is
+    kept only if sync_to_world(av) reproduces it AND every scope complement
+    (sync_all, sync_except k for every world value k, incl. the wall) fails — so no
+    'move everything but ⋯' commit can undercut the agency commit — and no single
+    physical program explains it.
+    """
+    rng = np.random.default_rng(seed)
+    tasks = []
+    for av, gv in combos:
+        made, attempts = 0, 0
+        while made < n_per_combo and attempts < 60000:
+            attempts += 1
+            ar, ac = int(rng.integers(size)), int(rng.integers(size))
+            gr, gc = int(rng.integers(size)), int(rng.integers(size))
+            if (ar, ac) == (gr, gc) or abs(ar - gr) + abs(ac - gc) < 3:
+                continue
+            # believed goal: the real goal shoved one cell in direction dg (on grid,
+            # not onto the agent).
+            dgname = str(rng.choice(list(DIRS)))
+            dg = DIRS[dgname]
+            bgr, bgc = gr + dg[0], gc + dg[1]
+            if not (0 <= bgr < size and 0 <= bgc < size) or (bgr, bgc) == (ar, ac):
+                continue
+
+            g = np.zeros((size, size), dtype=int)
+            g[ar, ac] = av
+            g[gr, gc] = gv
+
+            # believed-world true-belief path toward the DISPLACED goal — source of
+            # the phantom-wall cell (place the believed wall on it to force a detour).
+            bg = g.copy()
+            bg[gr, gc] = 0
+            bg[bgr, bgc] = gv
+            direct = unfold(bg, max_T, optimize(neg_distance(gv), av))
+            bpath = [_agent_pos(direct[t], av) for t in range(max_T)]
+            inter = [p for p in bpath
+                     if p and p not in ((ar, ac), (gr, gc), (bgr, bgc))]
+            if not inter:
+                continue
+            br, bc = inter[int(rng.integers(len(inter)))]      # believed wall
+
+            # real wall: an empty cell distinct from the believed wall and not on the
+            # agent's realised path (checked below via the distinctness gate).
+            free = [(r, c) for r in range(size) for c in range(size)
+                    if g[r, c] == 0 and (r, c) != (br, bc)]
+            if not free:
+                continue
+            wr, wc = free[int(rng.integers(len(free)))]
+            g[wr, wc] = 3                                       # REAL wall in the world
+
+            derive = _seq(clear_at(wr, wc), wall_at(br, bc), step(gv, dg),
+                          optimize(neg_distance(gv), av))
+            prog = fork(derive, sync_to_world(av))
+            x_full = unfold(g, max_T, prog)
+            t_arrive = next((t for t in range(max_T)
+                             if _agent_pos(x_full[t], av) == (bgr, bgc)), None)
+            if t_arrive is None or t_arrive < 3:
+                continue
+            T = t_arrive + 1
+            x = x_full[:T].copy()
+
+            # the wall and goal must stay put in the world for every frame, and all
+            # four world-values (av, gv, real wall, and — until arrival — the cell the
+            # agent came from) stay present & distinct: no clobber, no accidental move.
+            if any(x[t][gr, gc] != gv or x[t][wr, wc] != 3 for t in range(T)):
+                continue
+            if not all((x[t] == v).sum() == 1 for t in range(T) for v in (av, gv)):
+                continue
+            if not all((x[t] == 3).sum() == 1 for t in range(T)):
+                continue
+            # the agent must really detour (not the clean displaced-goal path)
+            if [_agent_pos(x[t], av) for t in range(T)] == bpath[:T]:
+                continue
+            if _physically_explainable(x, g):                  # not a bare step/seek
+                continue
+            world_vals = [int(v) for v in np.unique(g) if v != 0]
+            if not _scope_complements_all_fail(x, g, derive, av, world_vals):
+                continue                                        # literal commit unique
+            tasks.append((x, {'kind': 'belief', 'av': av, 'gv': gv,
+                              'pw': (br, bc), 'real_wall': (wr, wc),
+                              'displaced_to': (bgr, bgc), 'dir': dgname}))
+            made += 1
+    return tasks
+

@@ -296,6 +296,8 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
     except ImportError:
         print("stitch_core not installed; no compression performed")
         D.reset()
+        D._stitch_result = None          # nothing to rewrite arbitrary programs through
+        D._stitch_name_map = {}
         fallback = [simplify(normalize(s)) for s in sols.values() if s]
         return fallback, [str(t) for t in fallback]
 
@@ -313,6 +315,8 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
     # and never invents (or propagates) redundant fork wrappers.
     trees = [simplify(normalize(s)) for s in sols.values() if s]
     D.reset()
+    D._stitch_result = None              # (re)set; populated below once compress runs
+    D._stitch_name_map = {}
 
     if not trees:
         return trees, []
@@ -329,6 +333,12 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
     if not result.abstractions:
         print("stitch found no useful abstractions")
         return trees, [str(t) for t in trees]
+
+    # map stitch's original abstraction name -> the (offset-remapped) name registered
+    # in D, for the successfully-registered abstractions only.  Stashed on D so an
+    # arbitrary program can later be rewritten through this exact library — see
+    # rewrite_through_library() (used by the MDL-margin experiment to price rivals).
+    registered_name_map = {}
 
     # Register each abstraction in D in discovery order so that later
     # abstractions can reference earlier ones during parsing.
@@ -542,6 +552,7 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
 
         freeze(df)
         D.add(df)
+        registered_name_map[abs_result.name] = name
         _argtypes_str = ', '.join(str(t) for t in (df.tailtypes or []))
         print(f"added abstraction {name}: {abs_result.body}  [{_argtypes_str}] -> {df.type}")
 
@@ -570,7 +581,55 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
     # Fall back to original trees for Q training if most rewrites failed to parse
     # (stitch often references abstractions that were skipped, making rewrites unparseable)
     training_trees = new_trees if len(new_trees) * 2 >= len(trees) else trees
+    # expose the exact compress result + name remap so callers can rewrite arbitrary
+    # programs through this same library (rewrite_through_library).
+    D._stitch_result = result
+    D._stitch_name_map = registered_name_map
     return training_trees, [str(t) for t in new_trees]
+
+
+def rewrite_through_library(D, program_strs):
+    """Rewrite base-primitive programs through the abstractions the most recent
+    `saturate_stitch` registered in D — applying existing abstractions only, never
+    discovering new ones.  This prices an arbitrary program (e.g. a non-mental rival
+    spelling) under the SAME final library the corpus was compressed into, so a
+    `_dl` comparison against a library-rewritten solution is apples-to-apples.
+
+    Returns one rewritten s-expression per input (referencing D's invented tokens
+    where they apply).  A program that shares no abstraction comes back normalized
+    but otherwise unchanged.  Falls back to the normalized input if stitch_core is
+    unavailable or no abstractions were registered.
+    """
+    norm = [str(simplify(normalize(tr(D, s) if isinstance(s, str) else s)))
+            for s in program_strs]
+    result = getattr(D, '_stitch_result', None)
+    name_map = getattr(D, '_stitch_name_map', {}) or {}
+    if result is None or not name_map:
+        return norm
+    try:
+        import stitch_core
+    except ImportError:
+        return norm
+    keep = [a for a in result.abstractions if a.name in name_map]
+    if not keep:
+        return norm
+    import re as _re
+    rewritten = stitch_core.rewrite(norm, keep).rewritten
+    out = []
+    for s in rewritten:
+        # remap stitch's original fn_i -> the name registered in D (longest first so
+        # fn_1 never matches inside fn_10); then verify it parses under D, else keep base.
+        for orig in sorted(name_map, key=lambda n: -int(n.split('_')[1])):
+            s = _re.sub(rf'\b{orig}\b', name_map[orig], s)
+        out.append(s)
+    safe = []
+    for base, lib in zip(norm, out):
+        try:
+            tr(D, lib)
+            safe.append(lib)
+        except Exception:
+            safe.append(base)     # rewrite referenced a skipped token — price in base prims
+    return safe
 
 
 def needle(D, n, paths, paths_terminal, depth=0):
@@ -747,12 +806,18 @@ def _n_cpus_available():
 
 
 def _solve_one_task(args):
-    """Worker for parallel task enumeration. Must be module-level for pickling."""
+    """Worker for parallel task enumeration. Must be module-level for pickling.
+
+    Returns (key, solution_or_None, elapsed_seconds) — the wall time is measured
+    inside the worker so callers can calibrate per-task timeouts from real runs.
+    """
+    import time as _time
     x, D, q, sols_snapshot, timeout, budget, root_type = args
+    _t0 = _time.perf_counter()
     result = solve_enumeration([x], D, q, dict(sols_snapshot),
                                maxdepth=10, timeout=timeout, budget=budget,
                                root_type=root_type)
-    return mat_key(x), result.get(mat_key(x))
+    return mat_key(x), result.get(mat_key(x)), _time.perf_counter() - _t0
 
 
 def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, seeds=None,
@@ -818,7 +883,7 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
                 (x, D, task_Q(x) if idx < 3 else _uniform_q, dict(sols), t, budget, root_type)
                 for x in unsolved
             ]
-            for k, sol in pool.map(_solve_one_task, _args):
+            for k, sol, _elapsed in pool.map(_solve_one_task, _args):
                 if sol is not None:
                     sols[k] = sol
 
@@ -882,7 +947,13 @@ class MatRecognitionModel(nn.Module):
     def __init__(self, nd, max_coord=16, vocabsize=10, nembd=64, max_t=24):
         super().__init__()
         self.nembd = nembd
-        self.mat_emb = 5 * nembd   # frame0_agent + frame0_goal + all_wall + all_agent + T
+        # Per-ENTITY layout (value-agnostic), so two-mover / two-goal scenes (witness,
+        # dual belief) are representable rather than blurred into one mean:
+        #   2 mover slots × [start-pos ‖ trajectory]  = 2·(2·nembd)
+        #   2 goal  slots × [pos]                      = 2·nembd
+        #   wall pool                                  = nembd
+        #   T (path length)                            = nembd
+        self.mat_emb = 8 * nembd
         self.nd = nd
         self.vocabsize = vocabsize
 
@@ -899,57 +970,77 @@ class MatRecognitionModel(nn.Module):
         print(f'{sum(p.numel() for p in self.parameters()) / 2**20:.2f}M params')
 
     def encode_matrix(self, x):
-        """(B, T, H, W) long tensor -> (B, 4*nembd) grid+path-length embedding.
+        """(B, T, H, W) long tensor -> (B, 8*nembd) grid+path-length embedding.
 
-        Agent and goal are pooled from FRAME 0 ONLY (clean start positions).
-        Walls are pooled from ALL frames (static across frames anyway).
-        T is embedded directly as a path-length feature.
-        Returns (h_matrix, []).
+        PER-ENTITY pooling (value-agnostic): a two-mover / two-goal scene (witness,
+        dual belief) is represented in separate slots instead of collapsed into a
+        single blurred mean, which a one-agent pooling cannot distinguish from a
+        one-mover scene.  Returns (h_matrix, []).
         """
-        B, T, H, W = x.shape
-        device = x.device
+        B = x.shape[0]
+        outs = [self._encode_one(x[b]) for b in range(B)]
+        return th.stack(outs, dim=0), []
 
-        r_idx = th.arange(H, device=device)[None, None, :, None].expand(B, T, H, W)
-        c_idx = th.arange(W, device=device)[None, None, None, :].expand(B, T, H, W)
-        pos_e = self.row_embed(r_idx) + self.col_embed(c_idx)   # (B,T,H,W,nembd)
+    def _encode_one(self, xb):
+        """(T, H, W) long tensor -> (8*nembd,).
 
-        # frame-0 position embeddings (B, 1, H, W, nembd)
-        pos_e0 = pos_e[:, :1, :, :, :]
+        Roles by MOTION, not hardcoded values (the corpus uses diverse agent/goal ids):
+        an entity cell occupied in frame 0 but VACATED by the last frame is a mover; one
+        occupied at both ends is a stationary goal (its agent ends on it).  Distinct
+        movers/goals are separated by VALUE (read off frame 0, never assumed) and slotted
+        in canonical POSITION order, so the layout is permutation- and value-independent:
 
-        # Roles by MOTION, not by hardcoded values (the corpus uses diverse agent/goal
-        # ids): an entity cell occupied in frame 0 but VACATED by the last frame is the
-        # mover (agent); one occupied at both ends is stationary (goal — the agent ends
-        # on it).  Keeps the encoder correct whatever the actual av/gv literals are.
+          mover slot k<2 : [ start-pos pool ‖ trajectory pool (cells with that value) ]
+          goal  slot k<2 : [ pos pool ]
+          wall           : pool over all wall cells
+          T              : path-length embedding
+        A single-mover scene fills slot 0 only; empty slots are zero.  The per-mover
+        trajectory pool is the detour signal — a detour path has a different mean
+        position from a straight one even when T and start/goal coincide, and now that
+        signal is kept SEPARATE per mover (dual belief detours BOTH).
+        """
+        T, H, W = xb.shape
+        device = xb.device
         WALL, EMPTY = 3, 0
-        entity = (x != EMPTY) & (x != WALL)                     # (B,T,H,W) non-bg cells
-        f0, fl = entity[:, 0], entity[:, -1]                    # (B,H,W) first / last
-        agent_start = (f0 & ~fl).unsqueeze(1)                   # vacated start (B,1,H,W)
-        goal_pos    = (f0 &  fl).unsqueeze(1)                   # stationary entity
+        z = th.zeros(self.nembd, device=device)
 
-        def _pool(mask, pe):
-            m = mask.float().unsqueeze(-1)
-            return (pe * m).sum(dim=(1, 2, 3)) / m.sum(dim=(1, 2, 3)).clamp(min=1)
+        r_idx = th.arange(H, device=device)[:, None].expand(H, W)
+        c_idx = th.arange(W, device=device)[None, :].expand(H, W)
+        pos = self.row_embed(r_idx) + self.col_embed(c_idx)     # (H,W,nembd)
+
+        def pool(mask):
+            "mean position embedding over a (H,W) or (T,H,W) boolean mask"
+            m = mask.float()
+            if m.dim() == 3:
+                num = (m[..., None] * pos[None]).sum(dim=(0, 1, 2))
+            else:
+                num = (m[..., None] * pos).sum(dim=(0, 1))
+            return num / m.sum().clamp(min=1)
+
+        f0, fl = xb[0], xb[-1]
+        ent0 = (f0 != EMPTY) & (f0 != WALL)
+        entl = (fl != EMPTY) & (fl != WALL)
+        mover_cells = sorted(th.nonzero(ent0 & ~entl, as_tuple=False).tolist())  # vacated
+        goal_cells  = sorted(th.nonzero(ent0 &  entl, as_tuple=False).tolist())  # stationary
 
         parts = []
-        parts.append(_pool(agent_start, pos_e0))                # h_agent0 (start pos)
-        parts.append(_pool(goal_pos,    pos_e0))                # h_goal0
-        # walls: all frames (value 3 is the fixed wall rendering; empty for belief,
-        # whose wall is invisible — the model must read the detour instead).
-        parts.append(_pool((x == WALL), pos_e))                 # h_wall
-        # agent trajectory across ALL frames (the detour signal), value-agnostically:
-        # every non-bg cell except the stationary goal.  Differs between a detour and a
-        # straight path even when T and start/goal coincide — the key wall-coord cue.
-        # e.g. detour (0,3)→(0,2)→(1,2)→(2,2) mean (0.75,2.25) vs straight
-        # (0,3)→(1,3)→(2,3)→(2,2) mean (1.25,2.75).
-        parts.append(_pool(entity & ~goal_pos, pos_e))          # h_agent_all (traj mean)
-
-        # T embedding: direct path-length signal for detour detection
-        t_idx = th.full((B,), T - 1, dtype=th.long, device=device).clamp(
-            max=self.t_embed.num_embeddings - 1)
-        parts.append(self.t_embed(t_idx))                         # (B, nembd)
-
-        h_matrix = th.cat(parts, dim=-1)   # (B, 5*nembd)
-        return h_matrix, []
+        for k in range(2):                                       # 2 mover slots
+            if k < len(mover_cells):
+                r, c = mover_cells[k]
+                parts.append(pos[r, c])                          # start pos
+                parts.append(pool(xb == int(f0[r, c])))         # this mover's trajectory
+            else:
+                parts += [z, z]
+        for k in range(2):                                       # 2 goal slots
+            if k < len(goal_cells):
+                r, c = goal_cells[k]
+                parts.append(pos[r, c])
+            else:
+                parts.append(z)
+        parts.append(pool(xb == WALL))                           # wall pos (empty→invisible)
+        t_idx = min(T - 1, self.t_embed.num_embeddings - 1)
+        parts.append(self.t_embed(th.tensor(t_idx, device=device)))
+        return th.cat(parts, dim=-1)                             # (8*nembd,)
 
     def forward(self, x):
         "(B,T,H,W) -> dsl_logits (B,nd)"
@@ -961,10 +1052,16 @@ class MatRecognitionModel(nn.Module):
         return self.mat_emb
 
 def sample(ps):
-    if ps[0] < 0:
+    # ps is either a softmax prob vector (newtree) or a log_softmax list with -inf-masked
+    # non-candidates (needle's paths).  Detect log-probs by ANY negative entry — the old
+    # `ps[0] < 0` test misfired when the first candidate had log-prob exactly 0.0 (a tail
+    # type with a single candidate at index 0), leaving ps a Python list that `/=` can't
+    # divide.  Coercing to an array up front makes both branches robust.
+    ps = np.asarray(ps, dtype=float)
+    if np.any(ps < 0):
         ps = np.exp(ps)
 
-    ps /= ps.sum()
+    ps = ps / ps.sum()
     cdf = ps.cumsum(-1)
     x = rand()
     for i in range(len(ps)):
@@ -1057,16 +1154,35 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, n_iters=600):
     _gv_list = sorted({int(v) for x in (training_Xs or [])
                        for v in np.unique(x[0])
                        if v not in (0, 3) and int(v) not in _av_list}) or [2]
+    # Corpus scene statistics, so fantasy grids match the mix the model must encode.
+    # `_val_pool` — every entity value the corpus uses (value-agnostic sampling);
+    # `_multi_frac` — fraction of scenes with ≥4 entities (the two-mover + two-goal
+    # regime of witness/dual belief).  Programs are still library-sampled (not injected),
+    # so a multi-entity grid only *lets* a sampled program drive two movers — it exercises
+    # the encoder's second mover/goal slots rather than manufacturing belief scenes.
+    _ent_counts = [int(((np.unique(x[0]) != 0) & (np.unique(x[0]) != 3)).sum())
+                   for x in (training_Xs or [])]
+    _val_pool   = sorted({int(v) for x in (training_Xs or [])
+                          for v in np.unique(x[0]) if v not in (0, 3)}) or [1, 2]
+    _multi_frac = (sum(c >= 4 for c in _ent_counts) / len(_ent_counts)
+                   if _ent_counts else 0.0)
 
     def _fresh_ig():
-        """Fresh fantasy grid: all agent and goal values at random non-overlapping
-        positions, so the fantasy program has real entities to interact with and
-        its trajectory is genuinely informative about what the program does."""
+        """Fresh fantasy grid: entity values at random non-overlapping positions, so a
+        sampled program has real entities to interact with.  With probability
+        `_multi_frac` the grid is a corpus-matching FOUR-entity scene (two mover + two
+        goal candidates drawn value-agnostically from `_val_pool`); otherwise the plain
+        single-mover grid.  Roles are still decided by the program's motion — this only
+        provides scenes the two-slot encoder can represent."""
         ig = np.zeros((_sz, _sz), dtype=int)
         cells = [(r, c) for r in range(_sz) for c in range(_sz)]
         np.random.shuffle(cells)
-        for _i, _v in enumerate(_av_list + _gv_list):
-            ig[cells[_i][0], cells[_i][1]] = _v
+        if np.random.rand() < _multi_frac and len(_val_pool) >= 4:
+            vals = [int(v) for v in np.random.choice(_val_pool, size=4, replace=False)]
+        else:
+            vals = _av_list + _gv_list
+        for _i, _v in enumerate(vals):
+            ig[cells[_i][0], cells[_i][1]] = int(_v)
         return ig
 
     tbar = trange(n_iters)

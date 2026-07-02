@@ -135,8 +135,14 @@ def make_symmetric_prims(decomposed=False):
 
     # ── PHASE 2: decompose both fork AND sync ────────────────────────────────────
     # fork and sync_to_world (and the direction complement sync_to_model) must be
-    # DISCOVERED from the product-category plumbing, not handed over.
-    prims = [d for d in prims if d.repr not in ('fork', 'sync_to_world')]
+    # DISCOVERED from the product-category plumbing, not handed over.  then_sync is
+    # dropped too: it is `run commit c, then sync_to_world v` (dsl.py), i.e. an atomic
+    # node that BUNDLES a hidden sync_to_world.  Left in, registration solves as
+    # `(then_sync fst_gg v)` — a two-node shortcut that hides the very commit phase 2
+    # is trying to decompose, so registration never reaches for register(locate,place)
+    # and the census reads sync as belief-only.  Removing it forces the shared
+    # `(register (locate v) (place v))` path, so sync is demonstrably general.
+    prims = [d for d in prims if d.repr not in ('fork', 'sync_to_world', 'then_sync')]
     prims += [
         # fork plumbing: dup (Δ) ▸ mapsnd (bifunctor second) ▸ commit, wired by the
         # two typed composers.  fork ≡ (pipe_gpg (compose_gp dup (mapsnd derive)) C).

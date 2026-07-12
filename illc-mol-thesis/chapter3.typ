@@ -54,17 +54,26 @@
 
 #mol-chapter("Implementation")
 
-== Objective
+== Overview
 
-Research question: can the structure 
+Modularity-nativists argue for the existence of a Theory of Mind Module (ToMM), a natively-endowed domain-specific system for understanding the behavior of intentional agents. In Alan Leslie's characterization the ToMM introduces attitude concepts like _Believes_ and uses a "proprietary representational system" for ascribing attitudes to agents @leslie_pretending_1994. Our goal is to demonstrate that the ability to theorize in mental terms can in principle be _learned_, without the need for a native ToMM. 
 
-Modularity-nativists argue for the existence of a Theory of Mind Module (ToMM), a natively-endowed domain-specific system for understanding the behavior of intentional agents. In Alan Leslie's characterization the ToMM introduces attitude concepts like _Believes_ and uses a "proprietary representational system" for ascribing attitudes to agents @leslie_pretending_1994.
+In our first trial we show that, given a non-mental representational substrate, a system can learn a functional abstraction that encodes a notion of belief attribution. The learned function `fork(derive, commit)`
 
-Our goal is to demonstrate that, in princple, a system does not need a native ToMM to develop the ability to theorize about minds. We will show that a system can utilize domain-general cognitive equipment @margolis_oxford_2012 to formulate hypotheses that correctly solve false belief tasks [CITE]. In the first iteration of the implementation, we show that attitude concepts like _Believes_ need not be primitive concepts provided by an innate ToMM but rather can be constructed as compositions of domain-general functions. In the second iteration, we show that the implementation can arrive at an abstracted notion of belief starting from an even more basic language of 2-ary combinators. 
+
+We initialize the system with a library of domain-general primitives, none of which posit an agent's intentional state, nor encodes attitude concepts like _believes_. Lacking bespoke ToM capacities, such a system would on Leslie's view not be able to reason about intentional agents, to attribute a belief to an agent, to explain an agent's movement as navigation according to a private intensional representation. We show that the system learns _useful abstractions_ of domain-general functions, abstractions that encode attitude concepts like _Believes_ and attribute an intensional state to an agent.
+
+In the second iteration, we show that the implementation can arrive at an abstracted notion of belief starting from an even more basic language of 2-ary combinators. 
 
 == ECD architecture 
 
-ECD is a wake-sleep library-learning loop inspired by the DreamCoder @ellis_dreamcoder_2020. Each iteration of the loop consists of an enumeration phase, a compression phase, and a dreaming phase. In enumeration, the system generates candidate programs to solve tasks 
+ECD is a wake-sleep library-learning loop inspired by the DreamCoder @ellis_dreamcoder_2020. Each iteration of the loop consists of an enumeration phase, a compression phase, and a dreaming phase. In enumeration, the system generates candidate programs to solve tasks
+
+=== Program representation
+
+Every program, primitive, and invented abstraction is an instance of the `Delta` class, i.e. it is an object that can be a node in an expression tree. A `Delta` is initialized with a `head` 
+
+The library of primitives is represented by an instance of the `Deltas` class. It's instantiated with `core` primitives (the initial primitives) and is enriched by `invented` abstractions 
 
 === Enumeration
 
@@ -95,6 +104,12 @@ components of intensionality:
 fn_0  [<class 'int'>, <class 'int'>, <class 'int'>, <class 'int'>] -> fn
       body: (fork (compose (wall_at $3 $2) (optimize (neg_dist $1) $0)) (sync_to_world $0))")
 
+== Type system
+
+Bare-string, monomorphic, first-order, exact-match. A type is either a ground string (`grid`, `int`, `dir`, or `coord`) or an arrow name (`fn`, `pair_gg`, `fn_p_g`, `fn_g_p`, `fn_p_p`, `fn_g_c`, `fn_gc_g`). Delta.arrow = (tuple(tailtypes), type) (dsl.py:716), and enumeration resolves a hole by possibles = D.bytype[tailtype] — a dict keyed on string identity (ecd.py:132). Invented abstractions get types by reading concrete hole types straight off the body via typize (ecd.py:506). There is no type variable and no unification anywhere.
+
+ 
+
 == Primitives
 
 `sync_to_world(w)` bakes in three choices
@@ -121,10 +136,24 @@ the curriculum scaffold:
 - obstacle → policy = (compose (wall_at) (seek))
 - desire → seek
 
-fn-rooted:
+A scene requires belief attribution iff the world and the agent's model must hold contradictory contents at the same frame, and something in the world is sensitive to the true content at that cell/time. unfold runs one fixed per-frame fn, so any "stamp a real wall / move the real goal / erase" rival corrupts that witness. 
 
 
 WITNESS false belief tasks, to avoid extensional explanations
+
+=== false belief
+
+Goal-displacement false belief (canonical Sally-Anne)
+- goal object visibly relocates in-world mid-episode (from location A to B) but the agent still heads to A. - solved by a program that posits that, in the agent's model, the goal is still at A. And then the derive runs on that model, so the agent navigates optimally wrt the goal being at A rather than B. 
+- it's different than the phantom-wall false belief: false belief about an object's location vs. about an obstacle
+- so fork generalizes about what the model is wrong about
+
+two agents, contradictory beliefs
+- two agents detour around different phantom walls
+- solved by `compose(fork(...), fork(...))`
+- 
+
+
 
 Physical: rising
 
@@ -273,8 +302,9 @@ With agent value `$0`, goal value `$1`, and percieved wall coordinates `($3, $2)
 
 the private model is born from `dup` in `fork` and collapsed by `sync`
 
-=== DSL where `fork` and `sync` are ATOMIC
+=== primitives where `fork` and `sync` are ATOMIC
 
+- `fork`
 - direction of information flow:
   - `sync_to_world` (read from model, then write to world): takes action based on model
   - `sync_to_model` (read from world, then write to model): percieves/records based on world 
@@ -295,7 +325,8 @@ the private model is born from `dup` in `fork` and collapsed by `sync`
 
 This is a general DSL of operations. If minimum description length still picks exactly the `read-model`, `write-world`, `single-av`, `attract`, `add-wall` sequence while the other tasks use other primitives, then the agency signature is genuinely found as a composition of primitives, it's not just forced by hardcoding which primitives are available
 
-=== DSL where `fork` and `sync` are DECOMPOSED
+=== library where `fork` and `sync` are DECOMPOSED
+
 
 
 - `fork` decomposed as `commit∘mapsnd(derive)∘dup`
@@ -307,6 +338,33 @@ This is a general DSL of operations. If minimum description length still picks e
 - symmetry witness
   - `swap`
   - `via_swap`
+
+the searcher exploited mapsnd's functoriality, finding (compose_gp (compose_gp dup (mapsnd (wall_at ..))) (mapsnd (optimize ..))) — i.e. mapsnd(g∘f) = mapsnd(g)∘mapsnd(f) — rather than mapsnd(compose(wall_at, optimize)). Equivalent, same node count, shared-av intact.
+
+Why specifically four
+
+There are two objects in this little category, `grid` and `pair`, so there are four arrows between them: `grid` $arrow$ `grid` (`fn`), `grid` $arrow$ `pair` (`fn_g_p`), `pair` $arrow$ `grid` (`fn_p_g`), and `pair` $arrow$ `pair` (`fn_p_p`). We use all four because we want `dup`, `mapsnd`, and the two composers to be separate, discoverable nodes.
+
+In a monomorphic DSL, the number of types is dual to how finely you decompose. Every type you delete = one combinator you must pre-fuse = one node you wanted discoverable that you've now re-hidden.
+
+
+Principled, but a bigger change — parametric polymorphism. All four function types are instances of one polymorphic arrow a → b, and compose/compose_gp/pipe_gpg are literally the same function compose : (a→b)→(b→c)→(a→c). The proliferation is purely an artifact of having no type variables. With Hindley–Milner-style types + unification (what DreamCoder actually does) you'd keep one →, one compose, and just dup : grid→pair, mapsnd : (grid→grid)→(pair→pair), sync : int→(pair→grid). The four strings collapse into the unifier's job. Cost: the enumerator is built on exact string-keyed bytype buckets; you'd have to replace those with unification at each step. That's the honest "right" simplification, but it's an enumerator rewrite, not a DSL tweak.
+
+why use types grid, pair_gg, fn_g_p, and fn_p_g when we could use grid, (grid, grid), grid -> (grid grid), and (grid, grid) -> grid?
+
+Because in this enumerator a type is nothing but an opaque hash key. The only thing the searcher ever does with a type is D.bytype[tailtype] — bucket primitives by exact equality of the type value (see infer, makepaths, groom, and isequal's n1.type == n2.type). Nothing ever parses or decomposes a type string.
+
+So the direct answer: 'fn_g_p' and the literal string 'grid -> (grid, grid)' are behaviorally identical. You could globally swap in the structural strings today and the run would be byte-for-byte the same — they're just longer, equally-opaque dict keys. The short names are an ergonomic, honest label for an atom; the structural notation would be cosmetic at best and misleading at worst, because it advertises structure the machinery doesn't honor (a reader would expect the checker to know (grid,grid)->grid is a function returning a grid, and it doesn't — it's one indivisible token).
+
+Three things make this precise:
+
+1. There already is structure, exactly one level deep — at the primitive signature. Each Delta carries arrow = (tuple(tailtypes), type). So sync_to_world really is typed (int,) -> fn_p_g structurally. What's atomic is the slot types — the return type and each argument type. fn_g_p/fn_p_g/fn_p_p are precisely those slot atoms.
+
+2. They're atoms because the arguments are higher-order. fork takes commit :: fn_p_g — the argument is itself a function value. For the flat bytype bucket to enumerate "things that produce a pair→grid function," that function type has to be a single token. fn_p_g is the reified name of the arrow (grid,grid)->grid so a first-class function can be a bucket key. Writing it as the structured (grid,grid)->grid only buys you something if argument slots are matched structurally rather than by equality — i.e., if the enumerator unifies type terms instead of hashing them.
+
+3. Structural notation is load-bearing only with unification. This is the same fork in the road as last time: ground (variable-free) structured types matched by structural equality are identical in power to atomic strings — you gain nothing until you add type variables. compose : (a->b) -> (b->c) -> (a->c) is the only thing that needs to look inside -> (to unify b), and that's what would collapse your four arrow-atoms + three composers into one -> and one compose. Without polymorphism, grid -> (grid, grid) is just a verbose alias for fn_g_p.
+
+So the choice isn't "named atoms vs. structural types" — it's "atoms-as-keys (cheap dict lookup, current) vs. structural-types-with-unification (parses ->/(,), enables one polymorphic compose)." The structural spelling without the unifying machinery is pure notation. Given you're at two objects and four arrows, the atoms are the right call; the structural representation earns its keep only once you add a HM-style checker, which is worth it only if the object/arrow count starts exploding.
 
 === tasks
 
@@ -466,15 +524,11 @@ goal:
 
 #pagebreak()
 
-== Implementation
+== arity-generalization: discovering the number of grids needed, discovering that you even need a private channel for belief
 
-`normalize`:
 
-Stitch names its newly discovered fragments `fn_0`, `fn_1`, etc. 
 
 #pagebreak()
-
-== arity-generalization: discovering the number of grids needed, discovering that you even need a private channel for belief
 
 #all-tasks()
 

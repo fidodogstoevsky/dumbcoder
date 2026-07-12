@@ -61,7 +61,6 @@ Run:
 import sys
 import math
 import re as _re
-import zlib as _zlib
 from collections import Counter
 from copy import deepcopy
 from concurrent.futures import ProcessPoolExecutor
@@ -70,7 +69,7 @@ import numpy as np
 import torch as th
 
 from ecd import (
-    Deltas, solve_enumeration, saturate_stitch, mat_key, normalize,
+    Deltas, solve_enumeration, saturate_stitch, mat_key, mat_key_id, normalize,
     _solve_one_task, _worker_init, _n_cpus_available,
     dream, dreamed_q,
 )
@@ -78,7 +77,7 @@ from dsl import (
     fn, fn_p_g, cellvalue, coord,
     unfold, unfold_with_template, tr, simplify, length,
     # used by check_decomposition_identities (phase 2)
-    compose, wall_at, optimize, neg_distance, step,
+    compose, wall_at, clear_at, optimize, neg_distance, step,
     fork, sync_to_world, fork_decomposed, register, locate, place,
 )
 
@@ -88,6 +87,7 @@ from tasks_minds import (
     make_physics_tasks, make_desire_tasks, make_belief_tasks,
     make_witness_belief_tasks,
     make_goal_displacement_tasks, make_dual_belief_tasks,
+    make_false_obstacle_belief_tasks,
     COMBOS, SIZE, DIRS,
 )
 from tasks_world import (
@@ -250,6 +250,16 @@ def _belief_gt_str(D, m):
         d2 = (f"(compose (wall_at c{m['pw2'][0]} c{m['pw2'][1]}) "
               f"(optimize (neg_dist {m['gv2']}) {m['av2']}))")
         return f"(compose {_forks(D, d1, _sync(D, m['av']))} {_forks(D, d2, _sync(D, m['av2']))})"
+    if 'real_wall' in m:                             # false about BOTH obstacle and goal:
+        # a REAL wall stays in the world, so on this scene NO scope complement reproduces
+        # x (verified at construction by _scope_complements_all_fail) — the commit can only
+        # be the literal sync_to_world(av).  Also carries displaced_to, so test it BEFORE
+        # the goal branch.  derive = _seq(clear real wall, stamp phantom, shove goal, seek).
+        wr, wc = m['real_wall']
+        pr, pc = m['pw']
+        derive = (f"(compose (compose (compose (clear_at c{wr} c{wc}) (wall_at c{pr} c{pc})) "
+                  f"(step {m['gv']} {m['dir']})) (optimize (neg_dist {m['gv']}) {m['av']}))")
+        return _forks(D, derive, _sync(D, m['av']))
     if 'displaced_to' in m:                          # false belief about the goal's location
         derive = (f"(compose (step {m['gv']} {m['dir']}) "
                   f"(optimize (neg_dist {m['gv']}) {m['av']}))")
@@ -407,7 +417,8 @@ def _side_by_side(grids, labels, gap='   ', indent='    '):
     return '\n'.join(indent + line for line in out)
 
 
-_BELIEF_VARIANTS = ['belief_wall', 'belief_witness', 'belief_goal', 'belief_dual']
+_BELIEF_VARIANTS = ['belief_wall', 'belief_witness', 'belief_goal', 'belief_dual',
+                    'belief_false_obstacle']
 
 
 def _sample_kind(m):
@@ -417,6 +428,8 @@ def _sample_kind(m):
         return m['kind']
     if 'pw2' in m:
         return 'belief_dual'
+    if 'real_wall' in m:                 # false about both obstacle and goal (before goal)
+        return 'belief_false_obstacle'
     if 'displaced_to' in m:
         return 'belief_goal'
     if 'aw' in m:
@@ -600,6 +613,13 @@ def _belief_progs(m):
         o1, e1 = one(d1, m['av'])
         o2, e2 = one(d2, m['av2'])
         return compose(o1, o2), compose(e1, e2)
+    if 'real_wall' in m:                             # false about BOTH obstacle and goal
+        # mirror _belief_gt_str's real_wall branch: clear real wall ▸ stamp phantom ▸
+        # shove goal ▸ seek.  Carries displaced_to too, so test it BEFORE the goal branch.
+        derive = compose(compose(compose(clear_at(*m['real_wall']), wall_at(*m['pw'])),
+                                 step(m['gv'], DIRS[m['dir']])),
+                         optimize(neg_distance(m['gv']), m['av']))
+        return one(derive, m['av'])
     if 'displaced_to' in m:                          # goal-displacement: false belief about the goal
         derive = compose(step(m['gv'], DIRS[m['dir']]),
                          optimize(neg_distance(m['gv']), m['av']))
@@ -705,8 +725,16 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     # and across two contradictory beliefs at once (dual).  See tasks_minds.py.
     gdb  = make_goal_displacement_tasks(n_belvar, COMBOS, seed=23)
     dual = make_dual_belief_tasks(n_belvar, COMBOS, seed=24)
-    print(f"  belief variants: +{len(gdb)} goal-displacement, +{len(dual)} dual "
-          f"(both kind=belief)")
+    # False-obstacle belief (kind=belief): wrong about BOTH the obstacle and the goal,
+    # with a REAL wall (value 3) left in the world.  Its construction forbids the
+    # scope-complement degeneracy — no sync_all / sync_except k reproduces the scene, so
+    # any solution MUST commit via the literal sync_to_world(av).  This is what lets the
+    # (A) disclosure say the agency commit was FORCED and found, not merely argued
+    # extensionally equivalent to it.  Needs cube primitives (clear_at, wall value 3).
+    fob  = make_false_obstacle_belief_tasks(n_belvar, COMBOS, seed=25) if cube else []
+    print(f"  belief variants: +{len(gdb)} goal-displacement, +{len(dual)} dual, "
+          f"+{len(fob)} false-obstacle (all kind=belief; false-obstacle forbids the "
+          f"scope-complement commit)")
 
     # ── curriculum scaffold (on by default; --no-curriculum to disable) ───────────
     # Witness-belief is deep — compose(fork(policy, sync), seek) — so its FIRST solve
@@ -764,7 +792,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                        + make_readout_tasks(n_corner, seed=17))
 
     # fn-rooted families share the `unfold` interpreter; pair families are fn_p_g.
-    fn_tasks = phys + des + ov + comet + bel + gdb + dual + scaffold + fn_corner
+    fn_tasks = phys + des + ov + comet + bel + gdb + dual + fob + scaffold + fn_corner
     reg_tasks = reg + pair_corner
 
     # dedupe across the whole corpus (identical mats would skew stitch counts)
@@ -813,6 +841,11 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     # reaches programs that were out of budget before — this is how belief (deep from
     # primitives) becomes reachable once its parts have been compressed into reuse.
     sols = {}
+    solve_round = {}          # mat_key -> the ECD round it was first solved (for corpus_dl.py)
+    # per-round per-task fn timings (mat_key, round, solved?, seconds), so solve_dynamics.py
+    # can chart the cumulative-solve S-curve and the per-task solve-time collapse (the
+    # ~t_fn miss in round r ↦ seconds in round r+1) that is otherwise only in the log text.
+    timing_log = []
     templates = {mat_key(x): m['template'] for x, m in reg_tasks}
     all_tasks = fn_tasks + reg_tasks
     n_total = len(all_tasks)
@@ -891,6 +924,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                 timings = {}
                 for k, sol, elapsed in pool.map(_solve_one_task, args):
                     timings[k] = (sol is not None, elapsed)
+                    timing_log.append((k, it, sol is not None, float(elapsed)))
                     if sol is not None:
                         sols[k] = sol
                 solved_t = [e for hit, e in timings.values() if hit]
@@ -898,12 +932,9 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                 max_solve = max(solved_t) if solved_t else 0.0
                 print(f"    per-task time (s): {len(solved_t)} solved"
                       + (f" [slowest solve {max_solve:.1f}]" if solved_t else ""), flush=True)
-                for k, (hit, e) in sorted(timings.items(), key=lambda kv: -kv[1][1]):
-                    # k is mat_key = (shape, raw bytes); print a compact shape+crc tag
-                    # instead of dumping the whole matrix as \x00… bytes.
-                    _tag = f"{k[0]}#{_zlib.crc32(k[1]) & 0xffffff:06x}"
-                    print(f"      {'OK ' if hit else 'MISS'} {e:6.1f}  {kind_by_key.get(k,'?'):16} {_tag}",
-                          flush=True)
+                # (per-task OK/MISS dump removed — it clogged slurm output; the full
+                # per-attempt table is persisted in timing_log/the run artifact and can
+                # be reconstructed offline if t_fn ever needs recalibrating.)
                 if miss_t and solved_t:
                     print(f"    (misses burned up to {max(miss_t):.1f}s each; the uniform "
                           f"--t-fn can drop toward slowest-solve={max_solve:.1f}s to cut "
@@ -913,6 +944,11 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                               timeout=t_reg, root_type=fn_p_g, templates=templates)
 
         n_solved = len(sols)
+        # stamp the round each newly-solved task first appeared (corpus_dl.py replays the
+        # cumulative sols solved through round r to reconstruct that round's library).
+        for k in sols:
+            if sols[k] is not None:
+                solve_round.setdefault(k, it)
         print(f"    solved {n_solved}/{n_total} (+{n_solved - n_before} this round)", flush=True)
 
         # joint stitch over ALL solutions; abstractions are registered in D and so
@@ -957,6 +993,16 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
             print(f"    dreaming: training recognition Q on {len(replays)} replays "
                   f"+ fantasies ({dream_iters} steps)…", flush=True)
             qmodel = dream(D, replays, training_Xs=fn_Xs, root_type=fn, n_iters=dream_iters)
+
+    # Persist this run's searched sols + library-rewritten programs so the MDL-margin
+    # figure can price belief against its rivals under the library SEARCH found here,
+    # not a ground-truth reconstruction (python mdl_margin.py --run <this file>).
+    save_run_artifact(D, all_tasks, sols, rewritten, decomposed, smoke)
+    # Per-round trajectory artifact: base-prim sols keyed by mat_key_id, tagged with the
+    # round each was first solved, so `python corpus_dl.py --run <this file>` can rebuild
+    # the corpus description-length curve (DreamCoder-style) round by round.
+    save_trajectory_artifact(D, all_tasks, sols, solve_round, decomposed, smoke,
+                             stitch_iters, ecd_iters, timing_log=timing_log)
 
     # ── (A) usage census: stitch-independent evidence about the bare parts ───────────
     print("\n" + "=" * 72)
@@ -1041,6 +1087,32 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         print(f"  extensionally identical (verified for every belief family).  It is the SAME")
         print(f"  fork-structured belief with the agency hole expressed on the goal rather than")
         print(f"  the actor, NOT a non-mental rival; counted as the agency commit above.")
+
+    # ── the degeneracy REMOVED: false-obstacle scenes force the literal commit ────────
+    # On a false-obstacle scene a REAL wall (value 3) stays in the world, so — verified
+    # per task at construction (_scope_complements_all_fail) — NO scope complement
+    # (sync_all, sync_except k for every world value k, incl. the wall) reproduces x.
+    # The commit therefore CANNOT be degenerate: any solution the search returns commits
+    # via the literal sync_to_world(av).  This is the disclosure's answer, not an
+    # argument: where the complement is genuinely available (minimal scenes) it is
+    # extensionally the agency commit; where it is excluded (here) the literal commit is
+    # the one that gets found.
+    fob_forms = [belief_form[mat_key(x)] for x, m in all_tasks
+                 if m['kind'] == 'belief' and 'real_wall' in m
+                 and mat_key(x) in belief_form]
+    n_fob = sum(1 for x, m in all_tasks if m['kind'] == 'belief' and 'real_wall' in m)
+    if n_fob:
+        n_fob_lit = sum(1 for f in fob_forms if f == 'literal')
+        n_fob_deg = sum(1 for f in fob_forms if f == 'degenerate')
+        print(f"\n  FORCED LITERAL COMMIT — false-obstacle family (degeneracy excluded by construction)")
+        print(f"  {len(fob_forms)}/{n_fob} false-obstacle tasks solved; commit forms: "
+              f"{n_fob_lit} literal, {n_fob_deg} degenerate.")
+        print(f"  Every solved one commits via the literal sync_to_world(av): no scope complement")
+        print(f"  reproduces these scenes (real wall stays put), so the agency commit is FORCED")
+        print(f"  and found — not merely argued extensionally equal to a cheaper complement.")
+        if n_fob_deg:
+            print(f"  WARNING: {n_fob_deg} classified degenerate — should be impossible here; "
+                  f"check _scope_complements_all_fail / _belief_commit_form.")
 
     # ── (A′) cube census: with the full symmetric field present, which corner did each family pick? ──
     cube_ok = None
@@ -1235,6 +1307,118 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     else:
         print("\n  => not fully demonstrated this run (raise timeouts / n_bel / stitch_iters,")
         print("     or drop --smoke).  Each False above localises what failed.")
+
+
+def save_run_artifact(D, all_tasks, sols, rewritten, decomposed, smoke,
+                      path=None):
+    """Persist a phase run's search output so `mdl_margin.py` can price belief against
+    its rivals under the library THIS RUN actually found, rather than re-deriving one
+    from ground truth.
+
+    We store, per solved task (keyed by a stable `mat_key_id`):
+      * `sols`      — the searched program, fully expanded to base primitives
+                      (`simplify(normalize(...))`, exactly the form fed to the joint
+                      stitch), in solve order.  Re-stitching these reproduces this run's
+                      final library deterministically.
+      * `rewritten` — that program rewritten through the final library (the searched
+                      program's library form — mdl_margin's "found_lib").
+    Plus `kinds` (for diagnostics) and the phase flags so the consumer rebuilds the
+    matching base DSL.  See mdl_margin.run(run_path=...).
+    """
+    import json
+    if path is None:
+        path = f"phase{2 if decomposed else 1}_run{'.smoke' if smoke else ''}.json"
+    key2id = {mat_key(x): mat_key_id(x) for x, _ in all_tasks}
+    kind_of = {mat_key(x): m['kind'] for x, m in all_tasks}
+    sols_ser, kinds_ser = {}, {}
+    for k, sol in sols.items():            # solve order → stitch input order
+        if sol is None or k not in key2id:
+            continue
+        kid = key2id[k]
+        sols_ser[kid] = str(simplify(normalize(sol)))
+        kinds_ser[kid] = kind_of[k]
+    rew_ser = {key2id[k]: s for k, s in rewritten.items()
+               if k in key2id and s}
+    out = {
+        'decomposed': bool(decomposed),
+        'smoke': bool(smoke),
+        'library': [d.repr for d in D.invented],
+        'n_solved': len(sols_ser),
+        'sols': sols_ser,
+        'rewritten': rew_ser,
+        'kinds': kinds_ser,
+    }
+    with open(path, 'w') as f:
+        json.dump(out, f, indent=1)
+    print(f"  wrote run artifact ({len(sols_ser)} solved programs) to {path}")
+    return path
+
+
+def save_trajectory_artifact(D, all_tasks, sols, solve_round, decomposed, smoke,
+                             stitch_iters, ecd_iters, path=None, timing_log=None):
+    """Persist the per-round SEARCH TRAJECTORY so `corpus_dl.py` can rebuild the corpus
+    description-length curve (DreamCoder-style: total DL of every solution under the
+    current library, plus the library's own cost, per ECD round).
+
+    We store, per solved task (keyed by a stable `mat_key_id`):
+      * `sol`    — the searched program expanded to base primitives (the exact form fed
+                   to the joint stitch), so corpus_dl can re-stitch the cumulative
+                   solved-through-round-r subset and reproduce that round's library.
+      * `kind`   — the task family (physics / desire / belief / world makers), for the
+                   per-family facet.
+      * `round`  — the ECD round the task was first solved (1-indexed).  A task solved in
+                   round r is present in the corpus from round r onward.
+
+    Because `saturate_stitch` resets and re-discovers the library from the fully-expanded
+    sols each call (see ecd.saturate_stitch), re-stitching the cumulative round-r subset
+    reproduces round r's library deterministically — the same reproducibility mdl_margin
+    relies on for the final round.  `stitch_iters` is recorded so corpus_dl compresses
+    with the same budget.
+
+    `timing_log` (optional) is the flat list of every fn enumeration attempt
+    (mat_key, round, solved?, seconds) gathered in the wake-sleep loop.  We serialise it
+    as `timings` so `solve_dynamics.py` can draw the cumulative-solve S-curve and the
+    per-task solve-time collapse (a belief task burns ~t_fn missing in the round before
+    its abstraction lands, then solves in seconds the next round) directly from the run —
+    the numbers that are otherwise only printed to the log.  fn_p_g (registration) tasks
+    go through `solve_enumeration`, which does not return per-task times, so they are
+    absent here; belief — the family the collapse is about — is an fn task and is present.
+    """
+    import json
+    if path is None:
+        path = f"phase{2 if decomposed else 1}_traj{'.smoke' if smoke else ''}.json"
+    key2id  = {mat_key(x): mat_key_id(x) for x, _ in all_tasks}
+    kind_of = {mat_key(x): m['kind'] for x, m in all_tasks}
+    tasks_ser = {}
+    for k, sol in sols.items():
+        if sol is None or k not in key2id:
+            continue
+        kid = key2id[k]
+        tasks_ser[kid] = {
+            'sol':   str(simplify(normalize(sol))),
+            'kind':  kind_of[k],
+            'round': int(solve_round.get(k, ecd_iters)),
+        }
+    timings_ser = [
+        {'id': key2id[k], 'kind': kind_of.get(k, '?'),
+         'round': int(rnd), 'solved': bool(hit), 'elapsed': float(sec)}
+        for (k, rnd, hit, sec) in (timing_log or []) if k in key2id
+    ]
+    out = {
+        'decomposed':   bool(decomposed),
+        'smoke':        bool(smoke),
+        'stitch_iters': int(stitch_iters),
+        'ecd_iters':    int(ecd_iters),
+        'n_rounds':     max([t['round'] for t in tasks_ser.values()], default=0),
+        'n_solved':     len(tasks_ser),
+        'tasks':        tasks_ser,
+        'timings':      timings_ser,
+    }
+    with open(path, 'w') as f:
+        json.dump(out, f, indent=1)
+    print(f"  wrote trajectory artifact ({len(tasks_ser)} solved programs, "
+          f"{out['n_rounds']} rounds) to {path}")
+    return path
 
 
 def cli_kwargs(argv):

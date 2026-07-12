@@ -1,0 +1,172 @@
+{
+ "phase": 1,
+ "decomposed": false,
+ "smoke": false,
+ "source": "phase1_run.json",
+ "library": [
+  "fn_6",
+  "fn_7",
+  "fn_8",
+  "fn_9",
+  "fn_10",
+  "fn_11"
+ ],
+ "agent_ctor": "fn_6",
+ "agent_ctor_uses": 50,
+ "n_solved_belief": 84,
+ "tiled": false,
+ "columns": [
+  "fn_6",
+  "fn_7",
+  "fn_8",
+  "fn_9",
+  "fn_10",
+  "fn_11"
+ ],
+ "combos": [
+  {
+   "gv": 1,
+   "av": 7,
+   "solved": 11,
+   "variants": [
+    "belief_goal",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_6": 4,
+    "fn_7": 0,
+    "fn_8": 0,
+    "fn_9": 0,
+    "fn_10": 5,
+    "fn_11": 2
+   }
+  },
+  {
+   "gv": 2,
+   "av": 1,
+   "solved": 9,
+   "variants": [
+    "belief_goal",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_6": 6,
+    "fn_7": 1,
+    "fn_8": 0,
+    "fn_9": 1,
+    "fn_10": 2,
+    "fn_11": 0
+   }
+  },
+  {
+   "gv": 4,
+   "av": 9,
+   "solved": 12,
+   "variants": [
+    "belief_goal",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_6": 8,
+    "fn_7": 2,
+    "fn_8": 0,
+    "fn_9": 1,
+    "fn_10": 3,
+    "fn_11": 0
+   }
+  },
+  {
+   "gv": 5,
+   "av": 4,
+   "solved": 12,
+   "variants": [
+    "belief_goal",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_6": 7,
+    "fn_7": 2,
+    "fn_8": 0,
+    "fn_9": 0,
+    "fn_10": 4,
+    "fn_11": 1
+   }
+  },
+  {
+   "gv": 6,
+   "av": 2,
+   "solved": 10,
+   "variants": [
+    "belief_goal",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_6": 6,
+    "fn_7": 2,
+    "fn_8": 0,
+    "fn_9": 2,
+    "fn_10": 2,
+    "fn_11": 0
+   }
+  },
+  {
+   "gv": 7,
+   "av": 6,
+   "solved": 10,
+   "variants": [
+    "belief_goal",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_6": 4,
+    "fn_7": 1,
+    "fn_8": 0,
+    "fn_9": 2,
+    "fn_10": 3,
+    "fn_11": 1
+   }
+  },
+  {
+   "gv": 8,
+   "av": 5,
+   "solved": 10,
+   "variants": [
+    "belief_goal",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_6": 8,
+    "fn_7": 4,
+    "fn_8": 0,
+    "fn_9": 1,
+    "fn_10": 0,
+    "fn_11": 1
+   }
+  },
+  {
+   "gv": 9,
+   "av": 8,
+   "solved": 10,
+   "variants": [
+    "belief_goal",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_6": 7,
+    "fn_7": 3,
+    "fn_8": 0,
+    "fn_9": 1,
+    "fn_10": 1,
+    "fn_11": 1
+   }
+  }
+ ]
+}

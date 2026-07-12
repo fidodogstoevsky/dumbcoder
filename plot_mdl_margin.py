@@ -34,14 +34,17 @@ VAR_COLOR = {
     'belief_witness': '#eb6834',   # slot 8 — orange
     'belief_goal':    '#1baf7a',   # aqua (used only if it ever gains competitors)
     'belief_dual':    '#4a3aa7',   # violet
+    'belief_false_obstacle': '#b8860b',  # dark goldenrod (forced-literal family)
 }
 VAR_LABEL = {
     'belief_wall':    'wall (phantom obstacle)',
     'belief_witness': 'witness (false belief + bystander)',
     'belief_goal':    'goal-displacement',
     'belief_dual':    'dual (contradictory beliefs)',
+    'belief_false_obstacle': 'false-obstacle (forced literal commit)',
 }
-VAR_ORDER = ['belief_wall', 'belief_witness', 'belief_goal', 'belief_dual']
+VAR_ORDER = ['belief_wall', 'belief_witness', 'belief_goal', 'belief_dual',
+             'belief_false_obstacle']
 
 INK, MUTED, GRID = '#0b0b0b', '#52514e', '#e6e6e2'
 
@@ -72,11 +75,12 @@ def _competitor_margins(rec_list):
     return lib, base, n_tasks, n_comp_tasks
 
 
-def _step(ax, margins, color, lw, alpha, zorder):
+def _step(ax, margins, color, lw, alpha, zorder, ls='-'):
     x, y = _ecdf(margins)
     xx = np.concatenate([[x[0]], x]); yy = np.concatenate([[0.0], y])
-    ax.step(xx, yy, where='post', color=color, lw=lw, alpha=alpha,
-            solid_capstyle='round', solid_joinstyle='round', zorder=zorder)
+    ax.step(xx, yy, where='post', color=color, lw=lw, alpha=alpha, ls=ls,
+            solid_capstyle='round', solid_joinstyle='round',
+            dash_capstyle='round', zorder=zorder)
 
 
 def _panel(ax, data):
@@ -94,37 +98,30 @@ def _panel(ax, data):
 
     for v in present:
         c = VAR_COLOR[v]
-        _step(ax, base[v], c, 1.5, 0.55, 2)          # base prims — honest lower bound
-        _step(ax, lib[v],  c, 2.4, 1.0, 4)           # final library — the headline
+        _step(ax, base[v], c, 1.7, 0.7, 2, ls='--')  # base prims — honest lower bound (dashed)
+        _step(ax, lib[v],  c, 2.4, 1.0, 4)           # final library — the headline (solid)
 
-    # variant identity + line-style, one combined legend in the empty centre-left
-    handles = [Line2D([0], [0], color=VAR_COLOR[v], lw=2.4, label=VAR_LABEL[v])
-               for v in present]
-    handles += [Line2D([0], [0], color=INK, lw=2.4, label='under the final library'),
-                Line2D([0], [0], color=INK, lw=1.5, alpha=0.6, ls='-',
-                       label='in base primitives')]
+    # One legend row per line ACTUALLY drawn, in that line's own colour and style, so the
+    # key maps one-to-one onto the axes: solid-bold = priced under the final library,
+    # dashed-faint = priced in base primitives (the honest lower bound).  A neutral style
+    # key was tried but read as a phantom grey series — with only belief_wall carrying
+    # non-mental competitors (the others are expressiveness-excluded, see the note), a
+    # per-line coloured legend is both shorter and unambiguous.
+    handles = []
+    for v in present:
+        c = VAR_COLOR[v]
+        handles.append(Line2D([0], [0], color=c, lw=2.4, ls='-',
+                              label="final library"))
+        #handles.append(Line2D([0], [0], color=c, lw=2.4, ls='-',
+        #                      label=f"{VAR_LABEL[v]} — final library"))
+        handles.append(Line2D([0], [0], color=c, lw=1.7, ls='--', alpha=0.75,
+                              label="base primitives"))
+        #handles.append(Line2D([0], [0], color=c, lw=1.7, ls='--', alpha=0.75,
+        #                      label=f"{VAR_LABEL[v]} — base primitives"))
     leg = ax.legend(handles=handles, loc='center left', fontsize=8.6, frameon=True,
                     framealpha=0.96, edgecolor=GRID, borderpad=0.7, labelspacing=0.5,
                     bbox_to_anchor=(0.02, 0.62))
     leg.set_zorder(6)
-    # gently distinguish the two style rows (base is the same hue at low alpha in the data)
-    for txt, h in zip(leg.get_texts()[len(present):], handles[len(present):]):
-        txt.set_color(MUTED)
-
-    # headline count (top-left) and the expressiveness-only note (lower-centre)
-    n_pairs = sum(len(v) for v in lib.values())
-    n_pos = sum(1 for v in lib.values() for m in v if m > 0)
-    ax.text(0.02, 0.96, f"{n_pos}/{n_pairs} competitor pairs\nlonger than the mental reading",
-            transform=ax.transAxes, fontsize=8.4, color=INK, ha='left', va='top', zorder=6,
-            bbox=dict(boxstyle='round,pad=0.35', fc='#eef4ea', ec='#cfe0c5', lw=1))
-
-    none_vars = [v for v in VAR_ORDER if v in n_tasks and not lib.get(v)]
-    if none_vars:
-        txt = ("no non-mental behavioural competitor\n(excluded by expressiveness alone):\n"
-               + "\n".join(f"  · {VAR_LABEL[v]} — {n_tasks[v]} tasks" for v in none_vars))
-        ax.text(0.98, 0.05, txt, transform=ax.transAxes, fontsize=8, color=MUTED,
-                ha='right', va='bottom', zorder=6,
-                bbox=dict(boxstyle='round,pad=0.4', fc='#faf9f6', ec=GRID, lw=1))
 
     ax.set_xlabel('description-length margin   DL(rival) − DL(found)   (nats)',
                   fontsize=9.5, color=MUTED)

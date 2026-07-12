@@ -1,0 +1,135 @@
+p3-ablate job 24372980
+
+[gkaminer@int5 dumbcoder]$ cat slurm_24372980.out
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+
+EnvironmentNameNotFound: Could not find conda environment: dumbcoder
+You can list all discoverable environments with `conda info --envs`.
+
+
+========================================================================
+ABLATION — atomic fork/sync_to_world REMOVED; stack is the only channel path
+========================================================================
+DSL: 35 primitives (no atomic fork / sync_to_world)
+  belief is now reachable ONLY via the depth-1 stack (base▸dup_top▸map_top▸
+  commit_top); a clean-original crossblur ONLY via the depth-2 height-3 stack.
+  physics/desire/overlay stay shallow — they bootstrap the stack-prefix
+  abstractions that make the deep belief/crossblur programs reachable.
+
+  4 physics, 16 desire, 4 overlay, 48 belief, 4 crossblur — 76 total
+  ground-truth check: 76 tasks reproduced through the ablated DSL
+
+SOLVE — wake-sleep over the ablated DSL (same machinery as the joint run)
+  enumerating on 32 workers (maxdepth=16, timeout=1200s)…
+
+--- round 1/6: 76 unsolved; |D|=35 (0 invented); Q=uniform/content ---
+[     4] caught (step 4 up)
+[     2] caught (step 1 right)
+[     4] caught (step 4 up)
+[     3] caught (optimize (neg_dist 2) 1)
+[     5] caught (step 4 down)
+[     3] caught (optimize (neg_dist 5) 4)
+[     3] caught (optimize (neg_dist 7) 6)
+[     3] caught (optimize (neg_dist 7) 6)
+[     3] caught (optimize (neg_dist 5) 4)
+[     3] caught (optimize (neg_dist 9) 8)
+[     3] caught (optimize (neg_dist 8) 5)
+[     3] caught (optimize (neg_dist 8) 5)
+[     2] caught (optimize (neg_dist 1) 7)
+[     2] caught (optimize (neg_dist 4) 9)
+[     3] caught (optimize (neg_dist 2) 1)
+[     3] caught (optimize (neg_dist 9) 8)
+[     3] caught (optimize (neg_dist 6) 2)
+[     3] caught (optimize (neg_dist 6) 2)
+[     2] caught (optimize (neg_dist 4) 9)
+[     2] caught (optimize (neg_dist 1) 7)
+[ 58552] caught (pipe_gsg (compose_gs (compose_gs (compose_gs base dup_top) (map_top (step 4 right))) (zip_top overlay)) peek)
+    solved 21/76 (+21 this round)
+running stitch_core.compress on 21 programs (iterations=8, max_arity=5)
+stitch returned 8 abstractions
+added abstraction fn_0: (optimize (neg_dist #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_1: (step 4)  [dir] -> fn
+skipping abstraction 'fn_2': (fn_0 2 1) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_3': (fn_0 5 4) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_4': (fn_0 7 6) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_5': (fn_0 9 8) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_6': (fn_0 6 2) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_7': (fn_0 8 5) — no typed holes found (partial application or unannotatable constant)
+    dreaming: training recognition Q on 21 replays + fantasies (800 steps)…
+0.02M params
+loss=3.16 nodes=32: 100%|██████████| 800/800 [00:08<00:00, 98.75it/s] 
+
+--- round 2/6: 55 unsolved; |D|=37 (2 invented); Q=dreamed ---
+[ 15232] caught (pipe_gsg (compose_gs (compose_gs (compose_gs base dup_top) (map_top (step 1 up))) (zip_top overlay)) peek)
+    solved 22/76 (+1 this round)
+running stitch_core.compress on 22 programs (iterations=8, max_arity=5)
+stitch returned 8 abstractions
+added abstraction fn_2: (optimize (neg_dist #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_3: (pipe_gsg (compose_gs (compose_gs (compose_gs base dup_top) (map_top (step #1 #0))) (zip_top overlay)) peek)  [dir, cellvalue] -> fn
+added abstraction fn_4: (step 4)  [dir] -> fn
+skipping abstraction 'fn_5': (fn_0 2 1) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_6': (fn_0 5 4) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_7': (fn_0 7 6) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_8': (fn_0 9 8) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_9': (fn_0 6 2) — no typed holes found (partial application or unannotatable constant)
+    dreaming: training recognition Q on 22 replays + fantasies (800 steps)…
+0.02M params
+loss=3.22 nodes=22:  13%|█▎        | 105/800 [00:01<00:06, 111.20it/s]/gpfs/home5/gkaminer/dumbcoder/ecd.py:1005: RuntimeWarning: invalid value encountered in divide
+  ps = ps / ps.sum()
+loss=2.73 nodes=22: 100%|██████████| 800/800 [00:07<00:00, 110.92it/s]
+
+--- round 3/6: 54 unsolved; |D|=38 (3 invented); Q=dreamed ---
+[    30] caught (fn_3 down 4)
+[    33] caught (fn_3 left 1)
+    solved 24/76 (+2 this round)
+running stitch_core.compress on 24 programs (iterations=8, max_arity=5)
+stitch returned 8 abstractions
+added abstraction fn_3: (pipe_gsg (compose_gs (compose_gs (compose_gs base dup_top) (map_top (step #1 #0))) (zip_top overlay)) peek)  [dir, cellvalue] -> fn
+added abstraction fn_4: (optimize (neg_dist #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_5: (step 4)  [dir] -> fn
+skipping abstraction 'fn_6': (fn_1 2 1) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_7': (fn_1 5 4) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_8': (fn_1 7 6) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_9': (fn_1 9 8) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_10': (fn_1 6 2) — no typed holes found (partial application or unannotatable constant)
+
+--- round 4/6: 52 unsolved; |D|=38 (3 invented); Q=uniform/content ---
+    solved 24/76 (+0 this round)
+running stitch_core.compress on 24 programs (iterations=8, max_arity=5)
+stitch returned 8 abstractions
+added abstraction fn_3: (pipe_gsg (compose_gs (compose_gs (compose_gs base dup_top) (map_top (step #1 #0))) (zip_top overlay)) peek)  [dir, cellvalue] -> fn
+added abstraction fn_4: (optimize (neg_dist #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_5: (step 4)  [dir] -> fn
+skipping abstraction 'fn_6': (fn_1 2 1) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_7': (fn_1 5 4) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_8': (fn_1 7 6) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_9': (fn_1 9 8) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_10': (fn_1 6 2) — no typed holes found (partial application or unannotatable constant)
+    no new tasks solved this round — stopping.
+
+------------------------------------------------------------------------
+ABLATION RESULT — solved THROUGH the stack (reachability of arity-≥1 programs)
+------------------------------------------------------------------------
+  physics    4/4 solved via stack   arity 0×4
+  desire     16/16 solved via stack   arity 0×16
+  overlay    4/4 solved via stack   arity 1×4
+  belief     0/48 solved via stack   (none found)
+  crossblur  0/4 solved via stack   (none found)
+
+  belief solved via the depth-1 stack path                 : False
+  crossblur solved via a depth-2 (arity-2) stack program    : False
+  => stack programs not reached within the timeout — inconclusive; raise budgets.

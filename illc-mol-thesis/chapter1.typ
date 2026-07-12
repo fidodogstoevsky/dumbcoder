@@ -1,8 +1,19 @@
 #import "@preview/illc-mol-thesis:0.2.0": *
 
-#mol-chapter("Origins of Knowledge")
+#mol-chapter("Debate on how ToM is acquired")
 
 == Theory of Mind
+
+=== premack chimpanzee paper
+
+
+
+
+need the definition of mental state
+
+Human are able to 
+
+ @margolis_oxford_2012
 
 ability to theorize about minds, to see entities as rational agents, to attribute beliefs, desires, and intentions to them
 
@@ -25,4 +36,4 @@ assocationism/connectionism
 - theory theory
 - child as scientist
 
-
+#load-bib(read("references.bib"))

@@ -564,19 +564,37 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
 
     # Parse stitch's rewritten programs as the new compressed tree corpus.
     # For programs referencing skipped abstractions, inline-expand them first.
+    #
+    # Two lists with DIFFERENT contracts:
+    #   * new_trees    — successfully-parsed trees for Q training; order irrelevant,
+    #                    so parse failures are simply dropped.
+    #   * rewritten_out— ONE ENTRY PER INPUT, positionally aligned with `trees`
+    #                    (hence with both callers' `sol_keys`, which zip this list
+    #                    against them by position).  A parse failure must NOT shorten
+    #                    this list or every later key silently binds to the wrong
+    #                    program; on failure we keep the base-primitive input form
+    #                    (a valid identity rewrite referencing no abstraction token),
+    #                    which preserves alignment and stays parseable for the
+    #                    usage-census / constructor-specificity consumers.
+    assert len(result.rewritten) == len(programs), (
+        f"stitch returned {len(result.rewritten)} rewritten programs for "
+        f"{len(programs)} inputs — cannot align rewrites to solution keys")
     new_trees = []
-    for prog_str in result.rewritten:
+    rewritten_out = []
+    for prog_str, base_str in zip(result.rewritten, programs):
         expanded = expand_skipped(remap_names(prog_str))
         try:
             tree = tr(D, expanded)
             freeze(tree)
             new_trees.append(tree)
+            rewritten_out.append(str(tree))
         except Exception as e:
             if expanded != prog_str:
                 print(f"could not parse rewritten program '{prog_str}' "
                       f"(expanded: '{expanded}'): {e}")
             else:
                 print(f"could not parse rewritten program '{prog_str}': {e}")
+            rewritten_out.append(base_str)
 
     # Fall back to original trees for Q training if most rewrites failed to parse
     # (stitch often references abstractions that were skipped, making rewrites unparseable)
@@ -585,7 +603,7 @@ def saturate_stitch(D, sols, iterations=10, max_arity=6):
     # programs through this same library (rewrite_through_library).
     D._stitch_result = result
     D._stitch_name_map = registered_name_map
-    return training_trees, [str(t) for t in new_trees]
+    return training_trees, rewritten_out
 
 
 def rewrite_through_library(D, program_strs):
@@ -914,6 +932,12 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
 
 def mat_key(x):
     return (x.shape, x.tobytes())
+
+
+def mat_key_id(x):
+    "Stable hex id for a task matrix — a JSON-serialisable form of `mat_key` (same x → same id)."
+    import hashlib
+    return hashlib.sha1(repr(x.shape).encode() + x.tobytes()).hexdigest()
 
 
 class MatRecognitionModel(nn.Module):

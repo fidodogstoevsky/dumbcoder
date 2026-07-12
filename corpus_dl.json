@@ -1,0 +1,128 @@
+{
+ "decomposed": false,
+ "phase": 1,
+ "smoke": false,
+ "n_rounds": 4,
+ "n_tasks": 200,
+ "family_counts": {
+  "physics": 4,
+  "desire": 16,
+  "world": 96,
+  "belief": 84
+ },
+ "signature_round": 1,
+ "signature_drop": 834.5171165466309,
+ "final_library": [
+  "fn_0",
+  "fn_1",
+  "fn_2",
+  "fn_3",
+  "fn_4",
+  "fn_5"
+ ],
+ "rounds": [
+  {
+   "round": 0,
+   "n_invented": 0,
+   "invented": [],
+   "n_solved": 0,
+   "corpus_dl": 3209.361452102661,
+   "library_cost": 0.0,
+   "total_dl": 3209.361452102661,
+   "by_family": {
+    "physics": 22.53915786743164,
+    "desire": 115.90763854980469,
+    "world": 959.803653717041,
+    "belief": 2111.111001968384
+   }
+  },
+  {
+   "round": 1,
+   "n_invented": 6,
+   "invented": [
+    "fn_0",
+    "fn_1",
+    "fn_2",
+    "fn_3",
+    "fn_4",
+    "fn_5"
+   ],
+   "n_solved": 132,
+   "corpus_dl": 2177.6519680023193,
+   "library_cost": 48.3746452331543,
+   "total_dl": 2226.0266132354736,
+   "by_family": {
+    "physics": 25.015316009521484,
+    "desire": 114.72190856933594,
+    "world": 761.320858001709,
+    "belief": 1276.593885421753
+   }
+  },
+  {
+   "round": 2,
+   "n_invented": 6,
+   "invented": [
+    "fn_0",
+    "fn_1",
+    "fn_2",
+    "fn_3",
+    "fn_4",
+    "fn_5"
+   ],
+   "n_solved": 170,
+   "corpus_dl": 2100.1200790405273,
+   "library_cost": 46.33442425727844,
+   "total_dl": 2146.454503297806,
+   "by_family": {
+    "physics": 25.015316009521484,
+    "desire": 114.72190856933594,
+    "world": 788.9518795013428,
+    "belief": 1171.4309749603271
+   }
+  },
+  {
+   "round": 3,
+   "n_invented": 6,
+   "invented": [
+    "fn_0",
+    "fn_1",
+    "fn_2",
+    "fn_3",
+    "fn_4",
+    "fn_5"
+   ],
+   "n_solved": 195,
+   "corpus_dl": 2048.604242324829,
+   "library_cost": 53.39918327331543,
+   "total_dl": 2102.0034255981445,
+   "by_family": {
+    "physics": 25.015316009521484,
+    "desire": 125.81227111816406,
+    "world": 860.9780941009521,
+    "belief": 1036.7985610961914
+   }
+  },
+  {
+   "round": 4,
+   "n_invented": 6,
+   "invented": [
+    "fn_0",
+    "fn_1",
+    "fn_2",
+    "fn_3",
+    "fn_4",
+    "fn_5"
+   ],
+   "n_solved": 200,
+   "corpus_dl": 2019.8373928070068,
+   "library_cost": 55.96413254737854,
+   "total_dl": 2075.8015253543854,
+   "by_family": {
+    "physics": 25.015316009521484,
+    "desire": 125.81227111816406,
+    "world": 860.9780941009521,
+    "belief": 1008.0317115783691
+   }
+  }
+ ]
+}

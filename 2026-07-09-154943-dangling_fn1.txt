@@ -1,0 +1,215 @@
+▗ ▗   ▖ ▖  Claude Code v2.1.205
+           Opus 4.8 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/mol/s26/dumbcoder
+
+ ▎ Extended: Fable 5 is included in your weekly limit
+ ▎ Through July 12, you can use up to 50% of your weekly usage limit on Fable 5. If you hit your limit, you can continue on Fable 5 with usage credits. Fable 5 draws down usage faster than Opus 4.8. Run /model and select Fable to use it. Learn more (https://support.claude.com/en/articles/15424964-claude-fable-5-promotional-access)
+
+❯ /model                                                                        
+  ⎿  Set model to Opus 4.8 and saved as your default for new sessions
+
+❯ fable says: normalize (dsl.py:1006) expands an invented token only by walking 
+  its hiddentail. In round 2, enumeration produced a solution that used         
+  round-1's fn_1. That token was supposed to be inlined to primitives by        
+  normalize(s) (ecd.py:315) before stitch sees it — the whole point of the      
+  comment at ecd.py:306–312 ("stitch sees only primitive operations — no fn_i   
+  tokens"). In this case it slipped through: the fn_1 node reached stitch's     
+  corpus as an opaque atom, stitch treated it as a primitive, and baked it into 
+  the new abstraction body.                                                     
+                                                                                
+  You can confirm it's a leftover and not a this-round discovery from the remap 
+  at ecd.py:486–490: any this-round stitch-internal fn_1 would be rewritten     
+  fn_1 → fn_7 (offset +6). The body still literally says fn_1, so it was never  
+  in this round's discovery-index range — it's the round-1 token.               
+                                                                                
+  And critically: fn_1 is not in the final library (which is fn_6–fn_11). So    
+  fn_10's body (fn_1 …) is a dangling reference — it points at a name D no      
+  longer contains. This is exactly the naming-collision hazard the ecd.py:306   
+  comment is trying to prevent, and it means normalize's expansion isn't fully  
+  covering enumerated solutions that reuse prior-round abstractions.            
+                                                                                
+  That's worth checking, because it's a latent bug, not just cosmetics: if any  
+  downstream step (todelta/tr, the MDL-margin pricing, or                       
+  rewrite_through_library) tries to evaluate or re-parse fn_10, that fn_1 won't 
+  resolve. If these bodies are only ever printed for the report it's harmless   
+  — but I'd verify whichever path consumes the final library actually inlines   
+  or drops those references. . So trace where fn_10's body gets consumed and    
+  whether the dangling fn_1 actually breaks anything                            
+
+⏺ I'll trace this. Let me look at the key code paths and the actual artifacts.
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ Let me see the rest of the registration loop and how the library is
+  emitted/consumed.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+⏺ Now let me look at the actual library content to confirm the dangling
+  reference and find what consumes it.
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+⏺ The rewritten corpus uses fn_10 (20×/35×) but the bodies aren't in the JSON.
+  Let me find where the library bodies live and how they're consumed. Let me
+  check the phase driver and where todelta/rewrite paths touch invented bodies.
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ The JSON only stores names ([d.repr for d in D.invented]), not bodies — so the
+  bodies live only at runtime. The key question is what fn_10's body actually
+  contains and whether anything evaluates it. Let me look at the ECD round loop,
+  D.reset, and how the library is reconstructed downstream.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+⏺ D.reset didn't show up. Let me find it and see the ECD round's stitch call.
+
+  Searched for 1 pattern, ran 2 shell commands (ctrl+o to expand)
+
+⏺ D.reset isn't in dsl.py. Let me locate it and the Deltas class.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Now I understand the reset mechanics: saturate_stitch does D.reset() each
+  round, so the final library (fn_6–fn_11) is round-2's stitch, and
+  n_already_invented=6 is round-1's count. Let me reconstruct the actual round-2
+  library from the saved sols and inspect fn_10's body directly — that's
+  exactly what the downstream consumers do.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Let me look at what the saved sols strings actually contain — whether they
+  carry fn_ tokens — and reproduce the reconstruction path that mdl_margin uses.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Saved sols are fully primitive — so the reconstruction path
+  (mdl_margin/corpus_dl) never sees a fn_ token in its input; it re-stitches
+  from scratch with a fresh D. Let me run that exact reconstruction and check
+  every invented body for a dangling fn_ reference, then exercise _dl and
+  rewrite_through_library.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The reconstruction is fully self-consistent — every inner fn_ reference
+  (fn_3→fn_1, fn_4→fn_0/fn_1, fn_5→fn_1) resolves within the library. No stray
+  references. This is the path mdl_margin and corpus_dl actually use. Now let me
+  find where fable actually observed fn_10's body with a literal fn_1 — likely
+  a run log.
+  Searched for 2 patterns, listed 1 directory (ctrl+o to expand)
+
+⏺ The only committed log with bodies is round-1 (offset 0). fable's table (lines
+  72/91) shows fn_10 usage counts, not its body — so fable's "body literally
+  says fn_1" came from a live session, not a committed artifact. Let me nail
+  down the two remaining things: (1) confirm _dl/rewrite_through_library
+  actually succeed on the reconstructed library, and (2) check every consumer of
+  the run's in-memory bodies in experiment.py.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The reconstruction's nested references price and rewrite cleanly. Now let me
+  verify the run-side consumers in experiment.py — save_run_artifact (does it
+  normalize sols to primitives?) and _belief_ctor_in_D (does it evaluate
+  bodies?).
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+⏺ Key finding on the run side: _belief_ctor_in_D (the one run-side consumer that
+  touches invented bodies) calls str(simplify(normalize(deepcopy(d)))) — it
+  walks the hiddentail object graph, not names in D. Let me confirm the decisive
+  property: that normalize fully expands a program using a nested invented
+  token (the exact mechanism fable doubts), and that a registered body can't
+  hold an unresolved name.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I've traced every consumption path and reproduced the reconstruction. Here's
+  what I found.
+
+  Bottom line
+
+  The dangling fn_1 breaks nothing, in any consumer — and the code structurally
+  prevents it from ever being a live unresolved reference in a registered
+  abstraction. fable correctly identified a cosmetic artifact but mis-diagnosed
+  it as a latent bug.
+
+  The load-bearing fact: bodies are resolved object graphs, not lazy names
+
+  When an abstraction is registered, its body is parsed with hiddentail = tr(D, 
+  body_str) (ecd.py:499) and the result is a Delta object graph with every 
+  child's hiddentail already baked in. Nothing downstream ever re-looks-up a
+  child by name in D. Consequences:
+
+  - A name missing from the final library D is at most a cosmetic repr in
+  str(d); it is never consulted during evaluation or normalization.
+  - A registered abstraction cannot carry an unresolved reference: registration
+  requires tr(D, body_str) to succeed (ecd.py:498–504), which requires every
+  token to resolve in D at that moment; a token that doesn't resolve throws →
+  the abstraction is skipped (skipped_bodies[name]=…; continue) and never enters
+  the library. Since fn_10 is in the library, its body parsed cleanly.
+
+  I verified this: every one of the reconstructed bodies re-parses under D, and
+  a program using the most deeply-nested abstraction (fn_4, whose body nests
+  both fn_1 and fn_0) normalizes to pure primitives with zero stray fn_ tokens.
+
+  Where fn_10's body actually gets consumed
+
+  Run side (experiment.py), the in-memory library:
+  1. save_run_artifact (experiment.py:1291–1298) serializes [d.repr for d in 
+  D.invented] — names only. Bodies are never written. sols are saved as
+  str(simplify(normalize(sol))) — I confirmed all 200/186 saved solutions are
+  100% primitive, no fn_ tokens. So nothing dangling reaches disk.
+  2. _belief_ctor_in_D (experiment.py:142) does
+  str(simplify(normalize(deepcopy(d)))) — walks the object graph, resolves
+  fully. This is the only run-side reader that touches bodies.
+  3. Report tables (fable's log lines 72/91) print usage counts and repr names.
+
+  Downstream (mdl_margin.py, corpus_dl.py), separate processes: they read the
+  primitive sols from disk and re-stitch from scratch with a fresh D
+  (n_already_invented=0), producing a self-consistent library fn_0–fn_5 whose
+  nested references (fn_3→fn_1, fn_4→fn_0/fn_1, fn_5→fn_1) all resolve. I ran
+  _dl and rewrite_through_library on programs that use those nested abstractions
+  — all succeed. This path never sees the run's fn_10 body at all; _remap_names
+  just renames the run's fn_6–fn_11 tokens in the saved rewritten strings onto
+  the freshly-reconstructed names.
+
+  On fable's specific claim
+
+  fable's table (log lines 72/91) shows fn_10 usage counts, not its body — the
+  "body literally says fn_1" came from a live session I can't see, and it isn't
+  reproducible from committed code + artifacts, because:
+
+  - saturate_stitch calls D.reset() (ecd.py:317) before re-registering, so
+  round-1's fn_1 is gone from D during round-2 registration. A body string
+  literally containing fn_1 would fail tr() → be skipped, not registered as
+  fn_10.
+  - A this-round fn_1 token is rewritten fn_1→fn_7 by the remap loop
+  (ecd.py:488–491, range(6)) before parse. So it can't survive as literal fn_1
+  either.
+
+  What fable most likely saw is str(fn_10.hiddentail) printing a child node's 
+  repr. In my offset-0 reconstruction str(fn_3.hiddentail) legitimately prints
+  (fork (fn_1 …) …) because the child is library member fn_1. With the run's +6
+  offset that child is fn_7 and prints fn_7. Either way it's a resolved,
+  self-contained object — cosmetic naming, not a dangling pointer.
+
+  The one thing genuinely worth a guard (defense-in-depth, not an active bug)
+
+  fable's broader worry — "normalize isn't fully covering enumerated solutions
+  that reuse prior-round abstractions" — is empirically false here: the saved
+  sols include round-2 solutions found against a library containing fn_0–fn_5,
+  and every one normalized to primitives.
+
+  But the remap at ecd.py:488–491 does blindly rewrite any fn_i (i in
+  range(n_abstractions)) in the body string. If normalize ever did leak a
+  prior-round token whose index happened to fall in that range, it would be
+  silently misremapped to the wrong this-round token — a semantic corruption
+  with no crash. So the correctness of the final library rests entirely on
+  normalize never leaking (which holds), with no assertion backstopping it. If
+  you want a cheap belt-and-suspenders: assert not re.search(r'fn_\d+', str(t))
+  on the trees fed to stitch at ecd.py:316 — it would turn any future normalize
+  regression into a loud failure instead of a silent conflation. That's the only
+  actionable item, and it's a guard, not a fix.
+
+✻ Worked for 6m 23s

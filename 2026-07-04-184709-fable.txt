@@ -1,0 +1,454 @@
+▗ ▗   ▖ ▖  Claude Code v2.1.198
+           Fable 5 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/mol/s26/dumbcoder
+
+ ▎ Fable 5 is back.
+ ▎ Until July 7, you can use up to 50% of your plan's weekly usage limit on Fable 5. If you hit your limit, you can continue on Fable 5 with usage credits. Fable 5 draws down usage faster than Opus 4.8. Learn more (https://support.claude.com/en/articles/15424964-claude-fable-5-promotional-access)
+
+❯ /clear                                                                        
+
+❯ /model                                                                        
+  ⎿  Set model to Fable 5 and saved as your default for new sessions
+
+❯ I ran phase1 and got the following, what should I do next? phase 1 job        
+  24371267                                                                      
+                                                                                
+  Generating mixed corpus…                                                      
+    belief variants: +24 goal-displacement, +24 dual (both kind=belief)         
+    [curriculum] +24 plain-belief scaffold tasks (kind=belief_scaffold) to seed 
+  the fork(policy, sync) abstraction; excluded from the witness-belief          
+  verdict.                                                                      
+    4 physics, 16 desire, 4 overlay, 4 comet, 4 registration, 96 belief — 236   
+  total                                                                         
+    corner families: 4 flee, 4 deletion, 4 denoise, 48 obstacle, 4 underlay, 4  
+  perception, 4 multi_reg, 4 reg_except, 4 inpaint, 4 readout                   
+                                                                                
+  DSL: 37 primitives — CUBE run (core + symmetric complements)                  
+    added corners: ['bimap', 'clear_at', 'distance', 'dup', 'erase', 'locate',  
+  'mapfst', 'mapsnd', 'pair_blank', 'place', 'register', 'snd_gg', 'swap',      
+  'sync_all', 'sync_except', 'sync_to_model', 'underlay', 'via_swap']           
+    ground-truth check: 236 tasks verified via Delta trees                      
+                                                                                
+  ========================================================================      
+  WAKE-SLEEP — up to 4 ECD rounds (enumerate ↦ joint stitch), 32 workers        
+    fn Q: dreamed recognition model (replays + fantasies); registration Q:      
+  uniform                                                                       
+  ========================================================================      
+                                                                                
+  --- round 1/4: 212 fn + 24 fn_p_g unsolved; |D|=37 (0 invented); fn           
+  Q=uniform/content ---                                                         
+      [instr] agency constructor in D: ABSENT; belief solved (replay-eligible): 
+  0/96                                                                          
+  [     4] caught (step 4 up)                                                   
+  [     2] caught (step 1 right)                                                
+  [     4] caught (step 4 up)                                                   
+  [    13] caught (optimize (neg_dist 5) 4)                                     
+  [    13] caught (optimize (neg_dist 5) 4)                                     
+  [    13] caught (optimize (neg_dist 7) 6)                                     
+  [    13] caught (optimize (neg_dist 9) 8)                                     
+  [    13] caught (optimize (neg_dist 9) 8)                                     
+  [    13] caught (optimize (neg_dist 6) 2)                                     
+  [    13] caught (optimize (neg_dist 6) 2)                                     
+  [    13] caught (optimize (neg_dist 8) 5)                                     
+  [    13] caught (optimize (neg_dist 8) 5)                                     
+  [    12] caught (optimize (neg_dist 1) 7)                                     
+  [    12] caught (optimize (neg_dist 1) 7)                                     
+  [    12] caught (optimize (neg_dist 4) 9)                                     
+  [    12] caught (optimize (neg_dist 4) 9)                                     
+  [     5] caught (step 4 down)                                                 
+  [    13] caught (optimize (neg_dist 2) 1)                                     
+  [    13] caught (optimize (neg_dist 2) 1)                                     
+  [    13] caught (optimize (neg_dist 7) 6)                                     
+  [   141] caught (fork (step 4 right) overlay)                                 
+  [   149] caught (fork (step 1 left) overlay)                                  
+  [   165] caught (fork (step 4 down) overlay)                                  
+  [   157] caught (fork (step 1 up) overlay)                                    
+  [   289] caught (fork (optimize (neg_dist 8) 5) overlay)                      
+  [   289] caught (fork (optimize (neg_dist 6) 2) overlay)                      
+  [   289] caught (fork (optimize (neg_dist 2) 1) overlay)                      
+                                                                                
+  ──── (735 lines hidden) ───────────────────────────────────────────────────── 
+  s)×4                                                                          
+      obstacle      fn_9×27, fn_10×21                                           
+      underlay      (bare prims)×4                                              
+      perception    (bare prims)×4                                              
+      multi_reg     (bare prims)×4                                              
+      reg_except    (bare prims)×4                                              
+      inpaint       (bare prims)×4                                              
+      readout       (bare prims)×4                                              
+                                                                                
+  ========================================================================      
+  (B′) ABSTRACTION GENERALITY — does seek/policy carry holes for (gv, av)?      
+  ========================================================================      
+                                                                                
+    desire: 8 distinct (gv,av) combos solved & rewritten                        
+      fn_7 [seek]  reused by 8/8 combos  holes=2                                
+          body: (optimize (neg_dist $0) $1)                                     
+                                                                                
+    obstacle: 8 distinct (gv,av) combos solved & rewritten                      
+      fn_9 [policy]  reused by 8/8 combos  holes=4                              
+          body: (compose (wall_at $3 $2) (optimize (neg_dist $1) $0))           
+      fn_10 [policy]  reused by 7/8 combos  holes=4                             
+          body: (compose (optimize (neg_dist $3) $2) (wall_at $1 $0))           
+                                                                                
+    belief: 8 distinct (gv,av) combos solved & rewritten                        
+      fn_8 [policy]  reused by 8/8 combos  holes=4                              
+          body: (fork (compose (wall_at $1 $0) (optimize (neg_dist $2) $3))     
+  (sync_to_world $3))                                                           
+      fn_7 [seek]  reused by 7/8 combos  holes=2                                
+          body: (optimize (neg_dist $0) $1)                                     
+      fn_11 [seek]  reused by 6/8 combos  holes=2                               
+          body: (fork (compose (optimize (distance $0) $0) (optimize (neg_dist  
+  $0) $1)) (sync_to_world $1))                                                  
+      fn_6 [seek]  reused by 5/8 combos  holes=3                                
+          body: (fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world   
+  $0))                                                                          
+                                                                                
+    distinct belief (gv,av) combos in corpus            : 8                     
+    widest combo-span of one OBSTACLE policy (leading)  : 8                     
+    widest combo-span of one belief seek/policy (confirm): 8                    
+    => policy GENERALIZES into belief: one abstraction serves multiple combos   
+  via                                                                           
+       holes — belief's skeleton is genuinely shallow.                          
+                                                                                
+  ========================================================================      
+  VERDICT                                                                       
+  ========================================================================      
+    (A) parts are general    : fork∉belief-only=True, sync∉belief-only=True,    
+  wall∉belief-only=True                                                         
+    (A) only agency is unique: fork∧sync unique to belief=True, belief          
+  recombines=True, wall-based=True                                              
+    (B) constructor invented : True (shared agency hole: True)                  
+    (B) constructor is belief-specific: used by belief=True, absent from        
+  non-mental=False                                                              
+    (A′) cube: belief picks the lone asymmetric corner over the full field:     
+  False                                                                         
+                                                                                
+    => not fully demonstrated this run (raise timeouts / n_bel / stitch_iters,  
+       or drop --smoke).  Each False above localises what failed.               
+
+⏺ Let me look at the phase‑1 driver and the verdict logic to pin down exactly
+  which checks failed and what knobs exist before recommending anything.
+
+  Searched for 4 patterns, read 2 files, listed 1 directory (ctrl+o to expand)
+
+⏺ The run actually succeeded scientifically — both False flags in the verdict
+  are accounting bugs in experiment.py's reporting, not search failures. You
+  don't need bigger timeouts or more belief tasks; you need two small fixes to
+  the verdict checks, then a re-run (solutions aren't persisted, so the verdict
+  can't be recomputed offline).
+
+  Failure 1: constructor is belief-specific: absent from non-mental=False
+
+  The constructor fn_8 was flagged as used by a "non-mental" family — but that
+  family is the curriculum scaffold. The check at experiment.py:1202 iterates
+  all_tasks with m['kind'] != 'belief', which sweeps in the 24 belief_scaffold
+  tasks. Those are plain-belief tasks by construction (fork(wall-policy, sync)),
+  so their rewritten programs legitimately contain fn_8. The scaffold was
+  supposed to be excluded from the verdict (the corpus generator says so at
+  experiment.py:717, and agency_unique at line 1009 does exclude it by iterating
+  _ALL_KINDS, which omits belief_scaffold) — this one check just wasn't given
+  the same exclusion. Fix:
+
+  nonmental_free_of_ctor = bool(ctor_name) and not any(
+      ctor_name in _absts_in(rewritten.get(mat_key(x), ''))
+      for x, m in all_tasks if m['kind'] not in ('belief', 'belief_scaffold')
+  )
+
+  Failure 2: cube: belief picks the lone asymmetric corner: False
+
+  belief_avoids_complements failed because of distance×11 in belief's cube
+  census. Those 11 solves are goal-displacement tasks: the searcher displaces
+  the goal on the private copy via optimize (distance gv) gv instead of the
+  ground truth's step, then seeks and commits only the agent (that's fn_11's
+  body). This is consistent with your own design: belief_is_wall_based at line
+  1017 deliberately excludes displaced_to tasks because that family isn't
+  wall-based — but the (A′) census loop at line 1048 doesn't exclude them, so
+  their distance use gets counted against belief. Since the wall-based check
+  passed for everything else, all 11 distance uses must come from displaced_to
+  tasks. Fix: skip them in the census the same way (A) does, e.g. in the loop at
+  line 1048:
+
+  if m['kind'] == 'belief' and 'displaced_to' in m:
+      continue   # goal-displacement's derive is a displaced goal, not the wall 
+  corner (see (A))
+
+  (or subtract distance in _canon_belief_uses for displaced tasks, if you'd
+  rather keep them visible in the printed census).
+
+  Everything else already passed. Constructor invented with the shared agency
+  hole ($3 as actor and committer), fork/sync/wall each general, fork∧sync
+  unique to belief, fn_9's policy spanning all 8 obstacle combos and fn_8 all 8
+  belief combos. With the two fixes, this exact run's results would print the
+  full success verdict.
+
+  Two secondary observations for the re-submit:
+
+  - 45/96 belief tasks remain unsolved and round 4 (uniform Q) solved 0 —
+  wake-sleep stalled. That doesn't affect any verdict criterion, but each of
+  those misses burns the full 1200 s per round. Since round 4 contributes
+  nothing, you could drop to 3 ECD rounds, and per the run's own hint the
+  uniform --t-fn can come down toward ~1170 s without losing a solve — together
+  that's a substantial wall-clock cut on the cluster.
+  - If you do want more belief coverage for (B′), raising --t-fn is the lever,
+  not more rounds — the round-3→4 transition shows the dreamed Q was still
+  finding solutions when the uniform round stalled.
+
+  Want me to apply the two edits to experiment.py?
+
+✻ Sautéed for 2m 54s
+
+❯ so only solving 45/96 belief tasks is sufficient for the scientific argument? 
+
+⏺ Mostly yes — for the logical structure of the argument — but with two genuine
+  caveats worth handling before you'd defend it. (Small correction: it's 51/96
+  solved, 45 unsolved.)
+
+  Why partial coverage doesn't break the argument:
+
+  1. The claim is about the form of solutions, not the solve rate. The thesis
+  claim is: when the MDL learner explains a belief scene, the cheapest
+  explanation it finds is the agency compound (fork∧sync over general parts),
+  and joint compression distills that into a constructor. Every verdict check is
+  quantified over solved tasks. Crucially, the unsolved tasks can't secretly
+  harbor counterexamples, because rival-exclusion is built into task generation,
+  not search: make_dual_belief_tasks and the wall/witness makers reject any
+  scene reproducible by a non-mental single-grid program
+  (_dual_rival_explainable, _displaced_goal_explainable). So a future solve of
+  any of those 45 tasks can only be agency-shaped — more budget can't flip the
+  census.
+  2. Expressibility is established independently of search. The run verified all
+  236 tasks via ground-truth Delta trees before searching. So the 45 misses are
+  an enumeration-budget fact ("the searcher didn't reach depth-N in 1200s"),
+  not a representational failure — and search budget isn't part of the
+  scientific claim.
+  3. The design's cells are all witnessed. (B′) shows all 8 distinct (gv, av)
+  belief combos were solved and all 8 are served by the single constructor fn_8
+  via holes. Extra solves within a combo add redundancy, not new evidence.
+  4. The solve trajectory is itself the evidence. Belief solves went 8 → 32 → 51
+  across rounds, and tasks that burned 1100+ s pre-abstraction solved in 4–18 s
+  once fn_8/fn_9 existed (compare the scaffold tasks: ~1150 s in round 1, ~10 s
+  in round 2). That's the compression argument made dynamical: belief becomes
+  cheap exactly when the constructor enters the library.
+
+  The two real caveats:
+
+  - Universal checks on a 53% sample are weaker than on 100%. "Every solved
+  wall-belief is wall-based" and "belief avoids every complement" are ∀-claims
+  over an easier-skewed sample — the solved half is by definition the half
+  reachable at this budget. Generation-time rival rejection covers extensional
+  rivals, but a skeptic could still ask whether harder instances admit shorter
+  within-DSL alternatives you haven't enumerated (your scope-complement
+  disclosure machinery exists precisely because one such alternative showed up).
+  You can't fully close this, but you can report it honestly and show solve
+  rate climbing with budget.
+  - Check the variant breakdown of the 51. The three belief variants each kill a
+  different rival: wall/witness kills the world-stamp rival, goal-displacement
+  kills wall-only accounts, dual kills the transient-schedule rival. If the 45
+  misses were concentrated in one variant — dual is the likely suspect, since
+  its ground truth is a compose of two constructor blocks and thus much deeper —
+  that rival-exclusion leg would rest on very few examples. From the log all
+  three do appear (fn_8 ×37 wall-based, ~11 distance-based displaced-goal
+  solves, and round-2/3 dual solves like (compose (fn_9 c2 c1 7 1) (fn_9 c2 c2 9
+  8))), but the report never prints per-variant counts. You already have
+  _bel_variant in experiment.py (~line 406) — adding a one-line per-variant
+  solved/total breakdown to the (A) census would let you state, e.g., "duals:
+  9/24 solved, all as compositions of two constructor applications," which is
+  exactly the sentence a thesis examiner will want.
+
+  So: fix the two verdict bugs, add the per-variant breakdown line, and in the
+  thesis frame the 51/96 as budget-bound with the round-by-round trajectory as
+  supporting evidence. If you want a stronger number cheaply, the lever is
+  making round 4 use the dreamed Q instead of falling back to uniform — round
+  3's dreamed Q was still producing solves when the uniform round stalled at
+  zero.
+
+✻ Crunched for 1m 10s
+
+※ recap: Reviewing your phase-1 run: it scientifically succeeded, and the two failed verdict checks are accounting bugs in experiment.py, not search failures. Next action: apply the two small verdict-check fixes and resubmit the job.
+
+❯ review the verdict bools for phase1,2,3. What are the strongest metrics of    
+  success, to show that belief is discovered from a domain-general DSL? What    
+  kinds of experiments can I run and what kinds of quantitative data can I      
+  plot?                                                                         
+
+⏺ I'll read the three phase drivers and their verdict logic — phase 3 has its
+  own report — plus ARCHITECTURE.md for framing.
+
+  Searched for 2 patterns, read 4 files (ctrl+o to expand)
+
+⏺ Here's a full review. I read the shared phase-1/2 verdict
+  (experiment.py:1188–1229), phase 3's own verdict (phase3_arity.py:608–616),
+  and ARCHITECTURE.md's statement of the claim.
+
+  1. What the verdict bools currently are
+
+  Phases 1 & 2 (shared run_phase, phase 2 swaps sync_to_world for
+  register(locate,place) and fork for the product-category spelling):
+
+  Bool: fork_general, sync_general, wall_general
+  What it tests: each part is reached for by a non-mental family (overlay/comet,
+
+    registration, obstacle)
+  Strength: strong — one half of the double dissociation
+  ────────────────────────────────────────
+  Bool: agency_unique
+  What it tests: fork∧sync co-occurrence is unique to belief
+  Strength: strong — the other half
+  ────────────────────────────────────────
+  Bool: belief_uses_both, belief_is_wall_based
+  What it tests: belief actually recombines the parts; no displaced-goal rival
+    snuck in
+  Strength: supporting
+  ────────────────────────────────────────
+  Bool: constructor_found, constructor_shared
+  What it tests: joint stitch invented fork+sync+wall abstraction with a shared
+    hole (av = actor AND committer; three-way in phase 2)
+  Strength: the centerpiece
+  ────────────────────────────────────────
+  Bool: belief_uses_ctor, nonmental_free_of_ctor
+  What it tests: constructor is belief-specific in the rewrites
+  Strength: strong, currently buggy (scaffold leak)
+  ────────────────────────────────────────
+  Bool: cube_ok = keeps-corner ∧ avoids-complements
+  What it tests: belief picks the lone asymmetric corner of a live symmetric
+    field
+  Strength: strong anti-gerrymandering control, currently buggy (displaced-goal
+    distance)
+
+  Phase 3 (phase3_arity.py):
+
+  ┌───────────────────┬─────────────────────────────────────────────────────┐
+  │       Bool        │                    What it tests                    │
+  ├───────────────────┼─────────────────────────────────────────────────────┤
+  │                   │ physics/desire select arity 0, belief exactly arity │
+  │ arity_ok          │  1, max selected = 1, while arity ≥ 2 is            │
+  │                   │ expressible (height-3 ground truth runs)            │
+  ├───────────────────┼─────────────────────────────────────────────────────┤
+  │ constructor       │                                                     │
+  │ extracted +       │ same signature survives in the stack calculus       │
+  │ shared-av         │                                                     │
+  ├───────────────────┼─────────────────────────────────────────────────────┤
+  │ (implicit)        │ with atomic fork/sync deleted, depth-1/depth-2      │
+  │ ablation verdict  │ stack programs are actually reachable — so "never   │
+  │                   │ selected" is a preference, not a search failure     │
+  └───────────────────┴─────────────────────────────────────────────────────┘
+
+  2. Structural weaknesses in the current verdicts
+
+  These matter more than the two bugs we already found:
+
+  1. Almost everything is a boolean over a quantitative objective. The claim is
+  an MDL claim, but only phase 3's (C) MDL-margin actually measures a
+  description-length gap — and even there margin_lib > 0 is printed, not folded
+  into the verdict. Phases 1 and 2 have no priced rival anywhere: "belief avoids
+  every complement" is reported as set-membership, when the scientifically
+  meaningful statement is "the complement-using / non-mental encoding of this
+  scene costs +X nats under the final library." Booleans are also brittle — one
+  stray solve flips them, which is exactly what happened this run.
+  2. (B′) generality is computed and printed but not in the ok conjunction
+  (report_abstraction_generality at line 1186). "One abstraction spans all 8
+  (gv,av) combos via holes" is one of your strongest results — it's what makes
+  fn_8 a type constructor rather than 37 memorized programs — and it currently
+  can't fail the verdict.
+  3. No per-variant coverage requirement. Each belief variant (wall/witness,
+  goal-displacement, dual) exists to kill a specific rival; the verdict passes
+  even if a variant has zero solves, silently dropping that rival-exclusion leg.
+  4. Single seed, single run. Every bool is one Bernoulli draw. "Constructor
+  invented in 5/5 corpus seeds" is a categorically better sentence than
+  "constructor invented: True."
+  5. The two known bugs: scaffold tasks counted as non-mental in
+  nonmental_free_of_ctor (line 1202), and goal-displacement's legitimate
+  distance use poisoning the cube census (line 1048).
+
+  3. The strongest metrics, ranked
+
+  For the claim "belief is discovered from a domain-general DSL," the evidence
+  hierarchy is:
+
+  1. The shared-hole constructor from joint compression — a pure-MDL compressor,
+  given mental and non-mental solutions in one pool, invents
+  fork(compose(wall_at ..)(optimize .. $av))(sync_to_world $av) with the agent
+  value bound across policy and commit. Phase 2's three-way sharing
+  (optimize+locate+place) is stronger still. Quantify it: number of shared
+  holes, and the DL the corpus saves via this abstraction vs. the best library
+  stitch finds when belief tasks are excluded.
+  2. MDL margins over rivals — for each belief task: DL(found belief program) vs
+  DL(cheapest rival form) under the final library. Positive margins in nats
+  turn every "avoids/unique-to" boolean into a measured preference. Phase 3's
+  (C) is your template; phases 1–2 need it most.
+  3. The double dissociation — parts general (each used bare by its own
+  non-mental family), composition unique (fork∧sync only co-occur in belief),
+  constructor belief-specific in the rewrites. This is what defeats "you handed
+  it a believe primitive in two pieces."
+  4. The symmetry controls — cube (A′): the lone asymmetric corner selected out
+  of a field where every complement is some other family's natural tool; arity
+  (A″): exactly one private channel selected when arbitrarily many are
+  expressible, plus the ablation reachability proof. Together: neither the role
+  structure nor the channel count of belief was stipulated.
+  5. Generality across combos (B′) — one abstraction, holes tiling all 8 (gv,av)
+  cells, in belief and in obstacle (the policy fn_9 spanning 8/8).
+  6. Compression dynamics — belief tasks going from >1100 s / unsolvable to 4–18
+  s once the constructor enters the library. This is the "concepts make
+  thoughts cheap" story told as a time series.
+
+  4. Experiments to run and figures to plot
+
+  Quantitative upgrades to existing runs (cheap, highest thesis value):
+
+  - MDL-margin distribution (phases 1–2). You already have _dl-style pricing in
+  phase 3 and a rival battery per belief variant in tasks_minds.py. For every
+  solved belief task, price the found program and each rival spelling under the
+  final library. Plot: histogram/CDF of margin (nats), one curve per belief
+  variant. One figure kills the "maybe a non-mental program was almost as short"
+  objection for the whole corpus.
+  - Corpus-DL trajectory. Per ECD round: total description length of all
+  solutions under the current library, plus library cost. Plot: total DL vs
+  round (should fall), stacked or faceted by family — belief should show the
+  steepest drop at the round fn_8 appears. This is the DreamCoder-style figure
+  examiners will recognize.
+  - Solve dynamics. Plot 1: cumulative solves vs round, one line per family
+  (belief's S-curve vs the flat-at-ceiling non-mental families). Plot 2:
+  per-task solve time, round n vs round n+1, as a paired slope-graph or
+  log-scale scatter — the 1100 s → 10 s collapse is currently buried in log
+  text.
+  - Per-variant belief coverage + combo heatmap. Bar chart of solved/total for
+  wall/witness/goal/dual; heatmap of (gv,av) × abstraction-used showing fn_8
+  tiling every cell.
+
+  New ablations (each one figure, each answers a named objection):
+
+  - Silo vs joint stitch — compress belief solutions alone vs pooled with the
+  non-mental corpus. Is the constructor still found, and at what DL? Quantifies
+  the file-16 claim that belief is an MDL win, not a silo artefact. Plot:
+  library-DL and constructor-invention bar pairs.
+  - Corpus-mix dose-response — vary the non-mental fraction (0%, 25%, 50%, …);
+  measure constructor invention and belief solve rate. Shows the non-mental
+  tasks are load-bearing for the discovery, i.e. domain-generality is doing
+  work. Plot: solve rate / invention frequency vs mix.
+  - Budget dose-response — --t-fn at 600/1200/2400 s; belief solve rate per
+  variant. Supports "the 45 misses are budget-bound, not representational."
+  Plot: solve rate vs budget, per variant (dual should be the steepest riser).
+  - Dreaming ablation — --no-dream vs dreamed Q: cumulative solves vs
+  wall-clock. Round 3-vs-4 in your log already hints the dreamed Q matters; make
+  it a curve.
+  - Curriculum ablation — with/without the 24 scaffold tasks:
+  rounds-to-constructor and final belief coverage. Preempts "you seeded the
+  abstraction."
+  - Seed robustness — 5 corpus seeds × the main run; report every verdict metric
+  as k/5 with solve-rate error bars. Cheap on the cluster, transforms every
+  claim from anecdote to statistic.
+
+  Verdict-code changes to support all this: fix the two bugs; fold (B′) and a
+  per-variant-coverage minimum into ok; and next to each boolean print its
+  margin (e.g. agency_unique: True (nearest non-mental fork∧sync program: +14.2 
+  nats)). The booleans stay as the pass/fail gate; the margins become your
+  thesis figures.
+
+  If you want, I can start with the phase-1/2 MDL-margin instrumentation plus
+  the per-variant breakdown — those reuse existing pricing and variant code and
+  would upgrade the next cluster run without changing the science.
+
+✻ Brewed for 2m 17s
+
+※ recap: Reviewing your phase 1-3 verdict metrics for the belief-discovery thesis: run succeeded, but two verdict bools are accounting bugs in experiment.py. Next action: apply those two fixes, then add MDL-margin and per-variant instrumentation before resubmitting.

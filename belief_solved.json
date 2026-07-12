@@ -1,0 +1,36 @@
+{
+ "phase": 1,
+ "decomposed": false,
+ "smoke": false,
+ "source": "phase1_run.json",
+ "per_variant": {
+  "belief_wall": {
+   "total": 24,
+   "solved": 24,
+   "rate": 1.0
+  },
+  "belief_witness": {
+   "total": 48,
+   "solved": 36,
+   "rate": 0.75
+  },
+  "belief_goal": {
+   "total": 24,
+   "solved": 24,
+   "rate": 1.0
+  },
+  "belief_dual": {
+   "total": 24,
+   "solved": 0,
+   "rate": 0.0
+  },
+  "belief_false_obstacle": {
+   "total": 24,
+   "solved": 0,
+   "rate": 0.0
+  }
+ },
+ "total": 144,
+ "solved": 84,
+ "rate": 0.5833333333333334
+}

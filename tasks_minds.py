@@ -628,9 +628,11 @@ _DIR_NAME = {v: k for k, v in DIRS.items()}   # (dr,dc) vector -> 'right'/'left'
 
 
 def belief_variant(m):
-    "Fine label for a kind='belief' task (wall / witness / goal / dual)."
+    "Fine label for a kind='belief' task (wall / witness / goal / dual / false-obstacle)."
     if 'pw2' in m:
         return 'belief_dual'
+    if 'real_wall' in m:                 # false about BOTH obstacle and goal; also carries
+        return 'belief_false_obstacle'   # displaced_to, so test it BEFORE the goal branch
     if 'displaced_to' in m:
         return 'belief_goal'
     if 'aw' in m:
@@ -693,6 +695,21 @@ def belief_rival_specs(m):
         return [
             ('pure desire (no belief)',   _seek(gv, av)),
             ('shove goal in world',       _seq_str(_stepstr(gv, dn), _seek(gv, av))),
+        ]
+    if var == 'belief_false_obstacle':
+        # Wrong about BOTH the obstacle and the goal, with a REAL wall in the world.
+        # Every single-grid rival is expressiveness-excluded: the agent's realised path
+        # was computed on a private copy where the real wall was ERASED and a phantom
+        # wall stamped, so no world-level program (which must keep the real wall put)
+        # reproduces that trajectory — none can be a behavioural competitor.  We spell
+        # the closest analogues anyway so the margin table shows they don't reproduce.
+        av, gv, dn = m['av'], m['gv'], m['dir']
+        Wb, Cb = _wall(*m['pw']), _clear(*m['pw'])            # phantom (believed) wall
+        return [
+            ('no belief (seek past real wall)', _seek(gv, av)),
+            ('shove goal in world',             _seq_str(_stepstr(gv, dn), _seek(gv, av))),
+            ('transient phantom + shove goal',
+             _seq_str(Wb, _stepstr(gv, dn), _seek(gv, av), Cb)),
         ]
     # belief_wall: transient real wall (the tightest single-grid analogue) + no-wall physics
     av, gv, pw = m['av'], m['gv'], m['pw']

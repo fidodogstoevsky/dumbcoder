@@ -1,0 +1,831 @@
+phase 1 job 24371267
+
+Generating mixed corpus…
+  belief variants: +24 goal-displacement, +24 dual (both kind=belief)
+  [curriculum] +24 plain-belief scaffold tasks (kind=belief_scaffold) to seed the fork(policy, sync) abstraction; excluded from the witness-belief verdict.
+  4 physics, 16 desire, 4 overlay, 4 comet, 4 registration, 96 belief — 236 total
+  corner families: 4 flee, 4 deletion, 4 denoise, 48 obstacle, 4 underlay, 4 perception, 4 multi_reg, 4 reg_except, 4 inpaint, 4 readout
+
+DSL: 37 primitives — CUBE run (core + symmetric complements)
+  added corners: ['bimap', 'clear_at', 'distance', 'dup', 'erase', 'locate', 'mapfst', 'mapsnd', 'pair_blank', 'place', 'register', 'snd_gg', 'swap', 'sync_all', 'sync_except', 'sync_to_model', 'underlay', 'via_swap']
+  ground-truth check: 236 tasks verified via Delta trees
+
+========================================================================
+WAKE-SLEEP — up to 4 ECD rounds (enumerate ↦ joint stitch), 32 workers
+  fn Q: dreamed recognition model (replays + fantasies); registration Q: uniform
+========================================================================
+
+--- round 1/4: 212 fn + 24 fn_p_g unsolved; |D|=37 (0 invented); fn Q=uniform/content ---
+    [instr] agency constructor in D: ABSENT; belief solved (replay-eligible): 0/96
+[     4] caught (step 4 up)
+[     2] caught (step 1 right)
+[     4] caught (step 4 up)
+[    13] caught (optimize (neg_dist 5) 4)
+[    13] caught (optimize (neg_dist 5) 4)
+[    13] caught (optimize (neg_dist 7) 6)
+[    13] caught (optimize (neg_dist 9) 8)
+[    13] caught (optimize (neg_dist 9) 8)
+[    13] caught (optimize (neg_dist 6) 2)
+[    13] caught (optimize (neg_dist 6) 2)
+[    13] caught (optimize (neg_dist 8) 5)
+[    13] caught (optimize (neg_dist 8) 5)
+[    12] caught (optimize (neg_dist 1) 7)
+[    12] caught (optimize (neg_dist 1) 7)
+[    12] caught (optimize (neg_dist 4) 9)
+[    12] caught (optimize (neg_dist 4) 9)
+[     5] caught (step 4 down)
+[    13] caught (optimize (neg_dist 2) 1)
+[    13] caught (optimize (neg_dist 2) 1)
+[    13] caught (optimize (neg_dist 7) 6)
+[   141] caught (fork (step 4 right) overlay)
+[   149] caught (fork (step 1 left) overlay)
+[   165] caught (fork (step 4 down) overlay)
+[   157] caught (fork (step 1 up) overlay)
+[   289] caught (fork (optimize (neg_dist 8) 5) overlay)
+[   289] caught (fork (optimize (neg_dist 6) 2) overlay)
+[   289] caught (fork (optimize (neg_dist 2) 1) overlay)
+[   289] caught (fork (optimize (neg_dist 7) 6) overlay)
+[  9335] caught (fork (compose (optimize (distance 2) 2) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[  9335] caught (fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[  9335] caught (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[  9335] caught (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[  9335] caught (fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[  9335] caught (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[  9335] caught (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[  8995] caught (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[    16] caught (optimize (distance 1) 4)
+[    16] caught (optimize (distance 1) 4)
+[    17] caught (optimize (distance 4) 1)
+[    17] caught (optimize (distance 4) 1)
+[     2] caught (erase 4)
+[     1] caught (erase 1)
+[     2] caught (erase 4)
+[     2] caught (erase 4)
+[   114] caught (clear_at c1 c3)
+[   118] caught (clear_at c2 c2)
+[   113] caught (clear_at c1 c2)
+[   119] caught (clear_at c2 c3)
+[   193] caught (fork (step 1 left) underlay)
+[   237] caught (fork (step 2 left) underlay)
+[   204] caught (fork (step 1 up) underlay)
+[   259] caught (fork (step 4 down) underlay)
+[   875] caught (compose (wall_at c3 c3) (optimize (neg_dist 5) 4))
+[  1037] caught (compose (optimize (neg_dist 2) 1) (wall_at c3 c0))
+[  1036] caught (compose (optimize (neg_dist 2) 1) (wall_at c1 c2))
+[  1037] caught (compose (optimize (neg_dist 5) 4) (wall_at c1 c0))
+[  1245] caught (compose (wall_at c0 c3) (optimize (neg_dist 2) 1))
+[  1037] caught (compose (optimize (neg_dist 2) 1) (wall_at c3 c2))
+[  1036] caught (compose (optimize (neg_dist 2) 1) (wall_at c0 c1))
+[  1285] caught (compose (wall_at c2 c3) (optimize (neg_dist 5) 4))
+[  1355] caught (compose (wall_at c3 c2) (optimize (neg_dist 2) 1))
+[  1037] caught (compose (optimize (neg_dist 5) 4) (wall_at c4 c1))
+[   737] caught (compose (optimize (neg_dist 5) 4) (wall_at c3 c3))
+[   867] caught (compose (wall_at c2 c2) (optimize (neg_dist 5) 4))
+[   859] caught (compose (wall_at c1 c1) (optimize (neg_dist 7) 6))
+[   737] caught (compose (optimize (neg_dist 7) 6) (wall_at c2 c2))
+[   737] caught (compose (optimize (neg_dist 9) 8) (wall_at c3 c3))
+[  1037] caught (compose (optimize (neg_dist 7) 6) (wall_at c3 c0))
+[   859] caught (compose (wall_at c1 c1) (optimize (neg_dist 7) 6))
+[  1265] caught (compose (wall_at c1 c3) (optimize (neg_dist 7) 6))
+[  1255] caught (compose (wall_at c1 c2) (optimize (neg_dist 9) 8))
+[  1285] caught (compose (wall_at c2 c3) (optimize (neg_dist 7) 6))
+[  1037] caught (compose (optimize (neg_dist 9) 8) (wall_at c1 c0))
+[   737] caught (compose (optimize (neg_dist 6) 2) (wall_at c1 c1))
+[  1036] caught (compose (optimize (neg_dist 9) 8) (wall_at c0 c3))
+[   875] caught (compose (wall_at c3 c3) (optimize (neg_dist 6) 2))
+[  1037] caught (compose (optimize (neg_dist 6) 2) (wall_at c3 c2))
+[  1036] caught (compose (optimize (neg_dist 9) 8) (wall_at c2 c3))
+[  1385] caught (compose (wall_at c4 c3) (optimize (neg_dist 9) 8))
+[  1345] caught (compose (wall_at c3 c1) (optimize (neg_dist 6) 2))
+[  1037] caught (compose (optimize (neg_dist 8) 5) (wall_at c2 c0))
+[   737] caught (compose (optimize (neg_dist 8) 5) (wall_at c4 c4))
+[  1325] caught (compose (wall_at c2 c1) (optimize (neg_dist 6) 2))
+[   737] caught (compose (optimize (neg_dist 8) 5) (wall_at c4 c4))
+[  1037] caught (compose (optimize (neg_dist 8) 5) (wall_at c3 c0))
+[   851] caught (compose (wall_at c0 c0) (optimize (neg_dist 8) 5))
+[  1295] caught (compose (wall_at c2 c4) (optimize (neg_dist 6) 2))
+[  1010] caught (compose (optimize (neg_dist 1) 7) (wall_at c0 c4))
+[   866] caught (compose (wall_at c2 c2) (optimize (neg_dist 1) 7))
+[  1354] caught (compose (wall_at c3 c2) (optimize (neg_dist 1) 7))
+[  1315] caught (compose (wall_at c3 c4) (optimize (neg_dist 8) 5))
+[  1010] caught (compose (optimize (neg_dist 1) 7) (wall_at c1 c2))
+[  1274] caught (compose (wall_at c1 c4) (optimize (neg_dist 1) 7))
+[   866] caught (compose (wall_at c2 c2) (optimize (neg_dist 4) 9))
+[  1264] caught (compose (wall_at c1 c3) (optimize (neg_dist 1) 7))
+[  1314] caught (compose (wall_at c3 c4) (optimize (neg_dist 4) 9))
+[  1344] caught (compose (wall_at c3 c1) (optimize (neg_dist 4) 9))
+[  1344] caught (compose (wall_at c3 c1) (optimize (neg_dist 4) 9))
+[  1384] caught (compose (wall_at c4 c3) (optimize (neg_dist 4) 9))
+[  1354] caught (compose (wall_at c4 c0) (optimize (neg_dist 4) 9))
+[103713] caught (fork (compose (wall_at c3 c2) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[103823] caught (fork (compose (wall_at c3 c3) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[103263] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[103273] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[103603] caught (fork (compose (wall_at c3 c1) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[103263] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[103163] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[103163] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+    per-task time (s): 108 solved [slowest solve 1165.5]
+      MISS 1200.2  belief           (6, 5, 5)#5099d3
+      MISS 1200.2  belief           (6, 5, 5)#5221b7
+      MISS 1200.2  belief_scaffold  (7, 5, 5)#424d0b
+      MISS 1200.2  belief           (7, 5, 5)#ebd17c
+      MISS 1200.1  belief           (5, 5, 5)#ba140e
+      MISS 1200.1  belief           (7, 5, 5)#1e693f
+      MISS 1200.1  belief           (5, 5, 5)#ce909c
+      MISS 1200.1  belief           (5, 5, 5)#a9ccf6
+      MISS 1200.1  belief           (6, 5, 5)#40f159
+      MISS 1200.1  belief           (7, 5, 5)#36db2e
+      MISS 1200.1  belief           (5, 5, 5)#131701
+      MISS 1200.1  belief           (5, 5, 5)#cc38ce
+      MISS 1200.1  belief           (5, 5, 5)#182e10
+      MISS 1200.1  belief           (5, 5, 5)#ed6e83
+      MISS 1200.1  belief           (6, 5, 5)#5699c3
+      MISS 1200.1  belief           (4, 5, 5)#7de242
+      MISS 1200.1  belief           (4, 5, 5)#5e2517
+      MISS 1200.1  belief           (6, 5, 5)#cd876c
+      MISS 1200.1  belief           (4, 5, 5)#dce1e9
+      MISS 1200.1  belief           (6, 5, 5)#d7f6df
+      MISS 1200.1  belief           (6, 5, 5)#e5a811
+      MISS 1200.1  belief           (5, 5, 5)#75ee5d
+      MISS 1200.1  belief           (5, 5, 5)#e7b820
+      MISS 1200.1  belief           (6, 5, 5)#a8eb09
+      MISS 1200.1  belief           (6, 5, 5)#3dcdc6
+      MISS 1200.1  belief           (6, 5, 5)#aca907
+      MISS 1200.1  belief           (4, 5, 5)#452107
+      MISS 1200.1  belief           (5, 5, 5)#e0c4fe
+      MISS 1200.1  belief           (5, 5, 5)#f07466
+      MISS 1200.1  belief           (6, 5, 5)#93b51d
+      MISS 1200.1  belief           (6, 5, 5)#6d5f5a
+      MISS 1200.1  belief           (4, 5, 5)#a6f6f1
+      MISS 1200.1  belief           (5, 5, 5)#3034da
+      MISS 1200.1  belief           (4, 5, 5)#15d5bc
+      MISS 1200.1  belief           (4, 5, 5)#387b41
+      MISS 1200.1  belief           (6, 5, 5)#f62538
+      MISS 1200.1  belief           (4, 5, 5)#356432
+      MISS 1200.1  belief           (6, 5, 5)#8c77ca
+      MISS 1200.1  belief           (4, 5, 5)#3fe113
+      MISS 1200.1  belief           (4, 5, 5)#525959
+      MISS 1200.1  belief           (5, 5, 5)#4df5f7
+      MISS 1200.1  belief           (6, 5, 5)#b3a6bd
+      MISS 1200.1  belief           (6, 5, 5)#737283
+      MISS 1200.1  belief           (5, 5, 5)#5c8a6e
+      MISS 1200.1  belief           (6, 5, 5)#dc7384
+      MISS 1200.1  belief           (4, 5, 5)#81c5d8
+      MISS 1200.1  belief_scaffold  (4, 5, 5)#fbfac5
+      MISS 1200.1  belief           (7, 5, 5)#6b3f8e
+      MISS 1200.1  belief           (6, 5, 5)#bc70e6
+      MISS 1200.1  belief           (5, 5, 5)#749077
+      MISS 1200.1  belief           (5, 5, 5)#a7d499
+      MISS 1200.0  belief           (5, 5, 5)#c8cea1
+      MISS 1200.0  belief           (4, 5, 5)#5c5c06
+      MISS 1200.0  belief           (6, 5, 5)#e6a94d
+      MISS 1200.0  belief           (6, 5, 5)#ca2641
+      MISS 1200.0  belief           (4, 5, 5)#f20f4f
+      MISS 1200.0  belief           (4, 5, 5)#b7ba9e
+      MISS 1200.0  belief           (5, 5, 5)#8c8ff8
+      MISS 1200.0  belief           (6, 5, 5)#bb3ab7
+      MISS 1200.0  belief           (4, 5, 5)#8be1e6
+      MISS 1200.0  belief           (4, 5, 5)#7d402e
+      MISS 1200.0  belief           (4, 5, 5)#9eb9ca
+      MISS 1200.0  belief_scaffold  (5, 5, 5)#0ccc1f
+      MISS 1200.0  belief           (4, 5, 5)#50a9f3
+      MISS 1200.0  belief           (6, 5, 5)#204093
+      MISS 1200.0  belief           (7, 5, 5)#559da2
+      MISS 1200.0  belief           (5, 5, 5)#63ddc4
+      MISS 1200.0  belief           (4, 5, 5)#1098c9
+      MISS 1200.0  belief           (5, 5, 5)#2a719d
+      MISS 1200.0  belief           (4, 5, 5)#df404a
+      MISS 1200.0  belief           (4, 5, 5)#ecf3f0
+      MISS 1200.0  belief           (5, 5, 5)#5ae3c2
+      MISS 1200.0  belief_scaffold  (6, 5, 5)#aaf291
+      MISS 1200.0  belief           (4, 5, 5)#c26be1
+      MISS 1200.0  belief           (6, 5, 5)#978b4e
+      MISS 1200.0  belief           (6, 5, 5)#122239
+      MISS 1200.0  belief           (4, 5, 5)#1748cb
+      MISS 1200.0  belief           (6, 5, 5)#133233
+      MISS 1200.0  belief           (7, 5, 5)#11268f
+      MISS 1200.0  belief           (7, 5, 5)#e20786
+      MISS 1200.0  belief_scaffold  (6, 5, 5)#b2737c
+      MISS 1200.0  belief_scaffold  (6, 5, 5)#166da6
+      MISS 1200.0  belief           (6, 5, 5)#16ad14
+      MISS 1200.0  belief_scaffold  (4, 5, 5)#e7338a
+      MISS 1200.0  belief           (5, 5, 5)#407665
+      MISS 1200.0  belief_scaffold  (6, 5, 5)#785d51
+      MISS 1200.0  belief           (6, 5, 5)#81b537
+      MISS 1200.0  belief           (7, 5, 5)#4f1d45
+      MISS 1200.0  belief           (6, 5, 5)#48b4a2
+      MISS 1200.0  belief_scaffold  (6, 5, 5)#f70842
+      MISS 1200.0  belief           (4, 5, 5)#77d8a1
+      MISS 1200.0  belief           (6, 5, 5)#0a7df4
+      MISS 1200.0  belief_scaffold  (4, 5, 5)#814477
+      MISS 1200.0  belief_scaffold  (7, 5, 5)#2e45f1
+      MISS 1200.0  belief           (4, 5, 5)#a5617b
+      MISS 1200.0  belief           (6, 5, 5)#1960c1
+      MISS 1200.0  belief           (5, 5, 5)#3d8797
+      MISS 1200.0  belief           (4, 5, 5)#45802a
+      MISS 1200.0  belief_scaffold  (6, 5, 5)#fd9c9a
+      MISS 1200.0  belief_scaffold  (6, 5, 5)#77db3e
+      MISS 1200.0  belief           (5, 5, 5)#ada4ba
+      MISS 1200.0  belief_scaffold  (5, 5, 5)#cbc755
+      MISS 1200.0  belief_scaffold  (6, 5, 5)#6749fa
+      MISS 1200.0  belief_scaffold  (7, 5, 5)#2af4cb
+      OK  1165.5  belief_scaffold  (5, 5, 5)#e1d09b
+      OK  1163.1  belief_scaffold  (5, 5, 5)#74ae0e
+      OK  1154.4  belief_scaffold  (5, 5, 5)#5a5537
+      OK  1152.1  belief_scaffold  (5, 5, 5)#4f03a4
+      OK  1145.6  belief_scaffold  (5, 5, 5)#b426f6
+      OK  1133.8  belief_scaffold  (5, 5, 5)#f34fd0
+      OK  1047.1  belief_scaffold  (4, 5, 5)#66c4d0
+      OK  1025.2  belief_scaffold  (4, 5, 5)#feffe2
+      OK   200.8  belief           (7, 5, 5)#c98f4f
+      OK   187.8  belief           (6, 5, 5)#13a7fb
+      OK   166.2  belief           (5, 5, 5)#0bcb23
+      OK   166.1  belief           (5, 5, 5)#11492a
+      OK   163.1  belief           (5, 5, 5)#0fe299
+      OK   161.5  belief           (5, 5, 5)#cb93e7
+      OK   155.6  belief           (5, 5, 5)#7e23ac
+      OK   143.2  belief           (4, 5, 5)#03f044
+      OK    15.9  obstacle         (8, 5, 5)#0cfa1e
+      OK    14.7  obstacle         (7, 5, 5)#389f51
+      OK    14.0  obstacle         (7, 5, 5)#1e9140
+      OK    13.7  obstacle         (6, 5, 5)#1919d0
+      OK    12.9  obstacle         (6, 5, 5)#9541fb
+      OK    12.9  obstacle         (5, 5, 5)#366a2d
+      OK    12.8  obstacle         (7, 5, 5)#f892b2
+      OK    12.5  obstacle         (6, 5, 5)#527d15
+      OK    12.4  obstacle         (8, 5, 5)#48e882
+      OK    12.3  obstacle         (8, 5, 5)#27ab11
+      OK    12.1  obstacle         (6, 5, 5)#9089ea
+      OK    11.8  obstacle         (5, 5, 5)#23a808
+      OK    11.8  obstacle         (5, 5, 5)#32ad87
+      OK    11.8  obstacle         (5, 5, 5)#8a40c8
+      OK    11.7  obstacle         (7, 5, 5)#ad53d4
+      OK    11.6  obstacle         (7, 5, 5)#380b37
+      OK    11.6  obstacle         (8, 5, 5)#8d141d
+      OK    11.6  obstacle         (7, 5, 5)#9dc81a
+      OK    11.6  obstacle         (7, 5, 5)#215753
+      OK    11.6  obstacle         (6, 5, 5)#297ff1
+      OK    11.4  obstacle         (4, 5, 5)#c8065b
+      OK    11.3  obstacle         (4, 5, 5)#59b732
+      OK    11.0  obstacle         (4, 5, 5)#3de0f3
+      OK    10.8  obstacle         (6, 5, 5)#65a15b
+      OK    10.7  obstacle         (7, 5, 5)#6ec1b5
+      OK    10.5  obstacle         (4, 5, 5)#8cc149
+      OK    10.4  obstacle         (6, 5, 5)#fd9e23
+      OK    10.4  obstacle         (4, 5, 5)#30dff9
+      OK    10.2  obstacle         (6, 5, 5)#316cad
+      OK     9.8  obstacle         (4, 5, 5)#fb4460
+      OK     9.6  obstacle         (6, 5, 5)#bfb160
+      OK     9.4  obstacle         (5, 5, 5)#9b0773
+      OK     9.4  obstacle         (5, 5, 5)#17877f
+      OK     9.3  obstacle         (6, 5, 5)#088f33
+      OK     9.3  obstacle         (5, 5, 5)#93bf40
+      OK     9.3  obstacle         (6, 5, 5)#31a462
+      OK     8.9  obstacle         (5, 5, 5)#b94b75
+      OK     8.7  obstacle         (5, 5, 5)#c7584b
+      OK     8.5  obstacle         (4, 5, 5)#935f69
+      OK     8.1  obstacle         (4, 5, 5)#2030ef
+      OK     7.7  obstacle         (4, 5, 5)#52526d
+      OK     7.7  obstacle         (6, 5, 5)#8a5a4e
+      OK     7.4  obstacle         (4, 5, 5)#ad3c81
+      OK     7.0  obstacle         (5, 5, 5)#1ad58a
+      OK     7.0  obstacle         (5, 5, 5)#8b5f6f
+      OK     6.9  obstacle         (5, 5, 5)#d547e1
+      OK     6.1  obstacle         (4, 5, 5)#28c079
+      OK     6.1  obstacle         (4, 5, 5)#819fc0
+      OK     2.8  comet            (6, 5, 5)#e7b276
+      OK     2.0  comet            (4, 5, 5)#a68042
+      OK     2.0  comet            (4, 5, 5)#8b9c64
+      OK     1.9  comet            (4, 5, 5)#a3d46c
+      OK     1.8  underlay         (6, 5, 5)#38d4d0
+      OK     1.8  underlay         (5, 5, 5)#f900dc
+      OK     1.6  underlay         (5, 5, 5)#52980d
+      OK     1.4  underlay         (5, 5, 5)#48fe20
+      OK     0.9  overlay          (5, 5, 5)#b90aed
+      OK     0.8  overlay          (4, 5, 5)#35b122
+      OK     0.7  overlay          (3, 5, 5)#1a42a6
+      OK     0.7  overlay          (4, 5, 5)#ba2a60
+      OK     0.5  deletion         (2, 5, 5)#7dfb5f
+      OK     0.4  deletion         (2, 5, 5)#cec8cb
+      OK     0.4  deletion         (2, 5, 5)#3b1421
+      OK     0.3  deletion         (2, 5, 5)#25e242
+      OK     0.1  flee             (5, 5, 5)#42f1ba
+      OK     0.1  flee             (4, 5, 5)#9495b9
+      OK     0.0  flee             (5, 5, 5)#16f365
+      OK     0.0  desire           (6, 5, 5)#d6b32a
+      OK     0.0  desire           (6, 5, 5)#3e9b53
+      OK     0.0  desire           (5, 5, 5)#52a80e
+      OK     0.0  desire           (6, 5, 5)#f1b3d1
+      OK     0.0  desire           (5, 5, 5)#8a5d23
+      OK     0.0  desire           (5, 5, 5)#cb4f38
+      OK     0.0  desire           (6, 5, 5)#6ec2a2
+      OK     0.0  desire           (4, 5, 5)#a17a66
+      OK     0.0  desire           (5, 5, 5)#a6491f
+      OK     0.0  desire           (5, 5, 5)#dd630e
+      OK     0.0  desire           (5, 5, 5)#c33b96
+      OK     0.0  desire           (4, 5, 5)#c002d9
+      OK     0.0  desire           (4, 5, 5)#5c4054
+      OK     0.0  desire           (6, 5, 5)#3b4b75
+      OK     0.0  desire           (4, 5, 5)#036bd3
+      OK     0.0  desire           (4, 5, 5)#4334a6
+      OK     0.0  flee             (3, 5, 5)#7611fd
+      OK     0.0  physics          (5, 5, 5)#389cb3
+      OK     0.0  physics          (5, 5, 5)#07d9e3
+      OK     0.0  physics          (5, 5, 5)#5d5dea
+      OK     0.0  physics          (4, 5, 5)#e44b4d
+      OK     0.0  denoise          (2, 5, 5)#ff7973
+      OK     0.0  denoise          (2, 5, 5)#005970
+      OK     0.0  denoise          (2, 5, 5)#a23260
+      OK     0.0  denoise          (2, 5, 5)#9d3f02
+    (misses burned up to 1200.2s each; the uniform --t-fn can drop toward slowest-solve=1165.5s to cut wasted early-round time without losing a solve)
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     4] caught underlay
+[     4] caught underlay
+[     4] caught underlay
+[     4] caught underlay
+[     5] caught sync_all
+[     5] caught sync_all
+[     5] caught sync_all
+[     5] caught sync_all
+[     8] caught (sync_to_world 2)
+[     8] caught (sync_to_world 2)
+[    10] caught (sync_to_world 4)
+[    10] caught (sync_to_world 4)
+[    17] caught (sync_except 1)
+[    21] caught (sync_except 5)
+[    21] caught (sync_except 5)
+[    21] caught (sync_except 5)
+[    27] caught (sync_to_model 1)
+[    27] caught (sync_to_model 1)
+[    28] caught (sync_to_model 2)
+[    30] caught (sync_to_model 4)
+    solved 132/236 (+132 this round)
+running stitch_core.compress on 132 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_0: (compose (wall_at #3 #2) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_1: (fork (compose (optimize (distance #1) #1) (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_2: (compose (optimize (neg_dist #3) #2) (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_3: (fork (fn_0 #0 #3 #2 #1) (sync_to_world #0))  [cellvalue, coord, coord, cellvalue] -> fn
+added abstraction fn_4: (optimize (neg_dist #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_5: (fn_0 9 4)  [coord, coord] -> fn
+    dreaming: training recognition Q on 108 replays + fantasies (600 steps)…
+0.02M params
+loss=3.22 nodes=28: 100%|██████████| 600/600 [00:06<00:00, 87.05it/s]
+
+--- round 2/4: 104 fn + 0 fn_p_g unsolved; |D|=43 (6 invented); fn Q=dreamed (replay families only) ---
+    [instr] agency constructor in D: fn_1 (wall-free); belief solved (replay-eligible): 8/96
+[  7943] caught (compose (optimize (distance 5) 1) (fn_3 4 c3 c3 5))
+[  7472] caught (compose (fn_1 1 1) (fn_3 8 c1 c3 9))
+[  6400] caught (compose (fn_3 1 c1 c3 2) (fn_4 4 5))
+[ 10064] caught (compose (fn_3 1 c3 c3 2) (fn_4 4 5))
+[ 10646] caught (compose (fn_3 8 c3 c3 9) (fn_4 4 5))
+[ 12623] caught (compose (fn_3 6 c2 c2 7) (optimize (neg_dist 5) 1))
+[ 11408] caught (compose (fn_3 2 c1 c3 6) (fn_4 4 5))
+[  8579] caught (compose (fn_3 5 c3 c3 8) (fn_4 2 1))
+[ 10811] caught (compose (fn_3 8 c2 c3 9) (fn_4 1 2))
+[ 10905] caught (compose (fn_3 5 c3 c3 8) (fn_4 1 4))
+[  9416] caught (compose (fn_1 2 5) (fn_3 5 c1 c1 8))
+[ 16990] caught (compose (fn_3 4 c2 c2 5) (fn_4 2 1))
+[ 13445] caught (compose (fn_3 7 c2 c2 1) (fn_4 4 2))
+[ 15684] caught (compose (fn_3 7 c2 c3 1) (fn_4 2 4))
+[  3235] caught (fn_3 4 c2 c0 3)
+[  3272] caught (fn_3 2 c4 c3 3)
+[  3495] caught (fn_3 5 c3 c2 3)
+[  3385] caught (fn_3 9 c2 c4 3)
+[  3795] caught (fn_3 8 c4 c0 3)
+[ 20670] caught (fn_3 4 c4 c4 3)
+[ 17618] caught (fn_3 1 c4 c0 3)
+[ 24978] caught (fn_3 9 c4 c0 3)
+[ 22280] caught (fn_3 1 c4 c4 3)
+[ 21133] caught (fn_3 7 c4 c4 3)
+[   429] caught (fn_3 1 c0 c3 2)
+[   453] caught (fn_3 4 c2 c2 5)
+[   497] caught (fn_3 1 c3 c0 2)
+[   471] caught (fn_3 4 c2 c2 5)
+[   488] caught (fn_3 6 c3 c2 7)
+[   477] caught (fn_3 2 c2 c2 6)
+[   485] caught (fn_3 4 c1 c3 5)
+[   499] caught (fn_3 1 c3 c0 2)
+[   524] caught (fn_3 8 c3 c2 9)
+[   517] caught (fn_3 6 c1 c4 7)
+[   494] caught (fn_3 5 c3 c3 8)
+[   551] caught (fn_3 8 c2 c1 9)
+[   545] caught (fn_3 9 c2 c3 4)
+[   553] caught (fn_3 7 c2 c1 1)
+[   604] caught (fn_3 7 c1 c2 1)
+[   603] caught (fn_3 9 c3 c4 4)
+    per-task time (s): 40 solved [slowest solve 952.6]
+      MISS 1200.3  belief           (5, 5, 5)#f07466
+      MISS 1200.3  belief           (6, 5, 5)#e6a94d
+      MISS 1200.2  belief           (7, 5, 5)#559da2
+      MISS 1200.2  belief           (7, 5, 5)#ebd17c
+      MISS 1200.2  belief           (6, 5, 5)#bc70e6
+      MISS 1200.2  belief           (6, 5, 5)#3dcdc6
+      MISS 1200.1  belief           (7, 5, 5)#11268f
+      MISS 1200.1  belief           (7, 5, 5)#e20786
+      MISS 1200.1  belief           (4, 5, 5)#50a9f3
+      MISS 1200.1  belief           (5, 5, 5)#c8cea1
+      MISS 1200.1  belief           (6, 5, 5)#f62538
+      MISS 1200.1  belief           (5, 5, 5)#75ee5d
+      MISS 1200.1  belief           (4, 5, 5)#ecf3f0
+      MISS 1200.1  belief           (4, 5, 5)#7d402e
+      MISS 1200.1  belief           (6, 5, 5)#a8eb09
+      MISS 1200.1  belief           (4, 5, 5)#dce1e9
+      MISS 1200.1  belief           (4, 5, 5)#15d5bc
+      MISS 1200.1  belief           (4, 5, 5)#7de242
+      MISS 1200.1  belief           (4, 5, 5)#8be1e6
+      MISS 1200.1  belief           (6, 5, 5)#16ad14
+      MISS 1200.1  belief           (4, 5, 5)#df404a
+      MISS 1200.1  belief           (4, 5, 5)#1098c9
+      MISS 1200.1  belief           (4, 5, 5)#81c5d8
+      MISS 1200.1  belief           (7, 5, 5)#1e693f
+      MISS 1200.1  belief           (4, 5, 5)#5c5c06
+      MISS 1200.1  belief           (7, 5, 5)#4f1d45
+      MISS 1200.1  belief           (5, 5, 5)#ba140e
+      MISS 1200.1  belief           (4, 5, 5)#1748cb
+      MISS 1200.1  belief           (4, 5, 5)#77d8a1
+      MISS 1200.1  belief           (4, 5, 5)#452107
+      MISS 1200.1  belief           (5, 5, 5)#3034da
+      MISS 1200.1  belief           (6, 5, 5)#e5a811
+      MISS 1200.1  belief           (4, 5, 5)#3fe113
+      MISS 1200.1  belief           (4, 5, 5)#f20f4f
+      MISS 1200.1  belief           (5, 5, 5)#407665
+      MISS 1200.1  belief           (6, 5, 5)#204093
+      MISS 1200.1  belief           (4, 5, 5)#525959
+      MISS 1200.0  belief           (5, 5, 5)#3d8797
+      MISS 1200.0  belief           (5, 5, 5)#63ddc4
+      MISS 1200.0  belief           (6, 5, 5)#bb3ab7
+      MISS 1200.0  belief           (6, 5, 5)#93b51d
+      MISS 1200.0  belief           (5, 5, 5)#4df5f7
+      MISS 1200.0  belief           (4, 5, 5)#c26be1
+      MISS 1200.0  belief           (6, 5, 5)#133233
+      MISS 1200.0  belief           (6, 5, 5)#978b4e
+      MISS 1200.0  belief           (6, 5, 5)#5221b7
+      MISS 1200.0  belief           (5, 5, 5)#8c8ff8
+      MISS 1200.0  belief           (6, 5, 5)#5699c3
+      MISS 1200.0  belief           (6, 5, 5)#6d5f5a
+      MISS 1200.0  belief           (5, 5, 5)#749077
+      MISS 1200.0  belief           (5, 5, 5)#ada4ba
+      MISS 1200.0  belief           (6, 5, 5)#122239
+      MISS 1200.0  belief           (6, 5, 5)#8c77ca
+      MISS 1200.0  belief           (6, 5, 5)#737283
+      MISS 1200.0  belief           (5, 5, 5)#a7d499
+      MISS 1200.0  belief           (5, 5, 5)#a9ccf6
+      MISS 1200.0  belief           (5, 5, 5)#5c8a6e
+      MISS 1200.0  belief           (6, 5, 5)#cd876c
+      MISS 1200.0  belief           (6, 5, 5)#aca907
+      MISS 1200.0  belief           (6, 5, 5)#40f159
+      MISS 1200.0  belief           (6, 5, 5)#5099d3
+      MISS 1200.0  belief           (6, 5, 5)#dc7384
+      MISS 1200.0  belief           (5, 5, 5)#ce909c
+      MISS 1200.0  belief           (6, 5, 5)#1960c1
+      OK   952.6  belief           (6, 5, 5)#81b537
+      OK   882.4  belief           (4, 5, 5)#387b41
+      OK   760.3  belief           (6, 5, 5)#48b4a2
+      OK   694.7  belief           (5, 5, 5)#5ae3c2
+      OK   692.8  belief           (4, 5, 5)#5e2517
+      OK   678.5  belief           (4, 5, 5)#a6f6f1
+      OK   632.4  belief           (7, 5, 5)#36db2e
+      OK   584.2  belief           (7, 5, 5)#6b3f8e
+      OK   526.4  belief           (4, 5, 5)#b7ba9e
+      OK   445.7  belief           (5, 5, 5)#e0c4fe
+      OK   429.8  belief           (6, 5, 5)#d7f6df
+      OK   414.8  belief           (4, 5, 5)#a5617b
+      OK   373.7  belief           (4, 5, 5)#45802a
+      OK   339.4  belief           (4, 5, 5)#356432
+      OK   293.6  belief           (5, 5, 5)#cc38ce
+      OK   275.1  belief           (6, 5, 5)#b3a6bd
+      OK   268.6  belief           (5, 5, 5)#131701
+      OK   255.6  belief           (5, 5, 5)#2a719d
+      OK   252.2  belief           (6, 5, 5)#ca2641
+      OK    94.4  belief           (6, 5, 5)#0a7df4
+      OK    90.2  belief           (5, 5, 5)#ed6e83
+      OK    89.8  belief           (5, 5, 5)#182e10
+      OK    78.1  belief           (5, 5, 5)#e7b820
+      OK    69.7  belief           (4, 5, 5)#9eb9ca
+      OK    11.6  belief_scaffold  (6, 5, 5)#77db3e
+      OK    11.5  belief_scaffold  (6, 5, 5)#6749fa
+      OK    11.4  belief_scaffold  (7, 5, 5)#2e45f1
+      OK    11.0  belief_scaffold  (6, 5, 5)#f70842
+      OK    10.6  belief_scaffold  (6, 5, 5)#b2737c
+      OK    10.6  belief_scaffold  (7, 5, 5)#424d0b
+      OK    10.5  belief_scaffold  (6, 5, 5)#166da6
+      OK    10.5  belief_scaffold  (6, 5, 5)#aaf291
+      OK     9.8  belief_scaffold  (7, 5, 5)#2af4cb
+      OK     9.6  belief_scaffold  (5, 5, 5)#cbc755
+      OK     9.2  belief_scaffold  (6, 5, 5)#785d51
+      OK     8.6  belief_scaffold  (4, 5, 5)#e7338a
+      OK     8.4  belief_scaffold  (4, 5, 5)#fbfac5
+      OK     8.4  belief_scaffold  (5, 5, 5)#0ccc1f
+      OK     7.5  belief_scaffold  (4, 5, 5)#814477
+      OK     7.3  belief_scaffold  (6, 5, 5)#fd9c9a
+    (misses burned up to 1200.3s each; the uniform --t-fn can drop toward slowest-solve=952.6s to cut wasted early-round time without losing a solve)
+    solved 172/236 (+40 this round)
+running stitch_core.compress on 172 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (fork (compose #2 (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_7: (optimize (neg_dist #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_8: (compose (wall_at #3 #2) (fn_1 #1 #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_9: (fn_0 #3 #2 (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_10: (compose (fn_1 #3 #2) (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_11: (fn_0 #1 #0 (optimize (distance #0) #0))  [cellvalue, cellvalue] -> fn
+    dreaming: training recognition Q on 148 replays + fantasies (600 steps)…
+0.02M params
+loss=3.11 nodes=30: 100%|██████████| 600/600 [00:07<00:00, 77.90it/s]
+
+--- round 3/4: 64 fn + 0 fn_p_g unsolved; |D|=43 (6 invented); fn Q=dreamed (replay families only) ---
+    [instr] agency constructor in D: fn_6 (wall-free); belief solved (replay-eligible): 32/96
+[   453] caught (compose (fn_7 1 4) (fn_9 c2 c2 7 6))
+[ 10946] caught (compose (fn_7 5 2) (fn_9 c1 c2 1 7))
+[ 14064] caught (compose (fn_7 1 5) (fn_9 c4 c2 7 6))
+[ 16026] caught (compose (fn_9 c1 c2 1 7) (fn_7 4 2))
+[   238] caught (fn_6 6 7 (step 7 down))
+[ 14277] caught (compose (optimize (neg_dist 1) 4) (fn_9 c3 c3 8 5))
+[   238] caught (fn_6 5 8 (step 8 down))
+[  2573] caught (fn_6 4 5 (step 5 down))
+[   355] caught (fn_6 7 1 (step 1 down))
+[ 19939] caught (compose (fn_9 c2 c1 8 5) (fn_7 4 2))
+[ 17496] caught (compose (fn_7 1 4) (fn_9 c4 c3 6 2))
+[ 17567] caught (compose (fn_7 2 1) (fn_9 c3 c1 5 4))
+[  3143] caught (fn_6 7 1 (step 1 down))
+[  3521] caught (fn_6 8 9 (step 9 down))
+[ 20065] caught (compose (fn_7 5 4) (fn_9 c4 c3 6 2))
+[ 19431] caught (compose (fn_7 4 5) (fn_9 c1 c3 2 1))
+[ 19456] caught (compose (fn_7 5 4) (fn_9 c2 c3 1 7))
+[ 17283] caught (compose (fn_9 c2 c1 7 1) (fn_9 c2 c2 9 8))
+[ 21429] caught (compose (fn_9 c2 c2 5 4) (fn_9 c3 c2 2 1))
+    per-task time (s): 19 solved [slowest solve 1151.5]
+      MISS 1200.5  belief           (6, 5, 5)#bc70e6
+      MISS 1200.3  belief           (6, 5, 5)#f62538
+      MISS 1200.3  belief           (7, 5, 5)#11268f
+      MISS 1200.2  belief           (5, 5, 5)#3d8797
+      MISS 1200.2  belief           (5, 5, 5)#f07466
+      MISS 1200.2  belief           (4, 5, 5)#50a9f3
+      MISS 1200.2  belief           (4, 5, 5)#5c5c06
+      MISS 1200.2  belief           (6, 5, 5)#a8eb09
+      MISS 1200.2  belief           (4, 5, 5)#525959
+      MISS 1200.2  belief           (6, 5, 5)#93b51d
+      MISS 1200.1  belief           (5, 5, 5)#3034da
+      MISS 1200.1  belief           (4, 5, 5)#1748cb
+      MISS 1200.1  belief           (5, 5, 5)#c8cea1
+      MISS 1200.1  belief           (6, 5, 5)#e5a811
+      MISS 1200.1  belief           (5, 5, 5)#ba140e
+      MISS 1200.1  belief           (4, 5, 5)#1098c9
+      MISS 1200.1  belief           (5, 5, 5)#4df5f7
+      MISS 1200.1  belief           (6, 5, 5)#5699c3
+      MISS 1200.1  belief           (6, 5, 5)#cd876c
+      MISS 1200.1  belief           (4, 5, 5)#7de242
+      MISS 1200.1  belief           (5, 5, 5)#5c8a6e
+      MISS 1200.1  belief           (6, 5, 5)#204093
+      MISS 1200.1  belief           (5, 5, 5)#75ee5d
+      MISS 1200.1  belief           (5, 5, 5)#ada4ba
+      MISS 1200.1  belief           (6, 5, 5)#8c77ca
+      MISS 1200.1  belief           (5, 5, 5)#749077
+      MISS 1200.1  belief           (5, 5, 5)#407665
+      MISS 1200.1  belief           (4, 5, 5)#3fe113
+      MISS 1200.1  belief           (5, 5, 5)#a9ccf6
+      MISS 1200.1  belief           (6, 5, 5)#3dcdc6
+      MISS 1200.0  belief           (7, 5, 5)#ebd17c
+      MISS 1200.0  belief           (4, 5, 5)#81c5d8
+      MISS 1200.0  belief           (4, 5, 5)#452107
+      MISS 1200.0  belief           (5, 5, 5)#63ddc4
+      MISS 1200.0  belief           (6, 5, 5)#bb3ab7
+      MISS 1200.0  belief           (4, 5, 5)#77d8a1
+      MISS 1200.0  belief           (6, 5, 5)#5099d3
+      MISS 1200.0  belief           (4, 5, 5)#c26be1
+      MISS 1200.0  belief           (6, 5, 5)#5221b7
+      MISS 1200.0  belief           (6, 5, 5)#737283
+      MISS 1200.0  belief           (6, 5, 5)#133233
+      MISS 1200.0  belief           (6, 5, 5)#40f159
+      MISS 1200.0  belief           (5, 5, 5)#ce909c
+      MISS 1200.0  belief           (4, 5, 5)#15d5bc
+      MISS 1200.0  belief           (6, 5, 5)#aca907
+      OK  1151.5  belief           (4, 5, 5)#7d402e
+      OK  1133.6  belief           (7, 5, 5)#1e693f
+      OK  1107.3  belief           (6, 5, 5)#dc7384
+      OK  1100.1  belief           (6, 5, 5)#122239
+      OK  1038.2  belief           (7, 5, 5)#559da2
+      OK  1004.9  belief           (6, 5, 5)#16ad14
+      OK   991.8  belief           (5, 5, 5)#a7d499
+      OK   884.2  belief           (4, 5, 5)#df404a
+      OK   872.1  belief           (6, 5, 5)#e6a94d
+      OK   839.7  belief           (6, 5, 5)#1960c1
+      OK   770.3  belief           (6, 5, 5)#978b4e
+      OK   492.6  belief           (6, 5, 5)#6d5f5a
+      OK   174.9  belief           (4, 5, 5)#dce1e9
+      OK   158.6  belief           (4, 5, 5)#8be1e6
+      OK   120.6  belief           (4, 5, 5)#ecf3f0
+      OK    18.0  belief           (4, 5, 5)#f20f4f
+      OK    10.4  belief           (5, 5, 5)#8c8ff8
+      OK     4.3  belief           (7, 5, 5)#e20786
+      OK     4.2  belief           (7, 5, 5)#4f1d45
+    (misses burned up to 1200.5s each; the uniform --t-fn can drop toward slowest-solve=1151.5s to cut wasted early-round time without losing a solve)
+    solved 191/236 (+19 this round)
+running stitch_core.compress on 191 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (fork (compose #2 (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_7: (optimize (neg_dist #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_8: (fn_0 #3 #2 (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_9: (compose (wall_at #3 #2) (fn_1 #1 #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_10: (compose (fn_1 #3 #2) (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_11: (fn_0 #1 #0 (optimize (distance #0) #0))  [cellvalue, cellvalue] -> fn
+
+--- round 4/4: 45 fn + 0 fn_p_g unsolved; |D|=43 (6 invented); fn Q=uniform/content ---
+    [instr] agency constructor in D: fn_6 (wall-free); belief solved (replay-eligible): 51/96
+    per-task time (s): 0 solved
+      MISS 1200.4  belief           (6, 5, 5)#bc70e6
+      MISS 1200.4  belief           (5, 5, 5)#3034da
+      MISS 1200.4  belief           (4, 5, 5)#7de242
+      MISS 1200.4  belief           (6, 5, 5)#5699c3
+      MISS 1200.4  belief           (5, 5, 5)#4df5f7
+      MISS 1200.4  belief           (4, 5, 5)#525959
+      MISS 1200.3  belief           (6, 5, 5)#cd876c
+      MISS 1200.3  belief           (6, 5, 5)#e5a811
+      MISS 1200.3  belief           (4, 5, 5)#452107
+      MISS 1200.3  belief           (5, 5, 5)#ada4ba
+      MISS 1200.3  belief           (4, 5, 5)#77d8a1
+      MISS 1200.2  belief           (6, 5, 5)#3dcdc6
+      MISS 1200.2  belief           (5, 5, 5)#ba140e
+      MISS 1200.2  belief           (5, 5, 5)#3d8797
+      MISS 1200.2  belief           (4, 5, 5)#15d5bc
+      MISS 1200.2  belief           (4, 5, 5)#81c5d8
+      MISS 1200.2  belief           (7, 5, 5)#11268f
+      MISS 1200.1  belief           (6, 5, 5)#bb3ab7
+      MISS 1200.1  belief           (4, 5, 5)#1748cb
+      MISS 1200.1  belief           (5, 5, 5)#75ee5d
+      MISS 1200.1  belief           (4, 5, 5)#5c5c06
+      MISS 1200.1  belief           (5, 5, 5)#c8cea1
+      MISS 1200.1  belief           (5, 5, 5)#5c8a6e
+      MISS 1200.1  belief           (5, 5, 5)#63ddc4
+      MISS 1200.1  belief           (6, 5, 5)#a8eb09
+      MISS 1200.1  belief           (6, 5, 5)#f62538
+      MISS 1200.0  belief           (4, 5, 5)#c26be1
+      MISS 1200.0  belief           (7, 5, 5)#ebd17c
+      MISS 1200.0  belief           (5, 5, 5)#f07466
+      MISS 1200.0  belief           (6, 5, 5)#aca907
+      MISS 1200.0  belief           (6, 5, 5)#204093
+      MISS 1200.0  belief           (6, 5, 5)#5221b7
+      MISS 1200.0  belief           (5, 5, 5)#a9ccf6
+      MISS 1200.0  belief           (4, 5, 5)#3fe113
+      MISS 1200.0  belief           (4, 5, 5)#1098c9
+      MISS 1200.0  belief           (6, 5, 5)#133233
+      MISS 1200.0  belief           (5, 5, 5)#749077
+      MISS 1200.0  belief           (6, 5, 5)#93b51d
+      MISS 1200.0  belief           (6, 5, 5)#8c77ca
+      MISS 1200.0  belief           (5, 5, 5)#ce909c
+      MISS 1200.0  belief           (4, 5, 5)#50a9f3
+      MISS 1200.0  belief           (5, 5, 5)#407665
+      MISS 1200.0  belief           (6, 5, 5)#737283
+      MISS 1200.0  belief           (6, 5, 5)#40f159
+      MISS 1200.0  belief           (6, 5, 5)#5099d3
+    solved 191/236 (+0 this round)
+running stitch_core.compress on 191 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (fork (compose #2 (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_7: (optimize (neg_dist #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_8: (fn_0 #3 #2 (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_9: (compose (wall_at #3 #2) (fn_1 #1 #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_10: (compose (fn_1 #3 #2) (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_11: (fn_0 #1 #0 (optimize (distance #0) #0))  [cellvalue, cellvalue] -> fn
+    no new tasks solved this round (uniform/content Q) — wake-sleep stalled (raise t_fn / ecd_iters, or the abstraction belief needs hasn't formed).
+
+========================================================================
+(A) USAGE CENSUS — which core parts each family reaches for (pre-stitch)
+========================================================================
+  physics       4/4 solved   uses: ['step']
+  desire        16/16 solved   uses: ['neg_dist', 'optimize']
+  overlay       4/4 solved   uses: ['fork', 'overlay', 'step']
+  comet         4/4 solved   uses: ['fork', 'neg_dist', 'optimize', 'overlay']
+  registration  4/4 solved   uses: ['sync_to_world']
+  belief        51/96 solved   uses: ['compose', 'fork', 'neg_dist', 'optimize', 'step', 'sync_to_world', 'wall_at']
+  flee          4/4 solved   uses: ['optimize']
+  deletion      4/4 solved   uses: []
+  denoise       4/4 solved   uses: []
+  obstacle      48/48 solved   uses: ['compose', 'neg_dist', 'optimize', 'wall_at']
+  underlay      4/4 solved   uses: ['fork', 'step']
+  perception    4/4 solved   uses: []
+  multi_reg     4/4 solved   uses: []
+  reg_except    4/4 solved   uses: []
+  inpaint       4/4 solved   uses: []
+  readout       4/4 solved   uses: []
+
+  fork used outside belief (overlay/comet)   : True
+  sync used outside belief (registration)    : True
+  wall_at used outside belief (obstacle)     : True
+  belief reuses BOTH fork and sync           : True
+  fork∧sync agency is unique to belief       : True
+  wall-belief solutions are wall-based       : True   (no displaced-goal rival survived; goal-displacement family excluded)
+
+========================================================================
+(A′) CUBE CENSUS — which symmetric corner each family selected
+========================================================================
+  physics       (none)
+  desire        neg_dist×16
+  overlay       overlay×4
+  comet         neg_dist×4, overlay×4
+  registration  sync_to_world×4
+  belief        neg_dist×51, sync_to_world×51, wall_at×37, distance×11
+  flee          distance×4
+  deletion      clear_at×4
+  denoise       erase×4
+  obstacle      wall_at×48, neg_dist×48
+  underlay      underlay×4
+  perception    sync_to_model×4
+  multi_reg     sync_all×4
+  reg_except    sync_except×4
+  inpaint       underlay×4
+  readout       snd_gg×4
+
+  belief keeps the agency corner (sync_to_world + wall_at) : True
+  belief avoids every symmetric complement                 : False
+  some complement is used elsewhere (field is live)        : True
+  complements claimed by a non-mental family               : ['clear_at', 'distance', 'erase', 'snd_gg', 'sync_all', 'sync_except', 'sync_to_model', 'underlay']
+
+========================================================================
+(B) JOINT COMPRESSION — final library over all 191 solutions (last stitch: iterations=6)
+========================================================================
+
+  invented abstractions:
+    fn_6  [cellvalue, cellvalue, fn] -> fn
+      body: (fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world $0))
+      (desire fragment)
+    fn_7  [cellvalue, cellvalue] -> fn
+      body: (optimize (neg_dist $0) $1)
+      (desire fragment)
+    fn_8  [coord, coord, cellvalue, cellvalue] -> fn
+      body: (fork (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)) (sync_to_world $3))
+      *** AGENT TYPE CONSTRUCTOR (belief) ***
+          shared holes: $3 (x2)  — actor AND committer
+    fn_9  [cellvalue, cellvalue, coord, coord] -> fn
+      body: (compose (wall_at $3 $2) (optimize (neg_dist $1) $0))
+      (obstacle/belief policy: stamp wall ▸ navigate — the shared derive)
+    fn_10  [coord, coord, cellvalue, cellvalue] -> fn
+      body: (compose (optimize (neg_dist $3) $2) (wall_at $1 $0))
+      (obstacle/belief policy: stamp wall ▸ navigate — the shared derive)
+    fn_11  [cellvalue, cellvalue] -> fn
+      body: (fork (compose (optimize (distance $0) $0) (optimize (neg_dist $0) $1)) (sync_to_world $1))
+      (desire fragment)
+
+  abstraction usage by family (from stitch's rewritten programs):
+    physics       (bare prims)×4
+    desire        fn_7×16
+    overlay       (bare prims)×4
+    comet         fn_7×4
+    registration  (bare prims)×4
+    belief        fn_8×37, fn_7×22, fn_11×10, fn_6×6
+    flee          (bare prims)×4
+    deletion      (bare prims)×4
+    denoise       (bare prims)×4
+    obstacle      fn_9×27, fn_10×21
+    underlay      (bare prims)×4
+    perception    (bare prims)×4
+    multi_reg     (bare prims)×4
+    reg_except    (bare prims)×4
+    inpaint       (bare prims)×4
+    readout       (bare prims)×4
+
+========================================================================
+(B′) ABSTRACTION GENERALITY — does seek/policy carry holes for (gv, av)?
+========================================================================
+
+  desire: 8 distinct (gv,av) combos solved & rewritten
+    fn_7 [seek]  reused by 8/8 combos  holes=2
+        body: (optimize (neg_dist $0) $1)
+
+  obstacle: 8 distinct (gv,av) combos solved & rewritten
+    fn_9 [policy]  reused by 8/8 combos  holes=4
+        body: (compose (wall_at $3 $2) (optimize (neg_dist $1) $0))
+    fn_10 [policy]  reused by 7/8 combos  holes=4
+        body: (compose (optimize (neg_dist $3) $2) (wall_at $1 $0))
+
+  belief: 8 distinct (gv,av) combos solved & rewritten
+    fn_8 [policy]  reused by 8/8 combos  holes=4
+        body: (fork (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)) (sync_to_world $3))
+    fn_7 [seek]  reused by 7/8 combos  holes=2
+        body: (optimize (neg_dist $0) $1)
+    fn_11 [seek]  reused by 6/8 combos  holes=2
+        body: (fork (compose (optimize (distance $0) $0) (optimize (neg_dist $0) $1)) (sync_to_world $1))
+    fn_6 [seek]  reused by 5/8 combos  holes=3
+        body: (fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world $0))
+
+  distinct belief (gv,av) combos in corpus            : 8
+  widest combo-span of one OBSTACLE policy (leading)  : 8
+  widest combo-span of one belief seek/policy (confirm): 8
+  => policy GENERALIZES into belief: one abstraction serves multiple combos via
+     holes — belief's skeleton is genuinely shallow.
+
+========================================================================
+VERDICT
+========================================================================
+  (A) parts are general    : fork∉belief-only=True, sync∉belief-only=True, wall∉belief-only=True
+  (A) only agency is unique: fork∧sync unique to belief=True, belief recombines=True, wall-based=True
+  (B) constructor invented : True (shared agency hole: True)
+  (B) constructor is belief-specific: used by belief=True, absent from non-mental=False
+  (A′) cube: belief picks the lone asymmetric corner over the full field: False
+
+  => not fully demonstrated this run (raise timeouts / n_bel / stitch_iters,
+     or drop --smoke).  Each False above localises what failed.

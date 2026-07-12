@@ -1,0 +1,224 @@
+p3-joint job 24372971
+
+[gkaminer@int5 dumbcoder]$ cat slurm_24372971.out
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+
+EnvironmentNameNotFound: Could not find conda environment: dumbcoder
+You can list all discoverable environments with `conda info --envs`.
+
+
+Generating mixed corpus…
+  4 physics, 16 desire, 4 overlay, 48 belief, 4 crossblur — 76 total
+
+DSL: 37 primitives — lean atomic core + grid-stack calculus
+  arity = max grids held at once − 1.  physics/desire: 0 | overlay/belief: 1
+  the stack makes arity ≥ 2 EXPRESSIBLE (free parameter); the run asks whether
+  MDL ever SELECTS it.
+
+  ground-truth check: 76 tasks verified via Delta trees
+  identity check: fork_stack_decomposed ≡ fork(…, sync_to_world …) at depth-1
+
+========================================================================
+SOLVE — wake-sleep over root_type=fn, 3 rounds (dreaming on)
+========================================================================
+  enumerating on 32 workers (maxdepth=14, timeout=300s)…
+
+--- round 1/3: 76 unsolved; |D|=37 (0 invented); Q=uniform/content ---
+[     4] caught (step 4 up)
+[     2] caught (step 1 right)
+[     4] caught (step 4 up)
+[     5] caught (step 4 down)
+[     3] caught (optimize (neg_dist 2) 1)
+[     3] caught (optimize (neg_dist 5) 4)
+[     3] caught (optimize (neg_dist 5) 4)
+[     3] caught (optimize (neg_dist 7) 6)
+[     3] caught (optimize (neg_dist 7) 6)
+[     3] caught (optimize (neg_dist 9) 8)
+[     3] caught (optimize (neg_dist 9) 8)
+[     3] caught (optimize (neg_dist 6) 2)
+[     3] caught (optimize (neg_dist 6) 2)
+[     3] caught (optimize (neg_dist 8) 5)
+[     3] caught (optimize (neg_dist 8) 5)
+[     2] caught (optimize (neg_dist 1) 7)
+[     2] caught (optimize (neg_dist 1) 7)
+[     2] caught (optimize (neg_dist 4) 9)
+[     2] caught (optimize (neg_dist 4) 9)
+[     3] caught (optimize (neg_dist 2) 1)
+[     8] caught (fork (step 4 right) overlay)
+[    12] caught (fork (step 1 up) overlay)
+[    10] caught (fork (step 1 left) overlay)
+[    14] caught (fork (step 4 down) overlay)
+[ 20531] caught (fork (compose (wall_at c3 c1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[ 20381] caught (fork (compose (wall_at c1 c1) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[ 20608] caught (fork (compose (wall_at c4 c1) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[ 20636] caught (fork (compose (wall_at c4 c3) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+    solved 28/76 (+28 this round)
+running stitch_core.compress on 28 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_0: (optimize (neg_dist #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_1: (fork (compose (wall_at #3 #2) (fn_0 #1 #0)) (sync_to_world #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_2: (fork (step #1 #0) overlay)  [dir, cellvalue] -> fn
+added abstraction fn_3: (step 4)  [dir] -> fn
+skipping abstraction 'fn_4': (fn_0 2 1) — no typed holes found (partial application or unannotatable constant)
+skipping abstraction 'fn_5': (fn_0 5 4) — no typed holes found (partial application or unannotatable constant)
+    dreaming: training recognition Q on 28 replays + fantasies (600 steps)…
+0.02M params
+loss=3.28 nodes=36:   9%|▉         | 55/600 [00:00<00:05, 96.80it/s]/gpfs/home5/gkaminer/dumbcoder/ecd.py:1005: RuntimeWarning: invalid value encountered in divide
+  ps = ps / ps.sum()
+loss=3.11 nodes=35: 100%|██████████| 600/600 [00:05<00:00, 102.73it/s]
+
+--- round 2/3: 48 unsolved; |D|=41 (4 invented); Q=dreamed ---
+[   435] caught (fn_1 4 5 c1 c1)
+[   455] caught (fn_1 8 9 c1 c0)
+[   406] caught (fn_1 1 2 c1 c2)
+[   484] caught (fn_1 8 9 c0 c3)
+[    84] caught (fn_1 7 1 c3 c1)
+[   572] caught (fn_1 1 2 c2 c4)
+[   485] caught (fn_1 4 5 c3 c1)
+[   770] caught (fn_1 4 5 c0 c4)
+[   656] caught (fn_1 1 2 c2 c1)
+[   660] caught (fn_1 8 9 c3 c3)
+[   832] caught (fn_1 4 5 c3 c2)
+[   830] caught (fn_1 2 6 c3 c2)
+[   804] caught (fn_1 6 7 c1 c2)
+[   824] caught (fn_1 6 7 c0 c2)
+[   812] caught (fn_1 2 6 c0 c4)
+[   855] caught (fn_1 2 6 c4 c2)
+[   873] caught (fn_1 2 6 c3 c1)
+[   796] caught (fn_1 1 2 c2 c3)
+[   794] caught (fn_1 6 7 c2 c3)
+[   829] caught (fn_1 4 5 c3 c3)
+[   764] caught (fn_1 6 7 c3 c2)
+[   817] caught (fn_1 2 6 c0 c1)
+[   596] caught (fn_1 5 8 c0 c2)
+[   962] caught (fn_1 1 2 c2 c2)
+[   992] caught (fn_1 2 6 c2 c4)
+[  1106] caught (fn_1 4 5 c4 c3)
+[   827] caught (fn_1 5 8 c1 c3)
+[   633] caught (fn_1 7 1 c1 c3)
+[  1005] caught (fn_1 8 9 c0 c1)
+[  1015] caught (fn_1 1 2 c3 c2)
+[  1057] caught (fn_1 5 8 c3 c1)
+[   949] caught (fn_1 8 9 c2 c0)
+[   473] caught (fn_1 9 4 c0 c3)
+[   987] caught (fn_1 5 8 c1 c1)
+[   591] caught (fn_1 7 1 c4 c2)
+[  1016] caught (fn_1 8 9 c1 c2)
+[   912] caught (fn_1 6 7 c2 c3)
+[   801] caught (fn_1 9 4 c0 c2)
+[   842] caught (fn_1 9 4 c1 c0)
+[   893] caught (fn_1 7 1 c3 c1)
+[  1299] caught (fn_1 6 7 c4 c2)
+[  1296] caught (fn_1 5 8 c4 c1)
+[  1043] caught (fn_1 7 1 c4 c3)
+[   891] caught (fn_1 9 4 c2 c1)
+[ 14466] caught (fork (compose (fn_2 down 4) (fn_0 0 4)) overlay)
+[ 21067] caught (fork (compose (fn_2 right 1) (fn_0 0 1)) overlay)
+[ 26878] caught (fork (compose (fn_2 right 1) (fn_0 0 1)) overlay)
+    solved 75/76 (+47 this round)
+running stitch_core.compress on 75 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_4: (fork (compose (wall_at #3 #2) (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_5: (fork (compose (fork (step #0 #1) overlay) (optimize (neg_dist 0) #0)) overlay)  [cellvalue, dir] -> fn
+added abstraction fn_6: (optimize (neg_dist #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_7: (fn_0 #2 #1 #0 c2)  [coord, cellvalue, cellvalue] -> fn
+added abstraction fn_8: (fn_0 #2 #1 #0 c1)  [coord, cellvalue, cellvalue] -> fn
+added abstraction fn_9: (fn_0 #2 #1 #0 c3)  [coord, cellvalue, cellvalue] -> fn
+    dreaming: training recognition Q on 75 replays + fantasies (600 steps)…
+0.02M params
+loss=3.34 nodes=28: 100%|██████████| 600/600 [00:07<00:00, 82.90it/s]
+
+--- round 3/3: 1 unsolved; |D|=43 (6 invented); Q=dreamed ---
+    solved 75/76 (+0 this round)
+running stitch_core.compress on 75 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (fork (compose (wall_at #3 #2) (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_7: (fork (compose (fork (step #0 #1) overlay) (optimize (neg_dist 0) #0)) overlay)  [cellvalue, dir] -> fn
+added abstraction fn_8: (optimize (neg_dist #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_9: (fn_0 #2 #1 #0 c2)  [coord, cellvalue, cellvalue] -> fn
+added abstraction fn_10: (fn_0 #2 #1 #0 c1)  [coord, cellvalue, cellvalue] -> fn
+added abstraction fn_11: (fn_0 #2 #1 #0 c3)  [coord, cellvalue, cellvalue] -> fn
+    no new tasks solved this round — stopping.
+
+========================================================================
+(A″) ARITY CENSUS — private-channel arity SELECTED per family (lower = simpler)
+========================================================================
+  physics    4/4 solved   arity 0×4
+             uses: ['step']
+  desire     16/16 solved   arity 0×16
+             uses: ['optimize']
+  overlay    4/4 solved   arity 1×4
+             uses: ['fork', 'overlay', 'step']
+  belief     48/48 solved   arity 1×48
+             uses: ['fork', 'optimize', 'sync_to_world', 'wall_at']
+  crossblur  3/4 solved   arity 1×3
+             uses: ['fork', 'optimize', 'overlay', 'step']
+
+  physics/desire select arity 0 (no private channel)      : True
+  belief selects arity 1 (one private model)               : True
+  max arity SELECTED by any family                         : 1
+  max arity EXPRESSIBLE by the stack (crossblur ground-truth): 2
+  => the stack makes arity ≥ 2 a free parameter, yet MDL never selects
+     more than ONE private channel: belief's single private model is the
+     minimal sufficient arity, discovered — not a pair_gg stipulation.
+     (belief shares arity-1 with non-mental overlay/crossblur; what makes
+      it belief is the commit DIRECTION — the cube axis — not the COUNT.)
+
+========================================================================
+(C) MDL MARGIN — arity-1 (found) vs arity-2 (ground-truth) description length
+========================================================================
+  found arity-1 program (base prims)   DL =  22.10 nats   (fork (compose (fork (step 4 down) overlay) (optimize (neg_dist 0) 4)) overlay)
+  found arity-1 program (library)     DL =   6.17 nats   (fn_7 4 down)
+  ground-truth arity-2 program         DL =  34.31 nats   (pipe_gsg (compose_gs (compose_gs (compose_gs (compose_gs (compose_gs (compose_gs (compose_gs base dup_top) dup_top) (map_top (step 4 left))) swap_top) (map_top (step 4 down))) (zip_top overlay)) (zip_top overlay)) peek)
+
+  MDL margin (arity-2 − arity-1, base prims) = +12.20 nats
+  MDL margin (arity-2 − arity-1, library)   = +28.13 nats
+  => the arity-1 encoding is strictly shorter; MDL's avoidance of the second
+     private channel is a quantified preference, not merely an absence of evidence.
+
+========================================================================
+(B) JOINT COMPRESSION — final library over all 75 solutions (last stitch: iterations=6)
+========================================================================
+
+  invented abstractions:
+    fn_6  [cellvalue, cellvalue, coord, coord] -> fn
+      body: (fork (compose (wall_at $3 $2) (optimize (neg_dist $1) $0)) (sync_to_world $0))
+      *** AGENT TYPE CONSTRUCTOR (belief, depth-1) ***
+          shared holes: $0 (×2)  — actor AND committer
+    fn_7  [cellvalue, dir] -> fn
+      body: (fork (compose (fork (step $0 $1) overlay) (optimize (neg_dist 0) $0)) overlay)
+    fn_8  [cellvalue, cellvalue] -> fn
+      body: (optimize (neg_dist $0) $1)
+    fn_9  [coord, cellvalue, cellvalue] -> fn
+      body: (fork (compose (wall_at c2 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2))
+      *** AGENT TYPE CONSTRUCTOR (belief, depth-1) ***
+          shared holes: $2 (×2)  — actor AND committer
+    fn_10  [coord, cellvalue, cellvalue] -> fn
+      body: (fork (compose (wall_at c1 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2))
+      *** AGENT TYPE CONSTRUCTOR (belief, depth-1) ***
+          shared holes: $2 (×2)  — actor AND committer
+    fn_11  [coord, cellvalue, cellvalue] -> fn
+      body: (fork (compose (wall_at c3 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2))
+      *** AGENT TYPE CONSTRUCTOR (belief, depth-1) ***
+          shared holes: $2 (×2)  — actor AND committer
+
+========================================================================
+VERDICT
+========================================================================
+  (A″) arity ≥2 expressible but never selected; belief = arity 1     : True
+  (B)  arity-1 agent constructor extracted by joint stitch          : True
+       shared-av signature survives                                : True

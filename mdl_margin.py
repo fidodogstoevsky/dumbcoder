@@ -158,10 +158,10 @@ def build_corpus(smoke=False):
     Returns a flat list of (x, meta)."""
     if smoke:
         n_phys, n_des, n_ov, n_reg, n_bel, n_corner = 2, 1, 2, 2, 1, 2
-        n_comet, n_belvar, n_obstacle = 2, 1, 2
+        n_comet, n_belvar, n_goal, n_obstacle = 2, 1, 2, 2
     else:
         n_phys, n_des, n_ov, n_reg, n_bel, n_corner = 4, 2, 4, 4, 6, 4
-        n_comet, n_belvar, n_obstacle = 4, 3, 6
+        n_comet, n_belvar, n_goal, n_obstacle = 4, 3, 6, 6
 
     phys = make_physics_tasks(n_phys, seed=0)
     des  = make_desire_tasks(n_des, COMBOS, seed=1)
@@ -171,7 +171,7 @@ def build_corpus(smoke=False):
     # cube run: witness belief is the headline single-agent family (transient-wall rival
     # excluded by the crossing witness); plain belief seeds the fork(policy, sync) token.
     bel  = make_witness_belief_tasks(n_bel, COMBOS, seed=2)
-    gdb  = make_goal_displacement_tasks(n_belvar, COMBOS, seed=23)
+    gdb  = make_goal_displacement_tasks(n_goal, COMBOS, seed=23)
     dual = make_dual_belief_tasks(n_belvar, COMBOS, seed=24)
     # false-obstacle belief: real wall in the world forbids the scope-complement commit,
     # so every solution is the literal sync_to_world(av) (see experiment.run_phase).

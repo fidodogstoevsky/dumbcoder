@@ -261,8 +261,12 @@ def _belief_gt_str(D, m):
                   f"(step {m['gv']} {m['dir']})) (optimize (neg_dist {m['gv']}) {m['av']}))")
         return _forks(D, derive, _sync(D, m['av']))
     if 'displaced_to' in m:                          # false belief about the goal's location
-        derive = (f"(compose (step {m['gv']} {m['dir']}) "
-                  f"(optimize (neg_dist {m['gv']}) {m['av']}))")
+        # left-fold the shove sequence + seek, mirroring tasks_minds._seq
+        parts = ([f"(step {m['gv']} {dn})" for dn in m['dirs']]
+                 + [f"(optimize (neg_dist {m['gv']}) {m['av']})"])
+        derive = parts[0]
+        for p in parts[1:]:
+            derive = f"(compose {derive} {p})"
         return _forks(D, derive, _sync(D, m['av']))
     pr, pc = m['pw']                                 # phantom wall, optionally + witness
     derive = (f"(compose (wall_at c{pr} c{pc}) "
@@ -621,8 +625,10 @@ def _belief_progs(m):
                          optimize(neg_distance(m['gv']), m['av']))
         return one(derive, m['av'])
     if 'displaced_to' in m:                          # goal-displacement: false belief about the goal
-        derive = compose(step(m['gv'], DIRS[m['dir']]),
-                         optimize(neg_distance(m['gv']), m['av']))
+        derive = step(m['gv'], DIRS[m['dirs'][0]])
+        for dn in m['dirs'][1:]:
+            derive = compose(derive, step(m['gv'], DIRS[dn]))
+        derive = compose(derive, optimize(neg_distance(m['gv']), m['av']))
         return one(derive, m['av'])
     derive = compose(wall_at(*m['pw']), optimize(neg_distance(m['gv']), m['av']))
     orig, deco = one(derive, m['av'])
@@ -677,12 +683,18 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         n_phys, n_des, n_ov, n_reg, n_bel, n_corner = 2, 1, 2, 2, 1, 2
         n_comet = 2
         n_belvar = 1
+        n_goal = 2
         n_obstacle = 2
         _t_fn, t_reg, stitch_iters, _ecd_iters = 15, 8, 3, 2
     else:
         n_phys, n_des, n_ov, n_reg, n_bel, n_corner = 4, 2, 4, 4, 6, 4
         n_comet = 4
         n_belvar = 3
+        # goal-displacement gets ~2× the other belief variants' mass: its content
+        # subtree is the one that VARIES (12 shove shapes, see _GOAL_CONTENT_SPECS),
+        # and stitch only keeps the content slot as a hole if the varied family is
+        # heavy enough to out-compress a per-shove specialization.
+        n_goal = 6
         # obstacle is deliberately the DENSEST corner family: its solution IS belief's
         # wall policy (compose (wall_at) (optimize (neg_dist))), and that 4-hole compound
         # must recur enough to hold a top-`stitch_iters` abstraction slot even after
@@ -723,7 +735,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     # whether ONE fork(policy, sync_to_world av) agent constructor generalizes
     # across belief about an obstacle, about an object's location (goal-displacement),
     # and across two contradictory beliefs at once (dual).  See tasks_minds.py.
-    gdb  = make_goal_displacement_tasks(n_belvar, COMBOS, seed=23)
+    gdb  = make_goal_displacement_tasks(n_goal, COMBOS, seed=23)
     dual = make_dual_belief_tasks(n_belvar, COMBOS, seed=24)
     # False-obstacle belief (kind=belief): wrong about BOTH the obstacle and the goal,
     # with a REAL wall (value 3) left in the world.  Its construction forbids the

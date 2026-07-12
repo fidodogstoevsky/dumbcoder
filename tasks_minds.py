@@ -363,34 +363,54 @@ def make_witness_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max
 # the same construction the wall-belief generator already rejects as a rival via
 # `_displaced_goal_explainable`; here we PROMOTE it to its own belief family.
 
-def _goal_displacement_program(av, gv, d):
+def _goal_displacement_program(av, gv, ds):
     """Per-frame transition for a displaced-goal false belief:
 
-        (fork (compose (step gv d) (optimize (neg_dist gv) av)) (sync_to_world av))
+        (fork (compose (step gv d1) … (step gv dk) (optimize (neg_dist gv) av))
+              (sync_to_world av))
 
-    Each frame the agent privately shoves the goal one cell in direction d on a
-    copy of the world (`step gv d` — a stale belief about where gv sits), seeks
-    the displaced goal on that copy, and commits only its own move.  The true goal
-    is never touched in the world.  step + optimize are ordinary primitives: the
-    displacement is a COMPOUND, not a `move_goal` primitive.
+    Each frame the agent privately shoves the goal along `ds` (a sequence of one
+    or more direction vectors — a stale belief about where gv sits) on a copy of
+    the world, seeks the displaced goal on that copy, and commits only its own
+    move.  The true goal is never touched in the world.  step + optimize are
+    ordinary primitives: the displacement is a COMPOUND, not a `move_goal`
+    primitive — and varying its shape across the family (up vs down, one- vs
+    two-cell shoves; see _GOAL_CONTENT_SPECS for why only vertical shoves are
+    expressible) is what pushes stitch to keep the propositional content a HOLE
+    in the belief abstraction instead of baking one particular shove into the
+    body.
     """
-    return fork(compose(step(gv, d), optimize(neg_distance(gv), av)),
+    return fork(_seq(*([step(gv, d) for d in ds]
+                       + [optimize(neg_distance(gv), av)])),
                 sync_to_world(av))
 
 
 def _wall_explainable(x, g, size=SIZE):
-    "True if any phantom-WALL belief reproduces x (keeps the goal family distinct)."
+    """True if any phantom-WALL belief reproduces x (keeps the goal family distinct).
+
+    Two rival shapes are excluded:
+      * detour — stamp a wall and seek a visible value around it (the original check);
+      * beacon — stamp a wall and seek THE WALL VALUE 3 itself: a private marker the
+        agent simply walks toward.  A stationary displaced goal is extensionally a
+        walk to a fixed empty cell, so a beacon one-past the believed cell (or
+        anywhere on the greedy ray) reproduces most interior scenes — phase-1 runs
+        exploited exactly this to rewrite Sally-Anne tasks through the wall-belief
+        token (fn_6 with seek-target 3).  Seek targets therefore include 3, and the
+        stamp cell ranges over ALL cells: stamping over the true goal is legal in the
+        private model (only av is committed, so the clobber never renders).
+
+    Scenes that survive this check force genuinely goal-shaped propositional content —
+    no wall-content spelling of the belief exists for them.
+    """
     T = x.shape[0]
     vals = [int(v) for v in np.unique(g) if v != 0]
     for av in vals:
-        for gv in vals:
+        for gv in dict.fromkeys(vals + [3]):   # 3 = the wall value: the beacon target
             if av == gv:
                 continue
             seek = optimize(neg_distance(gv), av)
             for pr in range(size):
                 for pc in range(size):
-                    if g[pr, pc] != 0:
-                        continue
                     prog = fork(compose(wall_at(pr, pc), seek), sync_to_world(av))
                     try:
                         if np.array_equal(unfold(g, T, prog), x):
@@ -400,9 +420,28 @@ def _wall_explainable(x, g, size=SIZE):
     return False
 
 
+# Content specs for the goal-displacement family: the believed goal is the true goal
+# shoved along one of these direction-name sequences.  Deliberately varied in BOTH
+# direction and subtree size — a two-step shove is (compose (step gv d) (step gv d)),
+# a bigger content subtree than a single step — so no one shove recurs often enough
+# for stitch to bake it into an abstraction body: the content must stay a hole.
+#
+# Only VERTICAL shoves appear, and that is extensional, not a choice: `optimize`'s
+# greedy tie-break tries vertical neighbours first, so every seek path walks its
+# vertical leg first and its horizontal leg last.  A horizontally-displaced believed
+# cell therefore always sits on the direct-seek path (the scene is a truncated plain
+# desire — rejected as its prefix), and an L-displaced cell is always approached
+# horizontally, so a wall-beacon one cell past it reproduces the walk (rejected by
+# `_wall_explainable`).  Verified empirically: 0/4000 candidate scenes survive for
+# every horizontal or L-shaped spec, at every combo.
+_GOAL_CONTENT_SPECS = [('up',), ('down',), ('up', 'up'), ('down', 'down')]
+
+
 def make_goal_displacement_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=8):
-    """Sally-Anne: the agent walks to where it *believes* the goal is — one cell
-    displaced from its true position — while the true goal sits still.
+    """Sally-Anne: the agent walks to where it *believes* the goal is — displaced
+    along a one- or two-step shove from its true position — while the true goal
+    sits still.  Each combo cycles through a shuffled `_GOAL_CONTENT_SPECS`, so the
+    family covers diverse propositional contents rather than one baked-in shove.
 
     Necessity (the scene survives only if all hold):
       * the agent settles exactly on the believed (displaced) cell, never on the
@@ -411,25 +450,39 @@ def make_goal_displacement_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, 
       * the true goal keeps its value & position in every frame — the stationary
         witness that rules out any program that *actually* moves the goal;
       * no single physical fn reproduces it (`_physically_explainable`);
-      * no phantom wall reproduces it (`_wall_explainable`) — keeps this family
-        structurally distinct from `make_belief_tasks`.
+      * no phantom wall reproduces it (`_wall_explainable`) — including the seek-
+        the-wall BEACON rival, so wall-content spellings (fn_6 mimicry) are
+        excluded and only genuinely goal-shaped content survives.
     """
     rng = np.random.default_rng(seed)
     tasks = []
     for av, gv in combos:
+        order = list(_GOAL_CONTENT_SPECS)
+        rng.shuffle(order)
         made, attempts = 0, 0
-        while made < n_per_combo and attempts < 8000:
+        spec_i, spec_tries = 0, 0
+        while made < n_per_combo and attempts < 40000:
             attempts += 1
+            spec_tries += 1
+            if spec_tries > 3000:      # this content shape won't generate here; move on
+                spec_i, spec_tries = spec_i + 1, 0
+            spec = order[spec_i % len(order)]
+            vecs = [DIRS[dn] for dn in spec]
             ar, ac = int(rng.integers(size)), int(rng.integers(size))
             gr, gc = int(rng.integers(size)), int(rng.integers(size))
             if (ar, ac) == (gr, gc):
                 continue
-            dname = str(rng.choice(list(DIRS)))
-            dr, dc = DIRS[dname]
-            br, bc = gr + dr, gc + dc                 # believed (displaced) goal cell
-            if not (0 <= br < size and 0 <= bc < size):
+            # believed (displaced) goal cell: every intermediate shove cell must stay
+            # in bounds and clear of the agent, or the model shove clobbers/vanishes
+            br, bc, ok = gr, gc, True
+            for dr, dc in vecs:
+                br, bc = br + dr, bc + dc
+                if not (0 <= br < size and 0 <= bc < size) or (br, bc) == (ar, ac):
+                    ok = False
+                    break
+            if not ok:
                 continue
-            if (br, bc) in ((ar, ac), (gr, gc)):
+            if (br, bc) == (gr, gc):
                 continue
             if abs(ar - br) + abs(ac - bc) < 3:       # need a real trajectory to the belief
                 continue
@@ -437,7 +490,7 @@ def make_goal_displacement_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, 
             g[ar, ac] = av
             g[gr, gc] = gv
 
-            prog = _goal_displacement_program(av, gv, DIRS[dname])
+            prog = _goal_displacement_program(av, gv, vecs)
             x_full = unfold(g, max_T, prog)
             t_arrive = next((t for t in range(max_T)
                              if _agent_pos(x_full[t], av) == (br, bc)), None)
@@ -460,8 +513,9 @@ def make_goal_displacement_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, 
             if _wall_explainable(x, g, size):
                 continue
             tasks.append((x, {'kind': 'belief', 'av': av, 'gv': gv,
-                              'displaced_to': (br, bc), 'dir': dname}))
+                              'displaced_to': (br, bc), 'dirs': spec}))
             made += 1
+            spec_i, spec_tries = spec_i + 1, 0
     return tasks
 
 
@@ -691,10 +745,11 @@ def belief_rival_specs(m):
             ('stamp, act, witness, erase', _seq_str(W, oa, ow, C)),
         ]
     if var == 'belief_goal':
-        av, gv, dn = m['av'], m['gv'], m['dir']
+        av, gv = m['av'], m['gv']
+        shoves = [_stepstr(gv, dn) for dn in m['dirs']]
         return [
             ('pure desire (no belief)',   _seek(gv, av)),
-            ('shove goal in world',       _seq_str(_stepstr(gv, dn), _seek(gv, av))),
+            ('shove goal in world',       _seq_str(*shoves, _seek(gv, av))),
         ]
     if var == 'belief_false_obstacle':
         # Wrong about BOTH the obstacle and the goal, with a REAL wall in the world.

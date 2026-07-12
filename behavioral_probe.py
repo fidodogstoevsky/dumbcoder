@@ -142,7 +142,7 @@ def _probe_scene(D, Q, x, m):
     rival_final = _agent_pos(rival_frames[-1], av)
 
     return {
-        'av': av, 'gv': gv, 'dir': m['dir'], 'T': int(x.shape[0]),
+        'av': av, 'gv': gv, 'dir': '+'.join(m['dirs']), 'T': int(x.shape[0]),
         'believed_cell': list(believed),
         'true_goal': list(true_goal),
         'observed_final': list(observed),

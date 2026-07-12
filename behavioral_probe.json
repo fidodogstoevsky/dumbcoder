@@ -1,105 +1,24 @@
 {
  "phase": 1,
  "decomposed": false,
- "smoke": false,
- "source": "phase1_run.json",
+ "smoke": true,
+ "source": "phase1_run.smoke.json",
  "seed": 101,
  "index": 0,
  "library": [
   "fn_0",
   "fn_1",
-  "fn_2",
-  "fn_3",
-  "fn_4",
-  "fn_5"
+  "fn_2"
  ],
  "n_heldout": 24,
  "n_mental_searches_believed": 24,
- "n_rival_searches_true": 24,
+ "n_rival_searches_true": 23,
  "records": [
   {
    "av": 1,
    "gv": 2,
-   "dir": "down",
-   "T": 4,
-   "believed_cell": [
-    2,
-    1
-   ],
-   "true_goal": [
-    1,
-    1
-   ],
-   "observed_final": [
-    2,
-    1
-   ],
-   "mental": {
-    "program": "(fork (compose (step 2 down) (optimize (neg_dist 2) 1)) (sync_to_world 1))",
-    "program_lib": "(fork (fn_1 1 2 (step 2 down)) (sync_to_world 1))",
-    "dl": 20.488706588745117,
-    "final": [
-     2,
-     1
-    ],
-    "searches_believed": true
-   },
-   "rival": {
-    "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 2) 1)",
-    "program_lib": "(optimize (neg_dist 2) 1)",
-    "dl": 7.863266944885254,
-    "final": [
-     1,
-     1
-    ],
-    "searches_true": true
-   }
-  },
-  {
-   "av": 1,
-   "gv": 2,
    "dir": "up",
-   "T": 5,
-   "believed_cell": [
-    1,
-    3
-   ],
-   "true_goal": [
-    2,
-    3
-   ],
-   "observed_final": [
-    1,
-    3
-   ],
-   "mental": {
-    "program": "(fork (compose (step 2 up) (optimize (neg_dist 2) 1)) (sync_to_world 1))",
-    "program_lib": "(fork (fn_1 1 2 (step 2 up)) (sync_to_world 1))",
-    "dl": 20.488706588745117,
-    "final": [
-     1,
-     3
-    ],
-    "searches_believed": true
-   },
-   "rival": {
-    "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 2) 1)",
-    "program_lib": "(optimize (neg_dist 2) 1)",
-    "dl": 7.863266944885254,
-    "final": [
-     2,
-     3
-    ],
-    "searches_true": true
-   }
-  },
-  {
-   "av": 1,
-   "gv": 2,
-   "dir": "up",
-   "T": 6,
+   "T": 8,
    "believed_cell": [
     0,
     4
@@ -114,8 +33,8 @@
    ],
    "mental": {
     "program": "(fork (compose (step 2 up) (optimize (neg_dist 2) 1)) (sync_to_world 1))",
-    "program_lib": "(fork (fn_1 1 2 (step 2 up)) (sync_to_world 1))",
-    "dl": 20.488706588745117,
+    "program_lib": "(fork (compose (step 2 up) (optimize (neg_dist 2) 1)) (sync_to_world 1))",
+    "dl": 22.69734764099121,
     "final": [
      0,
      4
@@ -126,7 +45,7 @@
     "label": "pure desire (no belief)",
     "program": "(optimize (neg_dist 2) 1)",
     "program_lib": "(optimize (neg_dist 2) 1)",
-    "dl": 7.863266944885254,
+    "dl": 7.600902557373047,
     "final": [
      1,
      4
@@ -135,40 +54,79 @@
    }
   },
   {
-   "av": 4,
-   "gv": 5,
+   "av": 1,
+   "gv": 2,
    "dir": "down",
    "T": 4,
    "believed_cell": [
     3,
-    2
+    0
    ],
    "true_goal": [
     2,
-    2
+    0
    ],
    "observed_final": [
     3,
-    2
+    0
    ],
    "mental": {
-    "program": "(fork (compose (step 5 down) (optimize (neg_dist 5) 4)) (sync_to_world 4))",
-    "program_lib": "(fork (fn_1 4 5 (step 5 down)) (sync_to_world 4))",
-    "dl": 20.488706588745117,
+    "program": "(fork (compose (step 2 down) (optimize (neg_dist 2) 1)) (sync_to_world 1))",
+    "program_lib": "(fork (compose (step 2 down) (optimize (neg_dist 2) 1)) (sync_to_world 1))",
+    "dl": 22.69734764099121,
     "final": [
      3,
-     2
+     0
     ],
     "searches_believed": true
    },
    "rival": {
     "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 5) 4)",
-    "program_lib": "(optimize (neg_dist 5) 4)",
-    "dl": 7.863266944885254,
+    "program": "(optimize (neg_dist 2) 1)",
+    "program_lib": "(optimize (neg_dist 2) 1)",
+    "dl": 7.600902557373047,
     "final": [
      2,
-     2
+     0
+    ],
+    "searches_true": true
+   }
+  },
+  {
+   "av": 1,
+   "gv": 2,
+   "dir": "down+down",
+   "T": 5,
+   "believed_cell": [
+    3,
+    0
+   ],
+   "true_goal": [
+    1,
+    0
+   ],
+   "observed_final": [
+    3,
+    0
+   ],
+   "mental": {
+    "program": "(fork (compose (compose (step 2 down) (step 2 down)) (optimize (neg_dist 2) 1)) (sync_to_world 1))",
+    "program_lib": "(fork (compose (compose (step 2 down) (step 2 down)) (optimize (neg_dist 2) 1)) (sync_to_world 1))",
+    "dl": 30.991397857666016,
+    "final": [
+     3,
+     0
+    ],
+    "searches_believed": true
+   },
+   "rival": {
+    "label": "pure desire (no belief)",
+    "program": "(optimize (neg_dist 2) 1)",
+    "program_lib": "(optimize (neg_dist 2) 1)",
+    "dl": 7.600902557373047,
+    "final": [
+     1,
+     0
     ],
     "searches_true": true
    }
@@ -179,24 +137,24 @@
    "dir": "up",
    "T": 6,
    "believed_cell": [
-    1,
-    3
+    0,
+    0
    ],
    "true_goal": [
-    2,
-    3
+    1,
+    0
    ],
    "observed_final": [
-    1,
-    3
+    0,
+    0
    ],
    "mental": {
     "program": "(fork (compose (step 5 up) (optimize (neg_dist 5) 4)) (sync_to_world 4))",
-    "program_lib": "(fork (fn_1 4 5 (step 5 up)) (sync_to_world 4))",
-    "dl": 20.488706588745117,
+    "program_lib": "(fork (compose (step 5 up) (optimize (neg_dist 5) 4)) (sync_to_world 4))",
+    "dl": 22.69734764099121,
     "final": [
-     1,
-     3
+     0,
+     0
     ],
     "searches_believed": true
    },
@@ -204,10 +162,10 @@
     "label": "pure desire (no belief)",
     "program": "(optimize (neg_dist 5) 4)",
     "program_lib": "(optimize (neg_dist 5) 4)",
-    "dl": 7.863266944885254,
+    "dl": 7.600902557373047,
     "final": [
-     2,
-     3
+     1,
+     0
     ],
     "searches_true": true
    }
@@ -215,10 +173,10 @@
   {
    "av": 4,
    "gv": 5,
-   "dir": "up",
-   "T": 5,
+   "dir": "up+up",
+   "T": 4,
    "believed_cell": [
-    2,
+    1,
     0
    ],
    "true_goal": [
@@ -226,15 +184,15 @@
     0
    ],
    "observed_final": [
-    2,
+    1,
     0
    ],
    "mental": {
-    "program": "(fork (compose (step 5 up) (optimize (neg_dist 5) 4)) (sync_to_world 4))",
-    "program_lib": "(fork (fn_1 4 5 (step 5 up)) (sync_to_world 4))",
-    "dl": 20.488706588745117,
+    "program": "(fork (compose (compose (step 5 up) (step 5 up)) (optimize (neg_dist 5) 4)) (sync_to_world 4))",
+    "program_lib": "(fork (compose (compose (step 5 up) (step 5 up)) (optimize (neg_dist 5) 4)) (sync_to_world 4))",
+    "dl": 30.991397857666016,
     "final": [
-     2,
+     1,
      0
     ],
     "searches_believed": true
@@ -243,10 +201,49 @@
     "label": "pure desire (no belief)",
     "program": "(optimize (neg_dist 5) 4)",
     "program_lib": "(optimize (neg_dist 5) 4)",
-    "dl": 7.863266944885254,
+    "dl": 7.600902557373047,
     "final": [
      3,
-     0
+     2
+    ],
+    "searches_true": false
+   }
+  },
+  {
+   "av": 4,
+   "gv": 5,
+   "dir": "down+down",
+   "T": 7,
+   "believed_cell": [
+    3,
+    4
+   ],
+   "true_goal": [
+    1,
+    4
+   ],
+   "observed_final": [
+    3,
+    4
+   ],
+   "mental": {
+    "program": "(fork (compose (compose (step 5 down) (step 5 down)) (optimize (neg_dist 5) 4)) (sync_to_world 4))",
+    "program_lib": "(fork (compose (compose (step 5 down) (step 5 down)) (optimize (neg_dist 5) 4)) (sync_to_world 4))",
+    "dl": 30.991397857666016,
+    "final": [
+     3,
+     4
+    ],
+    "searches_believed": true
+   },
+   "rival": {
+    "label": "pure desire (no belief)",
+    "program": "(optimize (neg_dist 5) 4)",
+    "program_lib": "(optimize (neg_dist 5) 4)",
+    "dl": 7.600902557373047,
+    "final": [
+     1,
+     4
     ],
     "searches_true": true
    }
@@ -255,154 +252,115 @@
    "av": 6,
    "gv": 7,
    "dir": "down",
-   "T": 6,
+   "T": 4,
    "believed_cell": [
-    2,
+    4,
     0
    ],
    "true_goal": [
-    1,
+    3,
     0
    ],
    "observed_final": [
-    2,
+    4,
     0
    ],
    "mental": {
     "program": "(fork (compose (step 7 down) (optimize (neg_dist 7) 6)) (sync_to_world 6))",
-    "program_lib": "(fork (fn_1 6 7 (step 7 down)) (sync_to_world 6))",
-    "dl": 20.488706588745117,
-    "final": [
-     2,
-     0
-    ],
-    "searches_believed": true
-   },
-   "rival": {
-    "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 7) 6)",
-    "program_lib": "(optimize (neg_dist 7) 6)",
-    "dl": 7.863266944885254,
-    "final": [
-     1,
-     0
-    ],
-    "searches_true": true
-   }
-  },
-  {
-   "av": 6,
-   "gv": 7,
-   "dir": "up",
-   "T": 5,
-   "believed_cell": [
-    0,
-    1
-   ],
-   "true_goal": [
-    1,
-    1
-   ],
-   "observed_final": [
-    0,
-    1
-   ],
-   "mental": {
-    "program": "(fork (compose (step 7 up) (optimize (neg_dist 7) 6)) (sync_to_world 6))",
-    "program_lib": "(fork (fn_1 6 7 (step 7 up)) (sync_to_world 6))",
-    "dl": 20.488706588745117,
-    "final": [
-     0,
-     1
-    ],
-    "searches_believed": true
-   },
-   "rival": {
-    "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 7) 6)",
-    "program_lib": "(optimize (neg_dist 7) 6)",
-    "dl": 7.863266944885254,
-    "final": [
-     1,
-     1
-    ],
-    "searches_true": true
-   }
-  },
-  {
-   "av": 6,
-   "gv": 7,
-   "dir": "up",
-   "T": 5,
-   "believed_cell": [
-    0,
-    2
-   ],
-   "true_goal": [
-    1,
-    2
-   ],
-   "observed_final": [
-    0,
-    2
-   ],
-   "mental": {
-    "program": "(fork (compose (step 7 up) (optimize (neg_dist 7) 6)) (sync_to_world 6))",
-    "program_lib": "(fork (fn_1 6 7 (step 7 up)) (sync_to_world 6))",
-    "dl": 20.488706588745117,
-    "final": [
-     0,
-     2
-    ],
-    "searches_believed": true
-   },
-   "rival": {
-    "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 7) 6)",
-    "program_lib": "(optimize (neg_dist 7) 6)",
-    "dl": 7.863266944885254,
-    "final": [
-     1,
-     2
-    ],
-    "searches_true": true
-   }
-  },
-  {
-   "av": 8,
-   "gv": 9,
-   "dir": "down",
-   "T": 7,
-   "believed_cell": [
-    4,
-    3
-   ],
-   "true_goal": [
-    3,
-    3
-   ],
-   "observed_final": [
-    4,
-    3
-   ],
-   "mental": {
-    "program": "(fork (compose (step 9 down) (optimize (neg_dist 9) 8)) (sync_to_world 8))",
-    "program_lib": "(fork (fn_1 8 9 (step 9 down)) (sync_to_world 8))",
-    "dl": 20.488706588745117,
+    "program_lib": "(fork (compose (step 7 down) (optimize (neg_dist 7) 6)) (sync_to_world 6))",
+    "dl": 22.69734764099121,
     "final": [
      4,
-     3
+     0
     ],
     "searches_believed": true
    },
    "rival": {
     "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 9) 8)",
-    "program_lib": "(optimize (neg_dist 9) 8)",
-    "dl": 7.863266944885254,
+    "program": "(optimize (neg_dist 7) 6)",
+    "program_lib": "(optimize (neg_dist 7) 6)",
+    "dl": 7.600902557373047,
     "final": [
      3,
-     3
+     0
+    ],
+    "searches_true": true
+   }
+  },
+  {
+   "av": 6,
+   "gv": 7,
+   "dir": "up",
+   "T": 4,
+   "believed_cell": [
+    2,
+    0
+   ],
+   "true_goal": [
+    3,
+    0
+   ],
+   "observed_final": [
+    2,
+    0
+   ],
+   "mental": {
+    "program": "(fork (compose (step 7 up) (optimize (neg_dist 7) 6)) (sync_to_world 6))",
+    "program_lib": "(fork (compose (step 7 up) (optimize (neg_dist 7) 6)) (sync_to_world 6))",
+    "dl": 22.69734764099121,
+    "final": [
+     2,
+     0
+    ],
+    "searches_believed": true
+   },
+   "rival": {
+    "label": "pure desire (no belief)",
+    "program": "(optimize (neg_dist 7) 6)",
+    "program_lib": "(optimize (neg_dist 7) 6)",
+    "dl": 7.600902557373047,
+    "final": [
+     3,
+     0
+    ],
+    "searches_true": true
+   }
+  },
+  {
+   "av": 6,
+   "gv": 7,
+   "dir": "up+up",
+   "T": 6,
+   "believed_cell": [
+    2,
+    0
+   ],
+   "true_goal": [
+    4,
+    0
+   ],
+   "observed_final": [
+    2,
+    0
+   ],
+   "mental": {
+    "program": "(fork (compose (compose (step 7 up) (step 7 up)) (optimize (neg_dist 7) 6)) (sync_to_world 6))",
+    "program_lib": "(fork (compose (compose (step 7 up) (step 7 up)) (optimize (neg_dist 7) 6)) (sync_to_world 6))",
+    "dl": 30.991397857666016,
+    "final": [
+     2,
+     0
+    ],
+    "searches_believed": true
+   },
+   "rival": {
+    "label": "pure desire (no belief)",
+    "program": "(optimize (neg_dist 7) 6)",
+    "program_lib": "(optimize (neg_dist 7) 6)",
+    "dl": 7.600902557373047,
+    "final": [
+     4,
+     0
     ],
     "searches_true": true
    }
@@ -411,13 +369,52 @@
    "av": 8,
    "gv": 9,
    "dir": "down",
+   "T": 6,
+   "believed_cell": [
+    3,
+    4
+   ],
+   "true_goal": [
+    2,
+    4
+   ],
+   "observed_final": [
+    3,
+    4
+   ],
+   "mental": {
+    "program": "(fork (compose (step 9 down) (optimize (neg_dist 9) 8)) (sync_to_world 8))",
+    "program_lib": "(fork (compose (step 9 down) (optimize (neg_dist 9) 8)) (sync_to_world 8))",
+    "dl": 22.69734764099121,
+    "final": [
+     3,
+     4
+    ],
+    "searches_believed": true
+   },
+   "rival": {
+    "label": "pure desire (no belief)",
+    "program": "(optimize (neg_dist 9) 8)",
+    "program_lib": "(optimize (neg_dist 9) 8)",
+    "dl": 7.600902557373047,
+    "final": [
+     2,
+     4
+    ],
+    "searches_true": true
+   }
+  },
+  {
+   "av": 8,
+   "gv": 9,
+   "dir": "down+down",
    "T": 4,
    "believed_cell": [
     3,
     0
    ],
    "true_goal": [
-    2,
+    1,
     0
    ],
    "observed_final": [
@@ -425,9 +422,9 @@
     0
    ],
    "mental": {
-    "program": "(fork (compose (step 9 down) (optimize (neg_dist 9) 8)) (sync_to_world 8))",
-    "program_lib": "(fork (fn_1 8 9 (step 9 down)) (sync_to_world 8))",
-    "dl": 20.488706588745117,
+    "program": "(fork (compose (compose (step 9 down) (step 9 down)) (optimize (neg_dist 9) 8)) (sync_to_world 8))",
+    "program_lib": "(fork (compose (compose (step 9 down) (step 9 down)) (optimize (neg_dist 9) 8)) (sync_to_world 8))",
+    "dl": 30.991397857666016,
     "final": [
      3,
      0
@@ -438,9 +435,9 @@
     "label": "pure desire (no belief)",
     "program": "(optimize (neg_dist 9) 8)",
     "program_lib": "(optimize (neg_dist 9) 8)",
-    "dl": 7.863266944885254,
+    "dl": 7.600902557373047,
     "final": [
-     2,
+     1,
      0
     ],
     "searches_true": true
@@ -450,26 +447,26 @@
    "av": 8,
    "gv": 9,
    "dir": "up",
-   "T": 4,
+   "T": 7,
    "believed_cell": [
     1,
-    0
+    4
    ],
    "true_goal": [
     2,
-    0
+    4
    ],
    "observed_final": [
     1,
-    0
+    4
    ],
    "mental": {
     "program": "(fork (compose (step 9 up) (optimize (neg_dist 9) 8)) (sync_to_world 8))",
-    "program_lib": "(fork (fn_1 8 9 (step 9 up)) (sync_to_world 8))",
-    "dl": 20.488706588745117,
+    "program_lib": "(fork (compose (step 9 up) (optimize (neg_dist 9) 8)) (sync_to_world 8))",
+    "dl": 22.69734764099121,
     "final": [
      1,
-     0
+     4
     ],
     "searches_believed": true
    },
@@ -477,9 +474,48 @@
     "label": "pure desire (no belief)",
     "program": "(optimize (neg_dist 9) 8)",
     "program_lib": "(optimize (neg_dist 9) 8)",
-    "dl": 7.863266944885254,
+    "dl": 7.600902557373047,
     "final": [
      2,
+     4
+    ],
+    "searches_true": true
+   }
+  },
+  {
+   "av": 2,
+   "gv": 6,
+   "dir": "up+up",
+   "T": 5,
+   "believed_cell": [
+    1,
+    0
+   ],
+   "true_goal": [
+    3,
+    0
+   ],
+   "observed_final": [
+    1,
+    0
+   ],
+   "mental": {
+    "program": "(fork (compose (compose (step 6 up) (step 6 up)) (optimize (neg_dist 6) 2)) (sync_to_world 2))",
+    "program_lib": "(fork (compose (compose (step 6 up) (step 6 up)) (optimize (neg_dist 6) 2)) (sync_to_world 2))",
+    "dl": 30.991397857666016,
+    "final": [
+     1,
+     0
+    ],
+    "searches_believed": true
+   },
+   "rival": {
+    "label": "pure desire (no belief)",
+    "program": "(optimize (neg_dist 6) 2)",
+    "program_lib": "(optimize (neg_dist 6) 2)",
+    "dl": 7.600902557373047,
+    "final": [
+     3,
      0
     ],
     "searches_true": true
@@ -488,27 +524,27 @@
   {
    "av": 2,
    "gv": 6,
-   "dir": "up",
-   "T": 4,
+   "dir": "down+down",
+   "T": 6,
    "believed_cell": [
-    0,
-    2
+    4,
+    4
    ],
    "true_goal": [
-    1,
-    2
+    2,
+    4
    ],
    "observed_final": [
-    0,
-    2
+    4,
+    4
    ],
    "mental": {
-    "program": "(fork (compose (step 6 up) (optimize (neg_dist 6) 2)) (sync_to_world 2))",
-    "program_lib": "(fork (fn_1 2 6 (step 6 up)) (sync_to_world 2))",
-    "dl": 20.488706588745117,
+    "program": "(fork (compose (compose (step 6 down) (step 6 down)) (optimize (neg_dist 6) 2)) (sync_to_world 2))",
+    "program_lib": "(fork (compose (compose (step 6 down) (step 6 down)) (optimize (neg_dist 6) 2)) (sync_to_world 2))",
+    "dl": 30.991397857666016,
     "final": [
-     0,
-     2
+     4,
+     4
     ],
     "searches_believed": true
    },
@@ -516,10 +552,10 @@
     "label": "pure desire (no belief)",
     "program": "(optimize (neg_dist 6) 2)",
     "program_lib": "(optimize (neg_dist 6) 2)",
-    "dl": 7.863266944885254,
+    "dl": 7.600902557373047,
     "final": [
-     1,
-     2
+     2,
+     4
     ],
     "searches_true": true
    }
@@ -528,260 +564,182 @@
    "av": 2,
    "gv": 6,
    "dir": "down",
+   "T": 5,
+   "believed_cell": [
+    2,
+    4
+   ],
+   "true_goal": [
+    1,
+    4
+   ],
+   "observed_final": [
+    2,
+    4
+   ],
+   "mental": {
+    "program": "(fork (compose (step 6 down) (optimize (neg_dist 6) 2)) (sync_to_world 2))",
+    "program_lib": "(fork (compose (step 6 down) (optimize (neg_dist 6) 2)) (sync_to_world 2))",
+    "dl": 22.69734764099121,
+    "final": [
+     2,
+     4
+    ],
+    "searches_believed": true
+   },
+   "rival": {
+    "label": "pure desire (no belief)",
+    "program": "(optimize (neg_dist 6) 2)",
+    "program_lib": "(optimize (neg_dist 6) 2)",
+    "dl": 7.600902557373047,
+    "final": [
+     1,
+     4
+    ],
+    "searches_true": true
+   }
+  },
+  {
+   "av": 5,
+   "gv": 8,
+   "dir": "down+down",
    "T": 8,
    "believed_cell": [
-    4,
-    4
-   ],
-   "true_goal": [
     3,
     4
    ],
+   "true_goal": [
+    1,
+    4
+   ],
    "observed_final": [
-    4,
+    3,
     4
    ],
    "mental": {
-    "program": "(fork (compose (step 6 down) (optimize (neg_dist 6) 2)) (sync_to_world 2))",
-    "program_lib": "(fork (fn_1 2 6 (step 6 down)) (sync_to_world 2))",
-    "dl": 20.488706588745117,
+    "program": "(fork (compose (compose (step 8 down) (step 8 down)) (optimize (neg_dist 8) 5)) (sync_to_world 5))",
+    "program_lib": "(fork (compose (compose (step 8 down) (step 8 down)) (optimize (neg_dist 8) 5)) (sync_to_world 5))",
+    "dl": 30.991397857666016,
     "final": [
-     4,
+     3,
      4
     ],
     "searches_believed": true
    },
    "rival": {
     "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 6) 2)",
-    "program_lib": "(optimize (neg_dist 6) 2)",
-    "dl": 7.863266944885254,
+    "program": "(optimize (neg_dist 8) 5)",
+    "program_lib": "(optimize (neg_dist 8) 5)",
+    "dl": 7.600902557373047,
     "final": [
-     3,
+     1,
      4
     ],
     "searches_true": true
    }
   },
   {
-   "av": 2,
-   "gv": 6,
-   "dir": "down",
-   "T": 6,
-   "believed_cell": [
-    4,
-    3
-   ],
-   "true_goal": [
-    3,
-    3
-   ],
-   "observed_final": [
-    4,
-    3
-   ],
-   "mental": {
-    "program": "(fork (compose (step 6 down) (optimize (neg_dist 6) 2)) (sync_to_world 2))",
-    "program_lib": "(fork (fn_1 2 6 (step 6 down)) (sync_to_world 2))",
-    "dl": 20.488706588745117,
-    "final": [
-     4,
-     3
-    ],
-    "searches_believed": true
-   },
-   "rival": {
-    "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 6) 2)",
-    "program_lib": "(optimize (neg_dist 6) 2)",
-    "dl": 7.863266944885254,
-    "final": [
-     3,
-     3
-    ],
-    "searches_true": true
-   }
-  },
-  {
    "av": 5,
    "gv": 8,
    "dir": "down",
-   "T": 5,
-   "believed_cell": [
-    4,
-    1
-   ],
-   "true_goal": [
-    3,
-    1
-   ],
-   "observed_final": [
-    4,
-    1
-   ],
-   "mental": {
-    "program": "(fork (compose (step 8 down) (optimize (neg_dist 8) 5)) (sync_to_world 5))",
-    "program_lib": "(fork (fn_1 5 8 (step 8 down)) (sync_to_world 5))",
-    "dl": 20.488706588745117,
-    "final": [
-     4,
-     1
-    ],
-    "searches_believed": true
-   },
-   "rival": {
-    "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 8) 5)",
-    "program_lib": "(optimize (neg_dist 8) 5)",
-    "dl": 7.863266944885254,
-    "final": [
-     3,
-     1
-    ],
-    "searches_true": true
-   }
-  },
-  {
-   "av": 5,
-   "gv": 8,
-   "dir": "down",
-   "T": 5,
-   "believed_cell": [
-    4,
-    3
-   ],
-   "true_goal": [
-    3,
-    3
-   ],
-   "observed_final": [
-    4,
-    3
-   ],
-   "mental": {
-    "program": "(fork (compose (step 8 down) (optimize (neg_dist 8) 5)) (sync_to_world 5))",
-    "program_lib": "(fork (fn_1 5 8 (step 8 down)) (sync_to_world 5))",
-    "dl": 20.488706588745117,
-    "final": [
-     4,
-     3
-    ],
-    "searches_believed": true
-   },
-   "rival": {
-    "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 8) 5)",
-    "program_lib": "(optimize (neg_dist 8) 5)",
-    "dl": 7.863266944885254,
-    "final": [
-     3,
-     3
-    ],
-    "searches_true": true
-   }
-  },
-  {
-   "av": 5,
-   "gv": 8,
-   "dir": "down",
-   "T": 5,
-   "believed_cell": [
-    4,
-    2
-   ],
-   "true_goal": [
-    3,
-    2
-   ],
-   "observed_final": [
-    4,
-    2
-   ],
-   "mental": {
-    "program": "(fork (compose (step 8 down) (optimize (neg_dist 8) 5)) (sync_to_world 5))",
-    "program_lib": "(fork (fn_1 5 8 (step 8 down)) (sync_to_world 5))",
-    "dl": 20.488706588745117,
-    "final": [
-     4,
-     2
-    ],
-    "searches_believed": true
-   },
-   "rival": {
-    "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 8) 5)",
-    "program_lib": "(optimize (neg_dist 8) 5)",
-    "dl": 7.863266944885254,
-    "final": [
-     3,
-     2
-    ],
-    "searches_true": true
-   }
-  },
-  {
-   "av": 7,
-   "gv": 1,
-   "dir": "up",
    "T": 7,
    "believed_cell": [
-    1,
-    0
-   ],
-   "true_goal": [
     2,
     0
    ],
-   "observed_final": [
+   "true_goal": [
     1,
     0
    ],
+   "observed_final": [
+    2,
+    0
+   ],
    "mental": {
-    "program": "(fork (compose (step 1 up) (optimize (neg_dist 1) 7)) (sync_to_world 7))",
-    "program_lib": "(fork (fn_1 7 1 (step 1 up)) (sync_to_world 7))",
-    "dl": 20.488706588745117,
-    "final": [
-     1,
-     0
-    ],
-    "searches_believed": true
-   },
-   "rival": {
-    "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 1) 7)",
-    "program_lib": "(optimize (neg_dist 1) 7)",
-    "dl": 7.863266944885254,
+    "program": "(fork (compose (step 8 down) (optimize (neg_dist 8) 5)) (sync_to_world 5))",
+    "program_lib": "(fork (compose (step 8 down) (optimize (neg_dist 8) 5)) (sync_to_world 5))",
+    "dl": 22.69734764099121,
     "final": [
      2,
      0
     ],
+    "searches_believed": true
+   },
+   "rival": {
+    "label": "pure desire (no belief)",
+    "program": "(optimize (neg_dist 8) 5)",
+    "program_lib": "(optimize (neg_dist 8) 5)",
+    "dl": 7.600902557373047,
+    "final": [
+     1,
+     0
+    ],
     "searches_true": true
    }
   },
   {
-   "av": 7,
-   "gv": 1,
-   "dir": "up",
+   "av": 5,
+   "gv": 8,
+   "dir": "up+up",
    "T": 4,
    "believed_cell": [
     1,
-    1
+    0
    ],
    "true_goal": [
-    2,
-    1
+    3,
+    0
    ],
    "observed_final": [
     1,
-    1
+    0
    ],
    "mental": {
-    "program": "(fork (compose (step 1 up) (optimize (neg_dist 1) 7)) (sync_to_world 7))",
-    "program_lib": "(fork (fn_1 7 1 (step 1 up)) (sync_to_world 7))",
-    "dl": 20.488706588745117,
+    "program": "(fork (compose (compose (step 8 up) (step 8 up)) (optimize (neg_dist 8) 5)) (sync_to_world 5))",
+    "program_lib": "(fork (compose (compose (step 8 up) (step 8 up)) (optimize (neg_dist 8) 5)) (sync_to_world 5))",
+    "dl": 30.991397857666016,
     "final": [
      1,
-     1
+     0
+    ],
+    "searches_believed": true
+   },
+   "rival": {
+    "label": "pure desire (no belief)",
+    "program": "(optimize (neg_dist 8) 5)",
+    "program_lib": "(optimize (neg_dist 8) 5)",
+    "dl": 7.600902557373047,
+    "final": [
+     3,
+     0
+    ],
+    "searches_true": true
+   }
+  },
+  {
+   "av": 7,
+   "gv": 1,
+   "dir": "down+down",
+   "T": 6,
+   "believed_cell": [
+    4,
+    4
+   ],
+   "true_goal": [
+    2,
+    4
+   ],
+   "observed_final": [
+    4,
+    4
+   ],
+   "mental": {
+    "program": "(fork (compose (compose (step 1 down) (step 1 down)) (optimize (neg_dist 1) 7)) (sync_to_world 7))",
+    "program_lib": "(fork (compose (compose (step 1 down) (step 1 down)) (optimize (neg_dist 1) 7)) (sync_to_world 7))",
+    "dl": 30.991397857666016,
+    "final": [
+     4,
+     4
     ],
     "searches_believed": true
    },
@@ -789,10 +747,49 @@
     "label": "pure desire (no belief)",
     "program": "(optimize (neg_dist 1) 7)",
     "program_lib": "(optimize (neg_dist 1) 7)",
-    "dl": 7.863266944885254,
+    "dl": 7.600902557373047,
     "final": [
      2,
-     1
+     4
+    ],
+    "searches_true": true
+   }
+  },
+  {
+   "av": 7,
+   "gv": 1,
+   "dir": "up+up",
+   "T": 6,
+   "believed_cell": [
+    1,
+    4
+   ],
+   "true_goal": [
+    3,
+    4
+   ],
+   "observed_final": [
+    1,
+    4
+   ],
+   "mental": {
+    "program": "(fork (compose (compose (step 1 up) (step 1 up)) (optimize (neg_dist 1) 7)) (sync_to_world 7))",
+    "program_lib": "(fork (compose (compose (step 1 up) (step 1 up)) (optimize (neg_dist 1) 7)) (sync_to_world 7))",
+    "dl": 30.991397857666016,
+    "final": [
+     1,
+     4
+    ],
+    "searches_believed": true
+   },
+   "rival": {
+    "label": "pure desire (no belief)",
+    "program": "(optimize (neg_dist 1) 7)",
+    "program_lib": "(optimize (neg_dist 1) 7)",
+    "dl": 7.600902557373047,
+    "final": [
+     3,
+     4
     ],
     "searches_true": true
    }
@@ -803,24 +800,24 @@
    "dir": "up",
    "T": 7,
    "believed_cell": [
-    2,
-    0
+    1,
+    4
    ],
    "true_goal": [
-    3,
-    0
+    2,
+    4
    ],
    "observed_final": [
-    2,
-    0
+    1,
+    4
    ],
    "mental": {
     "program": "(fork (compose (step 1 up) (optimize (neg_dist 1) 7)) (sync_to_world 7))",
-    "program_lib": "(fork (fn_1 7 1 (step 1 up)) (sync_to_world 7))",
-    "dl": 20.488706588745117,
+    "program_lib": "(fork (compose (step 1 up) (optimize (neg_dist 1) 7)) (sync_to_world 7))",
+    "dl": 22.69734764099121,
     "final": [
-     2,
-     0
+     1,
+     4
     ],
     "searches_believed": true
    },
@@ -828,88 +825,10 @@
     "label": "pure desire (no belief)",
     "program": "(optimize (neg_dist 1) 7)",
     "program_lib": "(optimize (neg_dist 1) 7)",
-    "dl": 7.863266944885254,
+    "dl": 7.600902557373047,
     "final": [
-     3,
-     0
-    ],
-    "searches_true": true
-   }
-  },
-  {
-   "av": 9,
-   "gv": 4,
-   "dir": "down",
-   "T": 5,
-   "believed_cell": [
-    4,
-    4
-   ],
-   "true_goal": [
-    3,
-    4
-   ],
-   "observed_final": [
-    4,
-    4
-   ],
-   "mental": {
-    "program": "(fork (compose (step 4 down) (optimize (neg_dist 4) 9)) (sync_to_world 9))",
-    "program_lib": "(fork (fn_1 9 4 (step 4 down)) (sync_to_world 9))",
-    "dl": 20.488706588745117,
-    "final": [
-     4,
+     2,
      4
-    ],
-    "searches_believed": true
-   },
-   "rival": {
-    "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 4) 9)",
-    "program_lib": "(optimize (neg_dist 4) 9)",
-    "dl": 7.863266944885254,
-    "final": [
-     3,
-     4
-    ],
-    "searches_true": true
-   }
-  },
-  {
-   "av": 9,
-   "gv": 4,
-   "dir": "down",
-   "T": 6,
-   "believed_cell": [
-    4,
-    0
-   ],
-   "true_goal": [
-    3,
-    0
-   ],
-   "observed_final": [
-    4,
-    0
-   ],
-   "mental": {
-    "program": "(fork (compose (step 4 down) (optimize (neg_dist 4) 9)) (sync_to_world 9))",
-    "program_lib": "(fork (fn_1 9 4 (step 4 down)) (sync_to_world 9))",
-    "dl": 20.488706588745117,
-    "final": [
-     4,
-     0
-    ],
-    "searches_believed": true
-   },
-   "rival": {
-    "label": "pure desire (no belief)",
-    "program": "(optimize (neg_dist 4) 9)",
-    "program_lib": "(optimize (neg_dist 4) 9)",
-    "dl": 7.863266944885254,
-    "final": [
-     3,
-     0
     ],
     "searches_true": true
    }
@@ -918,26 +837,26 @@
    "av": 9,
    "gv": 4,
    "dir": "up",
-   "T": 6,
+   "T": 7,
    "believed_cell": [
-    0,
-    3
+    1,
+    0
    ],
    "true_goal": [
-    1,
-    3
+    2,
+    0
    ],
    "observed_final": [
-    0,
-    3
+    1,
+    0
    ],
    "mental": {
     "program": "(fork (compose (step 4 up) (optimize (neg_dist 4) 9)) (sync_to_world 9))",
-    "program_lib": "(fork (fn_1 9 4 (step 4 up)) (sync_to_world 9))",
-    "dl": 20.488706588745117,
+    "program_lib": "(fork (compose (step 4 up) (optimize (neg_dist 4) 9)) (sync_to_world 9))",
+    "dl": 22.69734764099121,
     "final": [
-     0,
-     3
+     1,
+     0
     ],
     "searches_believed": true
    },
@@ -945,10 +864,88 @@
     "label": "pure desire (no belief)",
     "program": "(optimize (neg_dist 4) 9)",
     "program_lib": "(optimize (neg_dist 4) 9)",
-    "dl": 7.863266944885254,
+    "dl": 7.600902557373047,
     "final": [
-     1,
-     3
+     2,
+     0
+    ],
+    "searches_true": true
+   }
+  },
+  {
+   "av": 9,
+   "gv": 4,
+   "dir": "down+down",
+   "T": 7,
+   "believed_cell": [
+    4,
+    0
+   ],
+   "true_goal": [
+    2,
+    0
+   ],
+   "observed_final": [
+    4,
+    0
+   ],
+   "mental": {
+    "program": "(fork (compose (compose (step 4 down) (step 4 down)) (optimize (neg_dist 4) 9)) (sync_to_world 9))",
+    "program_lib": "(fork (compose (compose (step 4 down) (step 4 down)) (optimize (neg_dist 4) 9)) (sync_to_world 9))",
+    "dl": 30.991397857666016,
+    "final": [
+     4,
+     0
+    ],
+    "searches_believed": true
+   },
+   "rival": {
+    "label": "pure desire (no belief)",
+    "program": "(optimize (neg_dist 4) 9)",
+    "program_lib": "(optimize (neg_dist 4) 9)",
+    "dl": 7.600902557373047,
+    "final": [
+     2,
+     0
+    ],
+    "searches_true": true
+   }
+  },
+  {
+   "av": 9,
+   "gv": 4,
+   "dir": "down",
+   "T": 6,
+   "believed_cell": [
+    3,
+    0
+   ],
+   "true_goal": [
+    2,
+    0
+   ],
+   "observed_final": [
+    3,
+    0
+   ],
+   "mental": {
+    "program": "(fork (compose (step 4 down) (optimize (neg_dist 4) 9)) (sync_to_world 9))",
+    "program_lib": "(fork (compose (step 4 down) (optimize (neg_dist 4) 9)) (sync_to_world 9))",
+    "dl": 22.69734764099121,
+    "final": [
+     3,
+     0
+    ],
+    "searches_believed": true
+   },
+   "rival": {
+    "label": "pure desire (no belief)",
+    "program": "(optimize (neg_dist 4) 9)",
+    "program_lib": "(optimize (neg_dist 4) 9)",
+    "dl": 7.600902557373047,
+    "final": [
+     2,
+     0
     ],
     "searches_true": true
    }

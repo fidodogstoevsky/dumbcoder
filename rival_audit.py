@@ -77,6 +77,23 @@ for name, fam, m in hits:
 if not hits:
     print("  (none — rivals do not reproduce any regenerated scene)")
 
+# Regression gate.  Scaffold is EXPECTED to remain reproducible by the transient-wall
+# rivals: on a single-agent scene the transient real wall is extensionally identical to
+# the private-copy belief in every frame (the reason witness tasks exist).  That leak is
+# unfixable in DATA and is instead handled by run_phase's round-1 t_fn cap, which keeps
+# the deep transient-wall program out of the round where belief must win.  Every OTHER
+# family (goal / witness / dual / false-obstacle) must have zero hits after (a)+(c).
+other_hits = [(name, fam, m) for name, fam, m in hits if fam != 'scaffold']
+print(f"\n=== regression gate ===")
+print(f"  scaffold hits (by design, handled by round-1 t_fn cap): "
+      f"{sum(1 for _, fam, _ in hits if fam == 'scaffold')}")
+if other_hits:
+    print(f"  FAIL: {len(other_hits)} non-scaffold rival hit(s) — a real leak:")
+    for name, fam, m in other_hits:
+        print(f"    {name} -> {fam} {belief_variant(m) if m['kind']=='belief' else m['kind']}")
+else:
+    print("  PASS: 0 non-scaffold rival hits (goal/witness/dual/fob all clean).")
+
 # generic snd_gg-readout audit: is any belief scene reproducible by fork(derive, snd_gg)
 # where derive = [optional wall stamp anywhere] ∘ seek(gv',av') over scene values?
 print("\n=== snd_gg-readout audit (fork(derive, snd_gg) sweep) ===", flush=True)

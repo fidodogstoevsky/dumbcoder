@@ -1,8 +1,8 @@
 {
  "decomposed": true,
  "smoke": true,
- "n_solved": 54,
- "n_total": 102,
+ "n_solved": 52,
+ "n_total": 100,
  "stitch_iters": 3,
  "ecd_iters": 2,
  "constructor_round": null,
@@ -11,7 +11,6 @@
   "desire": 1,
   "overlay": 1,
   "comet": 1,
-  "flee": 1,
   "deletion": 1,
   "denoise": 1,
   "underlay": 1,
@@ -29,7 +28,6 @@
   "desire": 1,
   "overlay": 1,
   "comet": 1,
-  "flee": 1,
   "deletion": 1,
   "denoise": 1,
   "underlay": 1,
@@ -47,7 +45,6 @@
   "desire": 8,
   "overlay": 2,
   "comet": 2,
-  "flee": 2,
   "deletion": 2,
   "denoise": 2,
   "underlay": 2,
@@ -67,7 +64,6 @@
   "comet": 2,
   "belief": 40,
   "belief_scaffold": 8,
-  "flee": 2,
   "deletion": 2,
   "denoise": 2,
   "underlay": 2,
@@ -106,9 +102,6 @@
    "optimize",
    "overlay",
    "pipe_gpg"
-  ],
-  "flee": [
-   "optimize"
   ],
   "deletion": [],
   "denoise": [],
@@ -199,17 +192,14 @@
    },
    "overlay": {
     "overlay": 2,
-    "dup": 2,
-    "mapsnd": 2
+    "mapsnd": 2,
+    "dup": 2
    },
    "comet": {
+    "dup": 2,
     "overlay": 2,
     "neg_dist": 2,
-    "dup": 2,
     "mapsnd": 2
-   },
-   "flee": {
-    "distance": 2
    },
    "deletion": {
     "clear_at": 2
@@ -218,9 +208,9 @@
     "erase": 2
    },
    "underlay": {
-    "dup": 2,
     "underlay": 2,
-    "mapsnd": 2
+    "mapsnd": 2,
+    "dup": 2
    },
    "obstacle": {
     "wall_at": 16,
@@ -231,8 +221,8 @@
     "wall_at": 4
    },
    "registration": {
-    "place": 2,
     "locate": 2,
+    "place": 2,
     "register": 2
    },
    "perception": {
@@ -257,7 +247,6 @@
   "any_complement_used": true,
   "used_complements": [
    "clear_at",
-   "distance",
    "erase",
    "snd_gg",
    "sync_all",
@@ -265,7 +254,9 @@
    "underlay",
    "via_swap"
   ],
-  "unused_complements": []
+  "unused_complements": [
+   "distance"
+  ]
  },
  "invented": [
   {
@@ -319,9 +310,6 @@
   "comet": {
    "fn_3": 2,
    "fn_4": 2
-  },
-  "flee": {
-   "(bare prims)": 2
   },
   "deletion": {
    "(bare prims)": 2

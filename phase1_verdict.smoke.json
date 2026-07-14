@@ -2,9 +2,11 @@
  "decomposed": false,
  "smoke": true,
  "n_solved": 58,
- "n_total": 102,
+ "n_total": 100,
  "stitch_iters": 3,
  "ecd_iters": 2,
+ "t_fn": 15,
+ "t_fn_round1": 15,
  "constructor_round": 1,
  "first_solve_round_by_kind": {
   "physics": 1,
@@ -12,7 +14,6 @@
   "overlay": 1,
   "comet": 1,
   "belief": 1,
-  "flee": 1,
   "deletion": 1,
   "denoise": 1,
   "underlay": 1,
@@ -31,7 +32,6 @@
   "overlay": 1,
   "comet": 1,
   "belief_goal": 1,
-  "flee": 1,
   "deletion": 1,
   "denoise": 1,
   "underlay": 1,
@@ -49,8 +49,7 @@
   "desire": 8,
   "overlay": 2,
   "comet": 2,
-  "belief": 4,
-  "flee": 2,
+  "belief": 6,
   "deletion": 2,
   "denoise": 2,
   "underlay": 2,
@@ -70,7 +69,6 @@
   "comet": 2,
   "belief": 40,
   "belief_scaffold": 8,
-  "flee": 2,
   "deletion": 2,
   "denoise": 2,
   "underlay": 2,
@@ -109,9 +107,6 @@
    "optimize",
    "sync_to_world"
   ],
-  "flee": [
-   "optimize"
-  ],
   "deletion": [],
   "denoise": [],
   "underlay": [
@@ -138,8 +133,8 @@
   "readout": []
  },
  "belief_commit": {
-  "literal": 4,
-  "degenerate": 0,
+  "literal": 5,
+  "degenerate": 1,
   "complement": 0
  },
  "belief_variants": {
@@ -147,25 +142,29 @@
    "solved": 0,
    "total": 8,
    "literal": 0,
-   "degenerate": 0
+   "degenerate": 0,
+   "complement": 0
   },
   "belief_goal": {
-   "solved": 4,
+   "solved": 6,
    "total": 16,
-   "literal": 4,
-   "degenerate": 0
+   "literal": 5,
+   "degenerate": 1,
+   "complement": 0
   },
   "belief_dual": {
    "solved": 0,
    "total": 8,
    "literal": 0,
-   "degenerate": 0
+   "degenerate": 0,
+   "complement": 0
   },
   "belief_false_obstacle": {
    "solved": 0,
    "total": 8,
    "literal": 0,
-   "degenerate": 0
+   "degenerate": 0,
+   "complement": 0
   }
  },
  "false_obstacle": {
@@ -198,9 +197,6 @@
     "overlay": 2,
     "neg_dist": 2
    },
-   "flee": {
-    "distance": 2
-   },
    "deletion": {
     "clear_at": 2
    },
@@ -211,12 +207,12 @@
     "underlay": 2
    },
    "obstacle": {
-    "wall_at": 16,
-    "neg_dist": 16
+    "neg_dist": 16,
+    "wall_at": 16
    },
    "relocate": {
-    "wall_at": 4,
-    "clear_at": 4
+    "clear_at": 4,
+    "wall_at": 4
    },
    "registration": {
     "sync_to_world": 2
@@ -242,7 +238,6 @@
   "any_complement_used": true,
   "used_complements": [
    "clear_at",
-   "distance",
    "erase",
    "snd_gg",
    "sync_all",
@@ -250,7 +245,9 @@
    "sync_to_model",
    "underlay"
   ],
-  "unused_complements": []
+  "unused_complements": [
+   "distance"
+  ]
  },
  "invented": [
   {
@@ -308,10 +305,7 @@
    "fn_4": 2
   },
   "belief": {
-   "fn_3": 4
-  },
-  "flee": {
-   "(bare prims)": 2
+   "fn_3": 6
   },
   "deletion": {
    "(bare prims)": 2

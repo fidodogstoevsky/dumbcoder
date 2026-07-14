@@ -22,12 +22,10 @@
   "fc6c553dbcaab6b2f4f4bb44b9e72139e4f68ea1": "(fork (step 4 down) overlay)",
   "bc77ac3ef142cf6858824af29c39ae591462a387": "(fork (optimize (neg_dist 8) 5) overlay)",
   "75cbdef2e9f9bbd97543b8d24bb0d65ebb973277": "(fork (optimize (neg_dist 6) 2) overlay)",
-  "c8495c5494739d6ff198253172e70e47de9af081": "(fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))",
-  "743a8abbcc71285a7c2e88703e72cfd63619a62a": "(fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))",
-  "2b3858d6c2d3abb66b576ada288ca987e4605187": "(fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))",
-  "b464bfaaa40ffc758417522bbe22e41d2cde46c1": "(fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))",
-  "f5030a808cedfde0030a7078ffbc4ae1436bd3ab": "(optimize (distance 4) 1)",
-  "65aecfddf06b2ba40f218f3b781d80cc02e312d2": "(optimize (distance 1) 4)",
+  "be5ddfa58faa30488a37de164e10599600d1834a": "(fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))",
+  "b14b331fb07dcf5dd869c01fc0af3c068b9f902b": "(fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))",
+  "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a": "(fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))",
+  "0ff3f032b31c5402d1a03c827ed5a5a910316901": "(fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9))",
   "795fdf54fa6968ba917d195b4bac9056c01d9785": "(clear_at c1 c3)",
   "c6d133cbfee52e96d9d00cd176bb0a95b9d90545": "(clear_at c2 c2)",
   "4a6706fd6b31c71e59778429cd328804a69489dc": "(erase 4)",
@@ -65,7 +63,9 @@
   "867ec8122de865d89fa427dfdf4b85c920b8361b": "(sync_except 1)",
   "0e5ce4512d0941bc24a031917aff3799e366c2c5": "(sync_except 5)",
   "5c5257e6104c036679bf8ec3cae0c2141f79770a": "(sync_to_model 1)",
-  "2c9e6caaaa1d0bd8f901cf1140b0328d1bce6f25": "(sync_to_model 4)"
+  "2c9e6caaaa1d0bd8f901cf1140b0328d1bce6f25": "(sync_to_model 4)",
+  "43044c8e54ef3b54aea01a150d6b697f7020dc70": "(fork (compose (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 5)) (sync_to_world 5)) (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))) (sync_except 5))",
+  "8884369c779c882587835276f76b20a0591ecb99": "(fork (compose (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 4)) (sync_to_world 4)) (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9))) (sync_to_model 4))"
  },
  "rewritten": {
   "a15fa5606d472e8c63f6e88b4a003d8b1d766fc8": "(step 4 up)",
@@ -82,12 +82,10 @@
   "fc6c553dbcaab6b2f4f4bb44b9e72139e4f68ea1": "(fork (step 4 down) overlay)",
   "bc77ac3ef142cf6858824af29c39ae591462a387": "(fork (fn_4 8 5) overlay)",
   "75cbdef2e9f9bbd97543b8d24bb0d65ebb973277": "(fork (fn_4 6 2) overlay)",
-  "c8495c5494739d6ff198253172e70e47de9af081": "(fn_3 4 5)",
-  "743a8abbcc71285a7c2e88703e72cfd63619a62a": "(fn_3 8 9)",
-  "2b3858d6c2d3abb66b576ada288ca987e4605187": "(fn_3 2 6)",
-  "b464bfaaa40ffc758417522bbe22e41d2cde46c1": "(fn_3 5 8)",
-  "f5030a808cedfde0030a7078ffbc4ae1436bd3ab": "(optimize (distance 4) 1)",
-  "65aecfddf06b2ba40f218f3b781d80cc02e312d2": "(optimize (distance 1) 4)",
+  "be5ddfa58faa30488a37de164e10599600d1834a": "(fn_3 4 5)",
+  "b14b331fb07dcf5dd869c01fc0af3c068b9f902b": "(fn_3 8 9)",
+  "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a": "(fn_3 5 8)",
+  "0ff3f032b31c5402d1a03c827ed5a5a910316901": "(fn_3 9 4)",
   "795fdf54fa6968ba917d195b4bac9056c01d9785": "(clear_at c1 c3)",
   "c6d133cbfee52e96d9d00cd176bb0a95b9d90545": "(clear_at c2 c2)",
   "4a6706fd6b31c71e59778429cd328804a69489dc": "(erase 4)",
@@ -125,7 +123,9 @@
   "867ec8122de865d89fa427dfdf4b85c920b8361b": "(sync_except 1)",
   "0e5ce4512d0941bc24a031917aff3799e366c2c5": "(sync_except 5)",
   "5c5257e6104c036679bf8ec3cae0c2141f79770a": "(sync_to_model 1)",
-  "2c9e6caaaa1d0bd8f901cf1140b0328d1bce6f25": "(sync_to_model 4)"
+  "2c9e6caaaa1d0bd8f901cf1140b0328d1bce6f25": "(sync_to_model 4)",
+  "43044c8e54ef3b54aea01a150d6b697f7020dc70": "(fork (compose (fn_3 5 4) (fn_3 4 5)) (sync_except 5))",
+  "8884369c779c882587835276f76b20a0591ecb99": "(fork (compose (fn_3 4 4) (fn_3 9 4)) (sync_to_model 4))"
  },
  "kinds": {
   "a15fa5606d472e8c63f6e88b4a003d8b1d766fc8": "physics",
@@ -142,12 +142,10 @@
   "fc6c553dbcaab6b2f4f4bb44b9e72139e4f68ea1": "overlay",
   "bc77ac3ef142cf6858824af29c39ae591462a387": "comet",
   "75cbdef2e9f9bbd97543b8d24bb0d65ebb973277": "comet",
-  "c8495c5494739d6ff198253172e70e47de9af081": "belief",
-  "743a8abbcc71285a7c2e88703e72cfd63619a62a": "belief",
-  "2b3858d6c2d3abb66b576ada288ca987e4605187": "belief",
-  "b464bfaaa40ffc758417522bbe22e41d2cde46c1": "belief",
-  "f5030a808cedfde0030a7078ffbc4ae1436bd3ab": "flee",
-  "65aecfddf06b2ba40f218f3b781d80cc02e312d2": "flee",
+  "be5ddfa58faa30488a37de164e10599600d1834a": "belief",
+  "b14b331fb07dcf5dd869c01fc0af3c068b9f902b": "belief",
+  "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a": "belief",
+  "0ff3f032b31c5402d1a03c827ed5a5a910316901": "belief",
   "795fdf54fa6968ba917d195b4bac9056c01d9785": "deletion",
   "c6d133cbfee52e96d9d00cd176bb0a95b9d90545": "deletion",
   "4a6706fd6b31c71e59778429cd328804a69489dc": "denoise",
@@ -185,6 +183,8 @@
   "867ec8122de865d89fa427dfdf4b85c920b8361b": "reg_except",
   "0e5ce4512d0941bc24a031917aff3799e366c2c5": "reg_except",
   "5c5257e6104c036679bf8ec3cae0c2141f79770a": "perception",
-  "2c9e6caaaa1d0bd8f901cf1140b0328d1bce6f25": "perception"
+  "2c9e6caaaa1d0bd8f901cf1140b0328d1bce6f25": "perception",
+  "43044c8e54ef3b54aea01a150d6b697f7020dc70": "belief",
+  "8884369c779c882587835276f76b20a0591ecb99": "belief"
  }
 }

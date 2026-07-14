@@ -32,7 +32,7 @@ Structural bugs found alongside:
   against the canonical derive — a rival derive that leaves gv/3 unmoved in the
   model makes sync_all safe.
 
-## (a) Kill the pure-compose rival on goal-displacement
+## (a) Kill the pure-compose rival on goal-displacement  ✅ DONE
 
 Files: `tasks_minds.py`.
 1. Add `distance`-seeks to `_physically_explainable` (~line 85; currently tests
@@ -50,9 +50,27 @@ Files: `tasks_minds.py`.
    non-mental rivals (tiers 1–2) and document flee-spelling as an alternative
    spelling of the same belief content.
 
-Verify: extend `rival_audit.py` with every caught rival from the Jul-12 logs →
-require 0 hits; require each family still fills its per-combo quota (raise
-`attempts` caps if needed).
+IMPLEMENTED:
+1. `_physically_explainable` now sweeps BOTH `optimize(neg_dist u, v)` (seek) and
+   `optimize(distance u, v)` (flee) for all scene-value pairs (self-seek skipped;
+   self-flee kept — R1 used it).
+2. `_compose_base_fns` + `_compose_rival_explainable(x, g, max_len=3)` enumerate
+   every compose chain of length ≤ `max_len` over step / seek / flee atoms. Wired
+   into gdb (max_len=3), and — at **max_len=2** — into witness and dual admission.
+   The 4-value witness/dual sweep at length 3 is ~87k unfolds/scene (≈240s for 8
+   witness tasks), untenable; length 2 (≈1980 unfolds) still catches the wall-free
+   2-agent rivals (one physical fn per agent, either polarity) — a genuine 3-deep
+   detour needs a wall, which clobbers the crossing witness — and runs in ~18s for
+   the full 48/24-task quotas.
+3. Flee arm ADDED to `_wall_explainable` (both `neg_dist` and `dist` policies in
+   the wall-fork). MEASURED: goal-displacement still fills 48/48 with all four
+   content specs represented (12/12/11/13 up-up/down-down/down/up), so the flee arm
+   did NOT collapse yield — kept it. This rejects the R3 wall∘flee fork as a
+   wall-content spelling of any polarity.
+
+Verify: `rival_audit.py` extended with a regression gate — R1/R2/R3/C1/C3 (+ fob
+erase-3s) now 0 hits on goal/witness/dual/fob; snd_gg 0/168; every family fills its
+per-combo quota. Only scaffold retains E1–E4/C2 hits (by design; see (c) target 2).
 
 ## (b) snd_gg — canonicalize the vacuous wrapper (NOT a data patch)  ✅ DONE
 
@@ -82,7 +100,7 @@ Verify: unit test that a hand-built wrapped tree simplifies to the inner
 program; smoke run asserts snd_gg absent from the belief census row while the
 readout family still solves via snd_gg.
 
-## (c) Transient-wall rivals: fob admission battery; round-1 budget cap for scaffold
+## (c) Transient-wall rivals: fob admission battery; round-1 budget cap for scaffold  ✅ DONE
 
 Target 1 — false-obstacle (real leak). Files: `tasks_minds.py`
 (`make_false_obstacle_belief_tasks`, ~line 831). Add a rejection battery:
@@ -103,6 +121,24 @@ log's own "--t-fn can drop toward slowest-solve" line is this calibration), full
 3600s for dreamed rounds 2+. DreamCoder-standard; state it in the thesis as a
 curriculum choice. (Alternatives: drop scaffold for long runs — worked in
 phase1-long round 1 but phase2-long still needed it; or accept + disclose.)
+
+IMPLEMENTED:
+- Target 1: `_false_obstacle_rival_explainable(x, g)` — (i) transient real-wall
+  battery `compose(compose(wall_at(pr,pc), seek), clear_at(pr,pc))` and `… erase(3)`
+  over all cells × agents × targets (incl. beacon 3) × BOTH neg_dist/dist policies;
+  (ii) scope-complement sweep `fork(derive', sync_all | sync_except k)` over
+  goal/wall-preserving derives `{seek, wall_at∘seek}` — repairs the derive-relative
+  gap in `_scope_complements_all_fail`. Wired after the scope check in
+  `make_false_obstacle_belief_tasks`. Result: fob fills 24/24 in ~7s, and the
+  Jul-12 C1–C3 / erase-3 rivals no longer reproduce ANY fob scene (audit: 0 fob hits).
+- Target 2: `ROUND1_T_FN_CAP = 1200.0` + `t_fn_round1` param on `run_phase`
+  (CLI `--t-fn-round1`). Round loop selects `round_t_fn = t_fn_round1 if it==1 else
+  t_fn`; default `t_fn_round1 = min(t_fn, 1200)` — a no-op at t_fn ≤ 1200 (smoke/
+  short), caps the first round at 1200s for the 3600s long runs. Round header prints
+  the per-round budget + "(round-1 cap)" flag. Scaffold's transient-wall rivals stay
+  in the audit BY DESIGN (unfixable in data); the cap keeps them out of round 1 so
+  the belief policy token forms first. Verified: phase1 + phase2 `--smoke` reach
+  VERDICT clean.
 
 ## (d) Classifier and census-scope fixes  ✅ DONE
 
@@ -167,4 +203,4 @@ Open item: confirm the snd_gg inner-sync_all reading by scp-ing the Jul-12
 phase1-long's three failed checks (tells us how much was measurement vs search).
 Then (a) + (c) generator hardening. Then (e).
 
-Status: [ ] (a)  [x] (b)  [ ] (c)  [x] (d)  [ ] (e)
+Status: [x] (a)  [x] (b)  [x] (c)  [x] (d)  [ ] (e)

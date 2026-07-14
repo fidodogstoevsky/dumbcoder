@@ -727,8 +727,15 @@ def check_decomposition_identities(tasks):
           f"sync ≡ register(locate, place) verified on {n} belief tasks")
 
 
+# Round-1 fn-timeout cap (seconds): the curriculum budget for the first enumeration
+# round.  Set to the calibrated slowest-solve of a task GIVEN its abstractions are
+# present (~1200s from the Jul-12 timing reports); round 1 has no invented tokens yet,
+# so a longer budget only buys deep extensional rivals, not the belief compound.
+ROUND1_T_FN_CAP = 1200.0
+
+
 def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn=None,
-              dream_on=True, plain_belief=False, curriculum=True):
+              t_fn_round1=None, dream_on=True, plain_belief=False, curriculum=True):
     """One phase of the curriculum (phase 1 = atomic, phase 2 = decomposed).
 
     Both phases run the full symmetric cube over the mixed minds/minds-free corpus
@@ -780,6 +787,12 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         _t_fn, t_reg, stitch_iters, _ecd_iters = 180, 30, 6, 4
     t_fn = _t_fn if t_fn is None else t_fn
     ecd_iters = _ecd_iters if ecd_iters is None else ecd_iters
+    # Per-round fn timeout schedule (DreamCoder-style curriculum): round 1 is capped
+    # near the calibrated slowest-solve so a deep transient-wall rival (scaffold, the
+    # ~349k program the Jul-12 3600s runs found) cannot land BEFORE the wall/fork policy
+    # tokens exist; dreamed rounds 2+ get the full budget.  A no-op when t_fn ≤ the cap
+    # (smoke / short runs), so it only bites the long runs it is meant to protect.
+    t_fn_round1 = min(t_fn, ROUND1_T_FN_CAP) if t_fn_round1 is None else t_fn_round1
     dream_iters = 120 if smoke else 600   # recognition-model training steps per round
 
     print("Generating mixed corpus…")
@@ -982,6 +995,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     fine_kind_of = {mat_key(x): _sample_kind(m) for x, m in all_tasks}
 
     for it in range(1, ecd_iters + 1):
+        round_t_fn = t_fn_round1 if it == 1 else t_fn   # curriculum budget schedule
         unsolved_fn  = [x for x, _ in fn_tasks if mat_key(x) not in sols]
         unsolved_reg = [x for x, _ in reg_tasks if mat_key(x) not in sols]
         n_before = len(sols)
@@ -998,7 +1012,9 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                         if sols.get(k) is not None and k in kind_by_key}
         print(f"\n--- round {it}/{ecd_iters}: {len(unsolved_fn)} fn + {len(unsolved_reg)} "
               f"fn_p_g unsolved; |D|={len(D)} ({len(D.invented)} invented); "
-              f"fn Q={'dreamed (replay families only)' if use_model else 'uniform/content'} ---", flush=True)
+              f"fn Q={'dreamed (replay families only)' if use_model else 'uniform/content'}; "
+              f"t_fn={round_t_fn:.0f}s{' (round-1 cap)' if it == 1 and round_t_fn < t_fn else ''} ---",
+              flush=True)
         # INSTRUMENTATION: does the fn_9-style belief constructor exist in the library
         # at the START of this round (i.e. is there anything for the recognition model
         # to steer toward), and how many belief tasks are already solved & thus eligible
@@ -1017,7 +1033,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                          (dreamed_q(qmodel, D, x)
                           if (use_model and kind_by_key.get(mat_key(x)) in replay_kinds)
                           else content_q(D, x)),
-                         dict(sols), t_fn, 0, fn) for x in unsolved_fn]
+                         dict(sols), round_t_fn, 0, fn) for x in unsolved_fn]
                 # per-task timing: collected so t_fn can be calibrated from a real run —
                 # the max SOLVE time bounds how low the uniform timeout can safely go.
                 timings = {}
@@ -1508,6 +1524,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         'decomposed': bool(decomposed), 'smoke': bool(smoke),
         'n_solved': sum(1 for v in sols.values() if v is not None), 'n_total': n_total,
         'stitch_iters': stitch_iters, 'ecd_iters': ecd_iters,
+        't_fn': t_fn, 't_fn_round1': t_fn_round1,   # curriculum budget schedule (c/target-2)
         # round attribution (item 3)
         'constructor_round': constructor_round,
         'first_solve_round_by_kind': first_solve_round,
@@ -1715,7 +1732,7 @@ def save_trajectory_artifact(D, all_tasks, sols, solve_round, decomposed, smoke,
 
 
 def cli_kwargs(argv):
-    "shared CLI parsing for the phase wrappers: --smoke --samples --ecd-iters N --t-fn N --no-dream --plain-belief --no-curriculum"
+    "shared CLI parsing for the phase wrappers: --smoke --samples --ecd-iters N --t-fn N --t-fn-round1 N --no-dream --plain-belief --no-curriculum"
     def _opt(flag, cast):
         if flag in argv:
             return cast(argv[argv.index(flag) + 1])
@@ -1724,6 +1741,7 @@ def cli_kwargs(argv):
                 samples='--samples' in argv,
                 ecd_iters=_opt('--ecd-iters', int),
                 t_fn=_opt('--t-fn', float),
+                t_fn_round1=_opt('--t-fn-round1', float),
                 dream_on='--no-dream' not in argv,
                 plain_belief='--plain-belief' in argv,
                 curriculum='--no-curriculum' not in argv)

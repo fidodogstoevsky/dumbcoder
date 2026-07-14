@@ -57,7 +57,7 @@ from dsl import (
     fn, util, direction, fn_p_g,
     RIGHT, LEFT, UP, DOWN,
     fork, sync_to_world, sync_all, sync_except,
-    compose, step, optimize, neg_distance, wall_at, clear_at,
+    compose, step, optimize, neg_distance, distance, wall_at, clear_at, erase,
     unfold, tr, simplify,
 )
 
@@ -83,7 +83,12 @@ def _agent_pos(frame, av):
 
 
 def _physically_explainable(x, g):
-    "True if x is reproduced by a single physical fn (step or optimize)."
+    """True if x is reproduced by a single physical fn: step, seek (optimize
+    neg_dist), or FLEE (optimize dist).  The flee arm matters because `optimize
+    (distance u) v` walking away from a value is extensionally a plain physical
+    move; on the all-vertical goal-content specs it can coincide with an up/down
+    shove (fleeing the true goal ≡ walking to the displaced cell), and the Jul-12
+    logs caught exactly such flee-content programs as bare non-mental solves."""
     T = x.shape[0]
     vals = [int(v) for v in np.unique(g) if v != 0]
     for v in vals:
@@ -94,13 +99,62 @@ def _physically_explainable(x, g):
             except Exception:
                 pass
         for u in vals:
-            if u == v:
-                continue
-            try:
-                if np.array_equal(unfold(g, T, optimize(neg_distance(u), v)), x):
-                    return True
-            except Exception:
-                pass
+            for util_fn in (neg_distance, distance):
+                if u == v and util_fn is neg_distance:
+                    continue                      # seeking self is stationary
+                try:
+                    if np.array_equal(unfold(g, T, optimize(util_fn(u), v)), x):
+                        return True
+                except Exception:
+                    pass
+    return False
+
+
+def _compose_base_fns(g):
+    """The non-mental per-frame atoms a short compose chain can be built from, over
+    a scene's own values: `step v d`, seek `optimize (neg_dist u) v`, and flee
+    `optimize (dist u) v` (u ranging over the scene values, incl. u==v for the
+    degenerate self-flee the Jul-12 R1 rival used).  These are exactly the physical
+    primitives the searcher composes; a chain of them is a purely world-level
+    (non-mental) program, so any scene it reproduces is NOT uniquely a belief."""
+    vals = [int(v) for v in np.unique(g) if v != 0]
+    fns = []
+    for v in vals:
+        for d in DIRS.values():
+            fns.append(step(v, d))
+        for u in vals:
+            if u != v:
+                fns.append(optimize(neg_distance(u), v))
+            fns.append(optimize(distance(u), v))
+    return fns
+
+
+def _compose_rival_explainable(x, g, max_len=3):
+    """True if any compose chain of length ≤ `max_len` over `_compose_base_fns`
+    reproduces x — the pure-compose non-mental rival family.  Longer HPC search
+    (t-fn 3600) reaches these 2–3 deep physical chains and used them to solve
+    goal-displacement / witness / dual scenes without any fork (Jul-12 R1/R2);
+    rejecting them at generation keeps a fork+sync belief the sole explanation.
+
+    Cost is bounded (~b^max_len unfolds, b≈#base fns) and only paid on scenes that
+    already passed the cheaper physical/wall gates, so few candidates reach here."""
+    T = x.shape[0]
+    base = _compose_base_fns(g)
+    chains = list(base)                     # length-1 chains (redundant with the
+    frontier = list(base)                   # physical check, but cheap and uniform)
+    for _ in range(max_len - 1):
+        nxt = []
+        for pref in frontier:
+            for f in base:
+                nxt.append(compose(pref, f))
+        chains.extend(nxt)
+        frontier = nxt
+    for prog in chains:
+        try:
+            if np.array_equal(unfold(g, T, prog), x):
+                return True
+        except Exception:
+            pass
     return False
 
 
@@ -347,6 +401,12 @@ def make_witness_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max
                 continue                                         # reject collisions/clobbers
             if _witness_rival_explainable(x, g, av, gv, aw, gw, pr, pc):
                 continue                                         # private belief must be unique
+            # nor any pure-compose chain (one physical fn per agent, either polarity):
+            # length-2 suffices for the wall-free 2-agent rivals and keeps the 4-value
+            # sweep tractable (a length-3 sweep is ~45× costlier here for no extra reach —
+            # a genuine 3-deep detour needs a wall, which clobbers the crossing witness).
+            if _compose_rival_explainable(x, g, max_len=2):
+                continue
             tasks.append((x, {'kind': 'belief', 'av': av, 'gv': gv,
                               'aw': aw, 'gw': gw, 'pw': (pr, pc)}))
             made += 1
@@ -408,15 +468,20 @@ def _wall_explainable(x, g, size=SIZE):
         for gv in dict.fromkeys(vals + [3]):   # 3 = the wall value: the beacon target
             if av == gv:
                 continue
-            seek = optimize(neg_distance(gv), av)
-            for pr in range(size):
-                for pc in range(size):
-                    prog = fork(compose(wall_at(pr, pc), seek), sync_to_world(av))
-                    try:
-                        if np.array_equal(unfold(g, T, prog), x):
-                            return True
-                    except Exception:
-                        pass
+            # both the SEEK reading (walk toward gv around a wall) and the FLEE reading
+            # (walk away from gv around a wall) — on the all-vertical content specs a
+            # flee of the true goal coincides with an up/down shove, and the Jul-12 R3
+            # rival was exactly a wall∘flee fork; rejecting it keeps the surviving scene
+            # from having a wall-content spelling of any polarity.
+            for policy in (optimize(neg_distance(gv), av), optimize(distance(gv), av)):
+                for pr in range(size):
+                    for pc in range(size):
+                        prog = fork(compose(wall_at(pr, pc), policy), sync_to_world(av))
+                        try:
+                            if np.array_equal(unfold(g, T, prog), x):
+                                return True
+                        except Exception:
+                            pass
     return False
 
 
@@ -511,6 +576,8 @@ def make_goal_displacement_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, 
             if _physically_explainable(x, g):
                 continue
             if _wall_explainable(x, g, size):
+                continue
+            if _compose_rival_explainable(x, g):    # no pure-compose non-mental chain
                 continue
             tasks.append((x, {'kind': 'belief', 'av': av, 'gv': gv,
                               'displaced_to': (br, bc), 'dirs': spec}))
@@ -660,6 +727,8 @@ def make_dual_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=
                        for t in range(T - 1) for v in (av1, gv1, av2, gv2)):
                 continue
             if _dual_rival_explainable(x, g, av1, gv1, pw1, av2, gv2, pw2):
+                continue
+            if _compose_rival_explainable(x, g, max_len=2):   # one physical fn per agent, either polarity
                 continue
             tasks.append((x, {'kind': 'belief', 'av': av1, 'gv': gv1, 'pw': pw1,
                               'av2': av2, 'gv2': gv2, 'pw2': pw2}))
@@ -828,6 +897,56 @@ def _scope_complements_all_fail(x, g, derive, av, world_vals):
     return True
 
 
+def _false_obstacle_rival_explainable(x, g, size=SIZE):
+    """True if any NON-MENTAL transient-wall program, or any scope-complement fork
+    over a goal/wall-preserving derive, reproduces the false-obstacle scene.
+
+    The scene keeps a REAL wall (value 3) and the goal fixed in the world, so the
+    intended solution is fork(derive, sync_to_world(av)) with a literal single-value
+    commit.  Two rival families would undercut that agency commit and are rejected:
+
+      * transient real wall — stamp a wall, seek/flee around it, then clear it (or
+        erase all 3s): a purely world-level detour.  The stamp-and-clear-the-believed-
+        cell variants are the confirmed Jul-12 live leak (C1–C3); the fob generator
+        had NO battery for them (unlike witness/dual);
+      * scope-complement fork — fork(derive', sync_all / sync_except k) where derive'
+        moves only the agent in the model (goal & wall left put), which makes a
+        wholesale / all-but-one commit coincide with the single-value agency commit.
+        `_scope_complements_all_fail` guarantees the complements fail only for the
+        CANONICAL derive; this sweep repairs that gap over alternative derives."""
+    T = x.shape[0]
+    agents  = [int(v) for v in np.unique(g) if v not in (0, 3)]
+    targets = [int(v) for v in np.unique(g) if v != 0]     # incl. real wall 3 (beacon)
+    world_vals = list(targets)
+    cells = [(r, c) for r in range(size) for c in range(size)]
+    for av in agents:
+        for gv in targets:
+            if av == gv:
+                continue
+            for util_fn in (neg_distance, distance):
+                seek = optimize(util_fn(gv), av)
+                # 1) transient real-wall rivals: stamp / act / (clear cell | erase all 3s)
+                for (pr, pc) in cells:
+                    for prog in (compose(compose(wall_at(pr, pc), seek), clear_at(pr, pc)),
+                                 compose(compose(wall_at(pr, pc), seek), erase(3))):
+                        try:
+                            if np.array_equal(unfold(g, T, prog), x):
+                                return True
+                        except Exception:
+                            pass
+                # 2) scope-complement forks over goal/wall-preserving derives
+                derives = [seek] + [compose(wall_at(pr, pc), seek) for (pr, pc) in cells]
+                commits = [sync_all] + [sync_except(k) for k in set(world_vals)]
+                for d in derives:
+                    for commit in commits:
+                        try:
+                            if np.array_equal(unfold(g, T, fork(d, commit)), x):
+                                return True
+                        except Exception:
+                            pass
+    return False
+
+
 def make_false_obstacle_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE,
                                      seed=0, max_T=8):
     """Single agent, false about BOTH the obstacle and the goal location.
@@ -912,6 +1031,8 @@ def make_false_obstacle_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE,
             world_vals = [int(v) for v in np.unique(g) if v != 0]
             if not _scope_complements_all_fail(x, g, derive, av, world_vals):
                 continue                                        # literal commit unique
+            if _false_obstacle_rival_explainable(x, g, size):   # no transient-wall / alt-derive rival
+                continue
             tasks.append((x, {'kind': 'belief', 'av': av, 'gv': gv,
                               'pw': (br, bc), 'real_wall': (wr, wc),
                               'displaced_to': (bgr, bgc), 'dir': dgname}))

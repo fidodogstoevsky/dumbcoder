@@ -4,6 +4,8 @@
 
 == Theory of Mind
 
+ability to attribute beliefs, to represent the world intensionally
+
 === premack chimpanzee paper
 
 

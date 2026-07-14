@@ -74,7 +74,7 @@ from ecd import (
     dream, dreamed_q,
 )
 from dsl import (
-    fn, fn_p_g, cellvalue, coord,
+    fn, fn_p_g, cellvalue, coord, Delta,
     unfold, unfold_with_template, tr, simplify, length,
     # used by check_decomposition_identities (phase 2)
     compose, wall_at, clear_at, optimize, neg_distance, step,
@@ -88,13 +88,14 @@ from tasks_minds import (
     make_witness_belief_tasks,
     make_goal_displacement_tasks, make_dual_belief_tasks,
     make_false_obstacle_belief_tasks,
+    belief_variant,
     COMBOS, SIZE, DIRS,
 )
 from tasks_world import (
     make_overlay_tasks, make_comet_tasks, make_registration_tasks,
     # one minds-free task per symmetric corner
     make_flee_tasks, make_deletion_tasks, make_denoise_tasks, make_obstacle_tasks,
-    make_underlay_tasks,
+    make_relocation_tasks, make_underlay_tasks,
     make_perception_tasks, make_multi_registration_tasks,
     make_registration_except_tasks, make_inpainting_tasks, make_readout_tasks,
 )
@@ -105,13 +106,13 @@ from prims import make_core_prims, make_symmetric_prims
 # primitives exist.  Reporting loops iterate these so new families show up
 # everywhere without per-call edits.
 _FN_KINDS   = ['physics', 'desire', 'overlay', 'comet', 'belief',
-               'flee', 'deletion', 'denoise', 'obstacle', 'underlay']
+               'flee', 'deletion', 'denoise', 'obstacle', 'relocate', 'underlay']
 _PAIR_KINDS = ['registration', 'perception', 'multi_reg', 'reg_except',
                'inpaint', 'readout']
-_CUBE_KINDS = ['flee', 'deletion', 'denoise', 'obstacle', 'underlay', 'perception',
-               'multi_reg', 'reg_except', 'inpaint', 'readout']
+_CUBE_KINDS = ['flee', 'deletion', 'denoise', 'obstacle', 'relocate', 'underlay',
+               'perception', 'multi_reg', 'reg_except', 'inpaint', 'readout']
 _ALL_KINDS  = ['physics', 'desire', 'overlay', 'comet', 'registration', 'belief',
-               'flee', 'deletion', 'denoise', 'obstacle', 'underlay',
+               'flee', 'deletion', 'denoise', 'obstacle', 'relocate', 'underlay',
                'perception', 'multi_reg', 'reg_except', 'inpaint', 'readout']
 
 # interface primitives whose presence in a solution we care about.  pipe_gpg/
@@ -311,6 +312,11 @@ def gt_program_str(D, m):
         return f"(clear_at c{r} c{c})"
     if k == 'denoise':
         return f"(erase {m['noise']})"
+    if k == 'relocate':
+        # spelled clear_at ▸ wall_at (not erase ▸ wall_at) to share the exact
+        # derive prefix of the false-obstacle belief gt, so gt-mode stitch joins them
+        (r1, c1), (r2, c2) = m['from'], m['to']
+        return f"(compose (clear_at c{r1} c{c1}) (wall_at c{r2} c{c2}))"
     if k == 'obstacle':
         pr, pc = m['pw']
         return (f"(compose (wall_at c{pr} c{pc}) "
@@ -363,32 +369,98 @@ def _corner_uses(tree):
 _SCOPE_COMPLEMENTS = {'sync_except', 'sync_all'}
 
 
+def _swap_scope_commit(D, tree, m):
+    """Rewrite `tree` (a normalized belief solution) in place so every fork /
+    decomposed-fork scope-complement commit (sync_all / sync_except) becomes the
+    literal agency commit sync_to_world(av) — av being *that fork's own* actor (the
+    seek's target).  Returns the rewritten tree if at least one scope commit was
+    swapped, else None (nothing to test).
+
+    This drives the SOLUTION-relative degeneracy test: a scope commit is the agency
+    commit on a scene iff swapping it for sync_to_world(av) in the solution's own
+    derive still reproduces the scene."""
+    swapped = [False]
+
+    def _actor(derive):
+        "actor value of this fork = the seek's target (optimize's cellvalue arg)."
+        found = []
+        def scan(n):
+            if not isinstance(n, Delta):
+                return
+            if n.repr == 'optimize' and n.tails and len(n.tails) == 2:
+                found.append(n.tails[1])
+            for t in (n.tails or []):
+                scan(t)
+        scan(derive)
+        for cand in found:
+            try:
+                return int(cand.head)
+            except (TypeError, ValueError):
+                continue
+        return m.get('av')
+
+    def _derive_of(node):
+        "the derive subtree of a fork / decomposed fork; commit is always tails[1]."
+        if not (node.tails and len(node.tails) == 2):
+            return None
+        if node.repr == 'fork':
+            return node.tails[0]
+        if node.repr == 'pipe_gpg' and node.tails[0].repr == 'compose_gp':
+            produce = node.tails[0]
+            if (produce.tails and len(produce.tails) == 2
+                    and produce.tails[1].repr == 'mapsnd' and produce.tails[1].tails):
+                return produce.tails[1].tails[0]
+        return None
+
+    def walk(node):
+        if not isinstance(node, Delta):
+            return
+        derive = _derive_of(node)
+        if derive is not None and node.tails[1].repr in _SCOPE_COMPLEMENTS:
+            av = _actor(derive)
+            if av is not None:
+                node.tails[1] = tr(D, _sync(D, av))
+                swapped[0] = True
+        for t in (node.tails or []):
+            walk(t)
+
+    walk(tree)
+    return tree if swapped[0] else None
+
+
 def _belief_commit_form(D, sol, x, m):
     """How a belief solution realises the single-value agency commit.
 
       'literal'    — commits via sync_to_world / register: the clean shared-av signature.
       'degenerate' — commits (also/only) via a SCOPE complement (sync_except gv / sync_all)
-                     that is extensionally equal to sync_to_world(av) on this scene.  When
-                     the agent is the only committed model-mover, 'move everything but the
-                     goal' == 'move the agent'; same fork-structured belief, agency hole
-                     expressed on gv rather than av.  Verified for every belief family
-                     (plain/witness/goal-displacement/dual): sync_except(gv) and
-                     sync_to_world(av) reproduce x identically.  A minimal-scene degeneracy
-                     of the commit, NOT a rival (non-mental) theory — see the disclosure note.
+                     that, ON THIS SCENE, is extensionally the agency commit: swapping it
+                     for sync_to_world(av) in the solution's OWN derive still reproduces x.
+                     When the agent is the only committed model-mover, 'move everything but
+                     the goal' == 'move the agent'; same fork-structured belief, agency hole
+                     expressed on gv rather than av.  A minimal-scene degeneracy of the
+                     commit, NOT a rival (non-mental) theory — see the disclosure note.
+      'complement' — a scope commit whose swap for sync_to_world(av) does NOT reproduce x:
+                     the commit is carrying non-agency work (a derive that leaves gv/3
+                     unmoved in the model, so only wholesale adoption fits).  A genuine
+                     non-mental rival; the verdict counts it as a FAILURE.
       None         — neither: not an agency commit (e.g. unsolved / non-fork).
 
-    Guarded by an extensional check: we only call a scope-complement commit degenerate
-    when the canonical agency program for this exact task also reproduces x."""
+    The degeneracy guard is SOLUTION-relative.  An earlier version tested the canonical
+    agency program for this task, which on a false-obstacle scene always reproduces x —
+    so it auto-classified every fork+scope solution 'degenerate' (vacuously), and could
+    never surface a real complement rival."""
     s = str(simplify(normalize(deepcopy(sol))))
     has_literal = 'sync_to_world' in s or 'register' in s
     has_scope = bool(_SCOPE_COMPLEMENTS & {p for p in _CORNERS if _re.search(rf'\b{p}\b', s)})
     if has_scope and _has_fork(s):
-        try:
-            canon = tr(D, _belief_gt_str(D, m))
-            if np.array_equal(unfold(x[0], x.shape[0], canon()), x):
-                return 'degenerate'
-        except Exception:
-            pass
+        swapped = _swap_scope_commit(D, simplify(normalize(deepcopy(sol))), m)
+        if swapped is not None:
+            try:
+                if np.array_equal(unfold(x[0], x.shape[0], swapped()), x):
+                    return 'degenerate'
+            except Exception:
+                pass
+        return 'complement'
     if has_literal:
         return 'literal'
     return None
@@ -685,6 +757,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         n_belvar = 1
         n_goal = 2
         n_obstacle = 2
+        n_relocate = 4
         _t_fn, t_reg, stitch_iters, _ecd_iters = 15, 8, 3, 2
     else:
         n_phys, n_des, n_ov, n_reg, n_bel, n_corner = 4, 2, 4, 4, 6, 4
@@ -703,6 +776,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         # per-combo mass of the other corners keeps it alive so wall-based belief can
         # reuse it as a single cheap token instead of re-deriving it inside the fork.
         n_obstacle = 6
+        n_relocate = 16
         _t_fn, t_reg, stitch_iters, _ecd_iters = 180, 30, 6, 4
     t_fn = _t_fn if t_fn is None else t_fn
     ecd_iters = _ecd_iters if ecd_iters is None else ecd_iters
@@ -792,11 +866,18 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         # underlay corner is exercised by a *fork* task (like overlay), not only by
         # the template-rooted inpainting task — the fork-producer side of the pair
         # interface now populates both z-order corners.
+        # relocate is the "move" grid-edit corner (clear_at ▸ wall_at) and, like
+        # obstacle, doubles as curriculum: its solution is the derive PREFIX of the
+        # false-obstacle belief (clear real wall ▸ stamp phantom), which is ~14 nats
+        # past the search frontier at primitive prices.  It gets extra mass
+        # (n_relocate) for the same reason obstacle does: the compound must recur
+        # enough to hold a stitch slot so false-obstacle can buy it as one token.
         fn_corner = (make_flee_tasks(n_corner, seed=10)
                      + make_deletion_tasks(n_corner, seed=11)
                      + make_denoise_tasks(n_corner, seed=12)
                      + make_underlay_tasks(n_corner, seed=19)
-                     + make_obstacle_tasks(n_obstacle, seed=18))
+                     + make_obstacle_tasks(n_obstacle, seed=18)
+                     + make_relocation_tasks(n_relocate, seed=26))
         pair_corner = (make_perception_tasks(n_corner, seed=13)
                        + make_multi_registration_tasks(n_corner, seed=14)
                        + make_registration_except_tasks(n_corner, seed=15)
@@ -854,6 +935,8 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     # primitives) becomes reachable once its parts have been compressed into reuse.
     sols = {}
     solve_round = {}          # mat_key -> the ECD round it was first solved (for corpus_dl.py)
+    constructor_round = None  # the ECD round whose joint stitch first produced the agency
+                              # constructor (item 3: the agency-signature round, for the verdict)
     # per-round per-task fn timings (mat_key, round, solved?, seconds), so solve_dynamics.py
     # can chart the cumulative-solve S-curve and the per-task solve-time collapse (the
     # ~t_fn miss in round r ↦ seconds in round r+1) that is otherwise only in the log text.
@@ -892,7 +975,11 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     # --t-fn small enough that early-round deep misses don't starve the shallow tasks of
     # workers, but ≥ the solve time of the slowest task GIVEN its abstractions are present
     # (see the per-task timing report below, which calibrates exactly this).
-    kind_by_key = {mat_key(x): m['kind'] for x, m in fn_tasks}
+    kind_by_key  = {mat_key(x): m['kind'] for x, m in fn_tasks}
+    kind_of_all  = {mat_key(x): m['kind'] for x, m in all_tasks}
+    # fine per-variant label (belief_wall / belief_witness / …) for per-solve logging
+    # and the round-attribution artifact; coarse kind for every non-belief family.
+    fine_kind_of = {mat_key(x): _sample_kind(m) for x, m in all_tasks}
 
     for it in range(1, ecd_iters + 1):
         unsolved_fn  = [x for x, _ in fn_tasks if mat_key(x) not in sols]
@@ -939,6 +1026,10 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                     timing_log.append((k, it, sol is not None, float(elapsed)))
                     if sol is not None:
                         sols[k] = sol
+                        # item 1: name the family and the exact (base-primitive) program
+                        # at the moment it is solved — the raw fact the thesis writes from.
+                        print(f"      + solved [{fine_kind_of.get(k, '?')}] in {elapsed:.1f}s: "
+                              f"{str(simplify(normalize(deepcopy(sol))))}", flush=True)
                 solved_t = [e for hit, e in timings.values() if hit]
                 miss_t   = [e for hit, e in timings.values() if not hit]
                 max_solve = max(solved_t) if solved_t else 0.0
@@ -952,8 +1043,15 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                           f"--t-fn can drop toward slowest-solve={max_solve:.1f}s to cut "
                           f"wasted early-round time without losing a solve)", flush=True)
         if unsolved_reg:
+            reg_before = set(sols)
             solve_enumeration(unsolved_reg, D, uniform_type_q(D), sols,
                               timeout=t_reg, root_type=fn_p_g, templates=templates)
+            # solve_enumeration mutates sols in place and returns no per-task info, so
+            # diff the keys to report the newly-solved fn_p_g families (item 1).
+            for k in set(sols) - reg_before:
+                if sols[k] is not None:
+                    print(f"      + solved [{fine_kind_of.get(k, '?')}]: "
+                          f"{str(simplify(normalize(deepcopy(sols[k]))))}", flush=True)
 
         n_solved = len(sols)
         # stamp the round each newly-solved task first appeared (corpus_dl.py replays the
@@ -968,6 +1066,11 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         sol_keys = [k for k, v in sols.items() if v is not None]
         _trees, rewritten_strs = saturate_stitch(D, sols, iterations=stitch_iters, max_arity=5)
         rewritten = dict(zip(sol_keys, rewritten_strs))
+        # item 3: stamp the round whose stitch first carved out the agency constructor
+        # (fork ∧ a sync-family commit) — the agency-signature round the trajectory figure
+        # and the verdict both refer to.
+        if constructor_round is None and _belief_ctor_in_D(D)[0] is not None:
+            constructor_round = it
 
         if n_solved == n_total:
             print("    all tasks solved — wake-sleep converged.")
@@ -1031,6 +1134,9 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
             belief_form[mat_key(x)] = _belief_commit_form(D, sol, x, m)
     n_belief_degenerate = sum(1 for f in belief_form.values() if f == 'degenerate')
     n_belief_literal    = sum(1 for f in belief_form.values() if f == 'literal')
+    # a scope commit that ISN'T the agency commit on its own scene (swap-to-literal
+    # fails to reproduce x): a genuine non-mental rival, counted as a verdict failure.
+    n_belief_complement = sum(1 for f in belief_form.values() if f == 'complement')
 
     uses_by_kind = {}
     solved_by_kind = Counter()
@@ -1053,6 +1159,33 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         u = sorted(uses_by_kind.get(kind, set()))
         print(f"  {kind:13s} {n}/{tot} solved   uses: {u}")
 
+    # belief-variant sub-census (item 5): the five variants pool into kind='belief' for
+    # the unified verdict, but the thesis results table wants them split back out — per
+    # variant, solved/total and how the agency commit was realised (literal sync_to_world
+    # vs the degenerate scope complement).  Reuses _sample_kind and the belief_form above.
+    belief_variants = {}
+    for x, m in all_tasks:
+        if m['kind'] != 'belief':
+            continue
+        rec = belief_variants.setdefault(_sample_kind(m),
+                                         {'solved': 0, 'total': 0,
+                                          'literal': 0, 'degenerate': 0, 'complement': 0})
+        rec['total'] += 1
+        if sols.get(mat_key(x)) is not None:
+            rec['solved'] += 1
+            form = belief_form.get(mat_key(x))
+            if form in ('literal', 'degenerate', 'complement'):
+                rec[form] += 1
+    if belief_variants:
+        print("\n  belief variants (pooled as kind='belief' above; agency commit form):")
+        for v in _BELIEF_VARIANTS:
+            r = belief_variants.get(v)
+            if r is None:
+                continue
+            comp = f", {r['complement']} complement" if r['complement'] else ""
+            print(f"    {v:22s} {r['solved']}/{r['total']} solved   "
+                  f"commit: {r['literal']} literal, {r['degenerate']} degenerate{comp}")
+
     # fork is general if a non-belief family reaches for it — with EITHER derive:
     # overlay's fixed `step` or comet's `optimize` seek (fork's derive slot is a
     # general fn, not wired to step).
@@ -1074,12 +1207,16 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                 for k in _ALL_KINDS if k != 'belief')
     )
     # Wall-based uniqueness is a claim about the WALL belief families only (plain /
-    # witness / dual); the goal-displacement family is deliberately NOT wall-based
-    # (its derive is `step`, a displaced goal), so it is excluded from this check.
+    # witness / dual / false-obstacle); ONLY the goal-displacement family is
+    # deliberately NOT wall-based (its derive is `step`, a displaced goal), so it
+    # alone is excluded.  Keying on belief_variant != 'belief_goal' (not
+    # 'displaced_to' not in m) keeps false-obstacle IN: fob also carries
+    # displaced_to but is wall-based, and the old key silently dropped its literal
+    # wall solves from this check.
     belief_is_wall_based = all(
         'wall_at' in _core_uses(sols[mat_key(x)])
         for x, m in all_tasks
-        if m['kind'] == 'belief' and 'displaced_to' not in m
+        if m['kind'] == 'belief' and belief_variant(m) != 'belief_goal'
         and sols.get(mat_key(x)) is not None
     )
     print(f"\n  fork used outside belief (overlay/comet)   : {fork_general}")
@@ -1113,30 +1250,40 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                  if m['kind'] == 'belief' and 'real_wall' in m
                  and mat_key(x) in belief_form]
     n_fob = sum(1 for x, m in all_tasks if m['kind'] == 'belief' and 'real_wall' in m)
+    n_fob_lit = n_fob_deg = n_fob_comp = 0
     if n_fob:
         n_fob_lit = sum(1 for f in fob_forms if f == 'literal')
         n_fob_deg = sum(1 for f in fob_forms if f == 'degenerate')
+        n_fob_comp = sum(1 for f in fob_forms if f == 'complement')
         print(f"\n  FORCED LITERAL COMMIT — false-obstacle family (degeneracy excluded by construction)")
         print(f"  {len(fob_forms)}/{n_fob} false-obstacle tasks solved; commit forms: "
-              f"{n_fob_lit} literal, {n_fob_deg} degenerate.")
+              f"{n_fob_lit} literal, {n_fob_deg} degenerate, {n_fob_comp} complement.")
         print(f"  Every solved one commits via the literal sync_to_world(av): no scope complement")
         print(f"  reproduces these scenes (real wall stays put), so the agency commit is FORCED")
         print(f"  and found — not merely argued extensionally equal to a cheaper complement.")
-        if n_fob_deg:
-            print(f"  WARNING: {n_fob_deg} classified degenerate — should be impossible here; "
-                  f"check _scope_complements_all_fail / _belief_commit_form.")
+        if n_fob_deg or n_fob_comp:
+            print(f"  WARNING: {n_fob_deg} degenerate + {n_fob_comp} complement — a scope commit "
+                  f"reproduced (or was found on) a real-wall scene;")
+            print(f"  should be impossible here; check _scope_complements_all_fail / "
+                  f"_belief_commit_form.")
 
     # ── (A′) cube census: with the full symmetric field present, which corner did each family pick? ──
     cube_ok = None
+    # defaults so the verdict artifact can read these even in a (hypothetical) non-cube run
+    corners_by_kind = {}
+    belief_keeps_corner = belief_avoids_complements = any_complement_used = None
+    used_complements, unused_complements = set(), []
     if cube:
         print("\n" + "=" * 72)
         print("(A′) CUBE CENSUS — which symmetric corner each family selected")
         print("=" * 72)
         corners_by_kind = {}
         for x, m in all_tasks:
-            if m['kind'] == 'belief' and 'displaced_to' in m:
-                # goal-displacement's derive is a displaced goal, not the wall
-                # corner (see (A)'s belief_is_wall_based exclusion above).
+            if m['kind'] == 'belief' and belief_variant(m) == 'belief_goal':
+                # ONLY goal-displacement is excluded: its derive is a displaced goal,
+                # not the wall corner (see (A)'s belief_is_wall_based exclusion above).
+                # false-obstacle carries displaced_to too but IS wall-based, so keying
+                # on belief_variant keeps its literal wall solves in the census.
                 continue
             sol = sols.get(mat_key(x))
             if sol is None:
@@ -1211,7 +1358,9 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         body = str(simplify(normalize(deepcopy(d))))
         shared = _shared_holes(body)
         argt = ', '.join(str(t) for t in (d.tailtypes or []))
-        print(f"    {d.repr}  [{argt}] -> {d.type}")
+        # stable semantic label (item 6) so the thesis/viz refer to abstractions by role
+        # ('agent_constructor', 'wall_policy', …) rather than the volatile fn_N index.
+        print(f"    {d.repr} «{_abstraction_role(body)}»  [{argt}] -> {d.type}")
         print(f"      body: {body}")
         _has_sync = 'sync_to_world' in body or 'register' in body  # atomic | decomposed
         _has_scope = bool(_SCOPE_COMPLEMENTS & {p for p in _CORNERS
@@ -1295,11 +1444,18 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         ctor_name in _absts_in(rewritten.get(mat_key(x), ''))
         for x, m in all_tasks if m['kind'] not in ('belief', 'belief_scaffold')
     )
+    # no belief solution may commit via a scope complement that ISN'T its own agency
+    # commit (a 'complement' rival — see _belief_commit_form).  A single one breaks the
+    # claim that fork∧sync is doing agency, so the verdict conjoins its absence.
+    no_belief_complement = (n_belief_complement == 0)
 
     print(f"  (A) parts are general    : fork∉belief-only={fork_general}, "
           f"sync∉belief-only={sync_general}, wall∉belief-only={wall_general}")
     print(f"  (A) only agency is unique: fork∧sync unique to belief={agency_unique}, "
           f"belief recombines={belief_uses_both}, wall-based={belief_is_wall_based}")
+    print(f"  (A) no scope-complement rival among belief solves : {no_belief_complement}"
+          f"   ({n_belief_complement} complement, {n_belief_degenerate} degenerate, "
+          f"{n_belief_literal} literal)")
     print(f"  (B) constructor invented : {constructor_found} "
           f"(shared agency hole: {constructor_shared})")
     print(f"  (B) constructor is belief-specific: used by belief={belief_uses_ctor}, "
@@ -1307,10 +1463,19 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     if cube:
         print(f"  (A′) cube: belief picks the lone asymmetric corner over the full field: {cube_ok}")
 
-    ok = (fork_general and sync_general and wall_general and belief_uses_both
-          and agency_unique and belief_is_wall_based and constructor_found
-          and constructor_shared and belief_uses_ctor and nonmental_free_of_ctor
-          and (cube_ok is not False))
+    # every criterion the headline verdict conjoins; failures names the ones that broke,
+    # so a partial run localises itself without the reader scanning the booleans above.
+    checks = {
+        'fork_general': fork_general, 'sync_general': sync_general,
+        'wall_general': wall_general, 'belief_uses_both': belief_uses_both,
+        'agency_unique': agency_unique, 'belief_is_wall_based': belief_is_wall_based,
+        'no_belief_complement': no_belief_complement,
+        'constructor_found': constructor_found, 'constructor_shared': constructor_shared,
+        'belief_uses_ctor': belief_uses_ctor, 'nonmental_free_of_ctor': nonmental_free_of_ctor,
+        'cube_ok': (cube_ok is not False),
+    }
+    failures = [name for name, v in checks.items() if not v]
+    ok = not failures
     if ok:
         print("\n  => In ONE library and ONE MDL compression over minds-free AND minds tasks,")
         print("     belief is the discovered recombination of parts that each do non-mental")
@@ -1318,7 +1483,123 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         print("     fork/sync bare elsewhere.  Not gerrymandered, not a silo artefact.")
     else:
         print("\n  => not fully demonstrated this run (raise timeouts / n_bel / stitch_iters,")
-        print("     or drop --smoke).  Each False above localises what failed.")
+        print("     or drop --smoke).")
+        print(f"     failed criteria: {failures}")
+
+    # ── (C) persist the verdict as structured data (item 2) ───────────────────────────
+    # Every boolean and census count the (A)/(A′)/(B)/VERDICT sections print — plus the
+    # round attribution (item 3) — so the thesis text and the viz cite exact values from
+    # one file instead of grepping the slurm log.  See save_verdict_artifact.
+    first_solve_round, first_solve_round_fine = {}, {}
+    for k, r in solve_round.items():
+        kd, fk = kind_of_all.get(k), fine_kind_of.get(k)
+        if kd is not None:
+            first_solve_round[kd] = min(int(r), first_solve_round.get(kd, int(r)))
+        if fk is not None:
+            first_solve_round_fine[fk] = min(int(r), first_solve_round_fine.get(fk, int(r)))
+    invented = []
+    for d in D.invented:
+        body = str(simplify(normalize(deepcopy(d))))
+        invented.append({'repr': d.repr, 'type': str(d.type),
+                         'tailtypes': [str(t) for t in (d.tailtypes or [])],
+                         'body': body, 'shared_holes': _shared_holes(body),
+                         'role': _abstraction_role(body)})
+    verdict = {
+        'decomposed': bool(decomposed), 'smoke': bool(smoke),
+        'n_solved': sum(1 for v in sols.values() if v is not None), 'n_total': n_total,
+        'stitch_iters': stitch_iters, 'ecd_iters': ecd_iters,
+        # round attribution (item 3)
+        'constructor_round': constructor_round,
+        'first_solve_round_by_kind': first_solve_round,
+        'first_solve_round_by_variant': first_solve_round_fine,
+        # (A) usage census
+        'solved_by_kind': solved_by_kind, 'total_by_kind': total_by_kind,
+        'uses_by_kind': uses_by_kind,
+        'belief_commit': {'literal': n_belief_literal, 'degenerate': n_belief_degenerate,
+                          'complement': n_belief_complement},
+        'belief_variants': belief_variants,
+        'false_obstacle': {'n': n_fob, 'literal': n_fob_lit, 'degenerate': n_fob_deg,
+                          'complement': n_fob_comp},
+        'A': {'fork_general': fork_general, 'sync_general': sync_general,
+              'wall_general': wall_general, 'belief_uses_both': belief_uses_both,
+              'agency_unique': agency_unique, 'belief_is_wall_based': belief_is_wall_based,
+              'no_belief_complement': no_belief_complement},
+        # (A′) cube census
+        'cube': {'enabled': bool(cube), 'cube_ok': cube_ok,
+                 'corners_by_kind': corners_by_kind,
+                 'belief_keeps_corner': belief_keeps_corner,
+                 'belief_avoids_complements': belief_avoids_complements,
+                 'any_complement_used': any_complement_used,
+                 'used_complements': used_complements,
+                 'unused_complements': unused_complements},
+        # (B) joint compression
+        'invented': invented,
+        'agent_constructor': (agent_constructor[0].repr if agent_constructor else None),
+        'agent_constructor_shared_holes': (agent_constructor[2] if agent_constructor else {}),
+        'abstraction_usage_by_kind': fam_absts,
+        # verdict
+        'constructor_found': constructor_found, 'constructor_shared': constructor_shared,
+        'belief_uses_ctor': belief_uses_ctor, 'nonmental_free_of_ctor': nonmental_free_of_ctor,
+        'failures': failures, 'ok': ok,
+    }
+    save_verdict_artifact(verdict, decomposed, smoke)
+
+
+def _abstraction_role(body):
+    """Semantic role of an invented abstraction, mirroring the (B) print branches so the
+    verdict artifact can name abstractions ('agent_constructor', 'wall_policy', …) rather
+    than leave the thesis/viz to re-classify fn_0/fn_3/… by hand."""
+    has_sync  = 'sync_to_world' in body or 'register' in body
+    has_scope = bool(_SCOPE_COMPLEMENTS & {p for p in _CORNERS
+                                           if _re.search(rf'\b{p}\b', body)})
+    if _has_fork(body) and has_sync and 'wall_at' in body:
+        return 'agent_constructor'
+    if _has_fork(body) and has_sync:
+        # fork ∧ a literal sync-family commit but no phantom wall — the wall-FREE agency
+        # constructor (witness / goal-displacement belief).  The wall-based (B) headline
+        # detector skips it; label it so the thesis doesn't read it as a desire fragment.
+        return 'agent_constructor_wallfree'
+    if _has_fork(body) and has_scope and ('optimize' in body or 'neg_dist' in body):
+        return 'agent_constructor_degenerate'
+    if _has_fork(body) and 'overlay' in body:
+        return 'motion_blur'
+    if 'wall_at' in body and ('optimize' in body or 'neg_dist' in body):
+        return 'wall_policy'
+    if 'optimize' in body or 'neg_dist' in body:
+        return 'desire_fragment'
+    return 'other'
+
+
+def _coerce(o):
+    "recursively make a verdict value JSON-serialisable (Counters/sets/numpy scalars)."
+    if isinstance(o, (bool, np.bool_)):
+        return bool(o)
+    if isinstance(o, Counter):
+        return {str(k): int(v) for k, v in o.items()}
+    if isinstance(o, dict):
+        return {str(k): _coerce(v) for k, v in o.items()}
+    if isinstance(o, set):
+        return sorted(_coerce(v) for v in o)
+    if isinstance(o, (list, tuple)):
+        return [_coerce(v) for v in o]
+    if isinstance(o, np.integer):
+        return int(o)
+    if isinstance(o, np.floating):
+        return float(o)
+    return o
+
+
+def save_verdict_artifact(verdict, decomposed, smoke, path=None):
+    """Persist the structured verdict (all (A)/(A′)/(B)/VERDICT booleans + census counts +
+    round attribution) so the thesis text and the figures read exact values from one file
+    instead of parsing stdout.  Consumed alongside phase{n}_run.json / phase{n}_traj.json."""
+    import json
+    if path is None:
+        path = f"phase{2 if decomposed else 1}_verdict{'.smoke' if smoke else ''}.json"
+    with open(path, 'w') as f:
+        json.dump(_coerce(verdict), f, indent=1)
+    print(f"  wrote verdict artifact to {path}")
+    return path
 
 
 def save_run_artifact(D, all_tasks, sols, rewritten, decomposed, smoke,

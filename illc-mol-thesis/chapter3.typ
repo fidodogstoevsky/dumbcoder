@@ -117,7 +117,9 @@ Bare-string, monomorphic, first-order, exact-match. A type is either a ground st
 2. find one particular value, transfer that
 3. transfer it to the world, discard the model
 
+DEFENDING the `optimize` primitive:
 
+"9- to 12-month-old infants have principled expectations about the way agents approach their goals that are consistent with the assumption that agents choose rational means to approach their goals (Gergely, Nadasdy, Csibra, & Bird, 1995)." Sodian
 
 - compose
 - step

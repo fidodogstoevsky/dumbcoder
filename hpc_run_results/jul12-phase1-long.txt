@@ -1,0 +1,492 @@
+sbatch --job-name=phase1 --time=24:00:00 run.job phase1.py --t-fn 3600 --ecd-iters 6
+batch job 24573602
+
+[gkaminer@int6 dumbcoder]$ cat slurm_24573602.out
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+
+EnvironmentNameNotFound: Could not find conda environment: dumbcoder
+You can list all discoverable environments with `conda info --envs`.
+
+
+Generating mixed corpus…
+  belief variants: +48 goal-displacement, +24 dual, +24 false-obstacle (all kind=belief; false-obstacle forbids the scope-complement commit)
+  [curriculum] +24 plain-belief scaffold tasks (kind=belief_scaffold) to seed the fork(policy, sync) abstraction; excluded from the witness-belief verdict.
+  4 physics, 16 desire, 4 overlay, 4 comet, 4 registration, 143 belief — 299 total
+  corner families: 4 flee, 4 deletion, 4 denoise, 48 obstacle, 16 relocate, 4 underlay, 4 perception, 4 multi_reg, 4 reg_except, 4 inpaint, 4 readout
+
+DSL: 37 primitives — CUBE run (core + symmetric complements)
+  added corners: ['bimap', 'clear_at', 'distance', 'dup', 'erase', 'locate', 'mapfst', 'mapsnd', 'pair_blank', 'place', 'register', 'snd_gg', 'swap', 'sync_all', 'sync_except', 'sync_to_model', 'underlay', 'via_swap']
+  ground-truth check: 299 tasks verified via Delta trees
+
+========================================================================
+WAKE-SLEEP — up to 6 ECD rounds (enumerate ↦ joint stitch), 32 workers
+  fn Q: dreamed recognition model (replays + fantasies); registration Q: uniform
+========================================================================
+
+--- round 1/6: 275 fn + 24 fn_p_g unsolved; |D|=37 (0 invented); fn Q=uniform/content ---
+    [instr] agency constructor in D: ABSENT; belief solved (replay-eligible): 0/143
+[     4] caught (step 4 up)
+[     4] caught (step 4 up)
+[     5] caught (step 4 down)
+[    13] caught (optimize (neg_dist 2) 1)
+[     2] caught (step 1 right)
+[    13] caught (optimize (neg_dist 7) 6)
+[    13] caught (optimize (neg_dist 9) 8)
+[    13] caught (optimize (neg_dist 9) 8)
+[    13] caught (optimize (neg_dist 6) 2)
+[    12] caught (optimize (neg_dist 1) 7)
+[    12] caught (optimize (neg_dist 1) 7)
+[    12] caught (optimize (neg_dist 4) 9)
+[    12] caught (optimize (neg_dist 4) 9)
+[    13] caught (optimize (neg_dist 6) 2)
+[    13] caught (optimize (neg_dist 8) 5)
+[    13] caught (optimize (neg_dist 5) 4)
+[    13] caught (optimize (neg_dist 8) 5)
+[    13] caught (optimize (neg_dist 7) 6)
+[    13] caught (optimize (neg_dist 2) 1)
+[    13] caught (optimize (neg_dist 5) 4)
+[   141] caught (fork (step 4 right) overlay)
+[   165] caught (fork (step 4 down) overlay)
+[   157] caught (fork (step 1 up) overlay)
+[   149] caught (fork (step 1 left) overlay)
+[   289] caught (fork (optimize (neg_dist 2) 1) overlay)
+[   289] caught (fork (optimize (neg_dist 8) 5) overlay)
+[   289] caught (fork (optimize (neg_dist 6) 2) overlay)
+[   289] caught (fork (optimize (neg_dist 7) 6) overlay)
+[  9335] caught (fork (compose (optimize (distance 2) 2) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[  9335] caught (fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[  9335] caught (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[  9335] caught (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[  9335] caught (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[ 79063] caught (fork (compose (step 5 down) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[ 79239] caught (fork (compose (step 7 down) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[ 79063] caught (fork (compose (step 5 down) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[ 78799] caught (fork (compose (step 2 down) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[102437] caught (fork (compose (wall_at c1 c0) (optimize (distance 9) 8)) (sync_to_world 8))
+[ 79415] caught (fork (compose (step 9 down) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[  9335] caught (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[ 79151] caught (fork (compose (step 6 down) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[  8995] caught (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[  8995] caught (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[  9335] caught (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[  8995] caught (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[  9335] caught (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[ 79151] caught (fork (compose (step 6 down) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[ 77629] caught (fork (compose (step 4 down) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[ 79327] caught (fork (compose (step 8 down) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[ 77365] caught (fork (compose (step 1 down) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[ 77629] caught (fork (compose (step 4 down) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[189730] caught (compose (compose (step 9 right) (optimize (distance 9) 9)) (optimize (distance 4) 9))
+[ 26713] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[135955] caught (fork (compose (wall_at c3 c3) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[136975] caught (fork (compose (wall_at c4 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[127959] caught (fork (compose (wall_at c0 c4) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[103493] caught (fork (compose (wall_at c3 c0) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[103163] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[    17] caught (optimize (distance 4) 1)
+[    16] caught (optimize (distance 1) 4)
+[    16] caught (optimize (distance 1) 4)
+[    17] caught (optimize (distance 4) 1)
+[   114] caught (clear_at c1 c3)
+[   118] caught (clear_at c2 c2)
+[   113] caught (clear_at c1 c2)
+[     2] caught (erase 4)
+[     1] caught (erase 1)
+[     2] caught (erase 4)
+[   119] caught (clear_at c2 c3)
+[     2] caught (erase 4)
+[   193] caught (fork (step 1 left) underlay)
+[   237] caught (fork (step 2 left) underlay)
+[   259] caught (fork (step 4 down) underlay)
+[   204] caught (fork (step 1 up) underlay)
+[103713] caught (fork (compose (wall_at c3 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[  1036] caught (compose (optimize (neg_dist 2) 1) (wall_at c1 c2))
+[  1245] caught (compose (wall_at c0 c3) (optimize (neg_dist 2) 1))
+[  1037] caught (compose (optimize (neg_dist 2) 1) (wall_at c3 c0))
+[  1037] caught (compose (optimize (neg_dist 2) 1) (wall_at c3 c2))
+[  1355] caught (compose (wall_at c3 c2) (optimize (neg_dist 2) 1))
+[  1037] caught (compose (optimize (neg_dist 5) 4) (wall_at c1 c0))
+[  1036] caught (compose (optimize (neg_dist 2) 1) (wall_at c0 c1))
+[   875] caught (compose (wall_at c3 c3) (optimize (neg_dist 5) 4))
+[  1285] caught (compose (wall_at c2 c3) (optimize (neg_dist 5) 4))
+[  1037] caught (compose (optimize (neg_dist 5) 4) (wall_at c4 c1))
+[   737] caught (compose (optimize (neg_dist 5) 4) (wall_at c3 c3))
+[   867] caught (compose (wall_at c2 c2) (optimize (neg_dist 5) 4))
+[  1037] caught (compose (optimize (neg_dist 7) 6) (wall_at c3 c0))
+[   859] caught (compose (wall_at c1 c1) (optimize (neg_dist 7) 6))
+[   737] caught (compose (optimize (neg_dist 7) 6) (wall_at c2 c2))
+[   859] caught (compose (wall_at c1 c1) (optimize (neg_dist 7) 6))
+[  1285] caught (compose (wall_at c2 c3) (optimize (neg_dist 7) 6))
+[   737] caught (compose (optimize (neg_dist 9) 8) (wall_at c3 c3))
+[  1265] caught (compose (wall_at c1 c3) (optimize (neg_dist 7) 6))
+[103163] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[  1255] caught (compose (wall_at c1 c2) (optimize (neg_dist 9) 8))
+[  1037] caught (compose (optimize (neg_dist 9) 8) (wall_at c1 c0))
+[  1036] caught (compose (optimize (neg_dist 9) 8) (wall_at c0 c3))
+[   737] caught (compose (optimize (neg_dist 6) 2) (wall_at c1 c1))
+[  1385] caught (compose (wall_at c4 c3) (optimize (neg_dist 9) 8))
+[   875] caught (compose (wall_at c3 c3) (optimize (neg_dist 6) 2))
+[  1037] caught (compose (optimize (neg_dist 6) 2) (wall_at c3 c2))
+[  1036] caught (compose (optimize (neg_dist 9) 8) (wall_at c2 c3))
+[102173] caught (fork (compose (wall_at c0 c3) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[  1345] caught (compose (wall_at c3 c1) (optimize (neg_dist 6) 2))
+[   737] caught (compose (optimize (neg_dist 8) 5) (wall_at c4 c4))
+[  1037] caught (compose (optimize (neg_dist 8) 5) (wall_at c2 c0))
+[   737] caught (compose (optimize (neg_dist 8) 5) (wall_at c4 c4))
+[  1325] caught (compose (wall_at c2 c1) (optimize (neg_dist 6) 2))
+[   851] caught (compose (wall_at c0 c0) (optimize (neg_dist 8) 5))
+[  1037] caught (compose (optimize (neg_dist 8) 5) (wall_at c3 c0))
+[  1295] caught (compose (wall_at c2 c4) (optimize (neg_dist 6) 2))
+[  1010] caught (compose (optimize (neg_dist 1) 7) (wall_at c0 c4))
+[   866] caught (compose (wall_at c2 c2) (optimize (neg_dist 1) 7))
+[  1354] caught (compose (wall_at c3 c2) (optimize (neg_dist 1) 7))
+[  1315] caught (compose (wall_at c3 c4) (optimize (neg_dist 8) 5))
+[  1010] caught (compose (optimize (neg_dist 1) 7) (wall_at c1 c2))
+[    86] caught (compose (wall_at c4 c4) (clear_at c1 c4))
+[   195] caught (compose (wall_at c4 c0) (clear_at c2 c4))
+[   866] caught (compose (wall_at c2 c2) (optimize (neg_dist 4) 9))
+[  1274] caught (compose (wall_at c1 c4) (optimize (neg_dist 1) 7))
+[    66] caught (compose (wall_at c0 c0) (clear_at c4 c3))
+[   177] caught (compose (wall_at c2 c0) (clear_at c1 c1))
+[   123] caught (compose (wall_at c3 c0) (clear_at c4 c3))
+[  1264] caught (compose (wall_at c1 c3) (optimize (neg_dist 1) 7))
+[    46] caught (compose (wall_at c0 c0) (clear_at c3 c0))
+[    96] caught (compose (wall_at c0 c1) (clear_at c4 c0))
+[   131] caught (compose (wall_at c0 c1) (clear_at c4 c2))
+[    85] caught (compose (wall_at c4 c4) (clear_at c0 c0))
+[   170] caught (compose (wall_at c1 c4) (clear_at c0 c0))
+[   178] caught (compose (wall_at c4 c1) (clear_at c3 c4))
+[   113] caught (compose (wall_at c0 c3) (clear_at c2 c0))
+[   194] caught (compose (wall_at c4 c1) (clear_at c2 c2))
+[   194] caught (compose (wall_at c2 c1) (clear_at c0 c2))
+[   282] caught (compose (wall_at c1 c2) (clear_at c4 c0))
+[   231] caught (compose (wall_at c3 c3) (clear_at c1 c2))
+[  1314] caught (compose (wall_at c3 c4) (optimize (neg_dist 4) 9))
+[  1344] caught (compose (wall_at c3 c1) (optimize (neg_dist 4) 9))
+[  1344] caught (compose (wall_at c3 c1) (optimize (neg_dist 4) 9))
+[  1384] caught (compose (wall_at c4 c3) (optimize (neg_dist 4) 9))
+[  1354] caught (compose (wall_at c4 c0) (optimize (neg_dist 4) 9))
+[102723] caught (fork (compose (wall_at c1 c3) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[103493] caught (fork (compose (wall_at c3 c0) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[102833] caught (fork (compose (wall_at c1 c4) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[103163] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[103713] caught (fork (compose (wall_at c3 c2) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[103823] caught (fork (compose (wall_at c3 c3) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[103603] caught (fork (compose (wall_at c3 c1) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[103263] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[103273] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[103053] caught (fork (compose (wall_at c2 c1) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[103713] caught (fork (compose (wall_at c3 c2) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[103263] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[103163] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[103163] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[103043] caught (fork (compose (wall_at c2 c1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[102603] caught (fork (compose (wall_at c1 c2) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[103823] caught (fork (compose (wall_at c3 c3) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[103923] caught (fork (compose (wall_at c3 c4) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[103263] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+    per-task time (s): 160 solved [slowest solve 3339.2]
+    (misses burned up to 3600.2s each; the uniform --t-fn can drop toward slowest-solve=3339.2s to cut wasted early-round time without losing a solve)
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     4] caught underlay
+[     4] caught underlay
+[     4] caught underlay
+[     4] caught underlay
+[     5] caught sync_all
+[     5] caught sync_all
+[     5] caught sync_all
+[     5] caught sync_all
+[     8] caught (sync_to_world 2)
+[     8] caught (sync_to_world 2)
+[    10] caught (sync_to_world 4)
+[    10] caught (sync_to_world 4)
+[    17] caught (sync_except 1)
+[    21] caught (sync_except 5)
+[    21] caught (sync_except 5)
+[    21] caught (sync_except 5)
+[    27] caught (sync_to_model 1)
+[    27] caught (sync_to_model 1)
+[    28] caught (sync_to_model 2)
+[    30] caught (sync_to_model 4)
+    solved 184/299 (+184 this round)
+running stitch_core.compress on 184 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_0: (fork (compose #2 (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_1: (compose (wall_at #3 #2) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_2: (compose (optimize (neg_dist #3) #2) (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_3: (fn_0 #1 #0 (optimize (distance #0) #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_4: (fn_0 #1 #0 (step #0 down))  [cellvalue, cellvalue] -> fn
+added abstraction fn_5: (compose (wall_at #3 #2) (clear_at #1 #0))  [coord, coord, coord, coord] -> fn
+    dreaming: training recognition Q on 160 replays + fantasies (600 steps)…
+0.02M params
+loss=3.04 nodes=41: 100%|██████████| 600/600 [00:06<00:00, 88.46it/s]
+
+--- round 2/6: 115 fn + 0 fn_p_g unsolved; |D|=43 (6 invented); fn Q=dreamed (replay families only) ---
+    [instr] agency constructor in D: fn_0 (wall-free); belief solved (replay-eligible): 28/143
+[ 59630] caught (compose (fn_0 5 8 (optimize (distance 4) 8)) (optimize (neg_dist 1) 4))
+[ 37707] caught (compose (fn_0 4 2 (fn_3 1 2)) (optimize (neg_dist 2) 1))
+[  1837] caught (fn_0 1 2 (fn_0 2 1 (optimize (neg_dist 1) 2)))
+[  2158] caught (fn_0 1 2 (fn_0 2 1 (optimize (neg_dist 1) 2)))
+[  4455] caught (fn_0 8 9 (fn_2 c3 c2 9 8))
+[  5148] caught (fn_0 4 5 (compose (optimize (neg_dist 4) 5) (optimize (distance 5) 5)))
+[  6480] caught (fn_0 5 8 (compose (optimize (neg_dist 5) 8) (optimize (distance 8) 8)))
+[ 19326] caught (fn_0 2 2 (compose (optimize (neg_dist 2) 6) (fn_3 6 2)))
+[ 23015] caught (fn_0 1 1 (compose (optimize (distance 2) 2) (fn_4 2 1)))
+[ 29672] caught (fn_0 1 1 (compose (optimize (distance 2) 2) (fn_3 2 1)))
+[ 27009] caught (fn_0 6 6 (compose (optimize (neg_dist 6) 7) (fn_4 7 6)))
+[ 46100] caught (compose (fn_0 5 8 (optimize (distance 2) 8)) (optimize (neg_dist 4) 2))
+[ 36430] caught (fn_0 6 6 (compose (optimize (distance 7) 7) (fn_3 7 6)))
+[ 29487] caught (fn_0 5 5 (compose (optimize (neg_dist 5) 8) (fn_4 8 5)))
+[ 40127] caught (fn_0 4 4 (compose (optimize (neg_dist 4) 5) (fn_4 5 4)))
+[ 42072] caught (fn_0 7 1 (compose (optimize (neg_dist 7) 1) (fn_4 1 1)))
+[ 45990] caught (fn_0 2 2 (compose (optimize (neg_dist 2) 6) (fn_4 6 2)))
+[ 48857] caught (fn_0 2 1 (compose (optimize (neg_dist 2) 6) (fn_4 6 2)))
+[   472] caught (fn_0 4 5 (fn_2 c2 c3 4 4))
+[  1725] caught (fn_0 1 1 (fn_1 1 2 c1 c3))
+[  1877] caught (fn_0 1 1 (fn_1 1 2 c2 c3))
+[  2575] caught (fn_0 6 6 (fn_1 6 7 c3 c3))
+[  3303] caught (fn_0 8 9 (wall_at c2 c3))
+[  3014] caught (fn_0 8 9 (fn_1 9 8 c3 c3))
+[  1861] caught (fn_0 2 6 (fn_1 6 2 c3 c1))
+[  3312] caught (fn_0 2 6 (fn_2 c4 c3 2 2))
+[  3007] caught (fn_0 5 5 (fn_1 5 8 c2 c0))
+[  2621] caught (fn_0 7 1 (wall_at c1 c2))
+[   398] caught (fn_0 7 1 (fn_2 c2 c4 1 1))
+[  3320] caught (fn_0 7 1 (fn_1 1 7 c3 c1))
+[ 13778] caught (fn_0 6 7 (fn_1 7 6 c1 c2))
+[  3917] caught (fn_0 9 4 (wall_at c0 c1))
+[ 35694] caught (fn_0 5 8 (fn_1 8 0 c2 c1))
+    per-task time (s): 33 solved [slowest solve 2777.3]
+    (misses burned up to 3600.6s each; the uniform --t-fn can drop toward slowest-solve=2777.3s to cut wasted early-round time without losing a solve)
+    solved 217/299 (+33 this round)
+running stitch_core.compress on 217 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (fork (compose #2 (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_7: (compose (wall_at #3 #2) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_8: (compose (optimize (neg_dist #3) #2) (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_9: (fn_0 #1 #0 (optimize (distance #0) #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_10: (fn_0 #1 #0 (step #0 down))  [cellvalue, cellvalue] -> fn
+added abstraction fn_11: (fn_0 #0 #0 (compose (optimize #3 #1) (#2 #1 #0)))  [cellvalue, cellvalue, fn, util] -> fn
+    dreaming: training recognition Q on 193 replays + fantasies (600 steps)…
+0.02M params
+loss=3.19 nodes=48: 100%|██████████| 600/600 [00:07<00:00, 79.79it/s]
+
+--- round 3/6: 82 fn + 0 fn_p_g unsolved; |D|=43 (6 invented); fn Q=dreamed (replay families only) ---
+    [instr] agency constructor in D: fn_6 (wall-free); belief solved (replay-eligible): 61/143
+[   720] caught (fn_11 9 4 (fn_10 4 9) (neg_dist 9))
+[   782] caught (fn_11 9 4 (fn_9 4 9) (neg_dist 9))
+[   850] caught (fn_11 7 1 (fn_9 1 7) (neg_dist 7))
+[   940] caught (fn_11 7 1 (fn_10 1 7) (neg_dist 7))
+[  1201] caught (fn_11 5 8 (fn_10 8 5) (neg_dist 5))
+[  5091] caught (fn_6 8 9 (fn_11 9 9 (step 9 down) (neg_dist 8)))
+[  5620] caught (fn_6 8 9 (fn_11 9 9 (fn_10 9 9) (neg_dist 8)))
+[  8534] caught (fn_6 6 7 (fn_11 7 7 (fn_10 7 7) (neg_dist 6)))
+[ 33292] caught (fn_11 5 8 (fn_7 5 8 c1 c1) (distance 8))
+    per-task time (s): 9 solved [slowest solve 1012.0]
+    (misses burned up to 3600.6s each; the uniform --t-fn can drop toward slowest-solve=1012.0s to cut wasted early-round time without losing a solve)
+    solved 226/299 (+9 this round)
+running stitch_core.compress on 226 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (fork (compose #2 (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_7: (compose (wall_at #3 #2) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_8: (fn_0 #2 #2 (compose (optimize #3 #1) (fn_0 #2 #1 #0)))  [fn, cellvalue, cellvalue, util] -> fn
+added abstraction fn_9: (compose (optimize (neg_dist #3) #2) (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_10: (fn_0 #1 #0 (optimize (distance #0) #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_11: (fn_0 #1 #0 (step #0 down))  [cellvalue, cellvalue] -> fn
+
+--- round 4/6: 73 fn + 0 fn_p_g unsolved; |D|=43 (6 invented); fn Q=uniform/content ---
+    [instr] agency constructor in D: fn_6 (wall-free); belief solved (replay-eligible): 70/143
+[ 57828] caught (fn_8 (wall_at c2 c0) 4 9 (distance 3))
+    per-task time (s): 1 solved [slowest solve 1642.0]
+    (misses burned up to 3600.5s each; the uniform --t-fn can drop toward slowest-solve=1642.0s to cut wasted early-round time without losing a solve)
+    solved 227/299 (+1 this round)
+running stitch_core.compress on 227 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (fork (compose #2 (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_7: (compose (wall_at #3 #2) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_8: (fn_0 #2 #2 (compose (optimize #3 #1) (fn_0 #2 #1 #0)))  [fn, cellvalue, cellvalue, util] -> fn
+added abstraction fn_9: (compose (optimize (neg_dist #3) #2) (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_10: (fn_0 #1 #0 (optimize (distance #0) #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_11: (fn_0 #1 #0 (step #0 down))  [cellvalue, cellvalue] -> fn
+
+--- round 5/6: 72 fn + 0 fn_p_g unsolved; |D|=43 (6 invented); fn Q=uniform/content ---
+    [instr] agency constructor in D: fn_6 (wall-free); belief solved (replay-eligible): 71/143
+    per-task time (s): 0 solved
+    solved 227/299 (+0 this round)
+running stitch_core.compress on 227 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (fork (compose #2 (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_7: (compose (wall_at #3 #2) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_8: (fn_0 #2 #2 (compose (optimize #3 #1) (fn_0 #2 #1 #0)))  [fn, cellvalue, cellvalue, util] -> fn
+added abstraction fn_9: (compose (optimize (neg_dist #3) #2) (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_10: (fn_0 #1 #0 (optimize (distance #0) #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_11: (fn_0 #1 #0 (step #0 down))  [cellvalue, cellvalue] -> fn
+    no new tasks solved this round (uniform/content Q) — wake-sleep stalled (raise t_fn / ecd_iters, or the abstraction belief needs hasn't formed).
+  wrote run artifact (227 solved programs) to phase1_run.json
+  wrote trajectory artifact (227 solved programs, 4 rounds) to phase1_traj.json
+
+========================================================================
+(A) USAGE CENSUS — which core parts each family reaches for (pre-stitch)
+========================================================================
+  physics       4/4 solved   uses: ['step']
+  desire        16/16 solved   uses: ['neg_dist', 'optimize']
+  overlay       4/4 solved   uses: ['fork', 'overlay', 'step']
+  comet         4/4 solved   uses: ['fork', 'neg_dist', 'optimize', 'overlay']
+  registration  4/4 solved   uses: ['sync_to_world']
+  belief        71/143 solved   uses: ['compose', 'fork', 'neg_dist', 'optimize', 'step', 'sync_to_world', 'wall_at']
+  flee          4/4 solved   uses: ['optimize']
+  deletion      4/4 solved   uses: []
+  denoise       4/4 solved   uses: []
+  obstacle      48/48 solved   uses: ['compose', 'neg_dist', 'optimize', 'wall_at']
+  relocate      16/16 solved   uses: ['compose', 'wall_at']
+  underlay      4/4 solved   uses: ['fork', 'step']
+  perception    4/4 solved   uses: []
+  multi_reg     4/4 solved   uses: []
+  reg_except    4/4 solved   uses: []
+  inpaint       4/4 solved   uses: []
+  readout       4/4 solved   uses: []
+
+  fork used outside belief (overlay/comet)   : True
+  sync used outside belief (registration)    : True
+  wall_at used outside belief (obstacle)     : True
+  belief reuses BOTH fork and sync           : True
+  fork∧sync agency is unique to belief       : True
+  wall-belief solutions are wall-based       : False   (no displaced-goal rival survived; goal-displacement family excluded)
+
+  FORCED LITERAL COMMIT — false-obstacle family (degeneracy excluded by construction)
+  21/24 false-obstacle tasks solved; commit forms: 21 literal, 0 degenerate.
+  Every solved one commits via the literal sync_to_world(av): no scope complement
+  reproduces these scenes (real wall stays put), so the agency commit is FORCED
+  and found — not merely argued extensionally equal to a cheaper complement.
+
+========================================================================
+(A′) CUBE CENSUS — which symmetric corner each family selected
+========================================================================
+  physics       (none)
+  desire        neg_dist×16
+  overlay       overlay×4
+  comet         overlay×4, neg_dist×4
+  registration  sync_to_world×4
+  belief        distance×3, neg_dist×3, sync_to_world×3
+  flee          distance×4
+  deletion      clear_at×4
+  denoise       erase×4
+  obstacle      neg_dist×48, wall_at×48
+  relocate      clear_at×16, wall_at×16
+  underlay      underlay×4
+  perception    sync_to_model×4
+  multi_reg     sync_all×4
+  reg_except    sync_except×4
+  inpaint       underlay×4
+  readout       snd_gg×4
+
+  belief keeps the agency corner (sync_to_world + wall_at) : False
+  belief avoids every symmetric complement                 : False
+  some complement is used elsewhere (field is live)        : True
+  complements claimed by a non-mental family               : ['clear_at', 'distance', 'erase', 'snd_gg', 'sync_all', 'sync_except', 'sync_to_model', 'underlay']
+
+========================================================================
+(B) JOINT COMPRESSION — final library over all 227 solutions (last stitch: iterations=6)
+========================================================================
+
+  invented abstractions:
+    fn_6  [cellvalue, cellvalue, fn] -> fn
+      body: (fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world $0))
+      (desire fragment)
+    fn_7  [cellvalue, cellvalue, coord, coord] -> fn
+      body: (compose (wall_at $3 $2) (optimize (neg_dist $1) $0))
+      (obstacle/belief policy: stamp wall ▸ navigate — the shared derive)
+    fn_8  [fn, cellvalue, cellvalue, util] -> fn
+      body: (fork (compose (compose (optimize $3 $1) (fork (compose $0 (optimize (neg_dist $1) $2)) (sync_to_world $2))) (optimize (neg_dist $2) $2)) (sync_to_world $2))
+      (desire fragment)
+    fn_9  [coord, coord, cellvalue, cellvalue] -> fn
+      body: (compose (optimize (neg_dist $3) $2) (wall_at $1 $0))
+      (obstacle/belief policy: stamp wall ▸ navigate — the shared derive)
+    fn_10  [cellvalue, cellvalue] -> fn
+      body: (fork (compose (optimize (distance $0) $0) (optimize (neg_dist $0) $1)) (sync_to_world $1))
+      (desire fragment)
+    fn_11  [cellvalue, cellvalue] -> fn
+      body: (fork (compose (step $0 down) (optimize (neg_dist $0) $1)) (sync_to_world $1))
+      (desire fragment)
+
+  abstraction usage by family (from stitch's rewritten programs):
+    physics       (bare prims)×4
+    desire        (bare prims)×16
+    overlay       (bare prims)×4
+    comet         (bare prims)×4
+    registration  (bare prims)×4
+    belief        fn_6×33, fn_8×16, fn_11×13, fn_10×12, fn_7×10, fn_9×4, (bare prims)×2
+    flee          (bare prims)×4
+    deletion      (bare prims)×4
+    denoise       (bare prims)×4
+    obstacle      fn_7×27, fn_9×21
+    relocate      (bare prims)×16
+    underlay      (bare prims)×4
+    perception    (bare prims)×4
+    multi_reg     (bare prims)×4
+    reg_except    (bare prims)×4
+    inpaint       (bare prims)×4
+    readout       (bare prims)×4
+
+========================================================================
+(B′) ABSTRACTION GENERALITY — does seek/policy carry holes for (gv, av)?
+========================================================================
+
+  desire: 8 distinct (gv,av) combos solved & rewritten
+    (no seek/policy abstraction reached these rewritten programs)
+
+  obstacle: 8 distinct (gv,av) combos solved & rewritten
+    fn_7 [policy]  reused by 8/8 combos  holes=4
+        body: (compose (wall_at $3 $2) (optimize (neg_dist $1) $0))
+    fn_9 [policy]  reused by 7/8 combos  holes=4
+        body: (compose (optimize (neg_dist $3) $2) (wall_at $1 $0))
+
+  belief: 8 distinct (gv,av) combos solved & rewritten
+    fn_6 [seek]  reused by 8/8 combos  holes=3
+        body: (fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world $0))
+    fn_10 [seek]  reused by 8/8 combos  holes=2
+        body: (fork (compose (optimize (distance $0) $0) (optimize (neg_dist $0) $1)) (sync_to_world $1))
+    fn_8 [seek]  reused by 8/8 combos  holes=4
+        body: (fork (compose (compose (optimize $3 $1) (fork (compose $0 (optimize (neg_dist $1) $2)) (sync_to_world $2))) (optimize (neg_dist $2) $2)) (sync_to_world $2))
+    fn_11 [seek]  reused by 8/8 combos  holes=2
+        body: (fork (compose (step $0 down) (optimize (neg_dist $0) $1)) (sync_to_world $1))
+    fn_7 [policy]  reused by 6/8 combos  holes=4
+        body: (compose (wall_at $3 $2) (optimize (neg_dist $1) $0))
+    fn_9 [policy]  reused by 4/8 combos  holes=4
+        body: (compose (optimize (neg_dist $3) $2) (wall_at $1 $0))
+
+  distinct belief (gv,av) combos in corpus            : 8
+  widest combo-span of one OBSTACLE policy (leading)  : 8
+  widest combo-span of one belief seek/policy (confirm): 8
+  => policy GENERALIZES into belief: one abstraction serves multiple combos via
+     holes — belief's skeleton is genuinely shallow.
+
+========================================================================
+VERDICT
+========================================================================
+  (A) parts are general    : fork∉belief-only=True, sync∉belief-only=True, wall∉belief-only=True
+  (A) only agency is unique: fork∧sync unique to belief=True, belief recombines=True, wall-based=False
+  (B) constructor invented : False (shared agency hole: False)
+  (B) constructor is belief-specific: used by belief=False, absent from non-mental=False
+  (A′) cube: belief picks the lone asymmetric corner over the full field: False
+
+  => not fully demonstrated this run (raise timeouts / n_bel / stitch_iters,
+     or drop --smoke).  Each False above localises what failed.
+[gkaminer@int6 dumbcoder]$ 

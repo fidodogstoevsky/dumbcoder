@@ -1,0 +1,375 @@
+{
+ "decomposed": true,
+ "smoke": true,
+ "n_solved": 54,
+ "n_total": 102,
+ "stitch_iters": 3,
+ "ecd_iters": 2,
+ "constructor_round": null,
+ "first_solve_round_by_kind": {
+  "physics": 1,
+  "desire": 1,
+  "overlay": 1,
+  "comet": 1,
+  "flee": 1,
+  "deletion": 1,
+  "denoise": 1,
+  "underlay": 1,
+  "obstacle": 1,
+  "relocate": 1,
+  "readout": 1,
+  "inpaint": 1,
+  "multi_reg": 1,
+  "reg_except": 1,
+  "perception": 1,
+  "registration": 1
+ },
+ "first_solve_round_by_variant": {
+  "physics": 1,
+  "desire": 1,
+  "overlay": 1,
+  "comet": 1,
+  "flee": 1,
+  "deletion": 1,
+  "denoise": 1,
+  "underlay": 1,
+  "obstacle": 1,
+  "relocate": 1,
+  "readout": 1,
+  "inpaint": 1,
+  "multi_reg": 1,
+  "reg_except": 1,
+  "perception": 1,
+  "registration": 1
+ },
+ "solved_by_kind": {
+  "physics": 2,
+  "desire": 8,
+  "overlay": 2,
+  "comet": 2,
+  "flee": 2,
+  "deletion": 2,
+  "denoise": 2,
+  "underlay": 2,
+  "obstacle": 16,
+  "relocate": 4,
+  "registration": 2,
+  "perception": 2,
+  "multi_reg": 2,
+  "reg_except": 2,
+  "inpaint": 2,
+  "readout": 2
+ },
+ "total_by_kind": {
+  "physics": 2,
+  "desire": 8,
+  "overlay": 2,
+  "comet": 2,
+  "belief": 40,
+  "belief_scaffold": 8,
+  "flee": 2,
+  "deletion": 2,
+  "denoise": 2,
+  "underlay": 2,
+  "obstacle": 16,
+  "relocate": 4,
+  "registration": 2,
+  "perception": 2,
+  "multi_reg": 2,
+  "reg_except": 2,
+  "inpaint": 2,
+  "readout": 2
+ },
+ "uses_by_kind": {
+  "physics": [
+   "step"
+  ],
+  "desire": [
+   "neg_dist",
+   "optimize"
+  ],
+  "overlay": [
+   "compose",
+   "compose_gp",
+   "dup",
+   "mapsnd",
+   "overlay",
+   "pipe_gpg",
+   "step"
+  ],
+  "comet": [
+   "compose",
+   "compose_gp",
+   "dup",
+   "mapsnd",
+   "neg_dist",
+   "optimize",
+   "overlay",
+   "pipe_gpg"
+  ],
+  "flee": [
+   "optimize"
+  ],
+  "deletion": [],
+  "denoise": [],
+  "underlay": [
+   "compose",
+   "compose_gp",
+   "dup",
+   "mapsnd",
+   "pipe_gpg",
+   "step"
+  ],
+  "obstacle": [
+   "compose",
+   "neg_dist",
+   "optimize",
+   "wall_at"
+  ],
+  "relocate": [
+   "compose",
+   "wall_at"
+  ],
+  "registration": [
+   "register"
+  ],
+  "perception": [],
+  "multi_reg": [],
+  "reg_except": [],
+  "inpaint": [],
+  "readout": []
+ },
+ "belief_commit": {
+  "literal": 0,
+  "degenerate": 0,
+  "complement": 0
+ },
+ "belief_variants": {
+  "belief_witness": {
+   "solved": 0,
+   "total": 8,
+   "literal": 0,
+   "degenerate": 0,
+   "complement": 0
+  },
+  "belief_goal": {
+   "solved": 0,
+   "total": 16,
+   "literal": 0,
+   "degenerate": 0,
+   "complement": 0
+  },
+  "belief_dual": {
+   "solved": 0,
+   "total": 8,
+   "literal": 0,
+   "degenerate": 0,
+   "complement": 0
+  },
+  "belief_false_obstacle": {
+   "solved": 0,
+   "total": 8,
+   "literal": 0,
+   "degenerate": 0,
+   "complement": 0
+  }
+ },
+ "false_obstacle": {
+  "n": 8,
+  "literal": 0,
+  "degenerate": 0,
+  "complement": 0
+ },
+ "A": {
+  "fork_general": true,
+  "sync_general": true,
+  "wall_general": true,
+  "belief_uses_both": false,
+  "agency_unique": false,
+  "belief_is_wall_based": true,
+  "no_belief_complement": true
+ },
+ "cube": {
+  "enabled": true,
+  "cube_ok": false,
+  "corners_by_kind": {
+   "physics": {},
+   "desire": {
+    "neg_dist": 8
+   },
+   "overlay": {
+    "overlay": 2,
+    "dup": 2,
+    "mapsnd": 2
+   },
+   "comet": {
+    "overlay": 2,
+    "neg_dist": 2,
+    "dup": 2,
+    "mapsnd": 2
+   },
+   "flee": {
+    "distance": 2
+   },
+   "deletion": {
+    "clear_at": 2
+   },
+   "denoise": {
+    "erase": 2
+   },
+   "underlay": {
+    "dup": 2,
+    "underlay": 2,
+    "mapsnd": 2
+   },
+   "obstacle": {
+    "wall_at": 16,
+    "neg_dist": 16
+   },
+   "relocate": {
+    "clear_at": 4,
+    "wall_at": 4
+   },
+   "registration": {
+    "place": 2,
+    "locate": 2,
+    "register": 2
+   },
+   "perception": {
+    "sync_all": 2,
+    "via_swap": 2
+   },
+   "multi_reg": {
+    "sync_all": 2
+   },
+   "reg_except": {
+    "sync_except": 2
+   },
+   "inpaint": {
+    "underlay": 2
+   },
+   "readout": {
+    "snd_gg": 2
+   }
+  },
+  "belief_keeps_corner": false,
+  "belief_avoids_complements": true,
+  "any_complement_used": true,
+  "used_complements": [
+   "clear_at",
+   "distance",
+   "erase",
+   "snd_gg",
+   "sync_all",
+   "sync_except",
+   "underlay",
+   "via_swap"
+  ],
+  "unused_complements": []
+ },
+ "invented": [
+  {
+   "repr": "fn_3",
+   "type": "fn",
+   "tailtypes": [
+    "cellvalue",
+    "cellvalue"
+   ],
+   "body": "(optimize (neg_dist $0) $1)",
+   "shared_holes": {},
+   "role": "desire_fragment"
+  },
+  {
+   "repr": "fn_4",
+   "type": "fn",
+   "tailtypes": [
+    "fn",
+    "fn_p_g"
+   ],
+   "body": "(pipe_gpg (compose_gp dup (mapsnd $0)) $1)",
+   "shared_holes": {},
+   "role": "other"
+  },
+  {
+   "repr": "fn_5",
+   "type": "fn",
+   "tailtypes": [
+    "coord",
+    "coord",
+    "cellvalue",
+    "cellvalue"
+   ],
+   "body": "(compose (optimize (neg_dist $3) $2) (wall_at $1 $0))",
+   "shared_holes": {},
+   "role": "wall_policy"
+  }
+ ],
+ "agent_constructor": null,
+ "agent_constructor_shared_holes": {},
+ "abstraction_usage_by_kind": {
+  "physics": {
+   "(bare prims)": 2
+  },
+  "desire": {
+   "fn_3": 8
+  },
+  "overlay": {
+   "fn_4": 2
+  },
+  "comet": {
+   "fn_3": 2,
+   "fn_4": 2
+  },
+  "flee": {
+   "(bare prims)": 2
+  },
+  "deletion": {
+   "(bare prims)": 2
+  },
+  "denoise": {
+   "(bare prims)": 2
+  },
+  "underlay": {
+   "fn_4": 2
+  },
+  "obstacle": {
+   "fn_5": 8,
+   "fn_3": 8
+  },
+  "relocate": {
+   "(bare prims)": 4
+  },
+  "registration": {
+   "(bare prims)": 2
+  },
+  "perception": {
+   "(bare prims)": 2
+  },
+  "multi_reg": {
+   "(bare prims)": 2
+  },
+  "reg_except": {
+   "(bare prims)": 2
+  },
+  "inpaint": {
+   "(bare prims)": 2
+  },
+  "readout": {
+   "(bare prims)": 2
+  }
+ },
+ "constructor_found": false,
+ "constructor_shared": false,
+ "belief_uses_ctor": false,
+ "nonmental_free_of_ctor": false,
+ "failures": [
+  "belief_uses_both",
+  "agency_unique",
+  "constructor_found",
+  "constructor_shared",
+  "belief_uses_ctor",
+  "nonmental_free_of_ctor",
+  "cube_ok"
+ ],
+ "ok": false
+}

@@ -8,6 +8,8 @@ choose one:
 - simple learning over rich structured representations
 - statistical learning over unstructured representations (weights)
 
+nativist argument relies on there not being algorithms for learning over structured representation. but we now know that there are 
+
 == Bayesian Learning
 
 an instantiation of neoconstructivism

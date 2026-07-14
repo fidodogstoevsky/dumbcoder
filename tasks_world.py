@@ -487,6 +487,56 @@ def make_obstacle_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=8):
     return tasks
 
 
+def make_relocation_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0):
+    """grid-edit compound (clear_at ▸ wall_at): a REAL wall jumps to a new cell.
+
+        (compose (clear_at r1 c1) (wall_at r2 c2))
+
+    A wall (value 3) vanishes from one cell and appears at another in a single
+    frame, then the scene is static; bystander values stay put throughout.  This
+    is the "move" grid-edit corner, the compound of the "remove" (deletion) and
+    "add" (obstacle) corners — a visible, non-mental relocation.
+
+    Purpose (mirrors the obstacle family's role for the wall policy): the
+    fragment `(compose (clear_at …) (wall_at …))` — or its erase spelling — is
+    exactly the derive PREFIX of the false-obstacle belief family (clear the
+    real wall, stamp the phantom), which prices ~14 nats beyond the search
+    frontier when every node is paid at primitive cost.  A relocation family
+    makes that compound recur in SOLVED non-mental tasks, so the joint stitch
+    can abstract it into one cheap token and pull false-obstacle belief inside
+    the enumerator's reach — the same curriculum trick that lowered belief's
+    first-solve via the obstacle corner.
+
+    Necessity: the jump is ≥2 cells (a 1-cell jump is a plain `step 3 d`), and
+    T=3 with an idempotent transition (frames 1 and 2 identical) kills every
+    step/optimize drift rival, which would keep moving; `erase 3` alone removes
+    the wall but conjures none; `wall_at` alone leaves two walls.
+    """
+    rng = np.random.default_rng(seed)
+    tasks, attempts = [], 0
+    while len(tasks) < n and attempts < 8000:
+        attempts += 1
+        cells = [(r, c) for r in range(size) for c in range(size)]
+        rng.shuffle(cells)
+        (r1, c1), (r2, c2), b1, b2 = cells[0], cells[1], cells[2], cells[3]
+        if abs(r1 - r2) + abs(c1 - c2) < 2:
+            continue
+        bv1, bv2 = (int(v) for v in rng.choice(vals, size=2))
+        g = np.zeros((size, size), dtype=int)
+        g[r1, c1] = 3
+        g[b1] = bv1
+        g[b2] = bv2
+        x = unfold(g, 3, compose(clear_at(r1, c1), wall_at(r2, c2)))
+        if np.array_equal(x[0], x[-1]):
+            continue
+        if _step_or_erase_reproduces(g, x):
+            continue
+        if _physically_explainable(x, g):
+            continue
+        tasks.append((x, {'kind': 'relocate', 'from': (r1, c1), 'to': (r2, c2)}))
+    return tasks
+
+
 # fn_p_g corners share the registration interpreter (unfold_with_template); each
 # is a single pair->grid commit over (working, template).  A scene is kept only if
 # the intended corner is the ONLY atomic commit that reproduces it — compositional

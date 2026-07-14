@@ -1085,7 +1085,15 @@ def sample(ps):
     if np.any(ps < 0):
         ps = np.exp(ps)
 
-    ps = ps / ps.sum()
+    # Guard a zero (or non-finite) total: an all-`-inf` log-prob row (every candidate
+    # masked out) exponentiates to all-zeros, and `ps / 0` gives the NaN cdf that
+    # trained both Jul-12 phase2 recognition models through warnings.  Fall back to a
+    # uniform draw over the candidates so sampling stays well-defined.
+    total = ps.sum()
+    if not np.isfinite(total) or total <= 0:
+        ps = np.ones_like(ps)
+        total = ps.sum()
+    ps = ps / total
     cdf = ps.cumsum(-1)
     x = rand()
     for i in range(len(ps)):

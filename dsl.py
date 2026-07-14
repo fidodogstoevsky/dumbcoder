@@ -1036,21 +1036,65 @@ def normalize(tree):
     return tree
 
 
+def _strip_snd_projection(tree):
+    """If `tree` is a vacuous model-projection wrapper, return the wrapped derive.
+
+    Two spellings of the same identity — a fork whose commit merely renders the
+    private (model) channel, discarding the world channel:
+
+        (fork f snd_gg)                                        -> f     [phase 1]
+        (pipe_gpg (compose_gp dup (mapsnd f)) snd_gg)          -> f     [phase 2]
+
+    fork(f, snd_gg)(w) = snd_gg((w, f(w))) = f(w), so the wrapper is exactly f
+    (`fork(f, snd_gg) ≡ f`, dsl.py fork/_snd_gg).  The decomposed spelling is the
+    same thing after fork is spelled out as pipe_gpg∘compose_gp∘dup∘mapsnd.  These
+    wrappers let an inner belief commit (e.g. a `fork(policy, sync_all)` whose
+    phantom wall never renders through sync_all) masquerade behind a fresh fork;
+    unwrapping surfaces the real inner program to the census/commit classifier.
+
+    Returns the inner derive Delta, or None if `tree` is not such a wrapper."""
+    if not (isinstance(tree, Delta) and tree.tails and len(tree.tails) == 2):
+        return None
+    produce, commit = tree.tails
+    if commit.repr != 'snd_gg':
+        return None
+    # phase 1: atomic fork.
+    if tree.repr == 'fork':
+        return produce
+    # phase 2: fork spelled out as (pipe_gpg (compose_gp dup (mapsnd f)) snd_gg).
+    if (tree.repr == 'pipe_gpg' and produce.repr == 'compose_gp'
+            and produce.tails and len(produce.tails) == 2):
+        dup_node, endo = produce.tails
+        if (dup_node.repr == 'dup' and endo.repr == 'mapsnd'
+                and endo.tails and len(endo.tails) == 1):
+            return endo.tails[0]
+    return None
+
+
 def simplify(tree):
     """Collapse spurious nesting in a (normalized) Delta tree, semantics-preserving.
 
-    Rewrite (applied bottom-up, to fixpoint):
+    Rewrites (applied bottom-up, to fixpoint):
 
-        (fork (fork X (sync_to_world v)) (sync_to_world v))
-            ->  (fork X (sync_to_world v))
+      (1) (fork (fork X (sync_to_world v)) (sync_to_world v))
+              ->  (fork X (sync_to_world v))
 
-    The inner fork's commit, sync_to_world(v), produces "world with v moved to its
-    position in X(world)" — i.e. it already moves only v.  The outer fork then
-    re-commits the *same* entity v, re-deriving and re-applying the identical move,
-    so it is a no-op wrapper.  (When the two sync values differ the outer commit is
-    not a no-op, so the rule requires them equal and leaves such trees untouched.)
+          The inner fork's commit, sync_to_world(v), produces "world with v moved to
+          its position in X(world)" — it already moves only v.  The outer fork
+          re-commits the *same* entity v, re-deriving and re-applying the identical
+          move, so it is a no-op wrapper.  (When the two sync values differ the outer
+          commit is not a no-op, so the rule requires them equal and leaves such
+          trees untouched.)
 
-    This is a structural rewrite over fork/sync_to_world (file13's DSL); trees from
+      (2) (fork f snd_gg)  ->  f     and its decomposed spelling
+          (pipe_gpg (compose_gp dup (mapsnd f)) snd_gg)  ->  f
+
+          The commit renders only the model channel, so the fork is exactly its
+          derive (see _strip_snd_projection).  Canonicalizing here — rather than
+          filtering the data — cleans the census, cube check, and stitch corpus in
+          one place, since they all pass programs through simplify.
+
+    Structural rewrites over fork/sync/projection nodes (file13/15's DSL); trees from
     other DSLs contain no such nodes and pass through unchanged.
     """
     if not isinstance(tree, Delta):
@@ -1059,15 +1103,26 @@ def simplify(tree):
     if tree.tails:
         tree.tails = [simplify(t) for t in tree.tails]
 
-    while (tree.repr == 'fork' and tree.tails and len(tree.tails) == 2):
-        derive, commit = tree.tails
-        if (commit.repr == 'sync_to_world' and commit.tails and
-                derive.repr == 'fork' and derive.tails and len(derive.tails) == 2):
-            inner_commit = derive.tails[1]
-            if (inner_commit.repr == 'sync_to_world' and inner_commit.tails and
-                    inner_commit.tails[0].repr == commit.tails[0].repr):
-                tree = derive          # drop the redundant outer fork
-                continue
+    while isinstance(tree, Delta):
+        # (1) redundant double-fork sync_to_world wrapper
+        if tree.repr == 'fork' and tree.tails and len(tree.tails) == 2:
+            derive, commit = tree.tails
+            if (commit.repr == 'sync_to_world' and commit.tails and
+                    derive.repr == 'fork' and derive.tails and len(derive.tails) == 2):
+                inner_commit = derive.tails[1]
+                if (inner_commit.repr == 'sync_to_world' and inner_commit.tails and
+                        inner_commit.tails[0].repr == commit.tails[0].repr):
+                    tree = derive          # drop the redundant outer fork
+                    continue
+
+        # (2) vacuous model-projection wrapper: fork(f, snd_gg) ≡ f (both spellings).
+        # The inner derive is already simplified (children were simplified above), so
+        # loop to re-check it against the top-level rules.
+        unwrapped = _strip_snd_projection(tree)
+        if unwrapped is not None:
+            tree = unwrapped
+            continue
+
         break
 
     return tree

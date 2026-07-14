@@ -66,7 +66,8 @@ from tasks_minds import (
 from tasks_world import (
     make_overlay_tasks, make_comet_tasks, make_registration_tasks,
     make_flee_tasks, make_deletion_tasks, make_denoise_tasks, make_underlay_tasks,
-    make_obstacle_tasks, make_perception_tasks, make_multi_registration_tasks,
+    make_obstacle_tasks, make_relocation_tasks, make_perception_tasks,
+    make_multi_registration_tasks,
     make_registration_except_tasks, make_inpainting_tasks, make_readout_tasks,
 )
 from experiment import gt_program_str, verify_ground_truth, check_decomposition_identities
@@ -158,10 +159,10 @@ def build_corpus(smoke=False):
     Returns a flat list of (x, meta)."""
     if smoke:
         n_phys, n_des, n_ov, n_reg, n_bel, n_corner = 2, 1, 2, 2, 1, 2
-        n_comet, n_belvar, n_goal, n_obstacle = 2, 1, 2, 2
+        n_comet, n_belvar, n_goal, n_obstacle, n_relocate = 2, 1, 2, 2, 4
     else:
         n_phys, n_des, n_ov, n_reg, n_bel, n_corner = 4, 2, 4, 4, 6, 4
-        n_comet, n_belvar, n_goal, n_obstacle = 4, 3, 6, 6
+        n_comet, n_belvar, n_goal, n_obstacle, n_relocate = 4, 3, 6, 6, 16
 
     phys = make_physics_tasks(n_phys, seed=0)
     des  = make_desire_tasks(n_des, COMBOS, seed=1)
@@ -184,7 +185,8 @@ def build_corpus(smoke=False):
                  + make_deletion_tasks(n_corner, seed=11)
                  + make_denoise_tasks(n_corner, seed=12)
                  + make_underlay_tasks(n_corner, seed=19)
-                 + make_obstacle_tasks(n_obstacle, seed=18))
+                 + make_obstacle_tasks(n_obstacle, seed=18)
+                 + make_relocation_tasks(n_relocate, seed=26))
     pair_corner = (make_perception_tasks(n_corner, seed=13)
                    + make_multi_registration_tasks(n_corner, seed=14)
                    + make_registration_except_tasks(n_corner, seed=15)

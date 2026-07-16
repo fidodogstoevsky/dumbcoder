@@ -31,7 +31,13 @@ module load Anaconda3/2023.07-2
 cd $HOME/dumbcoder
 
 # Activate our environment (replace dumbcoder with the actual env name on Snellius).
-source activate dumbcoder
+# FAIL LOUDLY if the env is missing rather than silently running on base conda.
+source activate dumbcoder || { echo "FATAL: could not activate conda env 'dumbcoder'"; exit 1; }
+# Import stitch_core in the stamp too and FAIL LOUDLY if absent: without it
+# saturate_stitch silently degrades to "no compression" (vacuous-(B) verdict, no
+# error).  stitch_core has no __version__, so stamp its file path instead.
+python -c "import sys, numpy, torch, stitch_core; print('ENV', sys.executable, '| PY', sys.version.split()[0], '| numpy', numpy.__version__, '| torch', torch.__version__, '| stitch_core', stitch_core.__file__)" \
+  || { echo 'FATAL: env stamp failed — stitch_core (or numpy/torch) not importable in env dumbcoder; refusing to run a no-compression job'; exit 1; }
 
 # Each phase runs several full ECD rounds: enumerate the still-unsolved tasks
 # against the current library, then ONE joint stitch over all solutions; the

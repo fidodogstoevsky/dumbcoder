@@ -33,8 +33,19 @@ module load Anaconda3/2023.07-2
 # Our job starts in the directory where we call sbatch.
 cd $HOME/dumbcoder
 
-# Activate our environment.
-source activate dumbcoder
+# Activate our environment.  FAIL LOUDLY if the env is missing: the Jul-12 runs
+# silently fell back to base conda (EnvironmentNameNotFound) and produced an
+# unrecorded, unpinned interpreter — the exact confounder these reruns remove.
+source activate dumbcoder || { echo "FATAL: could not activate conda env 'dumbcoder' — refusing to run on the fallback interpreter"; exit 1; }
+
+# Stamp the interpreter + key package versions into the slurm log, so every run
+# self-documents which environment it actually used.  stitch_core is imported here
+# too and FAILS LOUDLY if absent: without it saturate_stitch silently degrades to
+# "no compression", which produces a vacuous-(B) verdict with no error — the exact
+# failure that cost the Jul-14 runs 4 of 7 criteria.  (stitch_core exposes no
+# __version__, so we stamp its file path to prove which env it loaded from.)
+python -c "import sys, numpy, torch, stitch_core; print('ENV', sys.executable, '| PY', sys.version.split()[0], '| numpy', numpy.__version__, '| torch', torch.__version__, '| stitch_core', stitch_core.__file__)" \
+  || { echo 'FATAL: env stamp failed — stitch_core (or numpy/torch) not importable in env dumbcoder; refusing to run a no-compression job'; exit 1; }
 
 # Forward the phase script + all its flags (sbatch passes them as positional args).
 srun python "$@"

@@ -400,16 +400,30 @@ def _swap_scope_commit(D, tree, m):
         return m.get('av')
 
     def _derive_of(node):
-        "the derive subtree of a fork / decomposed fork; commit is always tails[1]."
+        """The derive subtree of a fork / decomposed fork; commit is always tails[1].
+
+        Handles the atomic `fork` and the decomposed `pipe_gpg(produce, commit)` where
+        `produce` is a (possibly nested) compose_gp chain whose last endo is `mapsnd`
+        or `bimap` (the model-channel map).  A NON-mapsnd/bimap tail (or none) means the
+        produce shape isn't a recognised model-channel derive — return None, and the
+        caller conservatively treats it as a genuine complement rather than swapping."""
         if not (node.tails and len(node.tails) == 2):
             return None
         if node.repr == 'fork':
             return node.tails[0]
         if node.repr == 'pipe_gpg' and node.tails[0].repr == 'compose_gp':
             produce = node.tails[0]
-            if (produce.tails and len(produce.tails) == 2
-                    and produce.tails[1].repr == 'mapsnd' and produce.tails[1].tails):
-                return produce.tails[1].tails[0]
+            if not (produce.tails and len(produce.tails) == 2):
+                return None
+            endo = produce.tails[1]
+            # mapsnd(derive): model-channel map — its arg is the derive.
+            if endo.repr == 'mapsnd' and endo.tails:
+                return endo.tails[0]
+            # bimap(world_op, model_op): the model derive is the SECOND arg (the first
+            # transforms the world channel).  The world-op is incidental to the commit's
+            # actor, which _actor reads from the derive's own seek.
+            if endo.repr == 'bimap' and endo.tails and len(endo.tails) == 2:
+                return endo.tails[1]
         return None
 
     def walk(node):

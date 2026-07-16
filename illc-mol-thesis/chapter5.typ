@@ -44,3 +44,33 @@ second order:
 - likelihood $P(cal(D)|ell)$ is the probability that solutions to tasks $d in cal(D)$ are found given that the DSL is $ell$. Say $ell={0,1}$. So $ell$ can generate any of the following task sets: $cal(D)_0={}$, $cal(D)_1={0}$, $cal(D)_2={1}$, $cal(D)_3={0,1}$. So $P(cal(D)_2|ell)=0.25$. But say $ell_1={1}$. So $P(cal(D)_2|ell_1)=0.5$. the likelihood is how tightly the DSL fits the dataset. if the DSL is quite broad i.e. it can generate solutions to tons of different task sets (like, if the DSL is pure untyped lambda calculus) then likelihood is quite low. But if the DSL is extremely narrow/specialized (strict typing to enforce particular compositions) such that it only generates solutions to one specific task set, then the likelihood of $cal(D)$ under $ell$ is quite high. 
 - prior $P(ell)$ is the length/complexity of the DSL. a shorter/simpler DSL is likelier to be chosen from the space of possible DSLs. The DSL is the framework theory. A simpler framework theory has a higher prior than a complex one.
 - posterior $P(ell|cal(D))$ is the probability that framework theory $ell$ is the correct explanation for observation set $cal(D)$. 
+
+== The tradeoff
+
+choose one:
+- simple learning over rich structured representations
+- statistical learning over unstructured representations (weights)
+
+nativist argument relies on there not being algorithms for learning over structured representation. but we now know that there are 
+
+== Bayesian Learning
+
+an instantiation of neoconstructivism
+
+- learning theory has progressed since Chomsky
+- we now know of algorithms that can learn abstract structure more efficiently from sparse data
+- maybe at the time it seemed that the grammars are too abstract to be learned
+
+search over hypothesis space
+
+== DreamCoder
+
+=== Explore
+
+=== Compress
+
+=== Dream
+
+== my thing
+
+inductive synthesis on input/output grid pairs

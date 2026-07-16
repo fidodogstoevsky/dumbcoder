@@ -59,6 +59,7 @@ from dsl import (
     fork, sync_to_world, sync_all, sync_except,
     compose, step, optimize, neg_distance, distance, wall_at, clear_at, erase,
     unfold, tr, simplify,
+    dup, bimap, compose_gp, pipe_gpg,   # decomposed-fork plumbing (world-channel rival sweep)
 )
 
 # ── Configuration ────────────────────────────────────────────────────────────
@@ -913,16 +914,27 @@ def _false_obstacle_rival_explainable(x, g, size=SIZE):
         moves only the agent in the model (goal & wall left put), which makes a
         wholesale / all-but-one commit coincide with the single-value agency commit.
         `_scope_complements_all_fail` guarantees the complements fail only for the
-        CANONICAL derive; this sweep repairs that gap over alternative derives."""
+        CANONICAL derive; this sweep repairs that gap over alternative derives;
+      * world-channel-transforming fork — in the decomposed DSL, `bimap` / `mapfst`
+        let the WORLD (first) channel be transformed too, not just the model.  Then a
+        scope commit can reproduce a real-wall scene even though `_scope_complements_
+        all_fail` (which holds the world pristine) certifies it cannot: a seek in the
+        world channel places the agent, and — because that derive never stamps the
+        phantom wall — the real wall stays aligned, so sync_except(gv) / sync_all is a
+        no-op on everything but the agent, i.e. extensionally sync_to_world(av).  This
+        is the confirmed Jul-14 phase2 leak (fob solved via bimap+sync_except).  Sweep
+        a bounded (world_op, model_derive) battery with a scope commit."""
     T = x.shape[0]
     agents  = [int(v) for v in np.unique(g) if v not in (0, 3)]
     targets = [int(v) for v in np.unique(g) if v != 0]     # incl. real wall 3 (beacon)
     world_vals = list(targets)
     cells = [(r, c) for r in range(size) for c in range(size)]
+    _ident = lambda z: z
     for av in agents:
         for gv in targets:
             if av == gv:
                 continue
+            commits = [sync_all] + [sync_except(k) for k in set(world_vals)]
             for util_fn in (neg_distance, distance):
                 seek = optimize(util_fn(gv), av)
                 # 1) transient real-wall rivals: stamp / act / (clear cell | erase all 3s)
@@ -936,11 +948,31 @@ def _false_obstacle_rival_explainable(x, g, size=SIZE):
                             pass
                 # 2) scope-complement forks over goal/wall-preserving derives
                 derives = [seek] + [compose(wall_at(pr, pc), seek) for (pr, pc) in cells]
-                commits = [sync_all] + [sync_except(k) for k in set(world_vals)]
                 for d in derives:
                     for commit in commits:
                         try:
                             if np.array_equal(unfold(g, T, fork(d, commit)), x):
+                                return True
+                        except Exception:
+                            pass
+            # 3) world-channel-transforming forks (decomposed DSL): a bounded battery of
+            #    (world_op, model_derive) pairs with a scope commit.  world_op/model_op
+            #    range over cross-seeks (both dirs, both utils), self-seeks, single steps,
+            #    and identity; the model derive additionally allows a 2-op seek
+            #    composition (mapsnd∘bimap in the found leak).  Kept bounded (~7k unfolds/
+            #    scene) — this runs only after the cheaper gates above pass.
+            seeks = [optimize(u(t), s) for u in (neg_distance, distance)
+                                       for (t, s) in ((gv, av), (av, gv))]
+            seeks += [optimize(distance(av), av), optimize(distance(gv), gv)]
+            steps = [step(v, d) for v in (av, gv) for d in DIRS.values()]
+            chan_ops  = seeks + steps + [_ident]
+            model_ops = chan_ops + [compose(a, b) for a in seeks for b in seeks]
+            for wop in chan_ops:
+                for mop in model_ops:
+                    prod = compose_gp(dup, bimap(wop, mop))
+                    for commit in commits:
+                        try:
+                            if np.array_equal(unfold(g, T, pipe_gpg(prod, commit)), x):
                                 return True
                         except Exception:
                             pass

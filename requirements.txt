@@ -1,0 +1,13 @@
+# Snellius env `dumbcoder` — Python 3.12.13 (pinned for HPC reproducibility).
+# Versions taken from the Jul-14 run ENV stamp in the slurm logs.
+#
+# torch is CPU-only (the genoa partition is CPU; nothing touches a GPU), so install
+# from the CPU wheel index:
+#   pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
+#
+# stitch_core is the Rust-backed library-learning compressor (saturate_stitch in
+# ecd.py); without it the run silently degrades to "no compression" — the job
+# scripts now fail loudly if it is missing.
+stitch_core==0.1.29
+numpy==2.5.1
+torch==2.13.0+cpu

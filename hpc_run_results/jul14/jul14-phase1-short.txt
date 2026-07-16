@@ -1,0 +1,618 @@
+sbatch --job-name=phase1-short --time=12:00:00 run.job phase1.py --t-fn 1200 --ecd-iters 4
+
+[gkaminer@int4 dumbcoder]$ cat slurm_24624105.out
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+ENV /home/gkaminer/.conda/envs/dumbcoder/bin/python | PY 3.12.13 | numpy 2.5.1 | torch 2.13.0+cpu
+Generating mixed corpus…
+  belief variants: +48 goal-displacement, +24 dual, +24 false-obstacle (all kind=belief; false-obstacle forbids the scope-complement commit)
+  [curriculum] +24 plain-belief scaffold tasks (kind=belief_scaffold) to seed the fork(policy, sync) abstraction; excluded from the witness-belief verdict.
+  4 physics, 16 desire, 4 overlay, 4 comet, 4 registration, 144 belief — 296 total
+  corner families: 0 flee, 4 deletion, 4 denoise, 48 obstacle, 16 relocate, 4 underlay, 4 perception, 4 multi_reg, 4 reg_except, 4 inpaint, 4 readout
+
+DSL: 37 primitives — CUBE run (core + symmetric complements)
+  added corners: ['bimap', 'clear_at', 'distance', 'dup', 'erase', 'locate', 'mapfst', 'mapsnd', 'pair_blank', 'place', 'register', 'snd_gg', 'swap', 'sync_all', 'sync_except', 'sync_to_model', 'underlay', 'via_swap']
+  ground-truth check: 296 tasks verified via Delta trees
+
+========================================================================
+WAKE-SLEEP — up to 4 ECD rounds (enumerate ↦ joint stitch), 32 workers
+  fn Q: dreamed recognition model (replays + fantasies); registration Q: uniform
+========================================================================
+
+--- round 1/4: 272 fn + 24 fn_p_g unsolved; |D|=37 (0 invented); fn Q=uniform/content; t_fn=1200s ---
+    [instr] agency constructor in D: ABSENT; belief solved (replay-eligible): 0/144
+[     2] caught (step 1 right)
+[     4] caught (step 4 up)
+[     4] caught (step 4 up)
+      + solved [physics] in 0.0s: (step 4 up)
+      + solved [physics] in 0.0s: (step 1 right)
+      + solved [physics] in 0.0s: (step 4 up)
+[     5] caught (step 4 down)
+      + solved [physics] in 0.0s: (step 4 down)
+[    13] caught (optimize (neg_dist 2) 1)
+      + solved [desire] in 0.0s: (optimize (neg_dist 2) 1)
+[    13] caught (optimize (neg_dist 2) 1)
+      + solved [desire] in 0.0s: (optimize (neg_dist 2) 1)
+[    13] caught (optimize (neg_dist 5) 4)
+[    13] caught (optimize (neg_dist 5) 4)
+      + solved [desire] in 0.0s: (optimize (neg_dist 5) 4)
+      + solved [desire] in 0.0s: (optimize (neg_dist 5) 4)
+[    13] caught (optimize (neg_dist 7) 6)
+      + solved [desire] in 0.0s: (optimize (neg_dist 7) 6)
+[    13] caught (optimize (neg_dist 7) 6)
+      + solved [desire] in 0.0s: (optimize (neg_dist 7) 6)
+[    13] caught (optimize (neg_dist 9) 8)
+      + solved [desire] in 0.0s: (optimize (neg_dist 9) 8)
+[    13] caught (optimize (neg_dist 9) 8)
+[    13] caught (optimize (neg_dist 6) 2)
+      + solved [desire] in 0.0s: (optimize (neg_dist 9) 8)
+[    13] caught (optimize (neg_dist 6) 2)
+      + solved [desire] in 0.0s: (optimize (neg_dist 6) 2)
+      + solved [desire] in 0.0s: (optimize (neg_dist 6) 2)
+[    13] caught (optimize (neg_dist 8) 5)
+      + solved [desire] in 0.0s: (optimize (neg_dist 8) 5)
+[    12] caught (optimize (neg_dist 1) 7)
+[    13] caught (optimize (neg_dist 8) 5)
+[    12] caught (optimize (neg_dist 1) 7)
+      + solved [desire] in 0.0s: (optimize (neg_dist 8) 5)
+      + solved [desire] in 0.0s: (optimize (neg_dist 1) 7)
+      + solved [desire] in 0.0s: (optimize (neg_dist 1) 7)
+[    12] caught (optimize (neg_dist 4) 9)
+[    12] caught (optimize (neg_dist 4) 9)
+      + solved [desire] in 0.0s: (optimize (neg_dist 4) 9)
+      + solved [desire] in 0.0s: (optimize (neg_dist 4) 9)
+[   141] caught (fork (step 4 right) overlay)
+[   149] caught (fork (step 1 left) overlay)
+[   165] caught (fork (step 4 down) overlay)
+[   157] caught (fork (step 1 up) overlay)
+      + solved [overlay] in 0.0s: (fork (step 4 right) overlay)
+      + solved [overlay] in 0.0s: (fork (step 4 down) overlay)
+      + solved [overlay] in 0.0s: (fork (step 1 left) overlay)
+      + solved [overlay] in 0.0s: (fork (step 1 up) overlay)
+[   289] caught (fork (optimize (neg_dist 2) 1) overlay)
+[   289] caught (fork (optimize (neg_dist 7) 6) overlay)
+[   289] caught (fork (optimize (neg_dist 8) 5) overlay)
+      + solved [comet] in 0.2s: (fork (optimize (neg_dist 8) 5) overlay)
+[   289] caught (fork (optimize (neg_dist 6) 2) overlay)
+      + solved [comet] in 0.2s: (fork (optimize (neg_dist 6) 2) overlay)
+      + solved [comet] in 0.1s: (fork (optimize (neg_dist 7) 6) overlay)
+      + solved [comet] in 0.1s: (fork (optimize (neg_dist 2) 1) overlay)
+[  9335] caught (fork (compose (optimize (distance 2) 2) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[  9335] caught (fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[  9335] caught (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[  9335] caught (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[ 78799] caught (fork (compose (step 2 down) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[  9335] caught (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[ 79239] caught (fork (compose (step 7 down) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[ 79415] caught (fork (compose (step 9 down) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[ 79063] caught (fork (compose (step 5 down) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[  9335] caught (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[ 79415] caught (fork (compose (step 9 down) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[ 79151] caught (fork (compose (step 6 down) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[547919] caught (fork (compose (compose (optimize (neg_dist 6) 7) (optimize (neg_dist 6) 7)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[  9335] caught (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[547919] caught (fork (compose (compose (optimize (neg_dist 4) 5) (optimize (neg_dist 4) 5)) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[547919] caught (fork (compose (compose (optimize (neg_dist 1) 2) (optimize (neg_dist 1) 2)) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[  9335] caught (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[ 79151] caught (fork (compose (step 6 down) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[ 79327] caught (fork (compose (step 8 down) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[548579] caught (fork (compose (compose (optimize (neg_dist 4) 5) (optimize (distance 5) 5)) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[  9335] caught (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[547919] caught (fork (compose (compose (optimize (neg_dist 8) 9) (optimize (neg_dist 8) 9)) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[  8995] caught (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[548579] caught (fork (compose (compose (optimize (neg_dist 8) 9) (optimize (distance 9) 9)) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[547919] caught (fork (compose (compose (optimize (neg_dist 1) 2) (optimize (neg_dist 1) 2)) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[ 79327] caught (fork (compose (step 8 down) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[  8995] caught (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[548579] caught (fork (compose (compose (optimize (neg_dist 1) 2) (optimize (distance 2) 2)) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[  8995] caught (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[547919] caught (fork (compose (compose (optimize (neg_dist 2) 6) (optimize (neg_dist 2) 6)) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[547919] caught (fork (compose (compose (optimize (neg_dist 6) 7) (optimize (neg_dist 6) 7)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[  8995] caught (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[548579] caught (fork (compose (compose (optimize (neg_dist 6) 7) (optimize (distance 7) 7)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[ 77365] caught (fork (compose (step 1 down) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[547919] caught (fork (compose (compose (optimize (neg_dist 2) 6) (optimize (neg_dist 2) 6)) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[ 77629] caught (fork (compose (step 4 down) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[548579] caught (fork (compose (compose (optimize (neg_dist 5) 8) (optimize (distance 8) 8)) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[552595] caught (fork (compose (compose (optimize (distance 4) 4) (optimize (distance 4) 4)) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[552595] caught (fork (compose (compose (optimize (distance 1) 1) (optimize (distance 1) 1)) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[549471] caught (fork (compose (compose (optimize (neg_dist 9) 4) (optimize (neg_dist 9) 4)) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_goal] in 392.1s: (fork (compose (compose (optimize (neg_dist 1) 2) (optimize (neg_dist 1) 2)) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_goal] in 38.7s: (fork (compose (step 2 down) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_goal] in 4.0s: (fork (compose (optimize (distance 2) 2) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_goal] in 482.8s: (fork (compose (compose (optimize (neg_dist 1) 2) (optimize (distance 2) 2)) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_goal] in 476.0s: (fork (compose (compose (optimize (neg_dist 1) 2) (optimize (neg_dist 1) 2)) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_goal] in 5.4s: (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_goal] in 389.5s: (fork (compose (compose (optimize (neg_dist 4) 5) (optimize (neg_dist 4) 5)) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_goal] in 56.5s: (fork (compose (step 5 down) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_goal] in 5.9s: (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_goal] in 433.8s: (fork (compose (compose (optimize (neg_dist 4) 5) (optimize (distance 5) 5)) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_goal] in 357.5s: (fork (compose (compose (optimize (neg_dist 6) 7) (optimize (neg_dist 6) 7)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_goal] in 5.0s: (fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_goal] in 44.5s: (fork (compose (step 7 down) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_goal] in 505.2s: (fork (compose (compose (optimize (neg_dist 6) 7) (optimize (neg_dist 6) 7)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_goal] in 509.6s: (fork (compose (compose (optimize (neg_dist 6) 7) (optimize (distance 7) 7)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_goal] in 44.5s: (fork (compose (step 9 down) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_goal] in 5.7s: (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_goal] in 420.9s: (fork (compose (compose (optimize (neg_dist 8) 9) (optimize (distance 9) 9)) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_goal] in 38.5s: (fork (compose (step 9 down) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_goal] in 390.0s: (fork (compose (compose (optimize (neg_dist 8) 9) (optimize (neg_dist 8) 9)) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_goal] in 4.5s: (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_goal] in 39.6s: (fork (compose (step 6 down) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_goal] in 439.5s: (fork (compose (compose (optimize (neg_dist 2) 6) (optimize (neg_dist 2) 6)) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_goal] in 390.4s: (fork (compose (compose (optimize (neg_dist 2) 6) (optimize (neg_dist 2) 6)) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_goal] in 4.0s: (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_goal] in 46.6s: (fork (compose (step 6 down) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_goal] in 6.2s: (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_goal] in 40.2s: (fork (compose (step 8 down) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[532265] caught (compose (compose (optimize (distance 2) 1) (step 1 down)) (step 1 right))
+      + solved [belief_goal] in 401.6s: (fork (compose (compose (optimize (neg_dist 5) 8) (optimize (distance 8) 8)) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_goal] in 5.2s: (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_goal] in 43.4s: (fork (compose (step 8 down) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_goal] in 4.7s: (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_goal] in 421.7s: (fork (compose (compose (optimize (distance 1) 1) (optimize (distance 1) 1)) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_goal] in 51.3s: (fork (compose (step 1 down) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_goal] in 5.3s: (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_goal] in 4.1s: (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_goal] in 379.5s: (fork (compose (compose (optimize (distance 4) 4) (optimize (distance 4) 4)) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_goal] in 41.4s: (fork (compose (step 4 down) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_goal] in 4.2s: (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_goal] in 440.1s: (fork (compose (compose (optimize (neg_dist 9) 4) (optimize (neg_dist 9) 4)) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_false_obstacle] in 359.1s: (compose (compose (optimize (distance 2) 1) (step 1 down)) (step 1 right))
+[103713] caught (fork (compose (wall_at c3 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[103713] caught (fork (compose (wall_at c3 c2) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[103493] caught (fork (compose (wall_at c3 c0) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[103163] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[102723] caught (fork (compose (wall_at c1 c3) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[103163] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[103163] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[102173] caught (fork (compose (wall_at c0 c3) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[102833] caught (fork (compose (wall_at c1 c4) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[103713] caught (fork (compose (wall_at c3 c2) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[103053] caught (fork (compose (wall_at c2 c1) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[103493] caught (fork (compose (wall_at c3 c0) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[103823] caught (fork (compose (wall_at c3 c3) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[   114] caught (clear_at c1 c3)
+[   118] caught (clear_at c2 c2)
+[   113] caught (clear_at c1 c2)
+[   119] caught (clear_at c2 c3)
+[     2] caught (erase 4)
+[     1] caught (erase 1)
+[     2] caught (erase 4)
+[     2] caught (erase 4)
+[   193] caught (fork (step 1 left) underlay)
+[   237] caught (fork (step 2 left) underlay)
+[   259] caught (fork (step 4 down) underlay)
+[   204] caught (fork (step 1 up) underlay)
+[  1036] caught (compose (optimize (neg_dist 2) 1) (wall_at c1 c2))
+[  1245] caught (compose (wall_at c0 c3) (optimize (neg_dist 2) 1))
+[  1037] caught (compose (optimize (neg_dist 2) 1) (wall_at c3 c0))
+[  1037] caught (compose (optimize (neg_dist 2) 1) (wall_at c3 c2))
+[  1355] caught (compose (wall_at c3 c2) (optimize (neg_dist 2) 1))
+[  1036] caught (compose (optimize (neg_dist 2) 1) (wall_at c0 c1))
+[  1037] caught (compose (optimize (neg_dist 5) 4) (wall_at c1 c0))
+[   875] caught (compose (wall_at c3 c3) (optimize (neg_dist 5) 4))
+[  1037] caught (compose (optimize (neg_dist 5) 4) (wall_at c4 c1))
+[  1285] caught (compose (wall_at c2 c3) (optimize (neg_dist 5) 4))
+[   737] caught (compose (optimize (neg_dist 5) 4) (wall_at c3 c3))
+[   867] caught (compose (wall_at c2 c2) (optimize (neg_dist 5) 4))
+[  1037] caught (compose (optimize (neg_dist 7) 6) (wall_at c3 c0))
+[   859] caught (compose (wall_at c1 c1) (optimize (neg_dist 7) 6))
+[103603] caught (fork (compose (wall_at c3 c1) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[   859] caught (compose (wall_at c1 c1) (optimize (neg_dist 7) 6))
+[  1285] caught (compose (wall_at c2 c3) (optimize (neg_dist 7) 6))
+[   737] caught (compose (optimize (neg_dist 7) 6) (wall_at c2 c2))
+[   737] caught (compose (optimize (neg_dist 9) 8) (wall_at c3 c3))
+[  1265] caught (compose (wall_at c1 c3) (optimize (neg_dist 7) 6))
+[  1255] caught (compose (wall_at c1 c2) (optimize (neg_dist 9) 8))
+[  1037] caught (compose (optimize (neg_dist 9) 8) (wall_at c1 c0))
+[  1036] caught (compose (optimize (neg_dist 9) 8) (wall_at c0 c3))
+[  1385] caught (compose (wall_at c4 c3) (optimize (neg_dist 9) 8))
+[  1036] caught (compose (optimize (neg_dist 9) 8) (wall_at c2 c3))
+[  1037] caught (compose (optimize (neg_dist 6) 2) (wall_at c3 c2))
+[   737] caught (compose (optimize (neg_dist 6) 2) (wall_at c1 c1))
+[   875] caught (compose (wall_at c3 c3) (optimize (neg_dist 6) 2))
+[  1345] caught (compose (wall_at c3 c1) (optimize (neg_dist 6) 2))
+[  1325] caught (compose (wall_at c2 c1) (optimize (neg_dist 6) 2))
+[103273] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[  1037] caught (compose (optimize (neg_dist 8) 5) (wall_at c2 c0))
+[  1295] caught (compose (wall_at c2 c4) (optimize (neg_dist 6) 2))
+[   737] caught (compose (optimize (neg_dist 8) 5) (wall_at c4 c4))
+[  1037] caught (compose (optimize (neg_dist 8) 5) (wall_at c3 c0))
+[   737] caught (compose (optimize (neg_dist 8) 5) (wall_at c4 c4))
+[   851] caught (compose (wall_at c0 c0) (optimize (neg_dist 8) 5))
+[  1010] caught (compose (optimize (neg_dist 1) 7) (wall_at c0 c4))
+[  1315] caught (compose (wall_at c3 c4) (optimize (neg_dist 8) 5))
+[  1354] caught (compose (wall_at c3 c2) (optimize (neg_dist 1) 7))
+[   866] caught (compose (wall_at c2 c2) (optimize (neg_dist 1) 7))
+[  1010] caught (compose (optimize (neg_dist 1) 7) (wall_at c1 c2))
+[  1264] caught (compose (wall_at c1 c3) (optimize (neg_dist 1) 7))
+[  1274] caught (compose (wall_at c1 c4) (optimize (neg_dist 1) 7))
+[   866] caught (compose (wall_at c2 c2) (optimize (neg_dist 4) 9))
+[  1314] caught (compose (wall_at c3 c4) (optimize (neg_dist 4) 9))
+[  1344] caught (compose (wall_at c3 c1) (optimize (neg_dist 4) 9))
+[  1344] caught (compose (wall_at c3 c1) (optimize (neg_dist 4) 9))
+[   195] caught (compose (wall_at c4 c0) (clear_at c2 c4))
+[  1384] caught (compose (wall_at c4 c3) (optimize (neg_dist 4) 9))
+[    86] caught (compose (wall_at c4 c4) (clear_at c1 c4))
+[   177] caught (compose (wall_at c2 c0) (clear_at c1 c1))
+[    66] caught (compose (wall_at c0 c0) (clear_at c4 c3))
+[   123] caught (compose (wall_at c3 c0) (clear_at c4 c3))
+[   131] caught (compose (wall_at c0 c1) (clear_at c4 c2))
+[    96] caught (compose (wall_at c0 c1) (clear_at c4 c0))
+[    46] caught (compose (wall_at c0 c0) (clear_at c3 c0))
+[    85] caught (compose (wall_at c4 c4) (clear_at c0 c0))
+[   178] caught (compose (wall_at c4 c1) (clear_at c3 c4))
+[   170] caught (compose (wall_at c1 c4) (clear_at c0 c0))
+[   113] caught (compose (wall_at c0 c3) (clear_at c2 c0))
+[   194] caught (compose (wall_at c4 c1) (clear_at c2 c2))
+[   282] caught (compose (wall_at c1 c2) (clear_at c4 c0))
+[   194] caught (compose (wall_at c2 c1) (clear_at c0 c2))
+[  1354] caught (compose (wall_at c4 c0) (optimize (neg_dist 4) 9))
+[   231] caught (compose (wall_at c3 c3) (clear_at c1 c2))
+[103263] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[103163] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[103163] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[103263] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[103823] caught (fork (compose (wall_at c3 c3) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[103043] caught (fork (compose (wall_at c2 c1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[102603] caught (fork (compose (wall_at c1 c2) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[103923] caught (fork (compose (wall_at c3 c4) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[103263] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[1596143] caught (fork (compose (compose (step 4 down) (wall_at c2 c2)) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_false_obstacle] in 1170.6s: (fork (compose (compose (step 4 down) (wall_at c2 c2)) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_scaffold] in 82.5s: (fork (compose (wall_at c3 c0) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_scaffold] in 69.9s: (fork (compose (wall_at c0 c3) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_scaffold] in 58.6s: (fork (compose (wall_at c3 c0) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_scaffold] in 66.5s: (fork (compose (wall_at c2 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_scaffold] in 59.3s: (fork (compose (wall_at c2 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_scaffold] in 65.0s: (fork (compose (wall_at c1 c3) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_scaffold] in 55.7s: (fork (compose (wall_at c3 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_scaffold] in 72.3s: (fork (compose (wall_at c1 c4) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_scaffold] in 68.5s: (fork (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_scaffold] in 57.7s: (fork (compose (wall_at c3 c2) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_scaffold] in 72.9s: (fork (compose (wall_at c3 c2) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_scaffold] in 72.5s: (fork (compose (wall_at c2 c1) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_scaffold] in 82.6s: (fork (compose (wall_at c2 c2) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_scaffold] in 65.8s: (fork (compose (wall_at c3 c1) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_scaffold] in 67.5s: (fork (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_scaffold] in 59.7s: (fork (compose (wall_at c3 c3) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_scaffold] in 73.3s: (fork (compose (wall_at c2 c2) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_scaffold] in 75.7s: (fork (compose (wall_at c3 c3) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_scaffold] in 64.9s: (fork (compose (wall_at c2 c3) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_scaffold] in 77.8s: (fork (compose (wall_at c1 c2) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_scaffold] in 74.2s: (fork (compose (wall_at c2 c1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_scaffold] in 65.9s: (fork (compose (wall_at c2 c3) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_scaffold] in 79.3s: (fork (compose (wall_at c3 c4) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_scaffold] in 78.1s: (fork (compose (wall_at c2 c3) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [deletion] in 0.0s: (clear_at c1 c3)
+      + solved [deletion] in 0.0s: (clear_at c2 c2)
+      + solved [deletion] in 0.0s: (clear_at c1 c2)
+      + solved [deletion] in 0.0s: (clear_at c2 c3)
+      + solved [denoise] in 0.0s: (erase 4)
+      + solved [denoise] in 0.0s: (erase 1)
+      + solved [denoise] in 0.0s: (erase 4)
+      + solved [denoise] in 0.0s: (erase 4)
+      + solved [underlay] in 0.0s: (fork (step 1 left) underlay)
+      + solved [underlay] in 0.1s: (fork (step 2 left) underlay)
+      + solved [underlay] in 0.1s: (fork (step 4 down) underlay)
+      + solved [underlay] in 0.0s: (fork (step 1 up) underlay)
+      + solved [obstacle] in 0.3s: (compose (optimize (neg_dist 2) 1) (wall_at c1 c2))
+      + solved [obstacle] in 0.3s: (compose (wall_at c0 c3) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.3s: (compose (optimize (neg_dist 2) 1) (wall_at c3 c0))
+      + solved [obstacle] in 0.3s: (compose (optimize (neg_dist 2) 1) (wall_at c3 c2))
+      + solved [obstacle] in 0.4s: (compose (wall_at c3 c2) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.4s: (compose (optimize (neg_dist 2) 1) (wall_at c0 c1))
+      + solved [obstacle] in 0.3s: (compose (optimize (neg_dist 5) 4) (wall_at c1 c0))
+      + solved [obstacle] in 0.2s: (compose (wall_at c3 c3) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.4s: (compose (optimize (neg_dist 5) 4) (wall_at c4 c1))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c3) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.2s: (compose (optimize (neg_dist 5) 4) (wall_at c3 c3))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c2) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.3s: (compose (optimize (neg_dist 7) 6) (wall_at c3 c0))
+      + solved [obstacle] in 0.3s: (compose (wall_at c1 c1) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.3s: (compose (wall_at c1 c1) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.4s: (compose (wall_at c2 c3) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.2s: (compose (optimize (neg_dist 7) 6) (wall_at c2 c2))
+      + solved [obstacle] in 0.3s: (compose (wall_at c1 c3) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.2s: (compose (optimize (neg_dist 9) 8) (wall_at c3 c3))
+      + solved [obstacle] in 0.3s: (compose (wall_at c1 c2) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.3s: (compose (optimize (neg_dist 9) 8) (wall_at c1 c0))
+      + solved [obstacle] in 0.3s: (compose (optimize (neg_dist 9) 8) (wall_at c0 c3))
+      + solved [obstacle] in 0.4s: (compose (wall_at c4 c3) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.3s: (compose (optimize (neg_dist 9) 8) (wall_at c2 c3))
+      + solved [obstacle] in 0.3s: (compose (optimize (neg_dist 6) 2) (wall_at c3 c2))
+      + solved [obstacle] in 0.2s: (compose (optimize (neg_dist 6) 2) (wall_at c1 c1))
+      + solved [obstacle] in 0.2s: (compose (wall_at c3 c3) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c1) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c1) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.5s: (compose (wall_at c2 c4) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.2s: (compose (optimize (neg_dist 8) 5) (wall_at c2 c0))
+      + solved [obstacle] in 0.3s: (compose (optimize (neg_dist 8) 5) (wall_at c3 c0))
+      + solved [obstacle] in 0.2s: (compose (optimize (neg_dist 8) 5) (wall_at c4 c4))
+      + solved [obstacle] in 0.3s: (compose (wall_at c0 c0) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.2s: (compose (optimize (neg_dist 8) 5) (wall_at c4 c4))
+      + solved [obstacle] in 0.4s: (compose (wall_at c3 c4) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c2) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.2s: (compose (optimize (neg_dist 1) 7) (wall_at c0 c4))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c2) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.4s: (compose (wall_at c1 c3) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.3s: (compose (optimize (neg_dist 1) 7) (wall_at c1 c2))
+      + solved [obstacle] in 0.3s: (compose (wall_at c1 c4) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.4s: (compose (wall_at c3 c4) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c2) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.4s: (compose (wall_at c3 c1) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.4s: (compose (wall_at c4 c3) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c1) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.4s: (compose (wall_at c4 c0) (optimize (neg_dist 4) 9))
+      + solved [relocate] in 0.0s: (compose (wall_at c4 c0) (clear_at c2 c4))
+      + solved [relocate] in 0.0s: (compose (wall_at c4 c4) (clear_at c1 c4))
+      + solved [relocate] in 0.0s: (compose (wall_at c2 c0) (clear_at c1 c1))
+      + solved [relocate] in 0.0s: (compose (wall_at c0 c0) (clear_at c4 c3))
+      + solved [relocate] in 0.0s: (compose (wall_at c3 c0) (clear_at c4 c3))
+      + solved [relocate] in 0.0s: (compose (wall_at c0 c1) (clear_at c4 c2))
+      + solved [relocate] in 0.0s: (compose (wall_at c0 c1) (clear_at c4 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c0 c0) (clear_at c3 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c4 c4) (clear_at c0 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c4 c1) (clear_at c3 c4))
+      + solved [relocate] in 0.0s: (compose (wall_at c1 c4) (clear_at c0 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c0 c3) (clear_at c2 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c4 c1) (clear_at c2 c2))
+      + solved [relocate] in 0.0s: (compose (wall_at c1 c2) (clear_at c4 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c2 c1) (clear_at c0 c2))
+      + solved [relocate] in 0.0s: (compose (wall_at c3 c3) (clear_at c1 c2))
+    per-task time (s): 170 solved [slowest solve 1170.6]
+    (misses burned up to 1200.0s each; the uniform --t-fn can drop toward slowest-solve=1170.6s to cut wasted early-round time without losing a solve)
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     4] caught underlay
+[     4] caught underlay
+[     4] caught underlay
+[     4] caught underlay
+[     5] caught sync_all
+[     5] caught sync_all
+[     5] caught sync_all
+[     5] caught sync_all
+[     8] caught (sync_to_world 2)
+[     8] caught (sync_to_world 2)
+[    10] caught (sync_to_world 4)
+[    10] caught (sync_to_world 4)
+[    17] caught (sync_except 1)
+[    21] caught (sync_except 5)
+[    21] caught (sync_except 5)
+[    21] caught (sync_except 5)
+[    27] caught (sync_to_model 1)
+[    27] caught (sync_to_model 1)
+[    28] caught (sync_to_model 2)
+[    30] caught (sync_to_model 4)
+      + solved [inpaint]: underlay
+      + solved [registration]: (sync_to_world 4)
+      + solved [registration]: (sync_to_world 2)
+      + solved [perception]: (sync_to_model 4)
+      + solved [readout]: snd_gg
+      + solved [multi_reg]: sync_all
+      + solved [multi_reg]: sync_all
+      + solved [readout]: snd_gg
+      + solved [inpaint]: underlay
+      + solved [reg_except]: (sync_except 5)
+      + solved [reg_except]: (sync_except 1)
+      + solved [registration]: (sync_to_world 4)
+      + solved [reg_except]: (sync_except 5)
+      + solved [readout]: snd_gg
+      + solved [inpaint]: underlay
+      + solved [perception]: (sync_to_model 2)
+      + solved [registration]: (sync_to_world 2)
+      + solved [readout]: snd_gg
+      + solved [perception]: (sync_to_model 1)
+      + solved [multi_reg]: sync_all
+      + solved [reg_except]: (sync_except 5)
+      + solved [multi_reg]: sync_all
+      + solved [perception]: (sync_to_model 1)
+      + solved [inpaint]: underlay
+    solved 194/296 (+194 this round)
+stitch_core not installed; no compression performed
+    dreaming: training recognition Q on 170 replays + fantasies (600 steps)…
+0.02M params
+loss=2.90 nodes=44: 100%|██████████| 600/600 [00:17<00:00, 34.47it/s] 
+
+--- round 2/4: 102 fn + 0 fn_p_g unsolved; |D|=37 (0 invented); fn Q=dreamed (replay families only); t_fn=1200s ---
+    [instr] agency constructor in D: ABSENT; belief solved (replay-eligible): 42/144
+[364738] caught (compose (fork (compose (optimize (distance 4) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5)) (optimize (neg_dist 1) 4))
+[997209] caught (fork (compose (compose (optimize (neg_dist 2) 1) (optimize (distance 2) 9)) (optimize (neg_dist 9) 8)) (sync_except 9))
+[1291696] caught (compose (fork (compose (optimize (distance 5) 4) (optimize (neg_dist 4) 8)) (sync_to_world 8)) (optimize (neg_dist 4) 5))
+[839722] caught (compose (compose (compose (optimize (distance 1) 2) (optimize (neg_dist 4) 1)) (optimize (neg_dist 4) 2)) (optimize (neg_dist 6) 2))
+      + solved [belief_witness] in 888.0s: (compose (fork (compose (optimize (distance 5) 4) (optimize (neg_dist 4) 8)) (sync_to_world 8)) (optimize (neg_dist 4) 5))
+      + solved [belief_witness] in 789.8s: (fork (compose (compose (optimize (neg_dist 2) 1) (optimize (distance 2) 9)) (optimize (neg_dist 9) 8)) (sync_except 9))
+      + solved [belief_witness] in 957.5s: (compose (compose (compose (optimize (distance 1) 2) (optimize (neg_dist 4) 1)) (optimize (neg_dist 4) 2)) (optimize (neg_dist 6) 2))
+      + solved [belief_witness] in 234.6s: (compose (fork (compose (optimize (distance 4) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5)) (optimize (neg_dist 1) 4))
+[ 50272] caught (fork (compose (compose (optimize (neg_dist 8) 9) (step 9 down)) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[241349] caught (fork (compose (compose (optimize (neg_dist 7) 1) (step 1 down)) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[898152] caught (compose (fork (compose (optimize (distance 4) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5)) (optimize (neg_dist 1) 4))
+      + solved [belief_witness] in 607.0s: (compose (fork (compose (optimize (distance 4) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5)) (optimize (neg_dist 1) 4))
+[319189] caught (fork (compose (compose (optimize (neg_dist 6) 7) (step 7 down)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[368958] caught (fork (compose (compose (optimize (neg_dist 4) 5) (step 5 down)) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[347953] caught (compose (fork (compose (optimize (distance 1) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9)) (optimize (neg_dist 5) 1))
+[411797] caught (fork (compose (compose (optimize (distance 2) 2) (step 2 down)) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[343362] caught (fork (compose (compose (optimize (neg_dist 7) 1) (step 1 down)) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[638381] caught (fork (compose (compose (step 8 down) (step 8 down)) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[867443] caught (fork (compose (fork (compose (optimize (neg_dist 9) 4) (step 4 down)) (sync_to_world 4)) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_witness] in 295.6s: (compose (fork (compose (optimize (distance 1) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9)) (optimize (neg_dist 5) 1))
+      + solved [belief_goal] in 297.7s: (fork (compose (compose (optimize (distance 2) 2) (step 2 down)) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_goal] in 268.9s: (fork (compose (compose (optimize (neg_dist 4) 5) (step 5 down)) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_goal] in 254.3s: (fork (compose (compose (optimize (neg_dist 6) 7) (step 7 down)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_goal] in 33.5s: (fork (compose (compose (optimize (neg_dist 8) 9) (step 9 down)) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_goal] in 551.5s: (fork (compose (compose (step 8 down) (step 8 down)) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_goal] in 327.3s: (fork (compose (compose (optimize (neg_dist 7) 1) (step 1 down)) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_goal] in 163.3s: (fork (compose (compose (optimize (neg_dist 7) 1) (step 1 down)) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_goal] in 679.4s: (fork (compose (fork (compose (optimize (neg_dist 9) 4) (step 4 down)) (sync_to_world 4)) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[193041] caught (fork (compose (compose (optimize (neg_dist 2) 6) (wall_at c2 c0)) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[265899] caught (fork (compose (compose (optimize (neg_dist 6) 7) (wall_at c1 c3)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[224469] caught (fork (compose (compose (optimize (distance 1) 1) (wall_at c0 c3)) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_false_obstacle] in 244.4s: (fork (compose (compose (optimize (neg_dist 6) 7) (wall_at c1 c3)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_false_obstacle] in 125.2s: (fork (compose (compose (optimize (neg_dist 2) 6) (wall_at c2 c0)) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_false_obstacle] in 200.0s: (fork (compose (compose (optimize (distance 1) 1) (wall_at c0 c3)) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+    per-task time (s): 17 solved [slowest solve 957.5]
+    (misses burned up to 1200.0s each; the uniform --t-fn can drop toward slowest-solve=957.5s to cut wasted early-round time without losing a solve)
+    solved 211/296 (+17 this round)
+stitch_core not installed; no compression performed
+    dreaming: training recognition Q on 187 replays + fantasies (600 steps)…
+0.02M params
+loss=2.84 nodes=50: 100%|██████████| 600/600 [00:11<00:00, 52.99it/s] 
+
+--- round 3/4: 85 fn + 0 fn_p_g unsolved; |D|=37 (0 invented); fn Q=dreamed (replay families only); t_fn=1200s ---
+    [instr] agency constructor in D: ABSENT; belief solved (replay-eligible): 59/144
+[1414950] caught (compose (compose (compose (optimize (neg_dist 5) 2) (optimize (distance 2) 6)) (optimize (neg_dist 5) 6)) (optimize (neg_dist 7) 6))
+[1520976] caught (fork (compose (compose (optimize (distance 4) 2) (optimize (neg_dist 1) 4)) (optimize (neg_dist 2) 1)) (sync_except 2))
+      + solved [belief_witness] in 1199.7s: (fork (compose (compose (optimize (distance 4) 2) (optimize (neg_dist 1) 4)) (optimize (neg_dist 2) 1)) (sync_except 2))
+      + solved [belief_witness] in 1118.7s: (compose (compose (compose (optimize (neg_dist 5) 2) (optimize (distance 2) 6)) (optimize (neg_dist 5) 6)) (optimize (neg_dist 7) 6))
+[204457] caught (fork (compose (compose (step 6 left) (wall_at c3 c3)) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[229051] caught (fork (compose (compose (optimize (neg_dist 2) 6) (optimize (neg_dist 0) 6)) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[336058] caught (fork (compose (compose (step 9 down) (wall_at c2 c0)) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[435086] caught (fork (compose (compose (optimize (neg_dist 1) 2) (wall_at c2 c1)) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[928644] caught (fork (compose (compose (step 5 up) (wall_at c1 c3)) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[1429265] caught (fork (compose (compose (step 8 down) (wall_at c3 c3)) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_false_obstacle] in 437.5s: (fork (compose (compose (optimize (neg_dist 1) 2) (wall_at c2 c1)) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_false_obstacle] in 689.4s: (fork (compose (compose (step 5 up) (wall_at c1 c3)) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_false_obstacle] in 327.0s: (fork (compose (compose (step 9 down) (wall_at c2 c0)) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_false_obstacle] in 168.7s: (fork (compose (compose (optimize (neg_dist 2) 6) (optimize (neg_dist 0) 6)) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_false_obstacle] in 144.9s: (fork (compose (compose (step 6 left) (wall_at c3 c3)) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_false_obstacle] in 1079.6s: (fork (compose (compose (step 8 down) (wall_at c3 c3)) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+    per-task time (s): 8 solved [slowest solve 1199.7]
+    (misses burned up to 1200.0s each; the uniform --t-fn can drop toward slowest-solve=1199.7s to cut wasted early-round time without losing a solve)
+    solved 219/296 (+8 this round)
+stitch_core not installed; no compression performed
+
+--- round 4/4: 77 fn + 0 fn_p_g unsolved; |D|=37 (0 invented); fn Q=uniform/content; t_fn=1200s ---
+    [instr] agency constructor in D: ABSENT; belief solved (replay-eligible): 67/144
+    per-task time (s): 0 solved
+    solved 219/296 (+0 this round)
+stitch_core not installed; no compression performed
+    no new tasks solved this round (uniform/content Q) — wake-sleep stalled (raise t_fn / ecd_iters, or the abstraction belief needs hasn't formed).
+  wrote run artifact (219 solved programs) to phase1_run.json
+  wrote trajectory artifact (219 solved programs, 3 rounds) to phase1_traj.json
+
+========================================================================
+(A) USAGE CENSUS — which core parts each family reaches for (pre-stitch)
+========================================================================
+  physics       4/4 solved   uses: ['step']
+  desire        16/16 solved   uses: ['neg_dist', 'optimize']
+  overlay       4/4 solved   uses: ['fork', 'overlay', 'step']
+  comet         4/4 solved   uses: ['fork', 'neg_dist', 'optimize', 'overlay']
+  registration  4/4 solved   uses: ['sync_to_world']
+  belief        67/144 solved   uses: ['compose', 'fork', 'neg_dist', 'optimize', 'step', 'sync_to_world', 'wall_at']
+  deletion      4/4 solved   uses: []
+  denoise       4/4 solved   uses: []
+  obstacle      48/48 solved   uses: ['compose', 'neg_dist', 'optimize', 'wall_at']
+  relocate      16/16 solved   uses: ['compose', 'wall_at']
+  underlay      4/4 solved   uses: ['fork', 'step']
+  perception    4/4 solved   uses: []
+  multi_reg     4/4 solved   uses: []
+  reg_except    4/4 solved   uses: []
+  inpaint       4/4 solved   uses: []
+  readout       4/4 solved   uses: []
+
+  belief variants (pooled as kind='belief' above; agency commit form):
+    belief_witness         8/48 solved   commit: 4 literal, 0 degenerate, 2 complement
+    belief_goal            48/48 solved   commit: 48 literal, 0 degenerate
+    belief_dual            0/24 solved   commit: 0 literal, 0 degenerate
+    belief_false_obstacle  11/24 solved   commit: 10 literal, 0 degenerate
+
+  fork used outside belief (overlay/comet)   : True
+  sync used outside belief (registration)    : True
+  wall_at used outside belief (obstacle)     : True
+  belief reuses BOTH fork and sync           : True
+  fork∧sync agency is unique to belief       : True
+  wall-belief solutions are wall-based       : False   (no displaced-goal rival survived; goal-displacement family excluded)
+
+  FORCED LITERAL COMMIT — false-obstacle family (degeneracy excluded by construction)
+  11/24 false-obstacle tasks solved; commit forms: 10 literal, 0 degenerate, 0 complement.
+  Every solved one commits via the literal sync_to_world(av): no scope complement
+  reproduces these scenes (real wall stays put), so the agency commit is FORCED
+  and found — not merely argued extensionally equal to a cheaper complement.
+
+========================================================================
+(A′) CUBE CENSUS — which symmetric corner each family selected
+========================================================================
+  physics       (none)
+  desire        neg_dist×16
+  overlay       overlay×4
+  comet         overlay×4, neg_dist×4
+  registration  sync_to_world×4
+  belief        neg_dist×18, sync_to_world×14, distance×10, wall_at×9, sync_except×2
+  deletion      clear_at×4
+  denoise       erase×4
+  obstacle      wall_at×48, neg_dist×48
+  relocate      clear_at×16, wall_at×16
+  underlay      underlay×4
+  perception    sync_to_model×4
+  multi_reg     sync_all×4
+  reg_except    sync_except×4
+  inpaint       underlay×4
+  readout       snd_gg×4
+
+  belief keeps the agency corner (sync_to_world + wall_at) : True
+  belief avoids every symmetric complement                 : False
+  some complement is used elsewhere (field is live)        : True
+  complements claimed by a non-mental family               : ['clear_at', 'erase', 'snd_gg', 'sync_all', 'sync_except', 'sync_to_model', 'underlay']
+  complements no family reached for (search/timeout?)      : ['distance']
+
+========================================================================
+(B) JOINT COMPRESSION — final library over all 219 solutions (last stitch: iterations=6)
+========================================================================
+
+  invented abstractions:
+
+  abstraction usage by family (from stitch's rewritten programs):
+    physics       (bare prims)×4
+    desire        (bare prims)×16
+    overlay       (bare prims)×4
+    comet         (bare prims)×4
+    registration  (bare prims)×4
+    belief        (bare prims)×67
+    deletion      (bare prims)×4
+    denoise       (bare prims)×4
+    obstacle      (bare prims)×48
+    relocate      (bare prims)×16
+    underlay      (bare prims)×4
+    perception    (bare prims)×4
+    multi_reg     (bare prims)×4
+    reg_except    (bare prims)×4
+    inpaint       (bare prims)×4
+    readout       (bare prims)×4
+
+========================================================================
+(B′) ABSTRACTION GENERALITY — does seek/policy carry holes for (gv, av)?
+========================================================================
+  no seek/policy abstraction was invented this run (belief's derive never
+  compressed — solve desire+obstacle first, or raise stitch_iters).
+
+========================================================================
+VERDICT
+========================================================================
+  (A) parts are general    : fork∉belief-only=True, sync∉belief-only=True, wall∉belief-only=True
+  (A) only agency is unique: fork∧sync unique to belief=True, belief recombines=True, wall-based=False
+  (A) no scope-complement rival among belief solves : False   (2 complement, 0 degenerate, 62 literal)
+  (B) constructor invented : False (shared agency hole: False)
+  (B) constructor is belief-specific: used by belief=False, absent from non-mental=False
+  (A′) cube: belief picks the lone asymmetric corner over the full field: False
+
+  => not fully demonstrated this run (raise timeouts / n_bel / stitch_iters,
+     or drop --smoke).
+     failed criteria: ['belief_is_wall_based', 'no_belief_complement', 'constructor_found', 'constructor_shared', 'belief_uses_ctor', 'nonmental_free_of_ctor', 'cube_ok']
+  wrote verdict artifact to phase1_verdict.json
+[gkaminer@int4 dumbcoder]$ 

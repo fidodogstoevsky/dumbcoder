@@ -71,7 +71,7 @@ from ecd import (
 )
 from dsl import unfold
 from prims import make_symmetric_prims
-from tasks_minds import (
+from tasks import (
     COMBOS, make_goal_displacement_tasks, belief_rival_specs, belief_variant, _agent_pos,
 )
 from experiment import verify_ground_truth, gt_program_str, check_decomposition_identities
@@ -96,7 +96,7 @@ def _dl(D, Q, prog):
 # ── library reconstruction (mirrors mdl_margin.run: rebuild the run's final library) ──
 def _rebuild_library(decomposed, smoke, run_path):
     """Rebuild exactly the library a run converged to, returning (D, Q, tasks,
-    corpus_keys).  Same reconstruction mdl_margin performs: verify the corpus, re-stitch
+    corpus_keys, run_prov).  Same reconstruction mdl_margin performs: verify the corpus, re-stitch
     the run's searched sols into the base DSL (atomic fork/sync in phase 1, decomposed
     plumbing in phase 2), remap the run's fn names.  The behavioural result is the same
     either way — the two DSLs are the same machine — but the mental program is displayed
@@ -107,14 +107,15 @@ def _rebuild_library(decomposed, smoke, run_path):
     verify_ground_truth(D, tasks)
     if decomposed:
         check_decomposition_identities(tasks)
-    sols, _found, _rw, run_library = _load_found(decomposed, smoke, tasks, D, run_path, False)
+    sols, _found, _rw, run_library, run_prov = _load_found(decomposed, smoke, tasks, D,
+                                                           run_path, False)
     saturate_stitch(D, sols, iterations=(3 if smoke else 6), max_arity=5)
     _remap_names(_rw, run_library, D)          # register the run's names on D (side-effect free here)
     Q = uniform_type_q(D)
     corpus_keys = {mat_key(x) for x, _ in tasks}
     print(f"  final library: {len(D)} tokens ({len(D.invented)} invented: "
           f"{[d.repr for d in D.invented]})")
-    return D, Q, tasks, corpus_keys
+    return D, Q, tasks, corpus_keys, run_prov
 
 
 # ── the probe over a battery of held-out Sally-Anne scenes ────────────────────────────
@@ -164,7 +165,7 @@ def _probe_scene(D, Q, x, m):
 
 
 def compute(decomposed, smoke, run_path, seed, index):
-    D, Q, _tasks, corpus_keys = _rebuild_library(decomposed, smoke, run_path)
+    D, Q, _tasks, corpus_keys, run_prov = _rebuild_library(decomposed, smoke, run_path)
 
     heldout = make_goal_displacement_tasks(3, COMBOS, seed=seed)
     heldout = [(x, m) for x, m in heldout if mat_key(x) not in corpus_keys]
@@ -179,6 +180,9 @@ def compute(decomposed, smoke, run_path, seed, index):
     if index >= n:
         raise SystemExit(f"--index {index} out of range ({n} held-out scenes)")
     return {
+        # the source run's commit + knobs; the probe's own knobs (held-out seed, index)
+        # are the two below
+        'provenance': run_prov,
         'phase': 2 if decomposed else 1, 'decomposed': decomposed, 'smoke': bool(smoke),
         'source': run_path or f"phase{2 if decomposed else 1}_run{'.smoke' if smoke else ''}.json",
         'seed': seed, 'index': index,

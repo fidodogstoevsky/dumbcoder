@@ -48,7 +48,7 @@ from dsl import (
     base, dup_top, blank_top, map_top, swap_top, zip_top, commit_top, peek,
     compose_gs, pipe_gsg,
 )
-from tasks_minds import SIZE   # coord terminals match the grid geometry (0..SIZE-1)
+from tasks import SIZE   # coord terminals match the grid geometry (0..SIZE-1)
 
 # Two disjoint integer-literal terminal pools (see the `coord`/`cellvalue` note in
 # dsl.py).  coord terminals get distinct reprs ('c0'..) because the s-expression

@@ -1,0 +1,445 @@
+# dumbcoder — Primitives & Tasks (experiment reference)
+
+*The exhaustive catalogue of the DSL the searcher composes over and the task corpus
+it is scored against.* This is the companion to
+[`ARCHITECTURE.md`](ARCHITECTURE.md): that file explains **how the system works and
+why it is built this way**; this file is the **reference for the experiments chapter**
+— every primitive (repr, type, semantics) and every task family (ground-truth
+program, what it probes, its necessity filter, its count knobs).
+
+Ground truth lives in three files, and every entry below is drawn from them:
+
+| Source | Contents |
+|---|---|
+| [`prims.py`](prims.py) | The three primitive *sets* handed to the searcher, per phase. |
+| [`tasks.py`](tasks.py) | All task generators (one bag) + necessity filters + `COMBOS` / `SIZE` / `DIRS`. Distinguished only by each task's `kind`; the §4.1/§4.2/§4.3 groupings below are expository, not a code boundary. |
+| [`dsl.py`](dsl.py) | The primitive implementations, types, and interpreters. |
+
+---
+
+## 1. Conventions
+
+**Grids.** Every scene is a `SIZE × SIZE` integer grid with `SIZE = 5`. Cell value
+`0` is empty; values `1`–`9` are objects (agents and goals, identified by value);
+`3` is reserved as the **wall / obstacle** value (a committable world-value). A
+*trajectory* is a stack of `T` frames produced by iterating a per-frame transition.
+
+**Two interpreters, two root types.** A program's *root type* selects how it is run
+against a task (see `ARCHITECTURE.md §2.3`):
+
+| root type | interpreter | run as | families |
+|---|---|---|---|
+| `fn` | `unfold(g, T, f)` | thread one grid through `f : grid→grid` for `T` frames | every trajectory family (physics, desire, all belief, overlay, comet, cube corners) |
+| `fn_p_g` | `unfold_with_template(g, template, T, c)` | pair each frame with a **given external** template and apply commit `c` | registration family + the template-rooted cube corners |
+
+Enumeration is **per root type** (one budget walk cannot produce two different
+arrows), but the **library and the joint stitch are shared** across both — that
+sharing is the crux of the MDL argument.
+
+**The `coord` / `cellvalue` split.** Integer literals come in two disjoint terminal
+pools so the s-expression parser can tell a grid *position* from a cell *value* that
+share an integer head:
+
+- `coord` terminals get distinct reprs `c0 … c{SIZE-1}` (grid positions; the *invisible*
+  wall coordinate is one of these — a bounded latent).
+- `cellvalue` terminals are the plain numerals `0 … 9` (agent/goal ids, step
+  magnitudes; **content-priced** — a literal visible in the grid costs 0 nats).
+
+**Necessity check.** Every family is generated *through the real interpreter* and then
+filtered so the intended program is the **unique cheapest explanation** of the scene.
+A scene is *rejected* if any cheaper non-target rival reproduces it exactly. Each
+family names its own rejection battery (the `_*_explainable` closures); a scene is
+kept only when every battery fails to reproduce it. This is what makes a solution
+evidence for the intended structure rather than a coincidence of an under-determined
+grid.
+
+**Shared constants** (`tasks.py`):
+
+```python
+SIZE   = 5
+COMBOS = [(1,2),(4,5),(6,7),(8,9),(2,6),(5,8),(7,1),(9,4)]   # 8 (agent, goal) value pairs
+DIRS   = {'right': RIGHT, 'left': LEFT, 'up': UP, 'down': DOWN}
+```
+
+`COMBOS` is the set of `(agent-value, goal-value)` pairs the per-combo families sweep,
+so the same abstraction has to recur across *different* concrete values before stitch
+will keep the value as a hole. "Per-combo" counts below multiply by `len(COMBOS) = 8`.
+
+---
+
+## 2. Type vocabulary
+
+The type system is **monomorphic** and string-based — no polymorphism, so each arrow
+over grids/pairs/stacks needs its own typed composer.
+
+| type | denotation |
+|---|---|
+| `fn` | `grid → grid` — a per-frame world transition (the main root type) |
+| `util` | `(grid, row, col) → float` — a positional utility scored by `optimize` |
+| `dir` | one of `right` / `left` / `up` / `down` |
+| `coord` | a grid position `(row, col)` — the *invisible* latent pool (`c0 … c4`) |
+| `cellvalue` | a cell value `0 … 9` — the *visible*, content-priced pool |
+| `pair_gg` | `(grid, grid)` — world channel + private/model channel |
+| `fn_g_p` | `grid → pair_gg` — a **pair producer** (e.g. `dup`) |
+| `fn_p_g` | `pair_gg → grid` — a **pair consumer / commit** (e.g. `sync_to_world`) |
+| `fn_p_p` | `pair_gg → pair_gg` — a pair endomorphism (bifunctor maps) |
+| `fn_g_c` | `grid → coord` — read a coordinate off a channel (`locate`) |
+| `fn_gc_g` | `(grid, coord) → grid` — impose a coordinate on a channel (`place`) |
+| `gstack` | `() \| (grid, *gstack)` — an n-ary cons/nil stack of grids; index 0 is the top |
+| `fn_g_s` | `grid → gstack` — lift / stack producer (`base`) |
+| `fn_s_s` | `gstack → gstack` — stack endomorphism |
+| `fn_s_g` | `gstack → grid` — render the stack (`peek`) |
+
+Legacy interpreter types (`sfn`, `machine`) survive in `dsl.py` for the baselines of
+`ARCHITECTURE.md §3.6` but are not used by the phases.
+
+---
+
+## 3. Primitive catalogue
+
+Each primitive is `Delta(head, return_type, [arg_types], repr=…)`. The tables give the
+`repr` (the s-expression token), the type signature, and the semantics.
+
+### 3.1 Grid core (in every DSL — `_grid_core`)
+
+| repr | signature | semantics |
+|---|---|---|
+| `compose` | `fn, fn → fn` | `compose(f,g)(x) = g(f(x))` — run `f` then `g` |
+| `step` | `cellvalue, dir → fn` | move every cell of the given value one step in the direction |
+| `optimize` | `util, cellvalue → fn` | move the agent value one greedy step to improve the utility (BFS-optimal first step) |
+| `wall_at` | `coord, coord → fn` | stamp a wall (value `3`) at `(r,c)` |
+| `neg_dist` | `cellvalue → util` | `−BFS-distance` to the nearest cell of the target value (**attract** when maximised) |
+| `right` `left` `up` `down` | `dir` | the four movement directions |
+| `c0 … c4` | `coord` | grid-position terminals (head = the plain int; distinct reprs) |
+| `0 … 9` | `cellvalue` | cell-value terminals (content-priced; head = the plain int) |
+
+### 3.2 Pair interface — core (`make_core_prims`, Phase 1 core)
+
+The private model enters *in program space*: `fork` produces a `(world, derived)`
+pair, an `fn_p_g` commit reconciles it back to one grid. Nothing here is mental —
+`overlay` is a non-mental commit, and `unfold_with_template` is a second, non-derived
+producer of pairs (registration), so the interface is populated from both sides.
+
+| repr | signature | semantics |
+|---|---|---|
+| `fork` | `fn, fn_p_g → fn` | `w ↦ commit((w, derive(w)))`; the private grid lives only for the call |
+| `sync_to_world` | `cellvalue → fn_p_g` | move value `v` from its **world** position to its **model** position — the agency commit (a grid-diff on one value) |
+| `overlay` | `fn_p_g` | union the channels; the **model**'s nonzero cells win ties (motion-blur / graphics) |
+| `then_sync` | `fn_p_g, cellvalue → fn_p_g` | run commit `c`, then `sync_to_world v` (**dropped in Phase 2** — it bundles a hidden sync) |
+
+**Belief** is the composition
+`fork( compose(wall_at r c, optimize(neg_dist gv) av), sync_to_world av )`
+with `av` appearing **twice** — in the policy and in the commit. That shared binding
+is the agency signature the compression step is meant to surface.
+
+### 3.3 The cube — symmetric complements (`make_symmetric_prims`, Phases 1 & 2)
+
+`make_core_prims` + the **other corner** of eight independent symmetry axes. None help
+a theory-of-mind task; each is the natural tool for some minds-free family (§4). The
+claim is that joint MDL *still* selects the (read-model, write-world, single-`av`)
+corner for belief while every complement attaches to its own non-mental family — so
+the agency signature is **discovered, not gerrymandered** into the primitive set.
+
+| axis | belief's corner | complement(s) — repr : signature — semantics |
+|---|---|---|
+| projection | `fst_gg` (keep world) | `fst_gg : fn_p_g` — project channel 1; `snd_gg : fn_p_g` — project channel 2 (readout) |
+| z-order | `overlay` (model wins) | `underlay : fn_p_g` — **world** wins ties; model only fills holes (inpainting) |
+| scope | `sync_to_world` (one value) | `sync_all : fn_p_g` — move *every* shared value to its model-position; `sync_except : cellvalue → fn_p_g` — every shared value *but* `v` |
+| utility | `neg_dist` (attract) | `distance : cellvalue → util` — `+BFS-distance`, so maximising *flees* the target |
+| grid-edit | `wall_at` (add) | `clear_at : coord, coord → fn` — clear one cell; `erase : cellvalue → fn` — remove every cell of a value |
+| direction | `sync_to_world` (act) | `sync_to_model : cellvalue → fn_p_g` — read off world, write to model, return **model** (perception, not action) |
+
+The projection corners are listed first among the complements because they are
+nullary (cheaper), which matters for best-first tie-breaking within a cost band.
+`sync_to_model` is an **atomic** node in Phase 1; in Phase 2 it becomes a compound
+(below).
+
+### 3.4 Decomposition plumbing (`make_symmetric_prims(decomposed=True)`, Phase 2)
+
+Phase 2 **removes** atomic `fork`, `sync_to_world`, and `then_sync` and hands the
+searcher the product-category parts, so belief must be **rediscovered** as a deeper
+compound. The identities the phase proves before search:
+
+```
+fork(derive, commit)  ≡  pipe_gpg( compose_gp(dup, mapsnd derive), commit )
+sync_to_world(v)      ≡  register( locate v, place v )
+sync_to_model(v)      ≡  via_swap( register( locate v, place v ) )
+```
+
+After decomposition `av` is shared **three** ways in belief (`optimize` + `locate` +
+`place`).
+
+*Fork plumbing:*
+
+| repr | signature | semantics |
+|---|---|---|
+| `dup` | `fn_g_p` | the diagonal Δ — `w ↦ (w, w)` |
+| `mapsnd` | `fn → fn_p_p` | bifunctor *second* — `(a,b) ↦ (a, f(b))` |
+| `compose_gp` | `fn_g_p, fn_p_p → fn_g_p` | chain a pair-producer with a pair-endomorphism |
+| `pipe_gpg` | `fn_g_p, fn_p_g → fn` | run a pair-producer into a pair-consumer: `w ↦ commit(produce(w))` |
+
+*Sync plumbing:*
+
+| repr | signature | semantics |
+|---|---|---|
+| `locate` | `cellvalue → fn_g_c` | position of value `v` in a grid (or none) |
+| `place` | `cellvalue → fn_gc_g` | move value `v` to a coordinate, clearing its old cell |
+| `register` | `fn_g_c, fn_gc_g → fn_p_g` | `(w,m) ↦ place(w, locate(m))` — read a coord off the model, impose it on the world (the av-free commit; generic image registration) |
+| `via_swap` | `fn_p_g → fn_p_g` | run a commit on the swapped pair — makes channel direction a search choice |
+
+*Bifunctor / pairing complements* (the wrong-channel / fresh-channel corners belief
+must **avoid**):
+
+| repr | signature | semantics |
+|---|---|---|
+| `swap` | `fn_p_p` | exchange the two channels (the symmetry witness) |
+| `mapfst` | `fn → fn_p_p` | map channel 1, carry channel 2 |
+| `bimap` | `fn, fn → fn_p_p` | the full product bifunctor map |
+| `pair_blank` | `fn_g_p` | pair `g` with a *fresh empty* scratch channel (vs `dup`'s copy) |
+
+The **scope** complements (`sync_all`, `sync_except`) fold over an unbounded value set
+and have no `locate`/`place` spelling, so they stay **atomic** in Phase 2; the z-order
+and projection commits likewise stay atomic — only the fork/sync plumbing is
+decomposed.
+
+### 3.5 The grid-stack — arity as a free parameter (`make_stack_prims`, Phase 3)
+
+The cube fixes *role* symmetry but hardwires every combinator to **arity 2**. The
+grid-stack replaces the fixed pair with a recursive type `gstack ::= () | (grid,
+*gstack)` and depth-polymorphic, n-ary lifts of every cube op. Depth-1 reproduces
+`fork`+`sync` exactly, so the number of private channels becomes a *discoverable*
+structural feature — Phase 3 shows joint MDL never *selects* arity > 1.
+
+| repr | signature | semantics |
+|---|---|---|
+| `base` | `fn_g_s` | the world as a 1-element stack (0 private channels) |
+| `dup_top` | `fn_s_s` | push a copy of the head — n-ary `dup` |
+| `blank_top` | `fn_s_s` | push a fresh empty channel — n-ary `pair_blank` |
+| `swap_top` | `fn_s_s` | exchange the top two channels — n-ary `swap` |
+| `map_top` | `fn → fn_s_s` | run a grid policy on the head only — n-ary `mapsnd` |
+| `zip_top` | `fn_p_g → fn_s_s` | combine the top two channels with a pair-consumer, popping one (what makes depth > 1 necessary) |
+| `commit_top` | `cellvalue → fn_s_s` | n-ary `sync_to_world`: read `v` off the top, impose on the channel below, pop |
+| `peek` | `fn_s_g` | render the top of the stack — n-ary `fst_gg` |
+| `compose_gs` | `fn_g_s, fn_s_s → fn_g_s` | n-ary `compose_gp` |
+| `pipe_gsg` | `fn_g_s, fn_s_g → fn` | n-ary `pipe_gpg` |
+
+Plus the grid core (`compose`, `step`, `optimize`, `wall_at`, `neg_dist`, directions,
+terminals).
+
+### 3.6 Which phase runs which set
+
+| phase | driver | primitive set | fork/sync status |
+|---|---|---|---|
+| **1** | `phase1.py` | `make_symmetric_prims(decomposed=False)` | atomic `fork` + `sync_to_world` + the cube |
+| **2** | `phase2.py` | `make_symmetric_prims(decomposed=True)` | fork & sync spelled out into product-category + register/locate/place plumbing; scope complements stay atomic |
+| **3** | `phase3_arity.py` | `make_stack_prims()` | depth-polymorphic grid-stack |
+
+`make_core_prims()` (the bare interface, no cube) is available for `--no-cube`
+diagnostic runs but is not a headline phase.
+
+---
+
+## 4. Task catalogue
+
+Tasks are `(trajectory, metadata)` pairs. Below, each family gives its **kind** (the
+metadata label used by the verdict), **root type**, the **ground-truth program**, what
+it **probes**, its **necessity filter(s)**, and its **count** (per-combo counts
+multiply by `len(COMBOS)=8`; see §4.5 for the smoke/full knobs). Programs are shown
+in the `optimize (neg_dist gv) av` seek shorthand.
+
+### 4.1 Minds families (`tasks.py`)
+
+All are reported under `kind='belief'` except `physics` and `desire`;
+`belief_variant(m)` assigns the fine label.
+
+#### `physics` — the fixed-transition warm-up
+- **root** `fn` · **count** `n_phys` (flat)
+- **program** `step v d` — a single fixed per-frame move.
+- **probes** the base interpreter with no private model at all.
+- **filter** `_physically_explainable`: the transition must be a genuine `step`/`optimize`.
+
+#### `desire` — utility-driven motion
+- **root** `fn` · **count** `n_des` per combo
+- **program** `optimize (neg_dist gv) av` — the agent greedily approaches its goal.
+- **probes** goal-directed motion **without** a private model — the "wanting, not
+  believing" baseline; supplies the `optimize`/`neg_dist` policy that belief reuses.
+- **filter** generated straight through `unfold`; distinct from belief by having no wall/fork.
+
+#### `belief_wall` — false belief about an invisible obstacle
+- **root** `fn` · **count** `n_bel` per combo (used in `--no-cube` / `--plain-belief`; see witness below)
+- **program** `fork( compose(wall_at r c, optimize(neg_dist gv) av), sync_to_world av )`
+- **probes** the core claim: a detour around an **invisible** wall the agent
+  (falsely) believes is there. `av` is shared between policy and commit.
+- **filters** `_physically_explainable` (no bare physics reproduces it) **and**
+  `_displaced_goal_explainable` (no displaced-goal rival reproduces it), so the phantom
+  wall is the unique explanation.
+
+#### `belief_witness` — false belief with a non-believing witness (the cube default)
+- **root** `fn` · **count** `n_bel` per combo
+- **program**
+  `compose( fork(compose(wall_at r c, optimize(neg_dist gv) av), sync_to_world av),
+  optimize(neg_dist gw) aw )` — the believer detours around its private wall; a second
+  agent `aw` then seeks `gw` on the **real, wall-free** committed world.
+- **probes** belief in a cube run, where `clear_at` would let a non-mental
+  *transient-wall* rival (stamp / act / erase) mimic single-agent belief. The witness
+  who acts on the un-walled world makes the **private-copy `fork` the unique**
+  explanation.
+- **filters** `_witness_rival_explainable` (transient-wall family, every stamp/act/erase
+  order) **and** `_compose_rival_explainable` (no short pure-compose chain).
+
+#### `belief_goal` — goal-displacement (Sally-Anne)
+- **root** `fn` · **count** `n_goal` per combo (**~2× the other variants**)
+- **program** `fork( _seq(step gv d …, optimize(neg_dist gv) av), sync_to_world av )` —
+  on its private copy the agent *shoves the goal* to where it believes the goal is,
+  then seeks that believed goal; the world's goal never moves, so the agent walks to
+  the **wrong** cell.
+- **probes** belief whose **content varies**: 12 shove shapes (up/down × 1/2-step,
+  metadata `dirs`), so stitch must keep the content subtree as a **hole** rather than
+  specialising per shove — this is the family behind the behavioural false-belief probe.
+- **filters** `_physically_explainable`, `_wall_explainable` (no phantom-wall belief —
+  incl. the seek-value-3 "beacon" rival — reproduces it), `_compose_rival_explainable`.
+- **note** gets ~2× mass precisely so the varied content out-compresses per-shove
+  specialisation.
+
+#### `belief_false_obstacle` (**fob**) — wrong about obstacle *and* goal, with a real wall
+- **root** `fn` · **count** `n_belvar` per combo · **cube only**
+- **program**
+  `fork( _seq(clear_at Wr, wall_at Wb, step gv dg, optimize(neg_dist gv) av),
+  sync_to_world av )` — on its private copy the agent erases the **real** wall `Wr`,
+  stamps the wall where it falsely believes it is `Wb`, shoves the goal toward its
+  believed location, then seeks; the world's real wall (value `3`) and goal stay put.
+- **probes** the strongest form of the claim: the detour is bent by two *uncommitted*
+  relocations, so **every scope complement must drag at least one world-value** and
+  fails. Only single-value `sync_to_world(av)` leaves both put — so any solution is
+  **forced** to use the literal agency commit, letting the verdict say the signature
+  was *forced and found*, not merely argued extensionally equivalent.
+- **filters** `_physically_explainable`, `_scope_complements_all_fail` (no
+  `sync_all`/`sync_except` reproduces it), `_false_obstacle_rival_explainable`
+  (no transient-wall / alt-derive rival), `_compose_rival_explainable`.
+- **seeded by** the `relocation` scaffold (§4.4).
+
+#### `belief_dual` — two agents, contradictory false beliefs
+- **root** `fn` · **count** `n_belvar` per combo
+- **program** two independent `fork(policy, sync_to_world av_i)` blocks, one per agent,
+  each committing only its own move.
+- **status** ⚠️ **not solved in any run**, including long-timeout ones — this is *not*
+  a budget miss; it may not be enumerable in the current DSL. **Expressiveness-excluded**
+  from the headline verdict (see `ARCHITECTURE.md §5`). Kept in the corpus as a probe of
+  the arity/composition frontier; do not delete.
+- **filters** `_dual_rival_explainable`, `_compose_rival_explainable`.
+
+### 4.2 Minds-free families — fork-rooted (`tasks.py`, root `fn`)
+
+These populate the pair interface from the **producer** side and give each cube corner
+genuine non-mental work.
+
+#### `overlay` — motion-blur trail
+- **program** `fork( step v d, overlay )` — a moving object leaves a union trail.
+- **probes** `fork` with a non-mental commit (`overlay`), and the fixed-`step` derive.
+- **filter** `_overlay_trail_explainable`, `_physically_explainable`.
+
+#### `comet` — fork with a *seek* derive
+- **program** `fork( optimize(neg_dist gv) av, overlay )` — a goal-seeker leaves a bent
+  comet trail as it approaches an off-axis goal.
+- **probes** that `fork`'s derive slot is a **general `fn`** (desire's utility policy,
+  not just `step`) — the same motion-blur wrapper carrying a mental-looking policy in a
+  minds-free task.
+- **filter** `_overlay_trail_explainable` (the seek-bend rules out any fixed step-trail),
+  `_physically_explainable`.
+
+#### `flee` — utility complement
+- **program** `optimize( distance hv, av )` — the agent *flees* a hazard `hv`.
+- **probes** the `distance` (repulsion) corner of the utility axis.
+
+#### `deletion` — grid-edit "remove one cell"
+- **program** `clear_at r c` — one cell goes empty; scene otherwise static.
+- **probes** the `clear_at` corner.
+
+#### `denoise` — grid-edit "remove a value"
+- **program** `erase v` — every cell of a noise value vanishes.
+- **probes** the `erase` corner.
+
+#### `underlay` — z-order complement in a fork context
+- **program** `fork( step v d, underlay )` — a **world-wins** motion trail crossing an
+  occluding bystander (the trail passes *behind* it).
+- **probes** the `underlay` corner via a *fork* task (so the fork-producer side
+  populates **both** z-order corners, not only the template-rooted inpainting task).
+
+#### `obstacle` — the wall policy, **densest corner** (curriculum)
+- **root** `fn` · **count** `n_obstacle` per combo (**~3× the other corners**)
+- **program** `compose( wall_at r c, optimize(neg_dist gv) av )` — a **real** obstacle
+  makes a goal-seeker detour; no private model, no fork, no sync.
+- **probes / role** its solution **is belief's derive (policy)**. Made the densest
+  corner so this 4-hole compound recurs enough to hold a top-`stitch_iters` abstraction
+  slot; once it is a cheap token, belief's first-solve drops and only the fork∧sync
+  agency wrapper is left unique to belief.
+- **filters** `_physically_explainable` (the wall detour must be required).
+
+#### `relocation` — grid-edit "move" corner (curriculum)
+- **root** `fn` · **count** `n_relocate` (flat, heavy)
+- **program** `compose( clear_at r1 c1, wall_at r2 c2 )` — a real wall jumps ≥2 cells in
+  one frame, then the scene is static; bystanders stay put.
+- **probes / role** the "move" grid-edit corner (compound of remove + add) and, like
+  obstacle, **curriculum**: this fragment is exactly the *derive prefix* of
+  false-obstacle belief (clear real wall ▸ stamp phantom), which prices ~14 nats past
+  the search frontier at primitive cost. Making it recur in solved non-mental tasks lets
+  the joint stitch abstract it into one token and pull **fob** inside reach.
+- **filters** jump ≥ 2 cells (a 1-cell jump is a plain `step 3 d`); `T=3` idempotent
+  (kills drift rivals); `_step_or_erase_reproduces`, `_physically_explainable`.
+
+### 4.3 Minds-free families — template-rooted (`tasks.py`, root `fn_p_g`)
+
+These run through `unfold_with_template`: each frame is paired with a **given external**
+template, so a program using `sync_to_world` here is doing image **registration**, not
+holding a belief. Each is certified by `_unique_pair_corner` — the intended commit is
+the *unique cheapest* atomic `fn_p_g` corner reproducing the frame.
+
+| family | commit (program) | probes / corner |
+|---|---|---|
+| `registration` | `sync_to_world v` | snap **one** named object onto the template — the sync commit in a non-mental context |
+| `perception` | `sync_to_model v` | the **direction** complement — record a sensation into the private channel |
+| `multi_registration` | `sync_all` | the **scope** complement — wholesale multi-object alignment |
+| `registration_except` | `sync_except v` | the **scope** complement — align all but one anchor |
+| `inpainting` | `underlay` | the **z-order** complement — the template only fills holes |
+| `readout` | `snd_gg` | the **projection** complement — return the template channel |
+
+### 4.4 Curriculum scaffolds
+
+Deep families are out of budget on a first solve even once their *parts* are cheap.
+Three ordinary task batches seed the abstractions that pull the deep families into
+reach — no batch carries a special "scaffold" label; each is just its own `kind`, and
+*which* tasks ended up doing the seeding is read off a run's results, not stipulated:
+
+| batch | seeds | mechanism |
+|---|---|---|
+| `obstacle` (§4.2, densest) | the **wall policy** token | makes `compose(wall_at, optimize(neg_dist))` recur so stitch abstracts it → belief's first-solve drops |
+| `relocation` (§4.2, heavy) | the **clear▸stamp** token | makes the fob derive-prefix recur → false-obstacle belief comes into reach |
+| extra wall-belief (`kind='belief'`, distinct seed) | the **`fork(policy, sync)` token** | a second batch of plain single-agent belief (`n_bel//2` per combo), emitted as ordinary `belief_wall` tasks; once solved, `fork(policy, sync)` recurs across combos → deep `belief_witness = compose(<token>, seek)` becomes reachable |
+
+The extra wall-belief batch is not tagged or held out: it lands in the corpus as
+`kind='belief'` (variant `belief_wall`) like any other wall-belief task. The headline
+claim still rests only on the witness tasks, where the transient-wall rival is excluded
+by construction.
+
+### 4.5 Count knobs (`run_phase` in `experiment.py`)
+
+| knob | smoke | full | applies to | per-combo? |
+|---|---|---|---|---|
+| `n_phys` | 2 | 4 | physics | flat |
+| `n_des` | 1 | 2 | desire | ✓ (×8) |
+| `n_ov` | 2 | 4 | overlay | flat |
+| `n_comet` | 2 | 4 | comet | flat |
+| `n_reg` | 2 | 4 | registration | flat |
+| `n_bel` | 1 | 6 | belief (witness/wall) + scaffold (`n_bel//2`) | ✓ (×8) |
+| `n_belvar` | 1 | 3 | dual, false-obstacle | ✓ (×8) |
+| `n_goal` | 2 | 6 | goal-displacement | ✓ (×8) |
+| `n_corner` | 2 | 4 | flee, deletion, denoise, underlay, and every template corner | flat |
+| `n_obstacle` | 2 | 6 | obstacle (deliberately dense) | ✓ (×8) |
+| `n_relocate` | 4 | 16 | relocation (deliberately heavy) | flat |
+
+Other run knobs (not corpus sizes): `--t-fn SECONDS` (per-task `fn` timeout — belief is
+the long pole), `t_fn_round1` (round-1 cap so a deep transient-wall rival can't land
+before the policy tokens exist), `--ecd-iters`, `--no-dream`, `--plain-belief` /
+`--curriculum` (diagnostics that trade the false-belief uniqueness guarantee for a
+shallower first solve). The whole resolved knob dict is embedded in every run artifact
+as provenance, so a figure caption can cite an exact configuration.

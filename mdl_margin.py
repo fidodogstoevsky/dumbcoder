@@ -8,7 +8,7 @@ under the FINAL library:
     `fork(compose(derive, seek), sync_to_world av)` that the searcher recovers
     (verify_ground_truth licenses reusing it without re-enumerating); and
   * each NON-MENTAL rival spelling from the task's discriminating battery
-    (tasks_minds.belief_rival_specs) — the transient-wall / pure-physics programs a
+    (tasks.belief_rival_specs) — the transient-wall / pure-physics programs a
     skeptic offers as "almost as short".
 
 The margin is  DL(rival) - DL(found)  in nats: positive means the mental reading is the
@@ -55,22 +55,21 @@ from ecd import (
 )
 from dsl import unfold
 from prims import make_symmetric_prims
-from tasks_minds import (
+from tasks import (
     COMBOS,
     make_physics_tasks, make_desire_tasks,
     make_belief_tasks, make_witness_belief_tasks,
     make_goal_displacement_tasks, make_dual_belief_tasks,
     make_false_obstacle_belief_tasks,
     belief_rival_specs, belief_variant,
-)
-from tasks_world import (
     make_overlay_tasks, make_comet_tasks, make_registration_tasks,
     make_flee_tasks, make_deletion_tasks, make_denoise_tasks, make_underlay_tasks,
     make_obstacle_tasks, make_relocation_tasks, make_perception_tasks,
     make_multi_registration_tasks,
     make_registration_except_tasks, make_inpainting_tasks, make_readout_tasks,
 )
-from experiment import gt_program_str, verify_ground_truth, check_decomposition_identities
+from experiment import (gt_program_str, verify_ground_truth, check_decomposition_identities,
+                        provenance_line)
 
 
 # ── DL pricing (identical convention to phase3_arity._dl) ───────────────────────────
@@ -152,9 +151,9 @@ def _reproduces_agents(xr, x, m):
 
 # ── corpus (mirrors experiment.run_phase's full-run corpus; kept in step by seeds) ──
 def build_corpus(smoke=False):
-    """The full phase-1/2 mixed corpus: minds-free (physics/desire/overlay/comet/
-    registration + the eight symmetric cube corners) AND minds (belief wall/witness/
-    goal-displacement/dual + the plain-belief scaffold).  Sizes/seeds match
+    """The full phase-1/2 mixed corpus: physics/desire/overlay/comet/registration +
+    the eight symmetric cube corners, plus belief wall/witness/goal-displacement/dual
+    and a second distinct-seeded batch of plain wall-belief tasks.  Sizes/seeds match
     experiment.run_phase so the stitched library equals the one a real phase converges to.
     Returns a flat list of (x, meta)."""
     if smoke:
@@ -177,9 +176,7 @@ def build_corpus(smoke=False):
     # false-obstacle belief: real wall in the world forbids the scope-complement commit,
     # so every solution is the literal sync_to_world(av) (see experiment.run_phase).
     fob  = make_false_obstacle_belief_tasks(n_belvar, COMBOS, seed=25)
-    scaffold = make_belief_tasks(max(1, n_bel // 2), COMBOS, seed=22)
-    for _, m in scaffold:
-        m['kind'] = 'belief_scaffold'
+    belief_extra = make_belief_tasks(max(1, n_bel // 2), COMBOS, seed=22)
 
     fn_corner = (make_flee_tasks(n_corner, seed=10)
                  + make_deletion_tasks(n_corner, seed=11)
@@ -193,7 +190,7 @@ def build_corpus(smoke=False):
                    + make_inpainting_tasks(n_corner, seed=16)
                    + make_readout_tasks(n_corner, seed=17))
 
-    tasks = (phys + des + ov + comet + bel + gdb + dual + fob + scaffold
+    tasks = (phys + des + ov + comet + bel + gdb + dual + fob + belief_extra
              + fn_corner + reg + pair_corner)
     # dedupe identical matrices (would skew stitch counts)
     seen, out = set(), []
@@ -208,11 +205,13 @@ def build_corpus(smoke=False):
 
 # ── found programs: from a phase run's search output (default) or ground truth ───────
 def _load_found(decomposed, smoke, tasks, D, run_path, ground_truth):
-    """Return (sols, found_of, rewritten_of, run_library):
+    """Return (sols, found_of, rewritten_of, run_library, run_prov):
       sols        — {key: tree} to re-stitch into the FINAL library (mutates D).
       found_of    — {key_id: base-primitive 'found' program} per solved belief task.
       rewritten_of— {key_id: library-rewritten found program}, or None to re-derive.
       run_library — the run's invented-abstraction names (for name remapping), or None.
+      run_prov    — the source run's provenance block (commit + knobs), or None when
+                    reconstructing from ground truth / reading a pre-header artifact.
 
     Default source is a phase run's artifact (the searched sols/rewritten that
     `experiment.save_run_artifact` writes); `ground_truth=True` restores the old
@@ -221,7 +220,7 @@ def _load_found(decomposed, smoke, tasks, D, run_path, ground_truth):
         sols = {mat_key(x): tr(D, gt_program_str(D, m)) for x, m in tasks}
         found_of = {mat_key_id(x): gt_program_str(D, m) for x, m in tasks}
         print("  source: ground-truth programs (legacy; no phase run consumed)")
-        return sols, found_of, None, None
+        return sols, found_of, None, None, None
 
     if run_path is None:
         run_path = f"phase{2 if decomposed else 1}_run{'.smoke' if smoke else ''}.json"
@@ -243,7 +242,9 @@ def _load_found(decomposed, smoke, tasks, D, run_path, ground_truth):
     sols = {kid: tr(D, s) for kid, s in art['sols'].items()}
     print(f"  source: phase run {run_path} ({art.get('n_solved', len(sols))} searched "
           f"programs; run library {art.get('library', [])})")
-    return sols, dict(art['sols']), dict(art.get('rewritten', {})), list(art.get('library', []))
+    print(f"  {provenance_line(art, run_path)}")
+    return (sols, dict(art['sols']), dict(art.get('rewritten', {})),
+            list(art.get('library', [])), art.get('provenance'))
 
 
 def _remap_names(rewritten_of, run_library, D):
@@ -281,8 +282,8 @@ def run(decomposed=False, smoke=False, run_path=None, ground_truth=False):
 
     # the found programs + the sols that define the FINAL library both come from the run
     # (or ground truth, with --ground-truth); re-stitching the sols mutates D in place.
-    sols, found_of, rewritten_of, run_library = _load_found(decomposed, smoke, tasks, D,
-                                                            run_path, ground_truth)
+    sols, found_of, rewritten_of, run_library, run_prov = _load_found(
+        decomposed, smoke, tasks, D, run_path, ground_truth)
     saturate_stitch(D, sols, iterations=(3 if smoke else 6), max_arity=5)
     if rewritten_of is not None:
         rewritten_of = _remap_names(rewritten_of, run_library, D)
@@ -290,15 +291,15 @@ def run(decomposed=False, smoke=False, run_path=None, ground_truth=False):
     print(f"  final library: {len(D)} tokens ({len(D.invented)} invented: "
           f"{[d.repr for d in D.invented]})")
 
-    # the plain-wall scaffold tasks (kind='belief_scaffold') are genuine wall-belief
-    # tasks; include them as the belief_wall variant.  They matter most here: for plain
-    # wall-belief the transient-wall rival reproduces the FULL scene, so MDL (not the
-    # witness/expressiveness) is the operative discriminator.
+    # every wall-belief task (including the extra distinct-seeded batch) is a genuine
+    # belief_wall variant.  They matter most here: for plain wall-belief the transient-
+    # wall rival reproduces the FULL scene, so MDL (not the witness/expressiveness) is
+    # the operative discriminator.
     records = []
     n_bad = 0
     n_missing = 0
     for x, m in tasks:
-        if m['kind'] not in ('belief', 'belief_scaffold'):
+        if m['kind'] != 'belief':
             continue
         kid = mat_key_id(x)
         if kid not in found_of:
@@ -355,8 +356,11 @@ def run(decomposed=False, smoke=False, run_path=None, ground_truth=False):
         print(f"  NOTE: {n_missing} belief task(s) had no found program in the run "
               f"(unsolved / not in the artifact) — excluded from the margin.")
 
-    _print_summary(records)
+    summary = _print_summary(records)
     out = {
+        # the provenance of the RUN these margins were priced under (this script has no
+        # knobs of its own worth a header): what a caption for the margin figure cites.
+        'provenance': run_prov,
         'phase': phase,
         'decomposed': decomposed,
         'smoke': smoke,
@@ -365,12 +369,16 @@ def run(decomposed=False, smoke=False, run_path=None, ground_truth=False):
         'library': [d.repr for d in D.invented],
         'n_belief_tasks': len(records),
         'n_belief_unsolved': n_missing,
+        'summary': summary,
         'records': records,
     }
     path = f"mdl_margins{'.decomposed' if decomposed else ''}.json"
     with open(path, 'w') as f:
         json.dump(out, f, indent=1)
     print(f"  wrote {len(records)} belief tasks x rivals to {path}")
+    # close the loop back to the run: the verdict quotes these nats (experiment.py's
+    # load_mdl_margin echoes them on the next run; this back-fill fixes up THIS one).
+    _backfill_verdict(summary, out, decomposed, smoke)
     return out
 
 
@@ -379,7 +387,11 @@ def _print_summary(records):
     reproduce the ENTIRE observed scene (the genuine 'almost as short' threats).  Rivals
     that render a different scene — whether they miss the agents' actions or match the
     actions but misplace the goal / wall — are reported separately: they are excluded by
-    expressiveness, so they never bear on the MDL comparison."""
+    expressiveness, so they never bear on the MDL comparison.
+
+    Returns the summary as data (stored in this experiment's artifact under 'summary'
+    and back-filled into the phase's verdict artifact by `_backfill_verdict`), so the
+    verdict reports these nats rather than only the booleans they support."""
     from collections import defaultdict
     comp = defaultdict(list)         # variant -> [library margins over competitor pairs]
     comp_base = defaultdict(list)
@@ -402,24 +414,37 @@ def _print_summary(records):
                     n_action_right_scene_wrong += 1
         n_tasks_with_comp[v] += int(has)
 
-    print(f"\n  {'variant':22s} {'tasks':>5s} {'w/comp':>6s} {'comp':>5s}  "
-          f"{'library margin over competitors (nats)':>40s}")
-    print("  " + "-" * 88)
+    by_variant = {}
     for var in ('belief_wall', 'belief_witness', 'belief_goal', 'belief_dual',
                 'belief_false_obstacle'):
         if var not in n_tasks:
             continue
         cl = comp[var]
-        if cl:
-            desc = (f"min {min(cl):+6.2f}  median {float(np.median(cl)):+6.2f}  "
-                    f"max {max(cl):+6.2f}   base median {float(np.median(comp_base[var])):+6.2f}")
+        by_variant[var] = {
+            'n_tasks': n_tasks[var], 'n_tasks_with_competitor': n_tasks_with_comp[var],
+            'n_competitor_pairs': len(cl),
+            'margin_lib_min': (float(min(cl)) if cl else None),
+            'margin_lib_median': (float(np.median(cl)) if cl else None),
+            'margin_lib_max': (float(max(cl)) if cl else None),
+            'margin_base_median': (float(np.median(comp_base[var])) if cl else None),
+        }
+
+    print(f"\n  {'variant':22s} {'tasks':>5s} {'w/comp':>6s} {'comp':>5s}  "
+          f"{'library margin over competitors (nats)':>40s}")
+    print("  " + "-" * 88)
+    for var, s in by_variant.items():
+        if s['n_competitor_pairs']:
+            desc = (f"min {s['margin_lib_min']:+6.2f}  median {s['margin_lib_median']:+6.2f}  "
+                    f"max {s['margin_lib_max']:+6.2f}   base median "
+                    f"{s['margin_base_median']:+6.2f}")
         else:
             desc = "no non-mental behavioural competitor (expressiveness-only)"
-        print(f"  {var:22s} {n_tasks[var]:5d} {n_tasks_with_comp[var]:6d} {len(cl):5d}  {desc}")
+        print(f"  {var:22s} {s['n_tasks']:5d} {s['n_tasks_with_competitor']:6d} "
+              f"{s['n_competitor_pairs']:5d}  {desc}")
 
     all_comp = [v for l in comp.values() for v in l]
+    share = (100.0 * sum(1 for v in all_comp if v > 0) / len(all_comp)) if all_comp else None
     if all_comp:
-        share = 100.0 * sum(1 for v in all_comp if v > 0) / len(all_comp)
         print(f"\n  every behavioural competitor is LONGER than the mental reading: "
               f"{share:.0f}% of {len(all_comp)} competitor pairs have library margin > 0")
     all_excl = [v for l in excl.values() for v in l]
@@ -439,6 +464,45 @@ def _print_summary(records):
         print(f"  ({n_action_right_scene_wrong} rival(s) reproduce the agents' actions but "
               f"render a different scene — action-right, scene-wrong; excluded by "
               f"expressiveness under the full-frame test, not counted as competitors)")
+    return {
+        'by_variant': by_variant,
+        'n_competitor_pairs': len(all_comp),
+        'pct_competitors_longer': share,
+        'n_competitors_shorter': n_shorter_comp,
+        'n_excluded_shorter': n_shorter_excl,
+        'n_action_right_scene_wrong': n_action_right_scene_wrong,
+        'margin_lib_median': (float(np.median(all_comp)) if all_comp else None),
+        'margin_lib_min': (float(min(all_comp)) if all_comp else None),
+    }
+
+
+def _backfill_verdict(summary, out, decomposed, smoke):
+    """Write this experiment's margins back into the phase's verdict artifact.
+
+    The verdict is where the thesis reads the run's claims, and it was all booleans:
+    'belief is the MDL win' with the nats living only here.  A run cannot compute them
+    itself (they need this pass), so the loop closes from this side — after pricing, we
+    add an 'mdl_margin' block to phase{1,2}_verdict[.smoke].json.  Only touches a
+    verdict of the SAME phase/mode; anything else is left alone."""
+    path = f"phase{2 if decomposed else 1}_verdict{'.smoke' if smoke else ''}.json"
+    try:
+        with open(path) as f:
+            verdict = json.load(f)
+    except (FileNotFoundError, ValueError):
+        print(f"  (no verdict artifact {path} to back-fill — run the phase first)")
+        return None
+    if bool(verdict.get('decomposed')) != bool(decomposed) or \
+       bool(verdict.get('smoke')) != bool(smoke):
+        print(f"  (verdict artifact {path} is a different phase/mode — not back-filled)")
+        return None
+    verdict['mdl_margin'] = dict(summary, source=out['source'], library=out['library'],
+                                 n_belief_tasks=out['n_belief_tasks'],
+                                 n_belief_unsolved=out['n_belief_unsolved'])
+    verdict['mdl_margin_note'] = None
+    with open(path, 'w') as f:
+        json.dump(verdict, f, indent=1)
+    print(f"  back-filled the margin summary into {path}")
+    return path
 
 
 if __name__ == '__main__':

@@ -4,20 +4,60 @@
 
 == Bayesian Cognitive Modeling
 
+- Marr's levels of analysis
+- computational: what is the thing that the system is doing
+- it's doing bayesian updating. it's finding the simplest theory. 
+- algorithmic: the procedure by which the solution is produced
+- 
+
+identify the computational problem that the mind is trying to solve: the problem is find the best explanation. we argue that best is determined logically by bayes' rule. so it's doing bayesian updating. then the algorithmic level is the procedure at which it's produced, ECD
+
+
+
 === Reverse-engineering the mind 
 
-[Griffiths 1.3]
+
+Introduce the philosophy of adopting an "engineering" approach to understand human behavior by identifying the abstract computational problems that the mind must solve
+
+_This book is about how the human mind comes to understand the world—and ultimately, perhaps, how we humans may come to understand ourselves. Many disciplines, ranging from neuroscience to anthropology, share this goal—but the approach that we adopt here is quite specific. We adopt the framework of cognitive science, which aims to create such an understanding through reverse-engineering: using the mathematical and computational tools from the engineering project of creating artificial intelligence (AI) systems to better understand the operation of human thought. AI generates a rich and hugely diverse stream of hypotheses about how the human mind might work. But cognitive science does not just take AI as a source of inspiration. What we have learned about the mathematical and computa- tional underpinnings of human cognition can also help to build more human like intelligence in machines. The fields of AI and cognitive science were born together in the late 1950s, and grew up _
+[Griffiths 2024]
+
+_In presenting the Bayesian approach in this book, we have chosen to emphasize the fact that the underlying philosophy is one of reverse-engineering. To create a Bayesian model of cognition, we begin by thinking about the computational problem that the mind is solv- ing. This involves identifying the data available to learn from, specifying hypotheses about how those data are being generated, and assigning prior probabilities to those hypothe- ses. Bayes’ rule then indicates the ideal solution to that problem, generating predictions that can be compared against human behavior. If we see a correspondence between model and behavior—and particularly if it holds up as we run further experiments designed to test the model’s predictions—then we have a way to understand why people might be doing what they are doing, and a model that we can use to make machines that perform similarly. This reverse-engineering approach instantiates a view of how to make progress in cog-_ [Griffiths 2024]
 
 === Marr's levels of analysis 
 
+bayesian models focus on the computational level, the logic of the problem, what the information processing system is doing. 
+
+
 [Marr 1982]
+
+_us about actual human minds. The paper ends with an appendix containing a glossary
+and a collection of useful resources for those interested in learning more.
+2 Bayesian Basics: Inductive generalization from
+examples
+The most basic question the Bayesian framework addresses is how to update beliefs and
+make inferences in light of observed data. In the spirit of Marr’s (1982) computational-
+level of analysis, it begins with understanding the logic of the inference made when
+generalizing from examples, rather than the algorithmic steps or specific cognitive pro-_
 [Perfors 2011]
+
+_Lastly, the project of reverse-engineering the mind must unfold over multiple levels of analysis, only one of which has been our focus here. Marr (68) famously argued for analyses that integrate across three levels: The computational level characterizes the problem that a cognitive system solves and the principles by which its solution can be computed from the available inputs in natural environments; the algorithmic level describes the procedures executed to produce this solution and the representations or data structures over which the algorithms operate; and the implementation level specifies how these algorithms and data structures are instantiated in the circuits of a brain or machine. Many early Bayesian models addressed only the computational level, characterizing cognition in purely functional terms as approximately optimal statistical inference in a given environment, without reference to how the computations are carried out (25, 39, 69). The HBMs of learning and development discussed here target a view between the computational and algorithmic levels: cognition as approximately optimal inference in probabilistic models defined over a learner’s subjective and dynamically growing mental representations of the world’s structure, rather than some objective and fixed world statistics.
+_
 [Tenenbaum 2011]
+
+_Marr (1982) argued that information-processing systems can be analyzed at three levels: the computational level characterizes the problem that a system solves and the principles by which its solution can be computed from the available inputs in natural environments; algorithmic-level analysis describes the procedures executed to produce this solution and the representations or data structures over which the algorithms operate; and the implementa- tion level specifies how these algorithms and data structures are instantiated in the circuits of a brain or machine. Reverse-engineering means beginning at the computational level, trying to understand the function of a system before diving into algorithms and implementation. For this reason, we have referred to it as a top-down or function-first approach (Griffiths et al., 2010). This idea was made explicit in Anderson’s (1990) framework for rational analysis, which focuses on analyzing cognition in terms of adaptive solutions to prob- lems posed by the environment, and resulted in several groundbreaking Bayesian models of cognition. Many early Bayesian models addressed only the computational level, characterizing cog-_
 [Griffiths 2024]
 
 === Rational constructivism
 
+position the framework as a middle way between nativism and empiricism, where domain-general statistical mechanisms construct domain-specific structural knowledge
+
+_associations). Many developmental researchers rejected this choice altogether and pursued less formal approaches to describing the growing minds of children, under the headings of “constructivism” or the “theory theory” (Gopnik & Meltzoff, 1997). The potential to explain how people can genuinely learn with abstract structured knowledge may be the most salient feature of Bayesian cognitive models—the biggest reason for their popularity in some developmental circles (Gopnik & Tenenbaum, 2007; Griffiths, Chater, Kemp, Perfors, & Tenenbaum, 2010; Perfors, Tenenbaum, & Wonnacott, 2010; Griffiths, Sobel, Tenenbaum, & Gopnik, 2011b; Xu, 2019; Spelke, 2022), and the biggest target of skepticism from oth- ers, in both the traditional nativist and empiricist camps (Berwick, Pietroski, Yankama, & Chomsky, 2011; McClelland et al., 2010)._
 [Griffiths 2024]
+
+_chology that similarly grew out of a desire to answer the tension between representation and learning in a boundedly rational system. On one side, a purely nativist response was to deny learning and to focus on characterizing the detailed representations that were already in place. On another side, an empiricist response was to suggest that structured represen- tations were not necessary, that learning (and the inferences that followed) was simply a bottom-up process of learning statistical associations. Other debates played out in cognitive development as well. Some research tended to characterized children as “noisy” or “irra- tional” adults, while other research sought to demonstrate that children are efficient and effective rational learners. With the development of the probabilistic framework came a renewed interest in unifying_ [Griffiths 2024]
+
+_Most importantly, the Bayesian approach lets us move beyond classic either-or dichotomies that have long shaped and limited debates in cognitive science: “empiricism versus nativism,” “domain-general versus domain-specific,” “logic versus probability,” “symbols versus statistics.” Instead we can ask harder questions of reverseengineering, with answers potentially rich enough to help us build more humanlike AI systems. How can domain-general mechanisms of learning and representation build domain-specific systems of knowledge? How can structured symbolic knowledge be acquired through statistical learning? The answers emerging suggest new ways to think about the development of a cognitive system. Powerful abstractions can be learned surprisingly quickly, together with or prior to learning the more concrete knowledge they constrain. Structured symbolic representations need not be rigid, static, hard-wired, or brittle. Embedded in a probabilistic framework, they can grow dynamically and robustly in response to the sparse, noisy data of experience._
 [Tenenbaum 2011]
 
 == The language of thought as a representational medium
@@ -37,6 +77,40 @@ have been many other proposals for modeling conceptual representations, only pro
 capture the full breadth and depth of people’s algorithmic abilities (Goodman et al., 2015). Code
 can model both procedural and declarative information and allow them to interact seamlessly.
 Universal programming languages integrate all this knowledge into a single formal representation._ [Rule 2020]
+
+=== $lambda$-calculus as universal formalism
+
+explain why $lambda$-calculus is a natural choice for modeling concepts as stochastic functions that can be combined and recombined
+
+=== why programs for theory of mind? 
+
+_We begin by defining the stochastic λ-calculus, a mathematical system that is able to rep- resent complex generative models using only a few basic constructs. It is based on the λ-calculus, which is one of the principal models of deterministic computation. After intro- ducing this mathematical basis, we will add a number of features to make modeling easier, making this a more practical probabilistic programming language (PPL) for cognitive sci- ence. In particular, we will adopt the PPL Church (Goodman et al., 2012), which elegantly extends the sparse mathematical system of stochastic λ-calculus based on the Scheme dialect of Lisp. How should we begin to build a compositional formal system—a language—for express-_
+[Griffiths 2024]
+
+_some fundamental knowledge that is more than just associations between words and cardinalities.
+We present a formal learning model which shows that statistical inference over a sufficiently powerful representational space can explain why children follow this developmental trajectory. The model uses several pieces of machinery, each of which has been independently proposed to explain cognitive phenomena in other domains. The representational system we use is lambda calculus, a formal language for compositional semantics (e.g., Heim & Kratzer, 1998; Steedman, 2000), computation more generally (Church, 1936), and other natural-language learning tasks (Piantadosi, Goodman, Ellis, & Tenenbaum, 2008; Liang, Jordan, & Klein, 2009, 2010; Zettlemoyer & Collins, 2005, 2007). The core inductive part of the model uses Bayesian statistics to formalize what inferences learners should make from data. This involves two key parts: a likelihood function which measures how well hypotheses fit observed data, and a prior which measures the complexity of individual hypotheses. We use simple and previously proposed forms of both. The model uses a likelihood function that uses the size principle (Tenenbaum, 1999) to penalize hypotheses which make overly broad predictions. Frank, Goodman, and Tenenbaum (2007) proposed that this type of likelihood function is important in cross-situa-tional word learning and Piantadosi et al. (2008) showed that it could solve the subset problem in learning compositional semantics. The prior is from the rational rules model of Goodman, Tenenbaum, Feldman, and Griffiths (2008), which first linked probabilistic inference with formal, compositional, representations. The prior assumes that learners prefer simplicity and re-use in compositional hypotheses and has been shown to be important in accounting for human rule-based concept learning._
+[Piantadosi 2012]
+
+_come to have meaning as CRS supposes, by virtue of how the structures they are mapped to act on other symbols. Learners are able to derive new facts by applying their internal expressions to each other in novel ways. As I show, this can give rise to rich systems of knowledge that span classes of computations and permit learners to extend a few simple observations into the domain of richer cognitive theories.
+2 Combinatory Logic as a Language for Universal Isomorphism
+A mathematical system known as combinatory logic provides the formal tool we’ll use to construct a universal isomorphism language as a hypothesized LOT. Combi-natory logic was developed in the early- and mid-1900s in order to allow logicians to work with expressions that did not require variables like “x” and “y”, yet had the same expressive power (Hindley and Seldin 1986). Combinatory logic’s usefulness is demonstrated by the fact that it was invented at least three independent times by mathematicians, includingMoses Schönfinkel, John vonNeumann, andHaskell Curry (Cardone and Hindley 2006). The main advantages of combinatory logic are its simplicity (allowing us to posit very minimal built-in machinery) and its power (allowing us to model symbols, structures, and relations). In cognitive research, combinatory logic is primarily seen in formal theories of natural language semantics (Steedman_
+[Piantadosi 2019]
+
+=== why programs for theory of mind?
+
+social reasoning requires recursive, compositional representations to handle nested mental states. There's no cleaner way of doing this than with programs. it's basically already a program.
+
+_The pattern of using an embedded query to capture the choices of another agent is a very general pattern for modeling intuitive psychology (Stuhlmüller & Goodman, 2013). We could write down the abstract structure schematically as: (define choice (lambda (belief state goal?)
+(query (define action (action-prior)) action (goal? (belief state action)))))
+where belief is taken to be the agent’s summary of the world dynamics (transitions from states to states, given actions), and goal? is a goal predicate on states picking out those that the agent desires. Of course many additional refinements and additions may be needed to build an adequate model of human intuitive psychology—agents form_
+[Goodman 2015]
+
+_Probabilistic Programs as a Unifying Language of Thought 467
+probabilistic programming for Bayesian inverse planning to more abstract symbolic plan- ning settings, using the Gen PPL (Cusumano-Towner et al., 2019) and the Planning Domain Description Language to represent an agent’s world models, goals, and plans using Gen also enables explicit probabilistic modeling of a boundedly rational agent’s approximate plan- ning algorithm to make goal inference robust when the agent might be prone to planning mistakes of various kinds. Of course, many additional components will be needed to build fully adequate models of_
+[Griffiths 2024]
+
+_or the blocked agent is previously associated as negative, or...’
+One alternative to a cue-based account is to use generative models of action choice, as in the Bayesian inverse planning (or “Bayesian theory-of-mind”) models of Baker, Saxe, and Tenenbaum (2009) or the “naive utility calculus” models of Jara-Ettinger, Gweon, Tenenbaum, and Schulz (2015) (See also Jern and Kemp (2015) and Tauber and Steyvers (2011), and a related alternative based on predictive coding from Kilner, Friston, and Frith (2007)). These models formalize explicitly mentalistic concepts such as ‘goal,’ ‘agent,’ ‘planning,’ ‘cost,’ ‘efficiency,’ and ‘belief,’ used to describe core psychological reasoning in infancy. They assume adults and children treat agents as approximately rational planners who choose the most efficient means to their goals. Planning computations may be formalized as solutions to Markov Decision Processes (or POMDPs), taking as input utility and belief functions defined over an agent’s state-space and the agent’s state-action transition functions, and returning a series of actions the agent should perform to most efficiently fulfill their goals (or maximize their utility). By simulating these planning processes, people can predict what agents might do next, or use inverse reasoning from observing a series of actions to infer the utilities and beliefs of agents in a scene. This is directly analogous to how simulation engines can be used for intuitive physics, to predict what will happen next in a scene or to infer objects’ dynamical properties from how they move. It yields similarly flexible reasoning abilities: Utilities and beliefs can be adjusted to take into account how agents might act for a wide range of novel goals and situations. Importantly, unlike in intuitive physics, simulation-based reasoning in intuitive psychology can be nested recursively to understand social interactions – we can think about agents thinking about other agents._ [Lake 2016]
 
 == Bayesian program induction as the learning engine
 
@@ -107,7 +181,7 @@ explain the neural recognition network as a way to "compile" slow, deliberative 
 
 == Learning theory of mind via inverse planning
 
-=== agents as approimately rational planners
+=== agents as approximately rational planners
 
 defining the generative model. agents move in an environment (MDP/POMDP) to maximize utility efficiency
 
@@ -128,3 +202,49 @@ bilistic planning in Markov decision problems (MDPs), and invert this relation u
 to infer agents' beliefs and goals from their actions. We test our framework with psychophysical
 experiments in a simple setting that allows us to collect a large amount of fine-grained human
 judgments to compare with the strong quantitative predictions of our models._ [Baker 2012]
+
+_Bayesian Models of Cognitive Development 513
+Skeletal structured generative models are one route for embodying and implementing core knowledge, but other approaches are being developed as the AI and machine learn- ing community re-engages with findings from cognitive development. One such promising direction, specifically in intuitive physics, is to combine artificial neural networks or graphs with different minimal notions of objects, and to let the network discover the dynamics and interactions between objects (for several recent examples, see Mrowca et al., 2018; Battaglia et al., 2016, 2018; Chang, Ullman, Torralba, & Tenenbaum, 2016). A very different compu- tational approach, however, is try to recover the principles of core knowledge purely from vast amounts of empirical data (for recent examples in intuitive physics and psychology, respectively, see Piloto et al., 2018; Rabinowitz et al., 2018). Such blank-slate models on their own do not yet generalize well, but it is too early to say_ [Griffiths 2024]
+
+=== Inverting the planner
+
+Show how the observer uses Bayesian induction to work backward from a trajectory to the most likely goals and beliefs
+
+_analog of expected utility theory used for understanding everyday behavior. Importantly, this does
+not assume that humans necessarily plan or act rationally in all circumstances. Rather, we tac-
+itly expect others to behave rationally (or approximately so) in particular situations, and perform
+"explanation by rationalization" by attributing the mental states which make their behavior appear
+most rational within the present context.
+The Bayesian Theory of Mind (BToM) framework combines these principles governing the_ [Baker 2012]
+
+_To address these questions, we formalize action understanding as a Bayesian inference prob-
+lem. We model the intuitive causal relation between beliefs, goals and actions as rational proba-
+bilistic planning in Markov decision problems (MDPs), and invert this relation using Bayes' rule
+to infer agents' beliefs and goals from their actions. We test our framework with psychophysical
+experiments in a simple setting that allows us to collect a large amount of fine-grained human
+judgments to compare with the strong quantitative predictions of our models._ [Baker 2012]
+
+_eral Bayesian treatment of “theory of mind” or “mentalizing”: the core human capacity to observe other agents’ actions and infer the beliefs, desires, and intentions that gave rise to them, assuming that those actions were the result of approximately rational goal-directed planning and decision-making processes in the agent’s mind. Chapter 14 develops the
+Bayesian approach to modeling theory of mind with a focus on understanding the actions of agents moving around us and in our local environment, on relatively short spatial and tem- poral scales, as developed in seminal work by Baker, Saxe, and Tenenbaum (2009), Lucas, Griffiths, et al. (2014), Jern, Lucas, and Kemp (2017), Jara-Ettinger, Gweon, Schulz, and Tenenbaum (2016), Baker, Jara-Ettinger, Saxe, and Tenenbaum (2017), and Ullman et al. (2009). At its core, this framework posits that individuals infer the intentions and beliefs of others by observing their actions and then “inverting” the agents’ planning process. Instead of predicting future actions based on given intentions (as in forward planning and rational decision-making; see chapter 7), Bayesian inverse planning starts with the observed actions and works backwards to infer the most likely intentions and beliefs that could have produced those actions. To achieve this, the model uses Bayes’ rule, combining prior beliefs about the actor’s preferences and intentions with the likelihood of the observed actions, given that those intentions assume an approximately rationally planner, to produce a posterior distribu- tion over possible intentions. This method provides a structured way to interpret the behavior of others in terms of underlying mental states, giving us not only a candidate mechanism behind the human ability to understand and predict the actions of others, but also opening up a vast landscape of insights and modeling opportunities for human social cognition and the cultural basis of cognition more generally. Finally, the Bayesian approach can be used to shed light on some aspects of cultural_ [Griffiths 2024]
+
+_tion (14.24)). Using the resulting policy as the generative model, joint belief (the probability distribution over states), desire (the latent reward function), and competence (the underly- ing cost function) can be inferred through Bayesian inference, where given an observed trajectory t,
+p(B, R, C|t) ∝ p(t|B, R, C)p(B)p(R)p(C). (14.25)
+Baker et al. (2017) developed and tested the model that we have just presented, asking adult participants to make joint inferences about agents’ beliefs and desires based on how they navigated an environment. Figure 14.11 shows several scenarios from this experiment, in which a hungry graduate student leaves their office to walk to lunch at one of three food trucks: Korean (K), Lebanese (L), or Mexican (M). There are two parking spots for the trucks (marked in yellow), and trucks can park in different spots on different days, or not show up at all, so the student may not know where each truck is parked and must plan carefully where to walk to get lunch from the best truck available as quickly as possible. Using a POMDP for a generative model, the agent’s desires can be captured using a reward function that represents their preferences over trucks, and the agent’s initial beliefs can be represented as a probability distribution over each of three partially observable world states: the Northeast parking spot being occupied by (1) Lebanese (L) or (2) Mexican (M), or (3) being empty (N for none). Finally, observations of the trucks are determined by line of sight, with a small probability of observation failure. Consider figure 14.11c, in which the student can initially see the Korean truck in the_ [Griffith 2024]
+
+=== From skeletal knowledge to rich theories
+
+show how DreamCoder can start with a skeletal planner (the principle of efficiency) and iteratively construct a library of complex social concepts like "helping", "hindering", or "chasing"
+
+_Skeletal structured generative models are one route for embodying and implementing core knowledge, but other approaches are being developed as the AI and machine learn- ing community re-engages with findings from cognitive development. One such promising direction, specifically in intuitive physics, is to combine artificial neural networks or graphs with different minimal notions of objects, and to let the network discover the dynamics and interactions between objects (for several recent examples, see Mrowca et al., 2018; Battaglia et al., 2016, 2018; Chang, Ullman, Torralba, & Tenenbaum, 2016). A very different compu- tational approach, however, is try to recover the principles of core knowledge purely from vast amounts of empirical data (for recent examples in intuitive physics and psychology, respectively, see Piloto et al., 2018; Rabinowitz et al., 2018). Such blank-slate models on their own do not yet generalize well, but it is too early to say_ [Griffiths 2024]
+
+_C.L. Baker et al. / Cognition 113 (2009) 329–349 349
+Kautz, H., & Allen, J. (1986). Generalized plan recognition. In Proceedings of the fifth national conference on artificial intelligence (pp. 32–37).
+Kemp, C., Perfors, A., & Tenenbaum, J. B. (2007). Learning overhypotheses with hierarchical Bayesian models. Developmental Science, 10(3), 307–321.
+Körding, K. (1997). Decision theory: What ‘‘should” the nervous system do? Science, 318(5850), 606–610.
+Liao, L., Fox, D., & Kautz, H. (2004). Learning and inferring transportation routines. In Proceedings of the nineteenth national conference on artificial intelligence (pp. 348–353). _ [Baker 2009]
+
+_programming languages—as candidate mechanistic models for thinking. And finally, by drawing on hierarchical Bayesian frameworks for learning inductive constraints and learn- ing to learn, the PLoT lets us think in terms of programs as hypotheses for novel concepts, and probabilistic meta-programs that generate domain-specific languages of programs as powerful and dynamically evolvable hypothesis spaces and priors for inductive concept learning. Looking ahead, we should start by acknowledging that Church models, and PLoT models_ [Griffiths 2024]
+
+_Each cycle the system is additionally tested on the domain’s
+held-out tasks. Testing time is consistent across all domains: the system is provided 10 minutes per task to search for a solution using its current library and recognition model. Fig. 5A (Row 1) shows the percentage of test tasks solved in each cycle by all systems. Except for text editing, where performance remains comparable across all systems, utilizing the recognition model for chunking (dream decompiling) enables faster domain proficiency and enhanced generalization through the learnt library. This distinction is most evident during the intermediate cycles of learning, following similar performance in the initial iterations and before proceeding to converge again in the later iterations. Notably, this occurs despite all systems having solved a similar number of training tasks throughout (Fig. 6, Appendix C). At the respective peak differences (excluding text editing), DDC-PC outperforms DREAMCODER by 13.25% on average test_ [Palmarini 2024]
+

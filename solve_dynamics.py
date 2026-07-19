@@ -48,9 +48,9 @@ import numpy as np
 
 
 # ── task family (the facet) — identical convention to corpus_dl.family ────────────────
-# Belief variants and the plain-wall scaffold (kind 'belief'/'belief_scaffold') fold into
-# 'belief'; physics/desire are their own families; every tasks_world maker folds into the
-# single non-mental 'world' facet — the contrast the figure is about is belief vs the rest.
+# All belief variants (kind 'belief', including the extra plain wall-belief batch) fold
+# into 'belief'; physics/desire are their own families; every non-mental maker folds into
+# the single 'world' facet — the contrast the figure is about is belief vs the rest.
 def family(kind):
     if kind.startswith('belief'):
         return 'belief'
@@ -98,7 +98,15 @@ def _load_from_artifact(decomposed, smoke, run_path):
                 'elapsed': float(r['elapsed'])}
                for r in art.get('timings', [])]
     n_rounds = int(art.get('n_rounds') or max((t['solve_round'] for t in tasks.values()), default=0))
-    return {'source': run_path, 'n_rounds': n_rounds, 'tasks': tasks, 'timings': timings}
+    # provenance: the source run's commit + knobs (experiment.build_provenance).  Inlined
+    # rather than importing experiment.provenance_line — this module reads artifacts with
+    # numpy alone, and the header isn't worth pulling the DSL and torch in behind it.
+    prov = art.get('provenance')
+    print("  " + (prov['repro'] if prov else
+                  f"provenance: NONE recorded in {run_path} — predates the provenance "
+                  f"header; rerun the phase to make its figures citable."))
+    return {'source': run_path, 'n_rounds': n_rounds, 'tasks': tasks, 'timings': timings,
+            'provenance': prov}
 
 
 # stdout line written by run_phase's per-task timing report:
@@ -187,6 +195,8 @@ def compute(data):
         }
 
     return {
+        # None on the --log path: a stdout log carries no provenance block
+        'provenance': data.get('provenance'),
         'phase': 2 if data.get('decomposed') else 1,
         'source': data['source'],
         'n_rounds': n_rounds,

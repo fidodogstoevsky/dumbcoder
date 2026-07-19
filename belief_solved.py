@@ -16,7 +16,7 @@ The bar heights are DERIVED FROM AN ACTUAL RUN, not ground truth.  `experiment.r
 (phase1.py / phase2.py) writes `phase{1,2}_run[.smoke].json` — the programs enumeration
 actually FOUND, keyed by task matrix.  We rebuild the exact phase corpus with
 `mdl_margin.build_corpus` (same sizes/seeds as the run), label each belief task by
-`tasks_minds.belief_variant`, and count a variant's task as SOLVED iff its matrix key is in
+`tasks.belief_variant`, and count a variant's task as SOLVED iff its matrix key is in
 the run's `sols`.  So a bar that falls short of its total is a task the search missed, not
 an artefact of reconstruction.
 
@@ -39,11 +39,11 @@ import sys
 import json
 
 from ecd import mat_key_id
-from tasks_minds import belief_variant
+from tasks import belief_variant
 from mdl_margin import build_corpus
 
 
-# ── belief variants (the bars) — same fine labels as tasks_minds.belief_variant ───────
+# ── belief variants (the bars) — same fine labels as tasks.belief_variant ───────
 VAR_ORDER = ['belief_wall', 'belief_witness', 'belief_goal', 'belief_dual',
              'belief_false_obstacle']
 VAR_LABEL = {
@@ -100,7 +100,7 @@ def compute(decomposed, smoke, run_path):
 
     per = {v: {'total': 0, 'solved': 0} for v in VAR_ORDER}
     for x, m in tasks:
-        if m['kind'] not in ('belief', 'belief_scaffold'):
+        if m['kind'] != 'belief':
             continue
         v = belief_variant(m)
         per[v]['total'] += 1

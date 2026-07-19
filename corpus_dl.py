@@ -50,6 +50,7 @@ from ecd import (
     Deltas, saturate_stitch, rewrite_through_library, tr, normalize, simplify,
 )
 from prims import make_symmetric_prims
+from experiment import provenance_line
 
 
 # ── DL pricing (identical convention to mdl_margin._dl / phase3_arity._dl) ────────────
@@ -84,10 +85,10 @@ def _body_dl(D, Q, tree):
 
 
 # ── task family (the facet) ───────────────────────────────────────────────────────────
-# Belief variants carry kind 'belief' or 'belief_scaffold' (the plain-wall tasks — see
-# mdl_margin, which prices kind in ('belief','belief_scaffold')); both fold into 'belief'.
-# physics / desire are their own mental families; every tasks_world maker folds into the
-# single non-mental 'world' facet — the contrast the figure is about is belief vs the rest.
+# Belief variants all carry kind 'belief' (including the extra plain wall-belief batch);
+# they fold into the single 'belief' facet.  physics / desire are their own families;
+# every non-mental maker folds into the single 'world' facet — the contrast the figure
+# is about is belief vs the rest.
 def family(kind):
     if kind.startswith('belief'):
         return 'belief'
@@ -209,7 +210,11 @@ def run(decomposed=False, smoke=False, run_path=None):
           f"({'decomposed' if decomposed else 'atomic'} fork/sync){' [smoke]' if smoke else ''}"
           f"\n{'='*72}")
     art = _load_traj(decomposed, smoke, run_path)
+    print(f"  {provenance_line(art, run_path)}")
     data = compute_trajectory(art)
+    # carry the source run's commit + knobs into this figure's own artifact, so the
+    # caption can cite them without re-opening the trajectory file
+    data['provenance'] = art.get('provenance')
     out = f"corpus_dl{'.decomposed' if decomposed else ''}.json"
     with open(out, 'w') as f:
         json.dump(data, f, indent=1)

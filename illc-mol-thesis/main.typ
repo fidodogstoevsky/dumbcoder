@@ -29,7 +29,6 @@
 #include "chapter2.typ"
 #include "chapter3.typ"
 #include "chapter4.typ"
-#include "chapter5.typ"
 #pagebreak()
 
-#load-bib(read("references.bib"), main: true)
+#load-bib(read("chapter1.bib") + read("chapter2.bib"), main: true)

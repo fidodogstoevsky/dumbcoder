@@ -306,4 +306,4 @@ To do something like that, we'd replace bare string types with a small ADT:
 
 We'd implement Robinson unification 
 
-#load-bib(read("references.bib"))
+#load-bib(read("chapter1.bib") + read("chapter2.bib"))

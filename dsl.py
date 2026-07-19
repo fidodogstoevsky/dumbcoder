@@ -132,78 +132,17 @@ def optimize(u, agent_val):
         return out
     return _step
 
-# ── state-threading combinator calculus (file11) ──────────────────────────────
-# The non-mental substrate for synthesizing the agent structure itself.
-# A scene unfolds as the iteration of a synthesized transition function over
-# state = (world, model), a pair of grids.  The simulator is purely mechanical:
-# it initializes the model as a copy of the world, applies the sfn each frame,
-# and renders the world channel.  Belief semantics lives nowhere in here — a
-# program that modifies the model channel and acts through sync_w implements
-# it; a program that ignores the model channel is ordinary physics.
-
-sfn = 'sfn'  # state -> state, where state = (world grid, model grid)
-
-def on_world(f):
-    "fn -> sfn: apply a grid transformation to the world channel only"
-    def _s(s):
-        w, m = s
-        return f(w), m
-    return _s
-
-def on_model(f):
-    "fn -> sfn: apply a grid transformation to the model channel only"
-    def _s(s):
-        w, m = s
-        return w, f(m)
-    return _s
-
-def sync_w(v):
-    "int -> sfn: move value v in the world to its position in the model"
-    def _s(s):
-        w, m = s
-        mpos = np.argwhere(m == v)
-        wpos = np.argwhere(w == v)
-        if len(mpos) == 0 or len(wpos) == 0:
-            return w, m
-        mr, mc = int(mpos[0][0]), int(mpos[0][1])
-        wr, wc = int(wpos[0][0]), int(wpos[0][1])
-        if (mr, mc) == (wr, wc):
-            return w, m
-        out = w.copy()
-        out[wr, wc] = 0
-        out[mr, mc] = v
-        return out, m
-    return _s
-
-def compose_s(a, b):
-    "sfn, sfn -> sfn: apply a, then b"
-    def _s(s):
-        return b(a(s))
-    return _s
-
 def wall_at(r, c):
     "int, int -> fn: a wall (value 3) appears at (r, c)"
     def _f(g):
         return gset(g, r, c, 3)
     return _f
 
-def unfold_state(g, T, sf):
-    """grid, int, sfn -> mat: iterate sf from (g, copy(g)); render the world.
-
-    The model channel starts as a copy of the world (memory initialized from
-    the senses) and is never rendered.
-    """
-    s = (g.copy(), g.copy())
-    frames = [s[0].copy()]
-    for _ in range(T - 1):
-        s = sf(s)
-        frames.append(s[0].copy())
-    return np.stack(frames)
-
 # ── single-grid calculus (file13) ───────────────────────────────────────────────
-# file11/12 hardwired a second grid into the interpreter's state (the pair) so
-# that intensionality could be *expressed as a compound* and then discovered by
-# compression.  Here the interpreter shrinks to threading a single grid; programs
+# Earlier iterations hardwired a second grid into the interpreter's state (the
+# pair) so that intensionality could be *expressed as a compound* and then
+# discovered by compression.  Here the interpreter shrinks to threading a single
+# grid; programs
 # are plain fn = grid -> grid.  The second grid (the agent's private model) is no
 # longer interpreter state — it is introduced *locally in program space* by a
 # general, non-mental combinator `fork`, computed over, and collapsed back to one
@@ -285,36 +224,27 @@ def unfold(g, T, f):
         frames.append(g.copy())
     return np.stack(frames)
 
-# ── monomorphic pair-calculus (file12) ─────────────────────────────────────────
-# file11 buried "state = (world, model), init by copy, render world" inside
-# unfold_state.  Here that triple is exposed as program data, with two
-# monomorphic state shapes: grid (no private channel) and pair_gg (one
-# private channel).  Whether a synthesized program *uses* a private channel
-# becomes a structural feature of the program — namely, which mk_machine_*
-# constructor it picks — instead of a type-system commitment in the interpreter.
+# ── monomorphic pair-calculus ──────────────────────────────────────────────────
+# The (world, model) pair is a first-class value: `pair_gg`.  Programs *produce*
+# pairs (grid -> pair_gg, `fn_g_p`) and *consume* them (pair_gg -> grid, `fn_p_g`),
+# so whether a synthesized program uses a private second channel is a structural
+# feature of the program rather than a type-system commitment in the interpreter.
 
 pair_gg = 'pair_gg'   # (grid, grid)
-fn_g_p  = 'fn_g_p'    # grid -> pair_gg   (init for pair machines)
-fn_p_g  = 'fn_p_g'    # pair_gg -> grid   (render for pair machines)
-machine = 'machine'   # bundled (kind, init, step, render)
+fn_g_p  = 'fn_g_p'    # grid -> pair_gg   (pair producer)
+fn_p_g  = 'fn_p_g'    # pair_gg -> grid   (pair consumer)
 
-def _dup_g(g):
-    "grid -> pair_gg: model channel starts as a copy of the world"
+def dup(g):
+    "grid -> pair_gg: the diagonal Δ — pair a grid with a copy of itself"
     return (g.copy(), g.copy())
 
-dup_g = _dup_g
-
-def _fst_gg(p):
-    "pair_gg -> grid: render the world (first) channel"
+def fst_gg(p):
+    "pair_gg -> grid: project the first channel"
     return p[0].copy()
 
-fst_gg = _fst_gg
-
-def _snd_gg(p):
-    "pair_gg -> grid: render the model (second) channel"
+def snd_gg(p):
+    "pair_gg -> grid: project the second channel"
     return p[1].copy()
-
-snd_gg = _snd_gg
 
 # ── decomposed fork: product-category combinators (file15) ───────────────────────
 # file13's `fork(derive, commit)` hides two operations inside one closure: the
@@ -325,8 +255,8 @@ snd_gg = _snd_gg
 #
 # which is three textbook combinators of the product (×) category:
 #
-#     dup      :: grid -> pair     w |-> (w, w)         -- diagonal Δ      (= dup_g)
-#     mapsnd f :: pair -> pair     (a,b) |-> (a, f(b))  -- bifunctor second (= on_model)
+#     dup      :: grid -> pair     w |-> (w, w)         -- diagonal Δ
+#     mapsnd f :: pair -> pair     (a,b) |-> (a, f(b))  -- bifunctor second
 #     commit   :: pair -> grid                          -- product eliminator (sync/…)
 #
 # Exposing these as DSL primitives turns the implicit copy into a discoverable
@@ -338,11 +268,12 @@ snd_gg = _snd_gg
 
 fn_p_p = 'fn_p_p'   # pair_gg -> pair_gg
 
-dup = dup_g         # grid -> pair_gg: the diagonal Δ; the private copy made explicit
-
-mapsnd = on_model   # fn -> fn_p_p: (a,b) |-> (a, f(b)) — bifunctor 'second'.
-                    # Literally the file11 model-channel map, reused verbatim: the
-                    # second grid is computed over while the first is carried along.
+def mapsnd(f):
+    "fn -> fn_p_p: bifunctor 'second' — (a,b) |-> (a, f(b)); map the second channel, carry the first"
+    def _s(p):
+        a, b = p
+        return a, f(b)
+    return _s
 
 def compose_gp(produce, endo):
     "fn_g_p, fn_p_p -> fn_g_p: (grid -> pair) then (pair -> pair)"
@@ -439,9 +370,9 @@ def sync_decomposed(v):
 #
 #     direction   : read model→write world (sync_to_world)  vs  read world→write model (sync_to_model)
 #     scope       : one value (sync_to_world)  vs  all (sync_all)  vs  all-but-one (sync_except)
-#     z-order     : model wins ties (overlay)   vs  world wins ties (underlay)
-#     projection  : keep world (fst_gg)         vs  keep model (snd_gg)
-#     bifunctor   : map second (mapsnd/on_model) vs map first (mapfst/on_world) vs both (bimap)
+#     z-order     : second wins ties (overlay)  vs  first wins ties (underlay)
+#     projection  : keep first (fst_gg)         vs  keep second (snd_gg)
+#     bifunctor   : map second (mapsnd)         vs  map first (mapfst)  vs  both (bimap)
 #     pairing     : diagonal (dup)              vs  fresh scratch (pair_blank)
 #     utility     : attract (neg_distance)      vs  repel (distance)
 #     grid edit   : add a wall (wall_at)        vs  remove a cell (clear_at / erase)
@@ -520,15 +451,18 @@ def sync_except(v):
     return _c
 
 def underlay(p):
-    "pair_gg -> grid (fn_p_g): the Z-ORDER complement of overlay — WORLD's nonzero cells win ties (model only fills holes / inpainting)"
-    w, m = p
-    out = m.copy()
-    out[w != 0] = w[w != 0]
+    "pair_gg -> grid (fn_p_g): the Z-ORDER complement of overlay — the first channel's nonzero cells win ties (the second only fills holes / inpainting)"
+    a, b = p
+    out = b.copy()
+    out[a != 0] = a[a != 0]
     return out
 
 def mapfst(f):
-    "fn -> fn_p_p: the BIFUNCTOR complement of mapsnd — (a,b) |-> (f(a), b); transform world, carry model as pristine reference.  (== on_world)"
-    return on_world(f)
+    "fn -> fn_p_p: the BIFUNCTOR complement of mapsnd — (a,b) |-> (f(a), b); map the first channel, carry the second unchanged"
+    def _s(p):
+        a, b = p
+        return f(a), b
+    return _s
 
 def bimap(f, g):
     "fn, fn -> fn_p_p: the full product bifunctor map — (a,b) |-> (f(a), g(b))"
@@ -538,7 +472,7 @@ def bimap(f, g):
     return _s
 
 def swap(p):
-    "pair_gg -> pair_gg (fn_p_p): the symmetry witness — exchange the two channels so neither is privileged as 'the world'"
+    "pair_gg -> pair_gg (fn_p_p): the symmetry witness — exchange the two channels so neither is privileged"
     a, b = p
     return (b.copy(), a.copy())
 
@@ -594,7 +528,7 @@ def erase(v):
 #     gstack ::= ()  |  (grid, *gstack)        -- a stack of grids; index 0 = top
 #
 # Each combinator below is the n-ary, depth-polymorphic lift of a cube op (dup,
-# pair_blank, on_model/mapsnd, swap, overlay, sync_to_world, fst_gg).  depth-1
+# pair_blank, mapsnd, swap, overlay, sync_to_world, fst_gg).  depth-1
 # reproduces fork+sync exactly (see fork_stack_decomposed); depth-0 is a bare fn
 # (no stack); depth-2 is the natural home of a two-buffer non-mental task.
 
@@ -622,7 +556,7 @@ def swap_top(s):
     return (s[1], s[0]) + s[2:]
 
 def map_top(f):
-    "fn -> fn_s_s: run a grid policy on the head only — n-ary `mapsnd`/`on_model` (the world below is carried untouched)"
+    "fn -> fn_s_s: run a grid policy on the head only — n-ary `mapsnd` (the channels below are carried untouched)"
     def _s(s):
         return (f(s[0]),) + s[1:]
     return _s
@@ -681,27 +615,6 @@ def fork_stack_decomposed(derive, av):
                               map_top(derive)),
                    commit_top(av)),
         peek)
-
-def mk_machine_g(init, step, render):
-    "fn, fn, fn -> machine: grid-state machine (no private channel)"
-    return ('machine_g', init, step, render)
-
-def mk_machine_gg(init, step, render):
-    "fn_g_p, sfn, fn_p_g -> machine: pair_gg-state machine (one private channel)"
-    return ('machine_gg', init, step, render)
-
-def unfold_m(g, T, m):
-    """grid, int, machine -> mat: thread g through init, iterate step (T-1)x,
-    render each frame.  The machine encodes its own state init and projection;
-    the interpreter is identical for both state shapes.
-    """
-    _kind, init, step, render = m
-    s = init(g)
-    frames = [np.asarray(render(s))]
-    for _ in range(T - 1):
-        s = step(s)
-        frames.append(np.asarray(render(s)))
-    return np.stack(frames)
 
 # ── Delta expression tree ──────────────────────────────────────────────────────
 
@@ -1046,7 +959,7 @@ def _strip_snd_projection(tree):
         (pipe_gpg (compose_gp dup (mapsnd f)) snd_gg)          -> f     [phase 2]
 
     fork(f, snd_gg)(w) = snd_gg((w, f(w))) = f(w), so the wrapper is exactly f
-    (`fork(f, snd_gg) ≡ f`, dsl.py fork/_snd_gg).  The decomposed spelling is the
+    (`fork(f, snd_gg) ≡ f`, dsl.py fork/snd_gg).  The decomposed spelling is the
     same thing after fork is spelled out as pipe_gpg∘compose_gp∘dup∘mapsnd.  These
     wrappers let an inner belief commit (e.g. a `fork(policy, sync_all)` whose
     phantom wall never renders through sync_all) masquerade behind a fresh fork;

@@ -20,8 +20,9 @@ from time import time
 
 from dsl import *
 
-###################################################################################
-##### 
+###############################################################################
+######                              library                               #####
+###############################################################################
 
 class Deltas:
     def __init__(self, core):
@@ -116,6 +117,9 @@ class Deltas:
         self.invented = []
         self.infer()
 
+###############################################################################
+######                             enumerate                              #####
+###############################################################################
 
 def makepaths(D, Q):
     Paths = [[] for i in range(len(D))]
@@ -281,6 +285,9 @@ def _annotate_holes(D, tree):
             for tail in n.tails:
                 qq.append((tail, None))
 
+###############################################################################
+######                             compress                               #####
+###############################################################################
 
 def saturate_stitch(D, sols, iterations=10, max_arity=6):
     """Learn abstractions via stitch_core (top-down synthesis).
@@ -696,22 +703,16 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
                       root_type=None, templates=None):
     """Enumerate programs from the DSL and match against task trajectories.
 
-    root_type=sfn      : programs are state transition fns over (world, model);
-                         wrapped as unfold_state(x[0], T, sf) (file11).
-    root_type=machine  : programs are explicit (init, step, render) bundles;
-                         wrapped as unfold_m(x[0], T, machine) (file12).
-                         The state shape (grid vs pair_gg) is a program choice.
+    root_type=fn       : programs are grid->grid fns; wrapped as unfold(x[0], T, f).
     root_type=fn_p_g   : programs are pair->grid commits; wrapped as
                          unfold_with_template(x[0], templates[key], T, c) (file14).
                          The second grid is a given template, not a derived model.
     """
     import dsl as _dsl
     if root_type is None:
-        root_type = sfn
+        root_type = fn
 
     _enum_type = root_type
-    _is_machine = (root_type == machine)
-    _is_fn = (root_type == fn)
     _is_pair = (root_type == _dsl.fn_p_g)
     templates = templates or {}
 
@@ -737,21 +738,14 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
             val = tree()
         except Exception:
             return
-        if _is_machine:
-            if not (isinstance(val, tuple) and len(val) == 4
-                    and val[0] in ('machine_g', 'machine_gg')):
-                return
-        else:
-            if not callable(val):
-                return
+        if not callable(val):
+            return
         cnt += 1
         candidates = []
         for tkey, (actual_g, T) in ig_map.items():
             try:
-                out = (_dsl.unfold_m(actual_g, T, val) if _is_machine else
-                       _dsl.unfold_with_template(actual_g, templates[tkey], T, val) if _is_pair else
-                       _dsl.unfold(actual_g, T, val) if _is_fn else
-                       _dsl.unfold_state(actual_g, T, val))
+                out = (_dsl.unfold_with_template(actual_g, templates[tkey], T, val) if _is_pair else
+                       _dsl.unfold(actual_g, T, val))
                 if isinstance(out, np.ndarray) and 0 not in out.shape:
                     candidates.append(mat_key(out))
             except Exception:
@@ -844,9 +838,9 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
     # when ECD is first run, reset the DSL
     D.reset()
     if root_type is None:
-        root_type = sfn
+        root_type = fn
 
-    _run_dream = run_dream and root_type in (sfn, machine, fn)
+    _run_dream = run_dream and root_type == fn
     _n_workers = n_workers if n_workers is not None else _n_cpus_available()
     print(f'ECD: using {_n_workers} workers (allocated CPUs: {_n_cpus_available()})', flush=True)
 
@@ -1166,7 +1160,7 @@ def dreamed_q(qmodel, D, x):
 def dream(D, soltrees=[], training_Xs=None, root_type=None, n_iters=600):
     import dsl as _dsl
     if root_type is None:
-        root_type = sfn
+        root_type = fn
 
     device = th.device('cuda' if th.cuda.is_available() else 'cpu')
 
@@ -1176,8 +1170,6 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, n_iters=600):
     paths, paths_terminal = makepaths(D, th.ones(len(D)))
 
     _fantasy_type = root_type
-    _is_machine   = (root_type == machine)
-    _is_fn        = (root_type == fn)
 
     # Pre-compute grid parameters for fantasy generation.
     # Infer grid size and goal values from training tasks so nothing is hardcoded.
@@ -1233,13 +1225,8 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, n_iters=600):
         for tree, is_fantasy in tagged:
             try:
                 val = tree()
-                if _is_machine:
-                    if not (isinstance(val, tuple) and len(val) == 4
-                            and val[0] in ('machine_g', 'machine_gg')):
-                        continue
-                else:
-                    if not callable(val):
-                        continue
+                if not callable(val):
+                    continue
                 if is_fantasy:
                     ig = _fresh_ig()
                     T  = int(randint(3, 8))
@@ -1249,9 +1236,7 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, n_iters=600):
                         continue
                     ig = src[0]
                     T  = src.shape[0]
-                out = (_dsl.unfold_m(ig, T, val) if _is_machine else
-                       _dsl.unfold(ig, T, val) if _is_fn else
-                       _dsl.unfold_state(ig, T, val))
+                out = _dsl.unfold(ig, T, val)
             except Exception:
                 continue
 

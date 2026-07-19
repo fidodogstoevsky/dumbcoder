@@ -10,27 +10,25 @@ import numpy as np
 from dsl import (RIGHT, LEFT, UP, DOWN, compose, step, optimize, neg_distance,
                  distance, wall_at, clear_at, erase, unfold, fork, sync_to_world,
                  sync_all, sync_except, snd_gg)
-from tasks_minds import (make_physics_tasks, make_desire_tasks, make_belief_tasks,
-                         make_witness_belief_tasks, make_goal_displacement_tasks,
-                         make_dual_belief_tasks, make_false_obstacle_belief_tasks,
-                         COMBOS, belief_variant)
+from tasks import (make_physics_tasks, make_desire_tasks, make_belief_tasks,
+                   make_witness_belief_tasks, make_goal_displacement_tasks,
+                   make_dual_belief_tasks, make_false_obstacle_belief_tasks,
+                   COMBOS, belief_variant)
 
-# full-run corpus (run_phase non-smoke): n_bel=6, n_goal=6, n_belvar=3, scaffold=3
+# full-run corpus (run_phase non-smoke): n_bel=6, n_goal=6, n_belvar=3, belief_extra=3
 print("generating corpora (same seeds as run_phase)…", flush=True)
 bel  = make_witness_belief_tasks(6, COMBOS, seed=2)
 gdb  = make_goal_displacement_tasks(6, COMBOS, seed=23)
 dual = make_dual_belief_tasks(3, COMBOS, seed=24)
 fob  = make_false_obstacle_belief_tasks(3, COMBOS, seed=25)
-scaf = make_belief_tasks(3, COMBOS, seed=22)
-for _, m in scaf:
-    m['kind'] = 'belief_scaffold'
+wall = make_belief_tasks(3, COMBOS, seed=22)   # plain wall-belief (kind='belief')
 tasks = ([(x, m, 'witness') for x, m in bel]
          + [(x, m, 'goal') for x, m in gdb]
          + [(x, m, 'dual') for x, m in dual]
          + [(x, m, 'fob') for x, m in fob]
-         + [(x, m, 'scaffold') for x, m in scaf])
+         + [(x, m, 'wall') for x, m in wall])
 print(f"  {len(bel)} witness, {len(gdb)} goal, {len(dual)} dual, {len(fob)} fob, "
-      f"{len(scaf)} scaffold = {len(tasks)}", flush=True)
+      f"{len(wall)} wall = {len(tasks)}", flush=True)
 
 RIVALS = {
     # the 189730 (phase1) / 25110 (phase2) pure-compose program

@@ -43,7 +43,7 @@ import json
 from collections import Counter, defaultdict
 
 from ecd import mat_key_id
-from tasks_minds import belief_variant
+from tasks import belief_variant
 from mdl_margin import build_corpus
 
 
@@ -96,7 +96,7 @@ def compute(decomposed, smoke, run_path):
     token_uses = Counter()                      # abstraction -> n belief programs using it
     n_solved = 0
     for x, m in tasks:
-        if m['kind'] not in ('belief', 'belief_scaffold'):
+        if m['kind'] != 'belief':
             continue
         kid = mat_key_id(x)
         if kid not in sols:

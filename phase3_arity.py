@@ -85,11 +85,11 @@ from dsl import (
     base, dup_top, blank_top, map_top, swap_top, zip_top, commit_top, peek,
     compose_gs, pipe_gsg, fork_stack_decomposed,
 )
-from tasks_minds import (
+from tasks import (
     make_physics_tasks, make_desire_tasks, make_belief_tasks,
     _physically_explainable, COMBOS, SIZE, DIRS,
+    make_overlay_tasks,
 )
-from tasks_world import make_overlay_tasks
 from prims import make_stack_prims
 
 # core parts whose presence in a solution we report (pre-stitch)

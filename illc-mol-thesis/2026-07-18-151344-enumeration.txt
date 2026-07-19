@@ -1,0 +1,519 @@
+▗ ▗   ▖ ▖  Claude Code v2.1.214
+           Opus 4.8 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/mol/s26/dumbcoder/illc-mol-thesis
+
+
+❯ /model                                                                        
+  ⎿  Set model to Opus 4.8 and saved as your default for new sessions
+
+❯ where in ecd.py is a program's cost calculated?                               
+
+  Searched for 3 patterns (ctrl+o to expand)
+
+⏺ The program-cost primitive lives in the logp method of the library object in
+  ecd.py. Let me show it:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Where cost is computed
+
+  The single primitive is Library.logp at ecd.py:71-79. Everything else in the
+  codebase that prices a program calls it and negates the result.
+
+  def logp(self, Q, d):
+      if d.tails is None:                    # leaf: cost of picking this 
+  primitive
+          return Q[self.index(d)]
+      out = 0
+      for tail in d.tails:                   # recurse into every argument
+          out += self.logp(Q, tail)
+      return Q[self.index(d)] + out          # this node + subtree
+
+  What it does: walks the program tree and sums a per-node log-probability
+  Q[index(d)] for the head plus the logp of each tail. Q is the (log-softmaxed)
+  grammar weight vector over the library D; index(d) locates the
+  primitive/invention in the library. So logp returns the log-probability of the
+  whole tree under the grammar.
+
+  Cost / description length is then just the negative of that. The convention is
+  factored out into a one-liner that's copy-pasted across the analysis scripts,
+  e.g. experiment.py:797:
+
+  def _dl(D, Q, prog):
+      t = ...            # parse prog to a tree
+      return float(-D.logp(Q, t))   # nats
+
+  Identical _dl wrappers live in corpus_dl.py:67, mdl_margin.py,
+  behavioral_probe.py:91, and phase3_arity.py — all commented as "same
+  convention," all bottoming out in D.logp.
+
+  Two related pieces:
+  - corpus_dl._body_dl (corpus_dl.py:73) is a variant for pricing an invention's
+  body: same recursion, but bound-variable holes ($i) are free since they name
+  arguments rather than cost tokens.
+  - makepaths/cenumerate (ecd.py:124, 155) use the same Q weights as budget
+  during enumeration — that's the search-time counterpart to the post-hoc logp
+  scoring.
+
+  So: cost = -D.logp(Q, tree), and logp itself is the recursive sum at
+  ecd.py:71.
+
+✻ Worked for 38s
+
+※ recap: You asked where a program's cost is calculated in ecd.py. The answer: `Library.logp` at ecd.py:71 sums per-node grammar log-probabilities, and cost equals its negation via the `_dl` wrappers. No pending action. (disable recaps in /config)
+
+❯ how does enumeration work?                                                    
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Now the driver that calls it — solve_enumeration:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ How enumeration works
+
+  The engine is a type-directed, best-first-by-description-length program 
+  search. It enumerates candidate programs cheapest-first (highest probability =
+  lowest -logp cost), runs each one on the task inputs, and keeps any whose
+  output hits a target. There are two implementations sharing the same idea,
+  selected by the budget argument in solve_enumeration.
+
+  The default path: iterative-deepening over cost windows (cenumerate, budget ==
+  0)
+
+  The outer loop is at ecd.py:774:
+
+  idx = 0
+  while not done and time() < deadline:
+      cenumerate(D, Q, _enum_type, (LOGPGAP*idx, LOGPGAP*(idx+1)), maxdepth, cb,
+  deadline)
+      idx += 1
+
+  It sweeps expanding log-cost windows [0,gap), [gap,2·gap), …. Each pass emits
+  only programs whose total cost -logp lands in that band, so overall programs
+  come out in increasing-cost order — this is best-first / MDL-ordered search,
+  done as iterative deepening so memory stays flat.
+
+  cenumerate (ecd.py:155) expands one node:
+
+  for i in D.bytype[tp]:                 # only symbols of the required type
+      qi = Q[i]                          # this symbol's log-prob
+      if -qi > budget[1]: continue       # PRUNE: head alone already too 
+  expensive
+      nbudget = (budget[0]+qi, budget[1]+qi)   # thread remaining budget down
+      cenumerate_fold(D, Q, d, tailtypes, nbudget, qi, maxdepth-1, cb, deadline)
+
+  Two key mechanisms:
+  - Type restriction — D.bytype[tp] means each argument slot only ever considers
+  symbols of the correct type. This is what keeps the search tractable.
+  - Budget pruning — a symbol's own cost is subtracted from the window ceiling;
+  if it already blows the budget, the whole subtree is skipped.
+
+  cenumerate_fold (ecd.py:180) fills the argument slots one at a time:
+
+  tailtp = tailtypes.pop(0)
+  def ccb(tail, tlogp):                  # got a candidate subtree for this slot
+      nd = deepcopy(d); nd.tails.append(tail)
+      cenumerate_fold(D, Q, nd, rest_tailtypes, budget-tlogp, ..., cb)   # fill 
+  remaining slots
+  return cenumerate(D, Q, tailtp, (0, budget[1]), maxdepth, ccb, deadline)
+
+  It recursively enumerates subtrees for the current slot (each firing ccb),
+  attaches each to a copy of the node, and recurses on the remaining slots. When
+  all slots are filled and the accumulated cost lies inside the window
+  (ecd.py:197):
+
+  if budget[0] <= 0 and 0 <= budget[1]:
+      return cb(d, offset)               # complete program → hand to callback
+
+  it fires cb — the callback that actually runs the finished program through the
+  DSL interpreter on the task inputs (ecd.py:~745), compares the output against
+  targets, and records the shortest solution per target (ecd.py:766). A time
+  check raises _EnumDone to bail out of the whole recursion.
+
+  The alternate path: single-ceiling generator (penumerate, budget > 0)
+
+  When a positive budget is passed (ecd.py:783), it wraps the root type in an
+  ephemeral node and uses penumerate (ecd.py:224) + groom (ecd.py:202) — a
+  generator-style version yielding (logp, tree) pairs under one fixed ceiling
+  instead of expanding windows. It relies on precomputed per-slot distributions
+  from makepaths (ecd.py:124), which log-softmaxes Q within each type.
+  penumerate is also used internally by the compression/saturate machinery.
+
+  Where the probabilities come from
+
+  Q is the grammar's flat log-prob vector. On iteration 1 it's a
+  type-conditioned uniform distribution (uniform_type_q, ecd.py:854: each symbol
+  costs -log(#symbols of its type)), optionally sharpened by boosting integer
+  literals that literally appear in the task grid to cost-0 (content_aware_q,
+  ecd.py:868). On later iterations Q comes from the learned recognition model
+  Qmodel (ecd.py:878). Cheaper Q → smaller cost windows → target program found
+  in an earlier pass.
+
+  The full loop
+
+  ECD (ecd.py:835) ties it together: dispatch all unsolved tasks to a process
+  pool (_solve_one_task → solve_enumeration), collect solutions, run stitch
+  compression to invent new library primitives, retrain Qmodel, and repeat — so
+  each iteration the library grows and enumeration reaches programs that were
+  out of budget before.
+
+  Want me to trace a concrete example program through cenumerate step by step?
+
+✻ Baked for 45s
+
+❯ trace a concrete example program through cenumerate step by step              
+
+⏺ To make this concrete and accurate, let me look at the actual DSL primitives
+  and types so I trace a real program, not a made-up one.
+
+  Searched for 4 patterns, listed 1 directory (ctrl+o to expand)
+
+⏺ Good — I'll trace a real program built from actual primitives in prims.py:
+
+  step : fn        tailtypes = [cellvalue, direction]     (prims.py:73)
+  3    : cellvalue (leaf)
+  up   : direction (leaf)
+
+  Target program: (step 3 up) — root enum type fn.
+
+  Costs
+
+  Q is the type-uniform distribution (uniform_type_q, ecd.py:854): each symbol
+  costs -log(#symbols of its type). Using illustrative counts, the per-token
+  costs (-Q[i], nats) are:
+
+  ┌───────┬───────────┬──────┐
+  │ token │   type    │ cost │
+  ├───────┼───────────┼──────┤
+  │ step  │ fn        │ 2.1  │
+  ├───────┼───────────┼──────┤
+  │ 3     │ cellvalue │ 2.3  │
+  ├───────┼───────────┼──────┤
+  │ up    │ direction │ 1.4  │
+  └───────┴───────────┴──────┘
+
+  Total program cost = 5.8 nats → lands in cost window idx=2 = [4, 6).
+
+  Remember the budget convention: budget = (lo, hi); consuming a token shifts
+  both bounds down by its cost, so budget = (window_lo − spent, window_hi − 
+  spent). A finished program fires the callback only when budget[0] ≤ 0 ≤ 
+  budget[1], i.e. window_lo ≤ total_cost ≤ window_hi.
+
+  Windows 0 and 1 — skipped by pruning
+
+  The outer loop (ecd.py:777) tries windows [0,2), [2,4), … Take window idx=1 =
+  (2,4):
+
+  cenumerate(fn, (2,4)):
+    head=step, cost 2.1 ≤ 4 ✓  →  nbudget=(2-2.1, 4-2.1)=(-0.1, 1.9)
+      fold slot cellvalue, cenumerate(cellvalue, (0, 1.9)):
+        head=3, cost 2.3  >  budget[1]=1.9  →  `if -qi > budget[1]: continue`  ✗
+  PRUNED
+
+  After paying for step, only 1.9 nats of ceiling remain, but any cellvalue
+  costs 2.3 → the first argument can't be placed. (step 3 up) never completes in
+  this window. That's the mechanism that makes the search cheapest-first: the
+  program only becomes affordable once the window is wide enough.
+
+  Window 2 = (4,6) — the program completes
+
+  Here's the full recursion, with each frame's budget tuple and running offset
+  (the accumulated log-prob, negative):
+
+  cenumerate(fn, budget=(4,6))                                    ecd.py:155
+  │ head = step,  cost 2.1 ≤ 6 ✓
+  │ nbudget = (4-2.1, 6-2.1) = (1.9, 3.9),  offset = -2.1
+  │
+  └─ cenumerate_fold(step, tailtypes=[cellvalue,direction],       ecd.py:180
+     │                budget=(1.9,3.9), offset=-2.1)
+     │ pop tailtype = cellvalue;  remaining = [direction]
+     │
+     └─ cenumerate(cellvalue, budget=(0, 3.9), cb=ccb)      ← lo resets to 0 for
+  the sub-slot
+        │ head = 3,  cost 2.3 ≤ 3.9 ✓
+        │ nbudget = (0-2.3, 3.9-2.3) = (-2.3, 1.62),  offset = -2.3
+        │ tailtypes = None  →  leaf complete
+        │ check: -2.3 ≤ 0 ≤ 1.62 ✓  →  fire ccb(tail=3, tlogp=-2.3)
+        │
+        └─ ccb(3, -2.3):                                          ecd.py:184
+           │ nd = copy(step); nd.tails = [3]
+           │ nbudget = (1.9-2.3, 3.9-2.3) = (-0.4, 1.6)
+           │ noffset = -2.1 + -2.3 = -4.4
+           │
+           └─ cenumerate_fold(step[3], tailtypes=[direction],
+              │                budget=(-0.4,1.6), offset=-4.4)
+              │ pop tailtype = direction;  remaining = []
+              │
+              └─ cenumerate(direction, budget=(0, 1.6), cb=ccb2)
+                 │ head = up,  cost 1.4 ≤ 1.6 ✓
+                 │ nbudget = (0-1.4, 1.6-1.4) = (-1.4, 0.2),  offset=-1.4
+                 │ tailtypes = None → leaf complete
+                 │ check: -1.4 ≤ 0 ≤ 0.2 ✓ → fire ccb2(tail=up, tlogp=-1.4)
+                 │
+                 └─ ccb2(up, -1.4):
+                    │ nd = copy(step[3]); nd.tails = [3, up]
+                    │ nbudget = (-0.4-1.4, 1.6-1.4) = (-1.8, 0.2)
+                    │ noffset = -4.4 + -1.4 = -5.8
+                    │
+                    └─ cenumerate_fold(step[3,up], tailtypes=[],   ← all slots
+  filled
+                                       budget=(-1.8,0.2), offset=-5.8)
+                       │ tailtypes empty → skip the fill branch
+                       │ final check (ecd.py:197):
+                       │   budget[0] = -1.8 ≤ 0 ✓  and  0 ≤ budget[1] = 0.2 ✓
+                       └─►  cb( (step 3 up), offset=-5.8 )     ← the REAL task
+  callback
+
+  What the callback does
+
+  That final cb is the task callback defined in solve_enumeration (around
+  ecd.py:735). It:
+  1. Compiles/evaluates (step 3 up) through the DSL interpreter on each task
+  input x (unfold(...), ecd.py:747),
+  2. Computes mat_key(out) and checks membership in targets (ecd.py:758),
+  3. If it matches and is shorter than any stored solution, records it
+  (ecd.py:766); when every target is covered it raises _EnumDone to stop the
+  sweep.
+
+  The three things to take away from the trace
+
+  - Type-directed: each slot only ever enumerates D.bytype[tailtype] — the
+  cellvalue slot never even considers up, and vice-versa.
+  - Budget threading = MDL ordering: every token subtracts its cost from a
+  shared ceiling; the -qi > budget[1] guard (ecd.py:170) prunes any head that's
+  already unaffordable, so (step 3 up) first surfaces exactly in the window
+  matching its 5.8-nat cost.
+  - Continuation-passing assembly: partial programs are built by ccb closures
+  that deepcopy the parent node and append each freshly-enumerated subtree, so
+  the same recursion handles arbitrary arity and nesting depth.
+
+  Note the costs here are illustrative type-uniform values; with content_aware_q
+  (ecd.py:868) a literal 3 visible in the grid is boosted to cost 0, which
+  would drop the whole program into an earlier, cheaper window.
+
+✻ Churned for 1m 42s
+
+※ recap: We've been walking through ecd.py: program cost is `-D.logp(Q, tree)`, and enumeration is type-directed best-first search via cenumerate over expanding cost windows. Last I traced `(step 3 up)` step by step. Next: tell me what you'd like to explore. (disable recaps in /config)
+
+❯ I'm writing about enumeration for the thesis chapter, I think it's useful to  
+  go throguh the example, but does it make sense to go through the full trace   
+  in the third budget window?                                                   
+
+⏺ Short answer: no — the full window-2 trace is the wrong thing to spend the 
+  reader's attention on. Here's my reasoning.
+
+  Enumeration isn't your contribution. It's standard
+  best-first-by-description-length search (DreamCoder-lineage). Your MoL readers
+  will already know the idea, so this section is infrastructure you need them 
+  to trust, not a result you need to prove. That means it earns proportional,
+  not exhaustive, space. Hand-simulating the CPS assembly — deepcopy the node,
+  append the subtree, shift (-0.4, 1.6) → (-1.8, 0.2) — is bookkeeping. The
+  tuples don't teach the idea; they just show that arithmetic is associative.
+
+  The pedagogically valuable moment is the window-1 failure, not the window-2 
+  success. The one thing a reader might not have internalized is why the
+  cost-ordering emerges — and the pruning contrast delivers exactly that in
+  three lines:
+
+  ▎ In window [2,4), after paying 2.1 nats for step only 1.9 remain, but every 
+  ▎ cellvalue costs 2.3, so the first argument cannot be placed and the program 
+  ▎ is pruned. It first becomes affordable in [4,6), matching its 5.8-nat cost.
+
+  That single contrast conveys "iterative deepening over cost windows ⇒ cheapest
+  programs surface first" better than the entire completing recursion does. The
+  full window-2 trace, by comparison, just confirms that a program the reader
+  already knows sums to 5.8 will fire when the ceiling reaches 5.8.
+
+  What I'd actually put in the chapter:
+  - The program + its per-token costs table (keep this — it's concrete and
+  cheap).
+  - The type-direction point (each slot only draws from bytype[τ]) — one
+  sentence.
+  - The window-1-prunes / window-2-fires contrast (the insight).
+  - The assembly itself compressed to one artifact: either a static call-tree
+  figure or one prose sentence ("nested continuations append each enumerated
+  subtree to a copy of the parent node, so arbitrary arity and depth fall out of
+  the same recursion"). Not both, and not tuple-by-tuple.
+
+  So: keep the example, keep the window comparison, drop the step-by-step budget
+  threading. The trace is a great thing for you to have verified (and for an
+  appendix if you want it on record), but in the main text it costs more reader
+  attention than the non-novel mechanism deserves.
+
+  Want me to draft the tightened ~3-paragraph version against the actual
+  chapter*.typ prose so it matches your notation?
+
+✻ Cogitated for 34s
+
+❯ draft a tightened version                                                     
+
+⏺ Let me look at the chapters to match your notation and see where enumeration
+  currently lives.
+  Searched for 2 patterns, read 1 file, ran 1 shell command (ctrl+o to expand)
+
+⏺ The chapter already has exactly the pieces I recommended keeping — the setup,
+  the cost table in prose, and the window-[2,4) pruning contrast — and then
+  trails off at a dangling At budget window $[4,6)$. So the tightened version is
+  the completion: replace that dangling line with a short close that compresses
+  the assembly to one sentence and lands on the MDL payoff, instead of the
+  tuple-by-tuple recursion.
+
+⏺ Update(chapter3.typ)
+  ⎿  Added 3 lines, removed 1 line
+       97  
+       98  The program falls in the third budget window, bounded by $[4, 
+           6)$. The first two windows are skipped by pruning. For example
+            in window $[2,4)$ after paying 2.1 nats for `step`, only 1.9 
+           nats remain. But any primitive of type `cellvalue` costs 2.3 n
+           ats, so `step`'s first argument can't be placed. So trees with
+            a `step` node are pruned, since they would never complete wit
+           hin the second budget window. This is the mechanism that makes
+            search cheapest-first, since more complex programs only becom
+           e affordable once the window is wide enough. At each budget st
+           ep, only programs at that budget level are enumerated. 
+       99  
+      100 -At budget window $[4,6)$                                      
+      100 +At budget window $[4,6)$ the ceiling is finally wide enough to
+          + admit all three tokens. Enumeration is type-directed: each ar
+          +gument slot draws candidates only from the symbols of the matc
+          +hing type — `step`'s first slot from the `cellvalue` symbols, 
+          +its second from the `direction` symbols — so no ill-typed part
+          +ial tree is ever constructed. The tree itself is assembled by 
+          +continuation-passing: each enumerated subtree is appended to a
+          + copy of its parent node and the remaining slots are filled by
+          + the same recursion, so arbitrary arity and nesting depth are 
+          +handled without special-casing. `(step 3 up)` completes at its
+          + total cost of $approx 5.8$ nats, which lies in $[4,6)$, and t
+          +he search fires its callback — the finished program is run on 
+          +the task's input grids, its output compared against the target
+          +s, and, being the first solution found, it is stored as the ta
+          +sk's program.                                                 
+      101  
+      102 +Because the windows are tried in increasing order of cost, the
+          + first solution the search returns is (up to ties within a win
+          +dow) the shortest program that solves the task — its minimum-d
+          +escription-length explanation under the current grammar. As th
+          +e library grows over successive iterations, a solution that on
+          +ce required a wide, expensive window is re-expressed with a si
+          +ngle learned symbol and resurfaces in a much earlier one; this
+          + is the compression that later chapters exploit.              
+      103  
+      104 +                                                              
+      105  #load-bib(read("chapter1.bib"))
+      106  #load-bib(read("chapter2.bib"))
+      107   No newline at end of file
+
+⏺ Done. Here's what the tightened close does, and why:
+
+  What I added (replacing the dangling At budget window $[4,6)$):
+  1. One sentence on type-direction — names the concrete slots (cellvalue,
+  direction) so it's grounded, not abstract.
+  2. One sentence on assembly — the continuation-passing idea in prose, not the
+  (-0.4, 1.6) → (-1.8, 0.2) budget-tuple bookkeeping. This is the whole point of
+  my earlier advice: the reader learns "arity and depth fall out of one
+  recursion" without hand-simulating deepcopies.
+  3. The callback close — run, compare, store — so the example actually finishes
+  instead of stopping at "it completes."
+  4. An MDL payoff paragraph — the first solve is the shortest program, and
+  library growth resurfaces it in an earlier window. This ties the mechanism
+  back to what your thesis is actually about (compression / MDL), so the
+  enumeration section earns its place as motivated infrastructure rather than a
+  standalone tutorial.
+
+  Two things worth flagging for your own edit pass:
+
+  - The logp explanation above (lines 74–91) is where the real verbosity is now,
+  not the trace. It defines "logp = log-probability" twice and spends four
+  bullet points on additivity + "negation is description length." That's more
+  space than the non-novel background needs — I'd consider collapsing it to one
+  short paragraph. Want me to tighten that too?
+  - Consistency check: line 96 asserts step's cost is 2.1 and 3's is 2.3 as
+  given values, but only derives up = ln 4 ≈ 1.386. If a reader tries to
+  reproduce 2.1 and 2.3 from the type-uniform rule they can't (the type counts
+  aren't stated). Either add "(there are $N≈8$ symbols of type fn, so step $= ln
+  8 ≈ 2.08$…)" or explicitly say these two are illustrative. Small, but a
+  careful examiner will try the arithmetic.
+
+  I edited the file directly since it had the unfinished sentence — easy to
+  revert if you'd rather I'd drafted it in chat first.
+
+✻ Baked for 1m 14s
+
+※ recap: You're writing the enumeration section of thesis chapter3.typ. I tightened the `(step 3 up)` trace by replacing the dangling window-`[4,6)` line with a compressed completion plus MDL payoff. Next: decide whether to also trim the verbose logp explanation (lines 74–91). (disable recaps in /config)
+
+❯ /what's "special casing"?                                                     
+
+⏺ "Special-casing" means
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ what's "special casing"? what's "continuation passing"?                       
+
+⏺ Both are jargon I reached for — here's what each means, grounded in your
+  actual code, so you can decide whether to keep the words or reword.
+
+  "Special-casing"
+
+  Writing separate, dedicated code branches to handle particular situations,
+  instead of one general rule that covers them all. "Without special-casing" =
+  the code handles every case with the same uniform logic.
+
+  In cenumerate, the point is: the enumerator does not have one branch for
+  "primitive with 0 arguments" (a leaf like 3), another for "primitive with 2
+  arguments" (step), another for "3 arguments," etc. It has one recursive
+  procedure — cenumerate_fold (ecd.py:180) pops the next argument slot, fills
+  it, and calls itself for the rest:
+
+  if tailtypes and len(tailtypes) > 0:
+      tailtp = tailtypes.pop(0)        # handle ONE slot
+      ... cenumerate_fold(..., rest_tailtypes, ...)   # recurse for the rest
+
+  A 0-arg leaf, a 2-arg step, and some future 5-arg invention all flow through
+  this same code. Nobody wrote "if arity == 2 do X." That's what "arbitrary
+  arity and depth are handled without special-casing" claims: the generality is
+  free, falling out of the recursion.
+
+  For the thesis you could replace it with plainer wording: "…so programs of any
+  arity or nesting depth are handled by the same procedure."
+
+  "Continuation-passing"
+
+  A style where, instead of a function returning its result to the caller, you
+  hand it a callback — "here's what to do next with each result you produce" —
+  and it calls that.
+
+  In your enumerator, cenumerate doesn't return a list of subtrees. It's given a
+  callback (the parameter literally named cb) and invokes it for each subtree
+  it finds. When filling step's first slot, the code builds a fresh callback ccb
+  that says "take the subtree you found, attach it to a copy of step, then go
+  fill the next slot" (ecd.py:184):
+
+  def ccb(tail, tlogp):
+      nd = deepcopy(d); nd.tails.append(tail)   # attach subtree to parent copy
+      cenumerate_fold(..., rest_tailtypes, ...)  # "what to do next": fill 
+  remaining slots
+  return cenumerate(D, Q, tailtp, ..., ccb, ...) # enumerate slot, calling ccb 
+  per result
+
+  The "what to do next" — attach and continue — is the continuation. Each
+  nesting level wraps the previous one's continuation, which is how partial
+  trees get assembled incrementally rather than all at once.
+
+  Caveat for the thesis: "continuation-passing" is a real term of art, and
+  readers with a PL background will read it precisely — so make sure the
+  surrounding prose supports it. If your audience is more cognitive-science /
+  philosophy-of-mind (the belief/ToM framing suggests some are), it may read as
+  unexplained CS jargon. A softer phrasing that keeps the mechanism without the
+  term:
+
+  ▎ "The tree is assembled incrementally: each enumerated subtree is attached to
+  ▎ a copy of its parent node, and a callback fills the remaining argument 
+  ▎ slots by the same recursion."
+
+  That drops "continuation-passing" and "special-casing" both, at the cost of a
+  little precision. Your call which register the chapter is pitched at — want me
+  to swap in the plainer version, or keep the terms?
+
+✻ Baked for 22s
+
+※ recap: You're tightening the enumeration section of chapter3.typ for your thesis. The trace close is drafted; I just explained "special-casing" and "continuation-passing." Next: tell me whether to keep those terms or swap in the plainer phrasing.

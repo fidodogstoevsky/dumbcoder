@@ -1,9 +1,9 @@
-"""experiment.py: the unified mixed-corpus test — belief as an MDL win, not a silo.
+"""experiment.py: the unified one-corpus test — belief as an MDL win, not a silo.
 
-The non-mental task families answered the "gerrymandered decomposition" charge
+The other task families answered the "gerrymandered decomposition" charge
 (fork/sync are a
 `believe` primitive split into two gears that only ever re-mesh into belief) by
-giving the gears non-mental work: fork without sync (overlay/motion-blur) and
+giving the gears work unrelated to belief: fork without sync (overlay/motion-blur) and
 sync without fork (registration/coordinate-join).  But it proved this across
 THREE isolated searches — three separate `ECD` calls, three separate `Deltas`,
 three separate stitch passes.  That shows each gear is *reachable* somewhere; it
@@ -12,7 +12,7 @@ once, belief still emerges as the MDL-optimal recombination while its parts stay
 general.  Gerrymandering is an MDL claim, and MDL is only tested by joint
 compression.
 
-This file runs ONE library and ONE joint stitch over a mixed corpus:
+This file runs ONE library and ONE joint stitch over one corpus:
 
     physics       (step v d)                              fn
     desire        (optimize (neg_dist gv) av)             fn
@@ -43,7 +43,7 @@ The verdict has two independent halves:
       the MDL-optimal library carves out the agent constructor
       (fork + sync_to_world + wall_at + optimize, av shared x2) for the belief
       tasks, WHILE the same objective leaves fork/sync bare (or in a different,
-      non-mental abstraction) in the overlay/registration solutions.
+      non-agency abstraction) in the overlay/registration solutions.
 
 If both halves hold in one run, belief is a *discovered* recombination of
 independently-used parts — not a believe-primitive decomposed and rediscovered,
@@ -92,7 +92,7 @@ from tasks import (
     belief_variant,
     COMBOS, SIZE, DIRS,
     make_overlay_tasks, make_comet_tasks, make_registration_tasks,
-    # one non-mental task per symmetric corner
+    # one task per symmetric corner
     make_flee_tasks, make_deletion_tasks, make_denoise_tasks, make_obstacle_tasks,
     make_relocation_tasks, make_underlay_tasks,
     make_perception_tasks, make_multi_registration_tasks,
@@ -177,7 +177,7 @@ def _belief_ctor_in_D(D):
 # the symmetric "corners" populated only in --cube runs: each is the complement
 # of a core primitive along one axis (direction / scope / z-order / projection /
 # utility / grid-edit / bifunctor / pairing).  The cube test asks whether belief
-# still avoids ALL of these while the non-mental families happily reach for them.
+# still avoids ALL of these while the other families happily reach for them.
 _CORNERS = ('sync_to_world', 'sync_to_model', 'sync_all', 'sync_except',
             'overlay', 'underlay', 'fst_gg', 'snd_gg', 'via_swap',
             'neg_dist', 'distance', 'wall_at', 'clear_at', 'erase',
@@ -543,11 +543,11 @@ def _belief_commit_form(D, sol, x, m):
                      When the agent is the only committed model-mover, 'move everything but
                      the goal' == 'move the agent'; same fork-structured belief, agency hole
                      expressed on gv rather than av.  A minimal-scene degeneracy of the
-                     commit, NOT a rival (non-mental) theory — see the disclosure note.
+                     commit, NOT a rival (non-belief) theory — see the disclosure note.
       'complement' — a scope commit whose swap for sync_to_world(av) does NOT reproduce x:
                      the commit is carrying non-agency work (a derive that leaves gv/3
                      unmoved in the model, so only wholesale adoption fits).  A genuine
-                     non-mental rival; the verdict counts it as a FAILURE.
+                     non-belief rival; the verdict counts it as a FAILURE.
       None         — neither: not an agency commit (e.g. unsolved / non-fork).
 
     The degeneracy guard is SOLUTION-relative.  An earlier version tested the canonical
@@ -810,9 +810,9 @@ def report_dl_census(D, all_tasks, sols, rewritten, ctor_name=None):
     primitives ('before' — the library-free description enumeration actually returned)
     and in its library-rewritten form ('after' — what it costs once the abstractions
     exist).  The gap is the compression the stitch bought that family; for belief it is
-    what the agent constructor is worth, and the non-mental families are the baseline
-    that says whether belief's saving is special or just what abstraction does to
-    everything.
+    what the agent constructor is worth, and the other (non-belief) families are the
+    baseline that says whether belief's saving is special or just what abstraction does
+    to everything.
 
     Both sides are priced under the SAME final library and uniform type prior, which is
     also what mdl_margin.py prices belief-vs-rival margins with — so `dl_lib` here is
@@ -889,7 +889,7 @@ def report_dl_census(D, all_tasks, sols, rewritten, ctor_name=None):
               f"{bel['dl_lib_median']:.2f} after (median saving {bel['saved_median']:.2f}; "
               f"{bel['saved_total']:.2f} over {bel['n']} solves)")
         if nonmental_median is not None:
-            print(f"  non-mental families' median saving, for scale: "
+            print(f"  other families' median saving, for scale: "
                   f"{nonmental_median:.2f} nats/task")
         if ctor_name:
             print(f"  belief solves whose library form invokes {ctor_name} (the constructor): "
@@ -900,7 +900,7 @@ def report_dl_census(D, all_tasks, sols, rewritten, ctor_name=None):
 
 
 def load_mdl_margin(decomposed, smoke, run_path=None):
-    """The MDL margin (nats) belief holds over its non-mental rivals, read back from the
+    """The MDL margin (nats) belief holds over its non-belief rivals, read back from the
     artifact `mdl_margin.py` writes.  That experiment prices belief against the
     transient-wall/pure-physics rivals under THIS phase's library, but it runs as a
     separate pass, so its magnitudes never reached the verdict — the run said "belief is
@@ -940,12 +940,12 @@ def report_mdl_margin(decomposed, smoke):
     magnitude of its own central claim rather than only that it held."""
     summary, note = load_mdl_margin(decomposed, smoke)
     if summary is None:
-        print(f"  (B) MDL margin over non-mental rivals: unavailable — {note}")
+        print(f"  (B) MDL margin over non-belief rivals: unavailable — {note}")
         return None, note
     if note:
-        print(f"  (B) MDL margin over non-mental rivals  [{note}]")
+        print(f"  (B) MDL margin over non-belief rivals  [{note}]")
     else:
-        print(f"  (B) MDL margin over non-mental rivals (nats, under this run's library):")
+        print(f"  (B) MDL margin over non-belief rivals (nats, under this run's library):")
     for var in _BELIEF_VARIANTS:
         s = (summary.get('by_variant') or {}).get(var)
         if s is None:
@@ -1032,7 +1032,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
               t_fn_round1=None, dream_on=True, plain_belief=False, curriculum=True):
     """One phase of the curriculum (phase 1 = atomic, phase 2 = decomposed).
 
-    Both phases run the full symmetric cube over the mixed minds/minds-free corpus
+    Both phases run the full symmetric cube over the one undifferentiated corpus
     (`cube` is always on); the only knob is whether fork/sync are atomic or spelled
     out.  Phase 2 additionally proves the decomposition is numerically identical to
     the atomic machine before searching.
@@ -1082,7 +1082,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     t_fn = _t_fn if t_fn is None else t_fn
     ecd_iters = _ecd_iters if ecd_iters is None else ecd_iters
     # Per-round fn timeout schedule (DreamCoder-style curriculum): round 1 is capped
-    # near the calibrated slowest-solve so a deep transient-wall rival (scaffold, the
+    # near the calibrated slowest-solve so a deep transient-wall rival (the
     # ~349k program the Jul-12 3600s runs found) cannot land BEFORE the wall/fork policy
     # tokens exist; dreamed rounds 2+ get the full budget.  A no-op when t_fn ≤ the cap
     # (smoke / short runs), so it only bites the long runs it is meant to protect.
@@ -1105,7 +1105,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     prov = build_provenance(knobs)
     print_provenance(prov)
 
-    print("Generating mixed corpus…")
+    print("Generating corpus…")
     phys = make_physics_tasks(n_phys, seed=TASK_SEEDS['physics'])
     des  = make_desire_tasks(n_des, COMBOS, seed=TASK_SEEDS['desire'])
     ov   = make_overlay_tasks(n_ov, seed=TASK_SEEDS['overlay'])
@@ -1114,7 +1114,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     # optimize), the dual of the underlay family varying the commit slot.
     comet = make_comet_tasks(n_comet, seed=TASK_SEEDS['comet'])
     reg  = make_registration_tasks(n_reg, seed=TASK_SEEDS['registration'])
-    # In a --cube run the DSL contains clear_at, which lets a non-mental
+    # In a --cube run the DSL contains clear_at, which lets a non-belief
     # "transient wall" (stamp / act / erase) reproduce single-agent belief.  Use
     # witness-belief tasks there so the private-copy fork is the unique explanation.
     # `--plain-belief` overrides this to the shallower single-agent belief even in a
@@ -1171,14 +1171,14 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         print(f"  [curriculum] +{len(belief_extra)} extra plain wall-belief tasks "
               f"(kind=belief) to seed the fork(policy, sync) abstraction.")
 
-    # One minds-free task per symmetric corner, so every complement the cube adds
+    # One task per symmetric corner, so every complement the cube adds
     # is *useful somewhere* — otherwise "belief avoids the complements" is vacuous
-    # (an unused distractor is trivially avoided).  These only make sense when the
+    # (an unused complement is trivially avoided).  These only make sense when the
     # corner primitives exist, i.e. in a --cube run.  fn-rooted corners join the
     # `unfold` search; pair-rooted ones join the `unfold_with_template` search.
     fn_corner, pair_corner = [], []
     if cube:
-        # obstacle is the wall_at corner: a non-mental detour task whose solution is
+        # obstacle is the wall_at corner: a plain detour task whose solution is
         # belief's policy `(compose (wall_at) (optimize (neg_dist)))`.  A *family* of
         # them (per-combo, like belief) makes that derive recur so the joint stitch
         # abstracts it — which is what lowers belief's first-solve cost and leaves only
@@ -1460,7 +1460,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     n_belief_degenerate = sum(1 for f in belief_form.values() if f == 'degenerate')
     n_belief_literal    = sum(1 for f in belief_form.values() if f == 'literal')
     # a scope commit that ISN'T the agency commit on its own scene (swap-to-literal
-    # fails to reproduce x): a genuine non-mental rival, counted as a verdict failure.
+    # fails to reproduce x): a genuine non-belief rival, counted as a verdict failure.
     n_belief_complement = sum(1 for f in belief_form.values() if f == 'complement')
 
     uses_by_kind = {}
@@ -1560,7 +1560,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         print(f"  agent, 'move everything but the goal' == 'move the agent' — the two commits are")
         print(f"  extensionally identical (verified for every belief family).  It is the SAME")
         print(f"  fork-structured belief with the agency hole expressed on the goal rather than")
-        print(f"  the actor, NOT a non-mental rival; counted as the agency commit above.")
+        print(f"  the actor, NOT a non-belief rival; counted as the agency commit above.")
         if belief_variants.get('belief_goal', {}).get('degenerate', 0):
             print(f"  For goal-displacement this is INTRINSIC, not sampled: on a two-value scene")
             print(f"  sync_except(gv) moves exactly {{av}}, so it IS sync_to_world(av) on every")
@@ -1664,8 +1664,8 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                                and 'wall_at' in belief_corners)
         # `distance` is neg_dist's symmetric complement, but belief composes it as
         # its OWN world-model seek metric — (optimize (distance k) k) is a policy step
-        # inside the agent's model (see fn_9/fn_11), not a rival non-mental commit.
-        # It has no dedicated minds-free family either, so it is an agency-internal
+        # inside the agent's model (see fn_9/fn_11), not a rival non-agency commit.
+        # It has no dedicated family of its own either, so it is an agency-internal
         # corner, not one belief must avoid; subtract it from the avoidance test (it
         # is still reported below under field-liveness).
         _belief_seek_corners = {'distance'}
@@ -1678,8 +1678,8 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
             for k in _ALL_KINDS if k != 'belief'
         )) if corners_by_kind else set()
         any_complement_used = bool(used_complements)
-        # don't flag a complement as "unreached" if it has no dedicated minds-free
-        # family (the bifunctor/pairing corners) or isn't even a primitive in the
+        # don't flag a complement as "unreached" if it has no dedicated family
+        # of its own (the bifunctor/pairing corners) or isn't even a primitive in the
         # active DSL (e.g. sync_to_model, decomposed away to via_swap in phase 2).
         present = {d.repr for d in D.ds}
         no_home = {'mapfst', 'swap', 'bimap', 'pair_blank'}
@@ -1694,7 +1694,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                   f"extensionally")
             print(f"     equal to {_agency}(av) — the degenerate agency commit, not a complement; see (A))")
         print(f"  some complement is used elsewhere (field is live)        : {any_complement_used}")
-        print(f"  complements claimed by a non-mental family               : {sorted(used_complements)}")
+        print(f"  complements claimed by another family                    : {sorted(used_complements)}")
         if unused_complements:
             print(f"  complements no family reached for (search/timeout?)      : {unused_complements}")
         if cube_ok:
@@ -1756,7 +1756,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                       + ', '.join(f'{v} (x{n})' for v, n in shared.items())
                       + "  — actor AND committer (commit expressed on the goal)")
         elif _has_fork(body) and 'overlay' in body:
-            print(f"      (non-mental: fork + overlay — motion blur)")
+            print(f"      (non-belief: fork + overlay — motion blur)")
         elif 'wall_at' in body and ('optimize' in body or 'neg_dist' in body):
             print(f"      (obstacle/belief policy: stamp wall ▸ navigate — the shared derive)")
         elif 'optimize' in body or 'neg_dist' in body:
@@ -1809,7 +1809,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     ctor_shared_holes = dict(agent_constructor[2]) if agent_constructor else {}
     n_shared_holes = len(ctor_shared_holes)
     max_hole_uses = max(ctor_shared_holes.values(), default=0)
-    # the constructor must be a BELIEF abstraction, and the non-mental families must
+    # the constructor must be a BELIEF abstraction, and the non-belief families must
     # NOT have been swept into it (else it isn't really belief-specific).
     ctor_name = agent_constructor[0].repr if agent_constructor else None
     belief_uses_ctor = bool(ctor_name) and any(
@@ -1839,7 +1839,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                 if ctor_shared_holes else "") + ")"
              if agent_constructor else ""))
     print(f"  (B) constructor is belief-specific: used by belief={belief_uses_ctor}, "
-          f"absent from non-mental={nonmental_free_of_ctor}")
+          f"absent from other families={nonmental_free_of_ctor}")
     if dl_census.get('by_kind', {}).get('belief'):
         _b = dl_census['by_kind']['belief']
         _nm = dl_census.get('nonmental_saved_median')
@@ -1847,7 +1847,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
               f"{_b['dl_lib_median']:.2f} nats (median saving {_b['saved_median']:.2f} over "
               f"{_b['n']} solves;")
         print(f"      {dl_census['n_belief_using_ctor']}/{_b['n']} invoke the constructor"
-              + (f"; non-mental families save {_nm:.2f} nats/task for scale)"
+              + (f"; other families save {_nm:.2f} nats/task for scale)"
                  if _nm is not None else ")"))
     # the central magnitude — priced by mdl_margin.py under this same library, echoed
     # here so the run reports how MUCH shorter the mental reading is, not only that the
@@ -1870,10 +1870,10 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     failures = [name for name, v in checks.items() if not v]
     ok = not failures
     if ok:
-        print("\n  => In ONE library and ONE MDL compression over minds-free AND minds tasks,")
-        print("     belief is the discovered recombination of parts that each do non-mental")
-        print("     work, and the same objective that builds the agent constructor leaves")
-        print("     fork/sync bare elsewhere.  Not gerrymandered, not a silo artefact.")
+        print("\n  => In ONE library and ONE MDL compression over the whole corpus, belief is")
+        print("     the discovered recombination of parts that each do work unrelated to belief,")
+        print("     and the same objective that builds the agent constructor leaves fork/sync")
+        print("     bare elsewhere.  Not gerrymandered, not a silo artefact.")
     else:
         print("\n  => not fully demonstrated this run (raise timeouts / n_bel / stitch_iters,")
         print("     or drop --smoke).")

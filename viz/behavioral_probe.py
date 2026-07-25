@@ -61,18 +61,13 @@ Writes behavioral_probe[.decomposed].json and behavioral_probe[.decomposed].png/
 
 import sys
 import json
-import math
-
-import numpy as np
-import torch as th
-
 from ecd import (
     Deltas, saturate_stitch, rewrite_through_library, mat_key, tr,
 )
 from dsl import unfold
 from prims import make_symmetric_prims
 from tasks import (
-    COMBOS, make_goal_displacement_tasks, belief_rival_specs, belief_variant, _agent_pos,
+    COMBOS, make_goal_displacement_tasks, belief_rival_specs, _agent_pos,
 )
 from experiment import verify_ground_truth, gt_program_str, check_decomposition_identities
 from mdl_margin import build_corpus, uniform_type_q, _load_found, _remap_names

@@ -18,17 +18,24 @@
 )
 
 #mol-abstract[
-  ABSTRACT OF THE THESIS
-  
-  #lorem(150)
+
 ]
 
+// _Niets is mooi genoeg voor de arbeider, die zo lang zonder schoonheid heeft moeten leven_
+
+// _Nothing is precious enough for the worker, who has had to live without beauty for so long_
+
+// Michel de Klerk
+
+#pagebreak()
 
 #outline()
 #include "chapter1.typ"
 #include "chapter2.typ"
 #include "chapter3.typ"
 #include "chapter4.typ"
+#include "chapter5.typ"
+#include "chapter6.typ"
 #pagebreak()
 
 #load-bib(read("chapter1.bib") + read("chapter2.bib"), main: true)

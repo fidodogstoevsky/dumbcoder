@@ -2,7 +2,7 @@
 //
 // USE AS A LIBRARY (selective figures in your paper):
 //   #import "viz.typ": task-figure, all-tasks
-//   #figure(task-figure("physics", "belief"), caption: [...])   // early demo
+//   #figure(task-figure("physics", "belief_wall"), caption: [...])  // early demo
 //   #all-tasks()                                                // appendix: everything
 //
 // COMPILE STANDALONE (preview every family):
@@ -11,9 +11,11 @@
 // Importing only pulls the #let bindings; the preview at the bottom of this file
 // is discarded in the importing document, so it is safe to `#import`.
 //
-// DATA: produced by file16.export_task_samples (run `python file16.py --cube
-// --samples`).  Each sample is {kind, tag, T, panels:[{label, grid}]}; fn families
-// list successive `unfold` frames, fn_p_g families list world | template | result.
+// DATA: task_samples.json holds one ACTUAL generated example per family, written by
+// experiment.export_task_samples (the `--samples` path of a phase run).  The single
+// kind='belief' is split into its five display variants (wall / witness / goal /
+// false-obstacle / dual).  Each sample is {kind, tag, T, panels:[{label, grid}]}; fn
+// families list successive `unfold` frames, fn_p_g families world | template | result.
 
 #let task-data = json("task_samples.json")
 
@@ -27,6 +29,10 @@
   "3": rgb("#54585c"),   // wall (dark)
   "4": rgb("#e1812c"),   // orange
   "5": rgb("#b07aa1"),   // purple
+  "6": rgb("#e15759"),   // red
+  "7": rgb("#76b7b2"),   // teal
+  "8": rgb("#b8a02e"),   // olive
+  "9": rgb("#9c755f"),   // brown
 )
 
 #let cell(v, size: 11pt) = box(
@@ -53,20 +59,39 @@
 
 // ── per-kind captions: human title + ground-truth program ─────────────────────
 #let info = (
-  physics:      ("Physics — a body moves",            "(step v d)"),
-  desire:       ("True belief — seek a goal",              "(optimize (neg_dist gv) av)"),
-  overlay:      ("Overlay — motion blur",             "(fork (step v d) overlay)"),
-  registration: ("Registration — snap one object",    "(sync_to_world v)"),
-  belief:       ("False belief — act on a stale map",
+  // minds-free substrate
+  physics:      ("Physics — a body moves",                 "(step v d)"),
+  desire:       ("Desire — seek a goal (true belief)",     "(optimize (neg_dist gv) av)"),
+  // independent extension: fork / sync without belief
+  overlay:      ("Overlay — motion-blur trail",            "(fork (step v d) overlay)"),
+  comet:        ("Comet — fork with a seek derive",
+                 "(fork (optimize (neg_dist gv) av) overlay)"),
+  registration: ("Registration — snap one object",         "(sync_to_world v)"),
+  // belief — the five theory-of-mind variants (all kind='belief' in the corpus)
+  belief_wall:  ("False belief — detour round an invisible wall",
                  "(fork (compose (wall_at r c) (optimize (neg_dist gv) av)) (sync_to_world av))"),
-  flee:         ("Flee — avoid a hazard",             "(optimize (distance hv) av)"),
-  deletion:     ("Deletion — punch one hole",         "(clear_at r c)"),
-  denoise:      ("Denoise — drop a noise value",      "(erase nv)"),
-  perception:   ("Perception — record into the map",  "(sync_to_model v)"),
-  multi_reg:    ("Multi-registration — snap all",     "sync_all"),
-  reg_except:   ("Registration-except — all but one", "(sync_except a)"),
-  inpaint:      ("Inpainting — fill holes, keep pixels", "underlay"),
-  readout:      ("Readout — report the model",        "snd_gg"),
+  belief_witness: ("Witness belief — a bystander crosses the phantom wall",
+                 "(compose (fork (compose (wall_at r c) (optimize (neg_dist gv) av)) (sync_to_world av)) (optimize (neg_dist gw) aw))"),
+  belief_goal:  ("Goal displacement — Sally-Anne",
+                 "(fork (seq (step gv d) (optimize (neg_dist gv) av)) (sync_to_world av))"),
+  belief_false_obstacle: ("False obstacle — wrong about wall AND goal",
+                 "(fork (seq (clear_at Wr) (wall_at Wb) (step gv d) (optimize (neg_dist gv) av)) (sync_to_world av))"),
+  belief_dual:  ("Dual belief — two contradictory false beliefs",
+                 "two fork(policy, sync_to_world av_i) blocks"),
+  // symmetric corners — one minds-free task per cube axis
+  flee:         ("Flee — avoid the nearest hazard",        "(optimize (distance hv) av)"),
+  deletion:     ("Deletion — punch one hole",              "(clear_at r c)"),
+  denoise:      ("Denoise — drop a noise value",           "(erase nv)"),
+  obstacle:     ("Obstacle — detour round a REAL wall",
+                 "(compose (wall_at r c) (optimize (neg_dist gv) av))"),
+  relocate:     ("Relocation — a real wall jumps cell",
+                 "(compose (clear_at r c) (wall_at r' c'))"),
+  underlay:     ("Underlay — world-wins motion trail",     "(fork (step v d) underlay)"),
+  perception:   ("Perception — record into the model",     "(sync_to_model v)"),
+  multi_reg:    ("Multi-registration — snap all",          "sync_all"),
+  reg_except:   ("Registration-except — all but one",      "(sync_except a)"),
+  inpaint:      ("Inpainting — fill holes, keep pixels",   "underlay"),
+  readout:      ("Readout — report the model",             "snd_gg"),
 )
 
 // The built-in caption for a sample: bold title + [kind], ground-truth program,
@@ -131,12 +156,14 @@
 
 // Everything, grouped and titled by role — for the appendix.
 #let groups = (
-  ("Minds-free substrate",                           ("physics", "desire")),
-  ("Independent extension — fork / sync, no belief", ("overlay", "registration")),
-  ("Belief — theory of mind",                        ("belief",)),
+  ("Minds-free substrate",                                 ("physics", "desire")),
+  ("Independent extension — fork / sync, no belief",       ("overlay", "comet", "registration")),
+  ("Belief — theory of mind",
+   ("belief_wall", "belief_witness", "belief_goal",
+    "belief_false_obstacle", "belief_dual")),
   ("Symmetric corners — one minds-free task per cube axis",
-   ("flee", "deletion", "denoise", "perception",
-    "multi_reg", "reg_except", "inpaint", "readout")),
+   ("flee", "deletion", "denoise", "obstacle", "relocate", "underlay",
+    "perception", "multi_reg", "reg_except", "inpaint", "readout")),
 )
 
 // All families as a flat sequence (no group headings), each with its own caption,

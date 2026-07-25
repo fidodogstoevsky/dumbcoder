@@ -37,7 +37,6 @@ while a bespoke non-mental schedule never does.  Round 0 is the base-primitive c
 Writes corpus_dl[.decomposed].json and corpus_dl.png/.pdf.
 """
 
-import os
 import sys
 import json
 import math
@@ -47,7 +46,7 @@ import numpy as np
 import torch as th
 
 from ecd import (
-    Deltas, saturate_stitch, rewrite_through_library, tr, normalize, simplify,
+    Deltas, saturate_stitch, rewrite_through_library, tr,
 )
 from prims import make_symmetric_prims
 from experiment import provenance_line

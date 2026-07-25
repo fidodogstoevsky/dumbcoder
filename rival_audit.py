@@ -7,10 +7,10 @@ import sys
 sys.path.insert(0, '/Users/gidonkaminer/Documents/mol/s26/dumbcoder')
 import numpy as np
 
-from dsl import (RIGHT, LEFT, UP, DOWN, compose, step, optimize, neg_distance,
+from dsl import (RIGHT, DOWN, compose, step, optimize, neg_distance,
                  distance, wall_at, clear_at, erase, unfold, fork, sync_to_world,
-                 sync_all, sync_except, snd_gg)
-from tasks import (make_physics_tasks, make_desire_tasks, make_belief_tasks,
+                 snd_gg)
+from tasks import (make_belief_tasks,
                    make_witness_belief_tasks, make_goal_displacement_tasks,
                    make_dual_belief_tasks, make_false_obstacle_belief_tasks,
                    COMBOS, belief_variant)

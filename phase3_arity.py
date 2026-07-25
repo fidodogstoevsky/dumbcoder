@@ -77,8 +77,7 @@ from ecd import (
     _worker_init, _n_cpus_available, dream, dreamed_q,
 )
 from dsl import (
-    fn, util, direction, cellvalue, fn_p_g, fn_g_s, fn_s_s, fn_s_g,
-    RIGHT, LEFT, UP, DOWN,
+    fn, direction, cellvalue, fn_s_s,
     fork, sync_to_world, overlay, compose, step, optimize, neg_distance, wall_at,
     unfold, tr, simplify,
     # stack calculus (the arity generalization)

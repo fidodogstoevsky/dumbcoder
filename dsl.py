@@ -354,15 +354,6 @@ def register(loc, plc):
         return plc(w, loc(m))
     return _c
 
-def sync_decomposed(v):
-    "the decomposition identity (for checks): == sync_to_world(v)"
-    def _c(p):
-        w, m = p
-        if not len(np.argwhere(w == v)):
-            return w.copy()
-        return place(v)(w, locate(v)(m))
-    return _c
-
 # ── symmetric complements (file16 — the "cube") ─────────────────────────────────
 # Every commit/combinator above bakes in a *choice* that belief happens to want:
 # sync_to_world reads the coordinate off the MODEL, writes it into the WORLD,

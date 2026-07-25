@@ -1,5 +1,7 @@
 #import "@preview/illc-mol-thesis:0.2.0": *
 
+#import "viz.typ": task-figure, all-tasks
+
 #let terminal(body) = block(
   fill: black,
   inset: 10pt,
@@ -23,6 +25,7 @@
   #set text(font: "DejaVu Sans Mono", size: 9pt)
   #it
 ]
+
 
 #mol-chapter("Results and Discussion")
 
@@ -98,10 +101,33 @@ fn_11  [fn, fn_p_g] -> fn
 body: (pipe_gpg (compose_gp dup (mapsnd $0)) $1)"
 )
 
+== The structure of theory of mind
+
+explain the structure of ToM, of the agency signature, of belief attribution
+
+belief is a function that takes a proposition and an agent
+
+```lisp
+fn_0 = (fork (compose (wall_at $3 $2) (optimize (neg_dist $1) $0))
+             (sync_to_world $0))
+```
+
+in which the agent value `$0` appears twice. once in the policy that plans over the private, phantom-walled grid built by `derive`, and again in the `sync_to_world` commit that writes the result back to the world.
+
+Nothing in the grammar forced those two argument slots to be filled by the same value. The fact that they collapse into one shared hole is the structural signature of agency, of an agent acting on its own model of the world. This signature is discovered by the description-length objective, it's not stipulated by a primitive. 
+
+Dennet on intentionality: it's not a specific structure of "belief", rather just something that plays that role
+
+== Scaffolding
+
+Piaget's theory of stages of cognitive development [CITE]
+
+Wellman's theory of mind scale [CITE]
+
+show that lower-level solutions to non-mental tasks are building blocks for mental task solutions
 
 
-
-== Data analysis
+== Benefits of concept learning
 
 The guiding motivation of this project is that an intensional theory, attributing a belief to an agent, is the most compressed representation of an agent's behavior. This is obvious, since the agent navigates based on its intensional representation, so a theory that accounts for this will better represent the underlying data generating process. It's certainly possible to describe an agent's movement without attributing a belief to it, but it would be a laborious explanation that accounts for each step in the sequence. And of coruse it doesn't generalize well, it overfits to a specific agent's movement in a particular scene. 
 
@@ -178,67 +204,110 @@ Starting with the atomic library, the abstraction jump occurs at round 2 where w
 
 Rows are the (goal value, agent value) combinations in a task, columns are the invented abstractions added to the library. The count indicates how many solutions use that abstraction. 
 
-#figure(
-  image("agent_tiling.png", width: 100%),
-  caption: [Usage of each abstraction across instances of belief tasks]
-)
+INSERT FIGURE
+// #figure(
+//   image("agent_tiling.png", width: 100%),
+//   caption: [Usage of each abstraction across instances of belief tasks]
+// )
 
 So the belief abstraction generalizes across the (goal, agent) combinations it was trained on.
 
 === Behavioral probe: Passing the false-belief test
 
-The analyses so far are about description length. They show that the intensional program is the shorter account of the data, and the abstraction the loop learns is what makes it short.
+The analyses so far are about description length, showing that the intensional program is the shorter account of the data thanks to the abstraction that makes it easier to express more complex programs. We now show that the system passes the false belief test, reproducing the classic Sally-Anne false-belief setup @wimmer_beliefsabout_nodate. The test simply asks where the system predicts the agent will look. An object is where the agent last saw it, but the agent's belief about its location is now false; a child who attributes belief points to the believed location, while a younger child who cannot yet attribute belief points to the object's true location.
 
-We now 
+We use the goal-displacement family of tasks for this. These tasks depict a value's trajectory that changes direction 90$degree$
 
-But there is a more direct question we can ask of the learned library, the one the developmental literature actually asks of a child. Put the learner in front of a novel false-belief scene and see _where it predicts the agent will look_. This is the classic false-belief setup @wimmer_beliefsabout_nodate, of which the Sally-Anne task is the familiar form: an object is where the agent last saw it, but the agent's belief about its location is now false; a child who attributes belief points to the _believed_ location, while a younger child who cannot yet attribute belief points to the object's _true_ location.
+#task-figure("belief_goal")
 
-We reuse the goal-displacement family for this, because unlike the wall and witness families it lets the two readings come apart _behaviorally_. In a wall-belief scene the transient-wall rival reproduces the entire trajectory (that is exactly why the MDL margin, not behavior, is what separates them there). But in a goal-displacement scene the agent walks to where it believes the goal is — one cell from the true goal, which never moves — so a program that does not represent the agent's belief cannot reproduce the walk. The two readings predict the agent settling on _different cells_. That divergence is the false-belief test.
+, because unlike the wall and witness families it lets the two readings come apart behaviorally. In a wall-belief scene the extensional rival posits a transient wall in the actual world rather than positing a wall in the agent's private believed world. That rival reproduces the entire trajectory, which is why the MDL margin, not behavior, is what separates them there. But in a goal-displacement scene the agent walks to where it believes the goal is (one cell from the true goal, which never moves) so a program that does not represent the agent's belief cannot reproduce the walk. The two readings predict the agent settling on different cells, which is the false-belief test. 
 
-The probe reuses the phase-1 run and re-stitches its solutions to rebuild exactly the library it converged to, the same reconstruction the MDL-margin experiment performs. Nothing is re-enumerated. Onto a _held-out_ scene — drawn from a fresh seed that never entered the run, and checked to be absent from the training corpus — we instantiate the discovered belief compound (the `fork(derive, commit)` abstraction the library reprices belief through) and, as its foil, the shortest program expressible in the same library that does not represent belief. @fig-behavioral-probe shows one such scene.
+The probe reuses the phase 1 run and re-stitches its solutions to rebuild exactly the library of abstractions it converged to (this is the same reconstruction that the MDL-margin experiment performs). Onto a held-out scene (drawn from a fresh seed that never entered the run, and checked to be absent from the training corpus) we instantiate the discovered belief compound (the `fork(derive, commit)` abstraction the library reprices belief through) and, as its foil, the shortest program expressible in the same library. @fig-behavioral-probe shows one such scene.
 
 #figure(
   image("behavioral_probe.png", width: 100%),
   caption: [Behavioral probe on a held-out Sally-Anne scene. The learned belief compound sends the agent to the believed cell (passes); the shortest non-mental program under the same library sends it to the true goal (the naive answer).]
 ) <fig-behavioral-probe>
 
-The learner equipped with the belief compound writes `(fork (fn_1 1 2 (step 2 down)) (sync_to_world 1))` — the discovered `fork(derive, commit)` abstraction applied to a derive that privately displaces the goal and seeks it, committing only the agent's own move back to the world via `sync_to_world` — and its final frame puts the agent on the _believed_ cell, one step past the true goal. It searches where the agent thinks the goal is. The learner restricted to the non-mental fragment writes the shortest thing that fragment can say, plain desire `(optimize (neg_dist 2) 1)`, and its agent walks straight to the _true_ goal. It searches where the goal really is. Across all 24 held-out scenes the split is clean: the belief compound lands on the believed cell every time, the shortest non-mental program on the true cell every time.
+With `fn_1` as the abstraction
 
-Note that here the non-mental program is _shorter_ than the intensional one (7.9 nats against 20.5), which is the opposite of the MDL-margin result — and this is the point. The two figures are complementary. Where the transient-wall rival reproduces the scene, it does so only at a longer description length, so MDL rules it out; where the pure-desire rival is cheaper, it does so only by predicting the wrong behavior, so the data rule it out. There is no non-mental program that is both as short and as accurate as the belief compound. The naive reading is available and even parsimonious, exactly as it is for a three-year-old, but it fails the test. A learner that has compressed its experience into a belief compound passes the false-belief task; a learner confined to the non-mental fragment fails it in the specific way the developmental literature documents — predicting the true location rather than the believed one. The abstraction the loop discovers for the sake of compression turns out to be the very thing that licenses the mentalistic prediction.
+```lisp
+(compose
+  (optimize (neg_dist #1) #0)
+  #2)```
+
+The learner equipped with the belief compound writes the program
+
+```lisp
+(fork
+  (fn_1 1 2 (step 2 down)) 
+  (sync_to_world 1))```
+
+Which is normalized as
+
+```lisp
+(fork
+  (compose
+    (optimize (neg_dist 2) 1)
+     (step 2 down))
+  (sync_to_world 1))```
+
+the discovered `fork(derive, commit)` abstraction applied to a derive that privately displaces the goal and seeks it, committing only the agent's own move back to the world via `sync_to_world`. Its final frame puts the agent on the believed cell, one step past the true goal. It searches where the agent thinks the goal is. The learner restricted to the non-mental fragment writes the shortest thing that fragment can say, plain desire `(optimize (neg_dist 2) 1)`, and its agent walks straight to the true goal, where the goal really is. Across all 24 held-out scenes the belief compound lands on the believed cell every time, the shortest non-mental program on the true cell every time.
+
+Note that here the non-mental program is shorter than the intensional one (7.9 nats against 20.5), which is the opposite of the MDL-margin result, and this is the point. Where the transient-wall rival reproduces the scene, it does so only at a longer description length, so MDL rules it out. Where the pure-desire rival is cheaper, it does so only by predicting the wrong behavior, so the data rule it out. There is no non-mental program that is both as short and as accurate as the belief compound. The naive reading is available and parsimonious but it fails the test. A learner that has compressed its experience into a belief compound passes the false-belief task. a learner confined to the non-mental fragment fails by predicting the true location rather than the believed one. The abstraction the loop discovers for the sake of compression what licenses the mentalistic prediction.
 
 == Ablation experiments
 
 === Silo vs joint stitch
 
-compress belief solutions alone vs pooled with the non-mental corpus. Is the constructor still found, and at what DL? Quantifies the file-16 claim that belief is an MDL win, not a silo artefact.
+compress belief solutions alone vs pooled with the non-mental corpus. Is the constructor still found, and at what DL?
 
 *Plot*: library-DL and constructor-invention bar pairs.
 
 === Corpus-mix dose-response
 
-vary the non-mental fraction (0%, 25%, 50%, …); measure constructor invention and belief solve rate. Shows the non-mental tasks are load-bearing for the discovery, i.e. domain-generality is doing work.
+vary the non-mental fraction (0%, 25%, 50%, …); measure constructor invention and belief solve rate. Shows the non-belief tasks are the scaffolding that gets us to abstract belief
 
 *Plot*: solve rate / invention frequency vs mix.
 
 === Budget dose-response
 
---t-fn at 600/1200/2400 s; belief solve rate per variant. Supports "the 45 misses are budget-bound, not representational."
+--t-fn at 600/1200/2400 s; belief solve rate per variant. Supports argument that misses are budget-bound, not due to representational limitation
 
 *Plot*: solve rate vs budget, per variant (dual should be the steepest riser).
 
 === Dreaming ablation
 
---no-dream vs dreamed Q: cumulative solves vs wall-clock. Round 3-vs-4 in your log already hints the dreamed Q matters; make it a curve.
+--no-dream vs dreamed Q: cumulative solves vs wall-clock. Round 3-vs-4 in the log already hints the dreamed Q matters.
 
-=== Curriculum ablation
+*plot* a curve that shows Q bias contribution
 
-with/without the 24 scaffold tasks: rounds-to-constructor and final belief coverage. Preempts "you seeded the abstraction."
+=== curriculum ablation
+
+remove certain tasks, show that low-level abstractions don't get abstracted and then that prevents us from reaching high level abstractions
 
 === Seed robustness
 
-5 corpus seeds $times$ the main run; report every verdict metric as k/5 with solve-rate error bars. Cheap on the cluster, transforms every claim from anecdote to statistic.
+5 corpus seeds $times$ the main run; report every verdict metric as k/5 with solve-rate error bars
 
-== Discussion
+== Discussion and rebuttals
+
+
+question: to what extent is the ToM already present in the input data and DSL and structure
+
+potential argument: `fork` and `sync_to_world` are just decomposed `believes`. By your definition you'be we've been using from the literature, ToM/mentalizing is to be able to attribute a belief to an agent. A belief is an intensional state, a grid representation that may differ from the world. So `fork(derive, commit)` is already belief attribution, you've just broken it apart into components and now they're put back together.
+
+Responses: 
+1. `fork` and `sync` have non-mental uses, and they're often used independently of each other to solve other things, so they're general-purpose
+2. there are also lots of other primitives that are the duals (cube axis), and those don't get selected
+
+cube of symmetric complements, and general pair interface (`overlay`, `registration`) that stops `fork`/`sync` from being a disguised `believe`. 
+
+potential argument: the `fork` primitive smuggles in ToM because creating a copy of the world grid is a representational capacity
+
+response: ToM isn't just the representational capacity. creating a copy of the world that differs from it is just counterfactual reasoning, the what-if ability. it's super domain-general. infants have been shown to have it, disjunctive reasoning. The ToM is an abstraction that _uses_ this domain-general counterfactual representaion capacity to attribute a counterfactual world to a particular agent - that this modified world is _that agent's_ world. 
+
+potential argument: `optimize` is basically ToM because BFS navigation requires the agent to recognize a 
 
 out of the full 2×2×… cube of channel-direction / channel-target / z-order / scope variants, joint MDL still selects exactly the read-model→write-world, single-av corner for belief, and leaves the symmetric variants attached to their non-mental tasks.
 
@@ -254,56 +323,5 @@ generality by reuse is what shows it
 2. the library is also initialized with symmetric primitives to the ones used in the belief abstraction
 
 so it's a domain-general library that the search happened to recruit for belief. 
-
-== vs. real world
-
-obviously this isn't how an infant learns theory of mind
-
-I'm missing the _self_. I'm focusing on learning to distinguish between different entities in the domain, but not an infant learning to distinguish others from itself. For example, if I bite myself it hurts, but if I bite someone else it doesn't. maybe pain occurs only if I bite this but not that (extensional). or we have different states, different experiences, and sometimes someone else can be experiencing pain even when I'm not. 
-
-I'm missing the scale. I'm focusing on a narrow timescale. in real infants this would unfold over a long time scale. 
-
-== setup
-
-to what extent is the ToM already present in the input data and DSL and structure
-
-== Further work
-
-=== Polymorphism
-
-I'm using a simply-typed monomorphic type system, used only to prune enumeration. product-category composers. No generic composer. They constrain which wirings are legal, not what the program must prove. So I could further do dependent types, types as search constraint. Our product-category typing (dup/mapsnd/compose_gp, the fn_p_g discipline) is monomorphic. Dependent types are the limit case where the type carries enough information to make the I/O examples redundant. Then the MDL-over-examples approach is what you do when you can't or won't encode the spec as a type, when the spec is a behavior to be discovered, as it is for a cognitive concept like belief. Belief is precisely the kind of concept you can't hand-write a dependent type for, since it would be so conmplicated. So it makes more sense to just have it be discovered.
-
-
-DreamCoder uses polymorphic request types, so unification can rule out ill-typed branches early. But since our DSL has only $tilde$30 primitives our bottleneck isn't branching factor, so monomorphic dict lookup is sufficient. 
-
-The product-category combinator family in our type system is
-
-`
-dup_g       : grid -> pair_gg
-mapsnd      : fn   -> fn_p_p
-compose_gp  : fn_g_p, fn_p_p -> fn_g_p
-pipe_gpg    : fn_g_p, fn_p_g -> fn
-`
-
-which are just the pair-grounded instantiation of universal categorical combinators
-
-- `dup     : a -> pair a a` (the diagonal $triangle$)
-- `mapsnd  : (b -> c) -> pair a b -> pair a c` (the bifunctor 'second')
-- `compose : (b -> c) -> (a -> b) -> (a -> c)`
-
-so if we had polymorphism we could collapse the above family into one `compose`.
-
-With monomorphic types, a stitch abstraction discovered at type `grid` can only be reused at `grid`. With polymorphism, an abstraction abstracted over $forall a$ can be reused across instantiations of any type $a$. Phase 3 hand-engineers this witht eh cons/nil stack leaving arity as a free parameter. If we had polymorphism it would just fall out of the type discipline. 
-
-The decomposition is polymorphic in principle. Our monomorphic primitives are the ground instances at `a = grid`. So belief _can_ be assembled from standard categorical combinators.
-
-To do something like that, we'd replace bare string types with a small ADT:
-
-- ground `('con', 'grid', [])`
-- variable `('var', 'a')`
-- applied `('con', 'pair', [t1, t2])`
-- arrows `(args, ret)`
-
-We'd implement Robinson unification 
 
 #load-bib(read("chapter1.bib") + read("chapter2.bib"))

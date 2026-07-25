@@ -1,7 +1,7 @@
 {
  "decomposed": false,
  "smoke": true,
- "n_solved": 58,
+ "n_solved": 60,
  "n_total": 100,
  "stitch_iters": 3,
  "ecd_iters": 2,
@@ -49,7 +49,7 @@
   "desire": 8,
   "overlay": 2,
   "comet": 2,
-  "belief": 6,
+  "belief": 8,
   "deletion": 2,
   "denoise": 2,
   "underlay": 2,
@@ -132,7 +132,7 @@
   "readout": []
  },
  "belief_commit": {
-  "literal": 5,
+  "literal": 8,
   "degenerate": 0,
   "complement": 0
  },
@@ -145,9 +145,9 @@
    "complement": 0
   },
   "belief_goal": {
-   "solved": 6,
+   "solved": 8,
    "total": 16,
-   "literal": 5,
+   "literal": 8,
    "degenerate": 0,
    "complement": 0
   },
@@ -200,8 +200,8 @@
     "overlay": 2
    },
    "comet": {
-    "overlay": 2,
-    "neg_dist": 2
+    "neg_dist": 2,
+    "overlay": 2
    },
    "deletion": {
     "clear_at": 2
@@ -217,8 +217,8 @@
     "wall_at": 16
    },
    "relocate": {
-    "wall_at": 4,
-    "clear_at": 4
+    "clear_at": 4,
+    "wall_at": 4
    },
    "registration": {
     "sync_to_world": 2
@@ -316,8 +316,7 @@
    "fn_4": 2
   },
   "belief": {
-   "fn_3": 6,
-   "fn_4": 1
+   "fn_3": 8
   },
   "deletion": {
    "(bare prims)": 2
@@ -373,12 +372,12 @@
     "saved_total": 1.38629150390625
    },
    "belief": {
-    "n": 6,
-    "dl_base_median": 24.306785583496094,
-    "dl_lib_median": 6.907755374908447,
-    "saved_median": 17.399030208587646,
-    "saved_mean": 23.314231872558594,
-    "saved_total": 139.88539123535156
+    "n": 8,
+    "dl_base_median": 41.01266860961914,
+    "dl_lib_median": 14.914122819900513,
+    "saved_median": 26.098545789718628,
+    "saved_mean": 28.27342462539673,
+    "saved_total": 226.18739700317383
    },
    "deletion": {
     "n": 2,
@@ -463,19 +462,38 @@
   },
   "belief_by_variant": {
    "belief_goal": {
-    "n": 6,
-    "dl_base_median": 24.306785583496094,
-    "dl_lib_median": 6.907755374908447,
-    "saved_median": 17.399030208587646,
-    "saved_mean": 23.314231872558594,
-    "saved_total": 139.88539123535156
+    "n": 8,
+    "dl_base_median": 41.01266860961914,
+    "dl_lib_median": 14.914122819900513,
+    "saved_median": 26.098545789718628,
+    "saved_mean": 28.27342462539673,
+    "saved_total": 226.18739700317383
    }
   },
   "nonmental_saved_median": 0.0,
-  "n_belief_using_ctor": 6
+  "n_belief_using_ctor": 8
  },
- "mdl_margin": null,
- "mdl_margin_note": "no mdl_margins.json yet \u2014 run `python mdl_margin.py --smoke` to price belief against its rivals",
+ "mdl_margin": {
+  "by_variant": {
+   "belief_goal": {
+    "n_tasks": 4,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   }
+  },
+  "n_competitor_pairs": 0,
+  "pct_competitors_longer": null,
+  "n_competitors_shorter": 0,
+  "n_excluded_shorter": 0,
+  "n_action_right_scene_wrong": 0,
+  "margin_lib_median": null,
+  "margin_lib_min": null
+ },
+ "mdl_margin_note": "STALE: mdl_margins.json was priced from a run older than this one; re-run mdl_margin.py to price THIS library",
  "constructor_found": true,
  "constructor_shared": true,
  "belief_uses_ctor": true,
@@ -486,12 +504,12 @@
  "ok": false,
  "provenance": {
   "git": {
-   "commit": "a0be18821b1eb06c81bdb095897fa8a6fecb2052",
-   "commit_short": "a0be188",
+   "commit": "aa37df181ee852d2d21c374299f374cc2ccfbf2c",
+   "commit_short": "aa37df1",
    "branch": "master",
    "dirty": true
   },
-  "timestamp": "2026-07-24T16:36:39Z",
+  "timestamp": "2026-07-19T09:29:56Z",
   "host": "eduvpn-uva-stu-145-3-16-66.vpn.uva.nl",
   "python": "3.12.7",
   "argv": "phase1.py --smoke",
@@ -543,6 +561,6 @@
    "belief_fob": 25,
    "relocate": 26
   },
-  "repro": "commit a0be188+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-24T16:36:39Z"
+  "repro": "commit aa37df1+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-19T09:29:56Z"
  }
 }

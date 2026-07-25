@@ -12,7 +12,7 @@ Ground truth lives in three files, and every entry below is drawn from them:
 | Source | Contents |
 |---|---|
 | [`prims.py`](prims.py) | The three primitive *sets* handed to the searcher, per phase. |
-| [`tasks.py`](tasks.py) | All task generators (one bag) + necessity filters + `COMBOS` / `SIZE` / `DIRS`. Distinguished only by each task's `kind`; the §4.1/§4.2/§4.3 groupings below are expository, not a code boundary. |
+| [`tasks.py`](tasks.py) | All task generators (one undifferentiated bag) + necessity filters + `COMBOS` / `SIZE` / `DIRS`. A task carries only its own `kind`; the only structural split is root type (§4). |
 | [`dsl.py`](dsl.py) | The primitive implementations, types, and interpreters. |
 
 ---
@@ -134,11 +134,11 @@ is the agency signature the compression step is meant to surface.
 
 ### 3.3 The cube — symmetric complements (`make_symmetric_prims`, Phases 1 & 2)
 
-`make_core_prims` + the **other corner** of eight independent symmetry axes. None help
-a theory-of-mind task; each is the natural tool for some minds-free family (§4). The
-claim is that joint MDL *still* selects the (read-model, write-world, single-`av`)
-corner for belief while every complement attaches to its own non-mental family — so
-the agency signature is **discovered, not gerrymandered** into the primitive set.
+`make_core_prims` + the **other corner** of eight independent symmetry axes. None is
+belief's corner; each is the natural tool for some other family (§4). The claim is that
+joint MDL *still* selects the (read-model, write-world, single-`av`) corner for belief
+while every complement attaches to its own family — so the agency signature is
+**discovered, not gerrymandered** into the primitive set.
 
 | axis | belief's corner | complement(s) — repr : signature — semantics |
 |---|---|---|
@@ -241,16 +241,27 @@ diagnostic runs but is not a headline phase.
 
 ## 4. Task catalogue
 
-Tasks are `(trajectory, metadata)` pairs. Below, each family gives its **kind** (the
-metadata label used by the verdict), **root type**, the **ground-truth program**, what
-it **probes**, its **necessity filter(s)**, and its **count** (per-combo counts
-multiply by `len(COMBOS)=8`; see §4.5 for the smoke/full knobs). Programs are shown
-in the `optimize (neg_dist gv) av` seek shorthand.
+Tasks are `(trajectory, metadata)` pairs, and the corpus is **one undifferentiated
+bag**: every task carries only its own `kind` (`physics`, `desire`, `belief`,
+`overlay`, `registration`, …) — no "mental / minds-free" tag, no "scaffold / distractor"
+tag. Any such grouping is an *interpretation read off a run's results* (which families
+the invented agent constructor ends up serving; which tasks turn out to have seeded the
+abstractions that bring a deeper family into reach), never a property stamped on a task
+before the run. The **only** structural distinction is technical: a task's **root
+type** selects the interpreter that runs it (§*Two interpreters, two root types*)
+because one enumeration budget walk can produce only one arrow. The catalogue is
+organised by root type and, within that, is a flat list of families.
 
-### 4.1 Minds families (`tasks.py`)
+Each entry gives its **kind**, **root type**, the **ground-truth program**, what it
+**probes**, its **necessity filter(s)**, and its **count** (per-combo counts multiply
+by `len(COMBOS)=8`; see §4.3 for the smoke/full knobs). Programs are shown in the
+`optimize (neg_dist gv) av` seek shorthand.
 
-All are reported under `kind='belief'` except `physics` and `desire`;
-`belief_variant(m)` assigns the fine label.
+### 4.1 `fn`-rooted families (`tasks.py`, root `fn`)
+
+Threaded through `unfold` as a `grid→grid` per-frame transition. The five belief
+generators all emit under a single `kind='belief'`, with `belief_variant(m)` recovering
+the fine label; every other family here carries its own `kind`.
 
 #### `physics` — the fixed-transition warm-up
 - **root** `fn` · **count** `n_phys` (flat)
@@ -264,6 +275,14 @@ All are reported under `kind='belief'` except `physics` and `desire`;
 - **probes** goal-directed motion **without** a private model — the "wanting, not
   believing" baseline; supplies the `optimize`/`neg_dist` policy that belief reuses.
 - **filter** generated straight through `unfold`; distinct from belief by having no wall/fork.
+
+Two corpus facts about the `belief` family: in a cube run `belief_witness` stands in for
+the shallower `belief_wall` (the cube's `clear_at` lets a transient-wall rival mimic
+single-agent belief, so the witness scene is what keeps the private-copy `fork` the
+unique explanation); the `--plain-belief` diagnostic keeps `belief_wall`. And a cube
+*curriculum* run additionally emits a second, distinct-seeded batch of plain
+`belief_wall` tasks (`n_bel//2` per combo) — still ordinary `kind='belief'` with no
+distinguishing label.
 
 #### `belief_wall` — false belief about an invisible obstacle
 - **root** `fn` · **count** `n_bel` per combo (used in `--no-cube` / `--plain-belief`; see witness below)
@@ -316,7 +335,6 @@ All are reported under `kind='belief'` except `physics` and `desire`;
 - **filters** `_physically_explainable`, `_scope_complements_all_fail` (no
   `sync_all`/`sync_except` reproduces it), `_false_obstacle_rival_explainable`
   (no transient-wall / alt-derive rival), `_compose_rival_explainable`.
-- **seeded by** the `relocation` scaffold (§4.4).
 
 #### `belief_dual` — two agents, contradictory false beliefs
 - **root** `fn` · **count** `n_belvar` per combo
@@ -328,11 +346,6 @@ All are reported under `kind='belief'` except `physics` and `desire`;
   the arity/composition frontier; do not delete.
 - **filters** `_dual_rival_explainable`, `_compose_rival_explainable`.
 
-### 4.2 Minds-free families — fork-rooted (`tasks.py`, root `fn`)
-
-These populate the pair interface from the **producer** side and give each cube corner
-genuine non-mental work.
-
 #### `overlay` — motion-blur trail
 - **program** `fork( step v d, overlay )` — a moving object leaves a union trail.
 - **probes** `fork` with a non-mental commit (`overlay`), and the fixed-`step` derive.
@@ -342,8 +355,7 @@ genuine non-mental work.
 - **program** `fork( optimize(neg_dist gv) av, overlay )` — a goal-seeker leaves a bent
   comet trail as it approaches an off-axis goal.
 - **probes** that `fork`'s derive slot is a **general `fn`** (desire's utility policy,
-  not just `step`) — the same motion-blur wrapper carrying a mental-looking policy in a
-  minds-free task.
+  not just `step`) — the same motion-blur wrapper carrying a seek policy.
 - **filter** `_overlay_trail_explainable` (the seek-bend rules out any fixed step-trail),
   `_physically_explainable`.
 
@@ -365,29 +377,22 @@ genuine non-mental work.
 - **probes** the `underlay` corner via a *fork* task (so the fork-producer side
   populates **both** z-order corners, not only the template-rooted inpainting task).
 
-#### `obstacle` — the wall policy, **densest corner** (curriculum)
-- **root** `fn` · **count** `n_obstacle` per combo (**~3× the other corners**)
+#### `obstacle` — real-obstacle detour
+- **root** `fn` · **count** `n_obstacle` per combo (heavier than the other corners — §4.3)
 - **program** `compose( wall_at r c, optimize(neg_dist gv) av )` — a **real** obstacle
   makes a goal-seeker detour; no private model, no fork, no sync.
-- **probes / role** its solution **is belief's derive (policy)**. Made the densest
-  corner so this 4-hole compound recurs enough to hold a top-`stitch_iters` abstraction
-  slot; once it is a cheap token, belief's first-solve drops and only the fork∧sync
-  agency wrapper is left unique to belief.
+- **probes** the `wall_at` grid-edit corner exercised inside a goal-seeking policy.
 - **filters** `_physically_explainable` (the wall detour must be required).
 
-#### `relocation` — grid-edit "move" corner (curriculum)
-- **root** `fn` · **count** `n_relocate` (flat, heavy)
+#### `relocation` — grid-edit "move" corner
+- **root** `fn` · **count** `n_relocate` (flat, heavier than the other corners — §4.3)
 - **program** `compose( clear_at r1 c1, wall_at r2 c2 )` — a real wall jumps ≥2 cells in
   one frame, then the scene is static; bystanders stay put.
-- **probes / role** the "move" grid-edit corner (compound of remove + add) and, like
-  obstacle, **curriculum**: this fragment is exactly the *derive prefix* of
-  false-obstacle belief (clear real wall ▸ stamp phantom), which prices ~14 nats past
-  the search frontier at primitive cost. Making it recur in solved non-mental tasks lets
-  the joint stitch abstract it into one token and pull **fob** inside reach.
+- **probes** the "move" grid-edit corner (a compound of remove + add).
 - **filters** jump ≥ 2 cells (a 1-cell jump is a plain `step 3 d`); `T=3` idempotent
   (kills drift rivals); `_step_or_erase_reproduces`, `_physically_explainable`.
 
-### 4.3 Minds-free families — template-rooted (`tasks.py`, root `fn_p_g`)
+### 4.2 `fn_p_g`-rooted families — template (`tasks.py`, root `fn_p_g`)
 
 These run through `unfold_with_template`: each frame is paired with a **given external**
 template, so a program using `sync_to_world` here is doing image **registration**, not
@@ -396,32 +401,14 @@ the *unique cheapest* atomic `fn_p_g` corner reproducing the frame.
 
 | family | commit (program) | probes / corner |
 |---|---|---|
-| `registration` | `sync_to_world v` | snap **one** named object onto the template — the sync commit in a non-mental context |
+| `registration` | `sync_to_world v` | snap **one** named object onto the template — the sync commit doing image alignment, not belief |
 | `perception` | `sync_to_model v` | the **direction** complement — record a sensation into the private channel |
 | `multi_registration` | `sync_all` | the **scope** complement — wholesale multi-object alignment |
 | `registration_except` | `sync_except v` | the **scope** complement — align all but one anchor |
 | `inpainting` | `underlay` | the **z-order** complement — the template only fills holes |
 | `readout` | `snd_gg` | the **projection** complement — return the template channel |
 
-### 4.4 Curriculum scaffolds
-
-Deep families are out of budget on a first solve even once their *parts* are cheap.
-Three ordinary task batches seed the abstractions that pull the deep families into
-reach — no batch carries a special "scaffold" label; each is just its own `kind`, and
-*which* tasks ended up doing the seeding is read off a run's results, not stipulated:
-
-| batch | seeds | mechanism |
-|---|---|---|
-| `obstacle` (§4.2, densest) | the **wall policy** token | makes `compose(wall_at, optimize(neg_dist))` recur so stitch abstracts it → belief's first-solve drops |
-| `relocation` (§4.2, heavy) | the **clear▸stamp** token | makes the fob derive-prefix recur → false-obstacle belief comes into reach |
-| extra wall-belief (`kind='belief'`, distinct seed) | the **`fork(policy, sync)` token** | a second batch of plain single-agent belief (`n_bel//2` per combo), emitted as ordinary `belief_wall` tasks; once solved, `fork(policy, sync)` recurs across combos → deep `belief_witness = compose(<token>, seek)` becomes reachable |
-
-The extra wall-belief batch is not tagged or held out: it lands in the corpus as
-`kind='belief'` (variant `belief_wall`) like any other wall-belief task. The headline
-claim still rests only on the witness tasks, where the transient-wall rival is excluded
-by construction.
-
-### 4.5 Count knobs (`run_phase` in `experiment.py`)
+### 4.3 Count knobs (`run_phase` in `experiment.py`)
 
 | knob | smoke | full | applies to | per-combo? |
 |---|---|---|---|---|
@@ -430,12 +417,19 @@ by construction.
 | `n_ov` | 2 | 4 | overlay | flat |
 | `n_comet` | 2 | 4 | comet | flat |
 | `n_reg` | 2 | 4 | registration | flat |
-| `n_bel` | 1 | 6 | belief (witness/wall) + scaffold (`n_bel//2`) | ✓ (×8) |
+| `n_bel` | 1 | 6 | belief (witness/wall) + the extra `belief_wall` batch (`n_bel//2`) | ✓ (×8) |
 | `n_belvar` | 1 | 3 | dual, false-obstacle | ✓ (×8) |
 | `n_goal` | 2 | 6 | goal-displacement | ✓ (×8) |
 | `n_corner` | 2 | 4 | flee, deletion, denoise, underlay, and every template corner | flat |
-| `n_obstacle` | 2 | 6 | obstacle (deliberately dense) | ✓ (×8) |
-| `n_relocate` | 4 | 16 | relocation (deliberately heavy) | flat |
+| `n_obstacle` | 2 | 6 | obstacle | ✓ (×8) |
+| `n_relocate` | 4 | 16 | relocation | flat |
+
+Counts are deliberately **non-uniform** — `obstacle`, `relocation`, and `goal` carry
+several times the mass of the other corners, and `belief_wall` is generated in two
+separate batches. These are quantitative knobs on the one bag; *why* a family's mass or
+seeding matters — whether its solutions recur often enough to be abstracted, and which
+deeper family that in turn brings into reach — is read off a run's results, not asserted
+here, so the non-uniformity is intentional and should not be flattened.
 
 Other run knobs (not corpus sizes): `--t-fn SECONDS` (per-task `fn` timeout — belief is
 the long pole), `t_fn_round1` (round-1 cap so a deep transient-wall rival can't land

@@ -259,8 +259,9 @@ independently-populated calculus, the DSL adds non-mental inhabitants:
   program using `sync_to_world` here is doing image *registration*, not holding a
   belief.
 
-So the `pair_gg` / `fn_p_g` interface is populated from both sides by both mental
-and non-mental families. Belief is one path through a general calculus.
+So the `pair_gg` / `fn_p_g` interface is populated from both sides — by belief and by
+families (overlay, registration) with nothing mental about them. Belief is one path
+through a general calculus.
 
 ### 3.3 The "cube" — symmetric complements
 
@@ -278,12 +279,12 @@ cube (`make_symmetric_prims`) adds all of them, along independent axes:
 | utility | `neg_distance` (attract) | `distance` (flee) |
 | grid-edit | `wall_at` (add) | `clear_at`, `erase` (remove) |
 
-None of these help a theory-of-mind task; each is the natural tool for some
-non-mental one. The experimental claim: joint MDL still selects exactly the
-(read-model, write-world, single-`av`) corner for belief, while every complement
-attaches to *its own* non-mental family — so the agency signature is **discovered**,
-not gerrymandered into the primitive set. (This is why the corpus includes one
-minds-free task *per corner* — an unused distractor would be trivially "avoided".)
+None of these is belief's corner; each is the natural tool for some other family. The
+experimental claim: joint MDL still selects exactly the (read-model, write-world,
+single-`av`) corner for belief, while every complement attaches to *its own* family —
+so the agency signature is **discovered**, not gerrymandered into the primitive set.
+(This is why the corpus includes one task exercising *each corner* — an unused
+complement would be trivially "avoided".)
 
 ### 3.4 Decomposition of `fork` and `sync` (product-category combinators)
 
@@ -303,9 +304,10 @@ grid/pair arrows). Likewise `sync_to_world(v)` factors on the key `v` into
 `register(locate v, place v)` — read a coordinate off one channel, impose it on the
 other. **Phase 2** hands the searcher these decomposed parts and *removes* atomic
 `fork`/`sync`, forcing belief to be **rediscovered** as a deeper compound (now with
-`av` shared *three* ways: `optimize` + `locate` + `place`). The `fork_decomposed` /
-`sync_decomposed` helpers exist to prove the decompositions are numerically
-identical to the atomic versions before search begins.
+`av` shared *three* ways: `optimize` + `locate` + `place`). The `fork_decomposed`
+helper exists to prove the decomposition is numerically identical to the atomic
+version before search begins (with `sync_to_world` factored as `register(locate v,
+place v)`).
 
 ### 3.5 The grid-stack — arity as a free parameter
 
@@ -354,54 +356,41 @@ Tasks are `(trajectory, metadata)` pairs; each family is generated *through the
 real interpreter* with a **necessity check** that the intended program is the unique
 cheapest explanation (so a solution can't be a coincidence of an under-determined
 scene). The exhaustive catalogue — every family's ground-truth program, filter, and
-count — is in [`PRIMITIVES_AND_TASKS.md`](PRIMITIVES_AND_TASKS.md); the summary here:
+count — is in [`PRIMITIVES_AND_TASKS.md`](PRIMITIVES_AND_TASKS.md); the summary here.
 
-All generators live in one module, `tasks.py` — a single undifferentiated bag,
-distinguished only by each task's `kind`. The minds / minds-free grouping below is
-expository (and maps to the thesis chapters), not a code or corpus boundary.
+The corpus is **one undifferentiated bag**. A task carries only its own `kind`
+(`physics`, `desire`, `belief`, `overlay`, `registration`, …) and no higher-level
+label: the system never sorts tasks into "mental", "non-mental", "scaffold", or
+"distractor" classes. Every such grouping is an *interpretation of a run's results* —
+which families the invented agent constructor turns out to serve, and which tasks turn
+out to have seeded the abstractions that brought a deeper family into reach — recovered
+after the fact, never stipulated before. The **only** structural split is technical:
+a task's **root type** decides which interpreter runs it (Section 2.3), because one
+budget walk can produce only one arrow.
 
-- **Minds tasks**, all reported under `kind='belief'` except the
-  first two:
-  - `physics` (a single fixed per-frame transition) and `desire` (utility-driven
-    motion) — the non-mental warm-up families.
-  - `belief_wall` — false-belief detour around an *invisible* wall (`make_belief_tasks`);
-    in a cube run the deeper `belief_witness` (`make_witness_belief_tasks`) replaces
-    it, because the cube's `clear_at` lets a transient-wall rival mimic single-agent
-    belief, and the witness scene makes the private-copy `fork` the unique explanation.
-  - `belief_goal` — goal-displacement (Sally-Anne): the agent walks to where it
-    *believes* an object is (`make_goal_displacement_tasks`), the family whose
-    *content* subtree varies (12 shove shapes) so stitch must keep a content hole.
-  - `belief_false_obstacle` (**fob**) — wrong about *both* obstacle and goal, with a
-    **real** wall (value 3) left in the world; its construction forbids the
-    scope-complement degeneracy, so any solution *must* commit via the literal
-    `sync_to_world(av)` — this is what lets the verdict say the agency commit was
-    *forced*, not merely argued extensionally equivalent (`make_false_obstacle_belief_tasks`).
-  - `belief_dual` — two agents with contradictory false beliefs
-    (`make_dual_belief_tasks`); **not solved in any run** and expressiveness-excluded
-    (Section 5). `belief_variant(m)` assigns these fine labels.
+- **`fn`-rooted** (`unfold`, a `grid→grid` transition): `physics`, `desire`, `belief`
+  (five generators — `make_belief_tasks` / `make_witness_belief_tasks` /
+  `make_goal_displacement_tasks` / `make_false_obstacle_belief_tasks` /
+  `make_dual_belief_tasks`, all emitted under `kind='belief'` with `belief_variant(m)`
+  recovering the fine label), `overlay`, `comet`, `flee`, `deletion`, `denoise`,
+  `underlay`, `obstacle`, `relocation`.
+- **`fn_p_g`-rooted** (`unfold_with_template`, a `pair→grid` commit against a *given*
+  external template): `registration`, `perception`, `multi_registration`,
+  `registration_except`, `inpainting`, `readout`.
 
-  Rejection filters (`_physically_explainable`, `_wall_explainable`,
-  `_displaced_goal_explainable`, `_witness_rival_explainable`,
-  `_false_obstacle_rival_explainable`, `_scope_complements_all_fail`, …) discard
-  scenes reproducible by a cheaper non-belief rival, so the intended program is the
-  *unique* explanation.
+Each family names its own rejection battery (`_physically_explainable`,
+`_wall_explainable`, `_displaced_goal_explainable`, `_witness_rival_explainable`,
+`_false_obstacle_rival_explainable`, `_scope_complements_all_fail`, …); a scene is kept
+only when every cheaper non-target rival fails to reproduce it, so the intended program
+is the *unique* explanation. (`belief_dual` — two agents with contradictory false
+beliefs — is generated but **not solved in any run** and expressiveness-excluded;
+Section 5.)
 
-- **Minds-free tasks** — pair-producers and one task per cube
-  corner, so every complement the cube adds is *useful somewhere*:
-  - fork-rooted (`fn`): `overlay` (motion-blur union), `comet` (fork with a *seek*
-    derive — shows fork's derive slot is a general `fn`), and the cube corners
-    `flee`, `deletion`, `denoise`, `underlay`, `obstacle`, `relocation`.
-  - template-rooted (`fn_p_g`): `registration`, plus corners `perception`,
-    `multi_registration`, `registration_except`, `inpainting`, `readout`.
-  - **Curriculum scaffolds.** `obstacle` (the wall policy, densest corner, `n=6`/combo)
-    and `relocation` (the `clear_at ▸ wall_at` "move" corner, `n=16`) are deliberately
-    heavy: their solutions are exactly the *derive prefixes* of wall-belief and
-    false-obstacle belief, so the joint stitch abstracts them into cheap tokens and
-    pulls those belief families inside the enumerator's reach. A second distinct-seeded
-    batch of plain wall-belief tasks (emitted as ordinary `kind='belief'`, no special
-    label) similarly seeds the `fork(policy, sync)` abstraction so deep witness-belief
-    becomes reachable. Whether a given batch *served* as scaffold is read off results,
-    not stipulated by a tag.
+Two corpus facts a reader should not mistake for labels: some `kind='belief'` tasks are
+generated in a second, distinct-seeded batch, and per-family counts are deliberately
+**non-uniform** (`obstacle` and `relocation` in particular carry several times the mass
+of the other corners). Both are quantitative knobs on the same bag — *why* a family's
+mass or seeding matters is a question the results answer, not one the corpus asserts.
 
 ### 4.3 `run_phase` — one phase of the curriculum (`experiment.py:593`)
 
@@ -409,7 +398,7 @@ expository (and maps to the thesis chapters), not a code or corpus boundary.
 thin wrappers (`decomposed=False` / `True`), and `phase3_arity.py` runs the stack
 variant. A phase:
 
-1. **Generates the mixed corpus** (all minds + minds-free families) and dedupes it.
+1. **Generates the full corpus** (every family, across both root types) and dedupes it.
 2. **Builds the library** (`Deltas(make_symmetric_prims(decomposed=))`) and
    verifies every task's ground-truth program runs; in Phase 2 it first proves the
    decomposition identities.
@@ -425,8 +414,8 @@ variant. A phase:
    completeness mop-up.
 5. **Reports** the verdict: a *usage census* (which family reaches for which
    primitive), whether the joint stitch invented the agent constructor, and whether
-   that constructor is belief-specific (used by belief, absent from the non-mental
-   rewrites).
+   that constructor is belief-specific (used by belief, absent from the other
+   families' rewrites).
 
 Knobs: `--smoke` (fast, tiny corpus), `--samples` (dump/export example
 trajectories), `--ecd-iters N`, `--t-fn SECONDS` (belief is the long pole),
@@ -469,9 +458,9 @@ false-belief uniqueness guarantee for a shallower first solve).
 | `belief_solved.py` | Solve-rate per belief variant (the honest denominator: solved / total). |
 | `solve_dynamics.py` | Cumulative-solve S-curve + per-task solve-time collapse — *when* belief becomes reachable. |
 | `corpus_dl.py` | DreamCoder-style per-round total-DL trajectory — the compression belief buys. |
-| `mdl_margin.py` / `plot_mdl_margin.py` | Prices the found belief compound vs. its non-mental rivals under the final library (nats); the "not almost as short" figure. |
+| `mdl_margin.py` / `plot_mdl_margin.py` | Prices the found belief compound vs. its non-belief rivals under the final library (nats); the "not almost as short" figure. |
 | `agent_tiling.py` | `(gv,av)` × abstraction-used tiling — the win is *one* reused agent constructor, not a per-task fluke. |
-| `behavioral_probe.py` | The false-belief test: on a held-out Sally-Anne scene the belief compound predicts the *believed* cell, the shortest non-mental rival the *true* cell. |
+| `behavioral_probe.py` | The false-belief test: on a held-out Sally-Anne scene the belief compound predicts the *believed* cell, the shortest non-belief rival the *true* cell. |
 | `rival_audit.py` | Diagnostic: replays suspicious caught programs against the corpus to check for rival leaks. |
 
 > **Removed.** `file11.py` / `file12.py` (the earlier `sfn` / `machine` baselines)

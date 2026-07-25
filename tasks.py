@@ -44,20 +44,14 @@ hoped-for stitch discovery is the agent-type constructor:
 Run a phase via `python phase1.py`.
 """
 
-import sys
-import re as _re
-from collections import Counter
-from copy import deepcopy
-
 import numpy as np
 
-from ecd import Deltas, Delta, ECD, normalize, mat_key
 from dsl import (
-    fn, util, direction, fn_p_g,
+    fn, direction, fn_p_g,
     RIGHT, LEFT, UP, DOWN,
     fork, sync_to_world, sync_all, sync_except,
     compose, step, optimize, neg_distance, distance, wall_at, clear_at, erase,
-    unfold, unfold_with_template, tr, simplify,
+    unfold, unfold_with_template, tr,
     overlay, underlay, fst_gg, snd_gg, sync_to_model,   # non-mental fork/pair families
     dup, bimap, compose_gp, pipe_gpg,   # decomposed-fork plumbing (world-channel rival sweep)
 )
@@ -252,8 +246,11 @@ def make_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=8):
       (fork (compose (wall_at pr pc) (optimize (neg_dist gv) av)) (sync_to_world av))
 
     The phantom wall is placed on the true-belief BFS path; scenes are rejected
-    unless the wall actually causes a detour AND the trajectory is not
-    explainable by any single physical program.
+    unless the wall causes a detour that costs *extra* steps over the free-space
+    shortest path (a non-monotone route — a monotone shortest path, even one that
+    differs from the reference optimize tie-break, is reproduced by a plain desire
+    agent and so needs no wall) AND the trajectory is not explainable by any single
+    physical program.
     """
     rng = np.random.default_rng(seed)
     tasks = []
@@ -287,6 +284,16 @@ def make_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=8):
             T = t_arrive + 1
             x = x_full[:T].copy()
             if np.array_equal(x, direct[:T]):     # phantom wall must cause a detour
+                continue
+            if (T - 1) <= abs(ar - gr) + abs(ac - gc):
+                # The detour must cost *extra* steps over the free-space shortest
+                # path.  When the wall merely sits on one of several equally-short
+                # routes, the "detour" is just another monotone shortest path — a
+                # plain desire agent (optimize neg_dist) reproduces it with different
+                # tie-breaking, so the phantom wall carries no explanatory load and
+                # the scene is extensionally a goal task.  Requiring the trajectory
+                # to be strictly longer than the Manhattan distance keeps only walls
+                # that force a genuinely non-monotone detour.
                 continue
             if _physically_explainable(x, g):
                 continue
@@ -900,24 +907,6 @@ def belief_rival_specs(m):
 # Only sync_to_world(av) — the single-value agency commit whose av is shared with the
 # policy — leaves both put.  Solutions here must use the literal commit, so stitch can
 # recover the agency signature as a shared hole.
-
-def _false_obstacle_program(av, gv, real_w, bel_w, dg):
-    """Per-frame transition for a dual false belief (wrong obstacle + wrong goal):
-
-        (fork (_seq (clear_at Wr) (wall_at Wb) (step gv dg)
-                    (optimize (neg_dist gv) av))
-              (sync_to_world av))
-
-    On its private copy the agent erases the real wall Wr, stamps the wall where it
-    (falsely) believes it to be (Wb), shoves the goal one cell toward where it
-    (falsely) believes it sits, then seeks that believed goal around that believed
-    wall — committing only its own move.  The world's real wall and goal never move.
-    """
-    (wr, wc), (br, bc) = real_w, bel_w
-    return fork(_seq(clear_at(wr, wc), wall_at(br, bc), step(gv, dg),
-                     optimize(neg_distance(gv), av)),
-                sync_to_world(av))
-
 
 def _scope_complements_all_fail(x, g, derive, av, world_vals):
     """True iff sync_to_world(av) reproduces x from g under `derive` but NO scope

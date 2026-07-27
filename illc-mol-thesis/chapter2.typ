@@ -4,47 +4,50 @@
 
 == Levels of analysis and reverse engineering
 
-_state that the thesis' claim is computational with ECD as an algorithmic representation_
+Of the three positions surveyed in @perspectives, constructivism (the theory theory) comes closest to accounting for the features of theory of mind (@explanandum) that a theory of its acquisition ought to account for. But it's a mostly descriptive account: it doesn't specify which process does the theory construction, nor by what standards one theory is preferred to another. Without specifics, the nativist can say that no such constructive process exists, that it only looks like construction but is really just maturation of a native system. In this chapter we'll describe a model of a particular constructive process. 
 
+//Without an answer, the nativist can reply that no such process exists, and that what looks like construction is really maturation of something already in place. The strength of that reply is parasitic on the absence of a mechanism, and the business of this chapter is to supply one.
 
-- Marr's levels of analysis
-- computational: what is the thing that the system is doing
-- it's doing bayesian updating. it's finding the simplest theory. 
-- algorithmic: the procedure by which the solution is produced
+We proceed at Marr's computational level of analysis of information-processing systems @marr_vision_2010, in the tradition of "reverse-engineering" the mind @griffiths_bayesian_2024. Whereas in engineering we start from a computational problem and build a system that solves it, in reverse-engineering we start with a system and figure out what computational problem it solves: what information is its input, what results are its output, and what counts as a solution. Then once the problem is stated in these abstract terms we can ask which of the systems we know how to build solve problems of that shape, and then we model the mind as a system of that kind @griffiths_bayesian_2024.
 
-
-We're not studying how a child actually comes to learn theory of mind, that's the realm of developmental and cognitive psychology. 
-
-identify the computational problem that the mind is trying to solve: the problem is find the best explanation. we argue that best is determined logically by bayes' rule. so it's doing bayesian updating. then the algorithmic level is the procedure at which it's produced, ECD
-
-engineering: building AI, building algorithms that solve computational problems
-
-reverse-engineering: identify the abstract computational problems that the mind must solve to do what it does. knowing that the mind solves these certain problems, what are the AI systems we have that can solve problems like that. Then we can model the mind as that kind of system. 
-
-Start by thinking about the computational problem that the mind is solving. out of all the data, its task is to figure out the underlying data generation process, i.e. what's going on in the world. this is the problem of positing hypotheses, assigning prior probabilities to them, and updating the probabilities based on new data. Then Bayes' rule shows us the ideal solution to the problem. Then if we see that humans perform similarly to these algorithms, we have better evidence that it's this kind of problem solving @griffiths_bayesian_2024
-
-bayesian models focus on the computational level, the logic of the problem, what the information processing system is doing. 
-
-
-[Marr 1982]
-
-Bayesian framework addresses the question: "how to update beliefs and make inferences in light of observed data". Starts with the logic of the inference when generalizing, i.e. what's happening computationally, rather than how it does it algorithmically. 
 @perfors_learnability_2011
 
+The problem solved 
 
-- computational level: "characterizes the problem that a cognitive system solves and the principles by which its solution can be computed from the available inputs in natural environments"
-- algorithmic level: "describes the procedures executed to produce this solution and the representations or data structures over which the algorithms operate"
-- implementation level: "specifies how these algorithms and data structures are instantiated in the circuits of a brain or machine" @tenenbaum_how_2011
+So we should ask first what problem a mindreader is solving. @explanandum has already supplied most of the answer. The data available to the learner is a trajectory of bodies through space. What must be recovered is the process that generated that trajectory, and that process runs through states --- beliefs, desires, intentions --- that never appear in the data. The trajectory underdetermines the process: any behaviour is compatible with indefinitely many belief-desire pairs, and no amount of further observation eliminates all but one.
 
-reverse engineering means start at the computational level, understand what the system is doing, then get into the algorithm. So it's top-down, or function-first. @griffiths_bayesian_2024
+Stated that way, the problem is an instance of a familiar one. Given data, entertain hypotheses about the process that generated it, assign each a prior plausibility, and revise those plausibilities as the data comes in. And there is a known answer to the question of how such revision _ought_ to go: Bayes' rule specifies the ideal solution, and thereby generates predictions that can be checked against what people actually do @griffiths_bayesian_2024. If human judgements line up with those predictions, we have grounds for thinking that this is the problem being solved --- and a model we can use to build machines that solve it the same way.
 
-rational analysis framework. analyze cognitionin terms of adaptive solutions to environmental problems [Anderson 1990]
+That is the shape of the claim this thesis makes. The computational-level thesis is that acquiring a theory of mind is the problem of finding the best explanation of observed behaviour, where "best" is fixed not by taste but by the logic of Bayesian inference: a trade-off between the prior plausibility of an explanation and how well it fits the data. @sec-bayes makes that trade-off precise, and @sec-programs argues that the hypotheses being traded off are best understood as _programs_.
 
-== Bayesian inference: the logic of learning
+=== What is claimed, and what is not
+
+Fixing the level fixes the scope of the claim, and it is worth being explicit about what falls outside it. We are not studying how a child in fact comes to learn theory of mind. That is the province of developmental and cognitive psychology, and nothing here should be read as a proposal about neural implementation or about the moment-to-moment course of a particular child's development.
+
+Nor is the claim that children run the algorithm presented in @sec-dreamcoder. ECD, the wake-sleep library-learning system described there and implemented in Chapter 4, is offered as an algorithmic-level _realisation_ of the computational-level claim: a demonstration that the problem, so stated, is solvable by a mechanism that begins with no mental vocabulary at all. Its role in the argument is one of sufficiency rather than fidelity. If a learner equipped only with domain-general primitives and a preference for short programs comes to posit belief-like structure, then positing such structure is something a learner _can_ do rather than something it must be given --- and the nativist's inference from "no mechanism has been named" to "no mechanism exists" is blocked. Whether human learners use this mechanism, or some other one that solves the same problem, is a further question that this thesis does not settle.
+
+There is a caveat to the tidy division of levels, and it matters for @sec-hbm. Many early Bayesian models addressed the computational level alone, characterising cognition as approximately optimal statistical inference in a fixed environment without reference to how the computation is carried out. The hierarchical models discussed later sit somewhere between the computational and the algorithmic: they describe cognition as approximately optimal inference in probabilistic models defined over a learner's subjective and dynamically growing mental representations of the world's structure, rather than over some objective and fixed world statistics @tenenbaum_how_2011. Once the hypothesis space is itself something the learner builds and rebuilds, the question of what the learner is doing can no longer be cleanly separated from the question of what it is doing it _with_. That entanglement is not a defect of the account; it is the part of the account that does the developmental work.
+
+// --- source notes for this section, retained ---
+// - identify the computational problem that the mind is trying to solve: the problem is find
+//   the best explanation. we argue that best is determined logically by bayes' rule. so it's
+//   doing bayesian updating. then the algorithmic level is the procedure at which it's
+//   produced, ECD
+// - engineering: building AI, building algorithms that solve computational problems
+// - reverse-engineering: identify the abstract computational problems that the mind must
+//   solve to do what it does. knowing that the mind solves these certain problems, what are
+//   the AI systems we have that can solve problems like that. Then we can model the mind as
+//   that kind of system.
+// - bayesian models focus on the computational level, the logic of the problem, what the
+//   information processing system is doing. [Marr 1982]
+// - rational analysis framework. analyze cognition in terms of adaptive solutions to
+//   environmental problems [Anderson 1990]  <- NOT YET IN chapter2.bib
+
+== Bayesian inference: the logic of learning <sec-bayes>
 
 explain prior/likelihood, size principle, Bayes as normative solution
 
-== Programs as the hypothesis space
+== Programs as the hypothesis space <sec-programs>
 
 - Language of Thought
 - compositionality/productivity
@@ -130,7 +133,7 @@ _Without the constraints imposed by the prior, no meaningful generalizations wou
 
 since knowledge is programs, learning is program induction [Kitzelmann, 2009; Flener & Schmid, 2008; Gulwani et al., 2017]
 
-== Learning the language itself
+== Learning the language itself <sec-hbm>
 
 - HBMs
 - overhypotheses
@@ -183,7 +186,7 @@ first the most abstract domain knoweldge comes into place and then the specific 
 
 blessing of abstraction also defined in @perfors_learnability_2011
 
-== The DreamCoder algorithm
+== The DreamCoder algorithm <sec-dreamcoder>
 
 === Wake: exploration/enumeration/search (Bayesian inference)
 

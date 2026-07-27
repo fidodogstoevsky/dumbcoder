@@ -248,12 +248,17 @@ def _belief_gt_str(D, m):
     recognition, so both build the same canonical program."""
     if 'real_wall' in m:                             # false about BOTH obstacle and goal:
         # a REAL wall stays in the world, so on this scene NO scope complement reproduces
-        # x (verified at construction by _scope_complements_all_fail) — the commit can only
-        # be the literal sync_to_world(av).  Also carries displaced_to, so test it BEFORE
-        # the goal branch.  derive = _seq(clear real wall, stamp phantom, shove goal, seek).
-        wr, wc = m['real_wall']
+        # x under this derive (verified at construction by _scope_complements_all_fail) —
+        # the commit can only be the literal sync_to_world(av).  Also carries displaced_to,
+        # so test it BEFORE the goal branch.  derive = _seq(stamp phantom, shove goal,
+        # seek): the real wall is NOT erased in the model (the agent hallucinates an extra
+        # obstacle rather than mislocating this one).  That opening `clear_at(real wall)`
+        # was vacuous — the real wall is drawn from the free cells and rarely obstructs —
+        # and since the scope certification is derive-relative, certifying a derive the
+        # searcher would never price is what let sync_except(gv) back in.  Keep this in
+        # step with tasks.make_false_obstacle_belief_tasks.
         pr, pc = m['pw']
-        derive = (f"(compose (compose (compose (clear_at c{wr} c{wc}) (wall_at c{pr} c{pc})) "
+        derive = (f"(compose (compose (wall_at c{pr} c{pc}) "
                   f"(step {m['gv']} {m['dir']})) (optimize (neg_dist {m['gv']}) {m['av']}))")
         return _forks(D, derive, _sync(D, m['av']))
     if 'displaced_to' in m:                          # false belief about the goal's location
@@ -970,10 +975,10 @@ def _belief_progs(m):
                 fork_decomposed(derive, register(locate(av), place(av))))
 
     if 'real_wall' in m:                             # false about BOTH obstacle and goal
-        # mirror _belief_gt_str's real_wall branch: clear real wall ▸ stamp phantom ▸
-        # shove goal ▸ seek.  Carries displaced_to too, so test it BEFORE the goal branch.
-        derive = compose(compose(compose(clear_at(*m['real_wall']), wall_at(*m['pw'])),
-                                 step(m['gv'], DIRS[m['dir']])),
+        # mirror _belief_gt_str's real_wall branch: stamp phantom ▸ shove goal ▸ seek
+        # (the real wall is left standing in the model — see the note there).  Carries
+        # displaced_to too, so test it BEFORE the goal branch.
+        derive = compose(compose(wall_at(*m['pw']), step(m['gv'], DIRS[m['dir']])),
                          optimize(neg_distance(m['gv']), m['av']))
         return one(derive, m['av'])
     if 'displaced_to' in m:                          # goal-displacement: false belief about the goal
@@ -1112,18 +1117,19 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     # optimize), the dual of the underlay family varying the commit slot.
     comet = make_comet_tasks(n_comet, seed=TASK_SEEDS['comet'], k=k)
     reg  = make_registration_tasks(n_reg, seed=TASK_SEEDS['registration'], k=k)
-    # In a --cube run the DSL contains clear_at, which lets a non-belief
-    # "transient wall" (stamp / act / erase) reproduce single-agent belief.  Use
-    # witness-belief tasks there so the private-copy fork is the unique explanation.
-    # `--plain-belief` overrides this to the shallower single-agent belief even in a
-    # cube run: a DIAGNOSTIC to separate search budget from structure (plain belief
-    # is ~8 nodes vs. witness ~12+).  It WEAKENS the uniqueness claim (transient-wall
-    # rivals are no longer excluded), so it is for isolating the first-solve blocker,
-    # not for headline results.
+    # In a --cube run the DSL contains clear_at and erase, which let a non-belief
+    # "transient wall" (stamp / act / undo) reproduce single-agent belief.  Witness
+    # belief excludes that structurally — the witness crosses the phantom cell on the
+    # real grid — which is why it is the default here.  Single-agent belief now
+    # excludes it too, by the static counterpart of the same argument (a bystander on
+    # the phantom-wall cell that a world-level stamp destroys; see
+    # tasks.make_belief_tasks), so `--plain-belief` is a depth/budget diagnostic
+    # rather than a weakening of the uniqueness claim: plain belief is ~8 nodes vs
+    # witness ~12+, and it is the shallow probe for what is blocking a first solve.
     use_witness = cube and not plain_belief
     if plain_belief and cube:
-        print("  [--plain-belief] using single-agent belief in a cube run — DIAGNOSTIC "
-              "only; transient-wall rivals are NOT excluded.")
+        print("  [--plain-belief] using single-agent belief in a cube run — a DEPTH "
+              "diagnostic; transient-wall rivals stay excluded (bystander).")
     bel  = (make_witness_belief_tasks(n_bel, COMBOS, seed=TASK_SEEDS['belief'], k=k) if use_witness
             else make_belief_tasks(n_bel, COMBOS, seed=TASK_SEEDS['belief'], k=k))
     # Two further belief families (kind='belief'), so the unified verdict tests
@@ -1160,11 +1166,18 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     #
     # These are just wall-belief tasks (kind='belief', variant belief_wall) — no
     # special label, no separate bucket.  Whether they *served* as the scaffold that
-    # unlocked belief is read off the run's results, not stipulated here.  Sound
-    # because once the policy is a token, fork(policy, sync) is strictly cheaper than
-    # the transient-wall rival (which additionally pays clear_at + two coords), so the
-    # searcher returns the genuine compound — see the --plain-belief census, which
-    # solves via fork/sync_to_world, not clear_at.
+    # unlocked belief is read off the run's results, not stipulated here.
+    #
+    # Sound because the transient-wall rival does not REPRODUCE these scenes (the
+    # bystander on the phantom-wall cell is destroyed by a world-level stamp), so the
+    # searcher cannot return it whatever it costs.  It used to rest on pricing instead
+    # — once the policy is a token, fork(policy, sync) is cheaper than the rival, which
+    # additionally pays clear_at + two coords — and that argument is exactly what
+    # phase 2 falsified: with fork spelled out as dup/mapsnd/compose_gp/pipe_gpg the
+    # rival was the cheaper program, `(erase 3)` undercut `(clear_at r c)` by a token,
+    # and all 24 belief_wall solves in both jul-26 phase-2 runs were the non-mental
+    # world-edit.  A cost argument holds only under the pricing that happens to be in
+    # force; the scene has to do the excluding.
     belief_extra = []
     if curriculum and use_witness:
         n_extra = max(1, n_bel // 2)
@@ -1520,6 +1533,16 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     # census uses — a commit inside a derive writes to a private model, not the world)
     # and ask which agent value they name.  A solution that committed for both agents
     # would be attributing a private model to a bystander whose walk is plain desire.
+    #
+    # The commit is read AFTER canonicalising a degenerate scope commit, exactly as the
+    # cube census does via _canon_belief_uses.  A `(sync_except gv)` commit names the
+    # GOAL, so a raw string test finds neither agent in it and scores the task zero for
+    # both — which is what collapsed this figure to 2/24 and 0/24 in the jul-26 phase-2
+    # runs, where 22 and 24 of the solves respectively committed via a scope complement.
+    # Those solves do put the observer outside the fork and fork only for the believer;
+    # the metric simply could not see it.  `_swap_scope_commit` already recovers the
+    # committed value from the fork's own derive, so re-reading the swapped tree asks
+    # the question the figure is actually about: WHICH agent got a private model.
     selective = {'n': 0, 'solved': 0, 'believer_only': 0, 'observer_committed': 0}
     for x, m in all_tasks:
         if m['kind'] != 'belief' or belief_variant(m) != 'belief_observers':
@@ -1529,8 +1552,12 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         if sol is None:
             continue
         selective['solved'] += 1
-        commits = ' '.join(str(c) for c in
-                           _world_level_commits(simplify(normalize(deepcopy(sol)))))
+        tree = simplify(normalize(deepcopy(sol)))
+        if belief_form.get(mat_key(x)) == 'degenerate':
+            swapped = _swap_scope_commit(D, simplify(normalize(deepcopy(sol))), m)
+            if swapped is not None:
+                tree = swapped
+        commits = ' '.join(str(c) for c in _world_level_commits(tree))
         names_believer = _re.search(rf'\b{m["av"]}\b', commits) is not None
         names_observer = _re.search(rf'\b{m["observer"]}\b', commits) is not None
         selective['observer_committed'] += int(names_observer)
@@ -1541,6 +1568,8 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
               f"for the believer and NOT for the observer")
         print(f"  ({selective['observer_committed']} attribute a private model to the "
               f"bystander, whose walk is plain desire)")
+        print(f"  (degenerate scope commits are canonicalised to the agency commit "
+              f"first — see (A))")
 
     # fork is general if a non-belief family reaches for it — with EITHER derive:
     # overlay's fixed `step` or comet's `optimize` seek (fork's derive slot is a
@@ -1620,6 +1649,19 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     # that in fact committed literally via register(locate av)(place av) — the census now
     # reads the world-level commits (_world_level_commits), so the warning below means
     # what it says.
+    #
+    # It is also a DERIVE-RELATIVE claim, and the print below now says so.  What
+    # _scope_complements_all_fail certifies is that no scope complement reproduces the
+    # scenes WHEN PAIRED WITH THIS FAMILY'S DERIVE; a scope commit is extensionally
+    # unconstrained at the commit position (it can relocate any set of world values), so
+    # what rules it out is always the model configuration some particular derive leaves
+    # behind.  There is no derive-independent version of this guarantee to certify.  The
+    # generator therefore certifies exactly the derive it ran (tasks.py), which is what
+    # closed the jul-26 gap: the old derive opened with a vacuous `clear_at(real wall)`,
+    # the searcher priced the shorter derive without it, and against THAT one
+    # sync_except(gv) reproduced a quarter of the family.  A solve that still lands here
+    # is a genuine finding — a shorter derive the certification did not anticipate — so
+    # print the offending solution rather than asserting it cannot happen.
     fob_forms = [belief_form[mat_key(x)] for x, m in all_tasks
                  if m['kind'] == 'belief' and 'real_wall' in m
                  and mat_key(x) in belief_form]
@@ -1632,14 +1674,29 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         print(f"\n  FORCED LITERAL COMMIT — false-obstacle family (degeneracy excluded by construction)")
         print(f"  {len(fob_forms)}/{n_fob} false-obstacle tasks solved; commit forms: "
               f"{n_fob_lit} literal, {n_fob_deg} degenerate, {n_fob_comp} complement.")
-        print(f"  Every solved one commits via the literal sync_to_world(av): no scope complement")
-        print(f"  reproduces these scenes (real wall stays put), so the agency commit is FORCED")
-        print(f"  and found — not merely argued extensionally equal to a cheaper complement.")
-        if n_fob_deg or n_fob_comp:
-            print(f"  WARNING: {n_fob_deg} degenerate + {n_fob_comp} complement — a scope commit "
-                  f"reproduced (or was found on) a real-wall scene;")
-            print(f"  should be impossible here; check _scope_complements_all_fail / "
-                  f"_belief_commit_form.")
+        if not (n_fob_deg or n_fob_comp):
+            print(f"  Every solved one commits via the literal sync_to_world(av): no scope complement")
+            print(f"  reproduces these scenes when paired with the derive this family certifies")
+            print(f"  (real wall and goal stay put), so the agency commit is FORCED and found —")
+            print(f"  not merely argued extensionally equal to a cheaper complement.")
+        else:
+            print(f"  {n_fob_deg} degenerate + {n_fob_comp} complement: a scope commit reached the "
+                  f"world-level commit position")
+            print(f"  on a real-wall scene.  _scope_complements_all_fail certifies the scope "
+                  f"complements against")
+            print(f"  the derive the generator RAN, and a scope commit is extensionally "
+                  f"unconstrained on its own, so")
+            print(f"  this means the search found a derive the certification did not price. "
+                  f"The solutions:")
+            for x, m in all_tasks:
+                if m['kind'] != 'belief' or 'real_wall' not in m:
+                    continue
+                form = belief_form.get(mat_key(x))
+                if form not in ('degenerate', 'complement'):
+                    continue
+                print(f"    [{form}] av={m['av']} gv={m['gv']} pw={m['pw']} "
+                      f"real_wall={m['real_wall']}")
+                print(f"      {simplify(normalize(deepcopy(sols[mat_key(x)])))}")
 
     # ── (A′) cube census: with the full symmetric field present, which corner did each family pick? ──
     cube_ok = None

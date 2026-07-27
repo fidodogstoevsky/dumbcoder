@@ -352,6 +352,41 @@ def make_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=8,
     with different tie-breaking, so the wall would carry no explanatory load — that
     check is about the scene being well-posed, not about any particular rival, so it
     stays.
+
+    A BYSTANDER sits on the phantom-wall cell.  k scenes pin down *where* the wall
+    is (a wall one cell off dies on whichever scene routes through it) but they
+    cannot on their own distinguish a wall the agent only believes in from a real
+    wall stamped and then taken back down before the frame is rendered — the
+    transient-wall rival
+
+        (compose (compose (wall_at pr pc) (optimize (neg_dist gv) av)) (erase 3))
+
+    reproduces every scene honestly, because on a bare grid there is nothing at
+    (pr,pc) for the stamp to disturb.  That is a structural rival, not a per-scene
+    coincidence, so no amount of k closes it; it was merely priced out while phase 1
+    handed `fork` over atomically, and it took all 24 belief_wall solves in both
+    phase-2 runs once fork had to be spelled out.  The cure is to give the world
+    something at that cell to lose: an inert value `bv` (not av, not gv, never 3, so
+    it neither blocks BFS nor is mistaken for a wall) that stays put for the whole
+    trajectory.  `wall_at (pr,pc)` overwrites it and no undo can put it back — the
+    DSL's only writers are wall_at (3) and clear_at (0) — so a world-level stamp is
+    now visible in the rendered frame.  Only a program that stamps on a PRIVATE copy
+    and commits just the agent leaves it standing.  This is `belief_witness`'s
+    argument with a static object in place of a crossing agent, which is why it
+    also closes the projection and z-order commits (snd_gg / overlay / underlay all
+    carry the model's wall, or lose bv, into the world).
+
+    `bv` is drawn deterministically from the latent, not sampled: `_collect` pools
+    scenes by latent, so a per-scene draw would put different bystanders in one
+    task's scenes and turn a value the program never names into a spurious degree of
+    freedom (each distinct distractor value is otherwise a free literal under
+    content_q).  It stays out of the latent tuple proper because no program names it.
+
+    What the bystander does NOT close is the scope complements: `av` is the only
+    value this family's derive moves, so sync_all and sync_except(gv) are
+    extensionally sync_to_world(av) here no matter what else is on the grid.  That
+    degeneracy is the false-obstacle family's job (it moves the goal in the model
+    too), and is reported as a degeneracy rather than a rival.
     """
     rng = np.random.default_rng(seed)
     tasks = []
@@ -365,7 +400,10 @@ def make_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=8,
             g[ar, ac] = av
             g[gr, gc] = gv
 
-            # true-belief trajectory: source of on-path phantom-wall candidates
+            # true-belief trajectory: source of on-path phantom-wall candidates.
+            # Computed before the bystander is placed, which is harmless: bv is not
+            # 3, so it blocks neither BFS nor `optimize`, and the path is the same
+            # either way (the detour check below re-runs it on the final grid).
             direct = unfold(g, max_T, optimize(neg_distance(gv), av))
             path  = [_agent_pos(direct[t], av) for t in range(max_T)]
             inter = [p for p in path if p and p != (ar, ac) and p != (gr, gc)]
@@ -373,6 +411,12 @@ def make_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=8,
                 return None
             pr, pc = inter[int(rng.integers(len(inter)))]
 
+            bv = _bystander_value(av, gv, (pr, pc))
+            if g[pr, pc] != 0:
+                return None
+            g[pr, pc] = bv                        # the thing a world-level stamp eats
+
+            direct = unfold(g, max_T, optimize(neg_distance(gv), av))
             gt = fork(compose(wall_at(pr, pc), optimize(neg_distance(gv), av)),
                       sync_to_world(av))
             x_full = unfold(g, max_T, gt)
@@ -386,14 +430,75 @@ def make_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=8,
                 return None
             if (T - 1) <= abs(ar - gr) + abs(ac - gc):
                 return None                       # …and one that costs extra steps
+            # the bystander must survive intact: the agent's model has a wall on its
+            # cell, so `optimize` never routes through it and sync_to_world(av) never
+            # lands av there.  gv is deliberately NOT checked — this family's
+            # trajectory ends with av arriving ON the goal cell and overwriting it.
+            # And no frame may read as containing a wall: the phantom is private, so
+            # a 3 in the world would hand the transient rival its footing back.
+            if not all((x[t] == bv).sum() == 1 and (x[t] == av).sum() == 1
+                       for t in range(T)):
+                return None
+            if any((x[t] == 3).any() for t in range(T)):
+                return None
             return ((av, gv, pr, pc), x,
-                    {'kind': 'belief', 'av': av, 'gv': gv, 'pw': (pr, pc)})
+                    {'kind': 'belief', 'av': av, 'gv': gv, 'pw': (pr, pc), 'bv': bv})
 
         # A wall cell has to recur across independently sampled placements for a
         # bucket to fill, so this family needs a far bigger proposal budget than the
         # single-scene generator did.
-        tasks += _collect(propose, n_per_combo, k, rng, attempts=200000)
+        tasks += _collect(propose, n_per_combo, k, rng, attempts=200000,
+                          certify=_no_transient_wall)
     return tasks
+
+
+def _bystander_value(av, gv, cell, size=SIZE):
+    """The inert value that guards a phantom-wall cell — a function of the LATENT.
+
+    Never av or gv (they are what the policy names) and never 3 (that is a wall).
+    Keyed on the wall cell so the marker is not the same value in every task, but
+    deterministic so all k scenes of one task agree — see the pooling note in
+    `make_belief_tasks`."""
+    pool = [v for v in (1, 2, 4, 5, 6, 7, 8, 9) if v not in (av, gv)]
+    return pool[(cell[0] * size + cell[1]) % len(pool)]
+
+
+def _no_transient_wall(scenes, m):
+    """CLOSED-SET certification: no stamp-act-undo schedule reproduces every scene.
+
+    The rival the bystander is there to kill is a world-level wall that is taken
+    back down before the frame is rendered.  Under `unfold`'s one fixed per-frame
+    fn there are only so many ways to write that with one stamp and one undo, and
+    the set is finite because the grid is: for EVERY cell q, stamp a wall at q, run
+    the policy, and remove it — either with `clear_at q` (the targeted undo) or
+    `erase 3` (the wholesale one).  An undo at a cell other than q leaves the wall
+    standing and is caught by the same sweep at q.  Also rules out the no-wall
+    physics, so the detour is not merely a tie-break.
+
+    Checked at task level: a rival only undercuts the intended program if it
+    reproduces all k scenes.  Without the bystander every task in the family fails
+    this at its own wall cell (and only there — k already pins the cell down)."""
+    av, gv = m['av'], m['gv']
+    seek = optimize(neg_distance(gv), av)
+
+    def repro(prog):
+        for s in scenes:
+            try:
+                if not np.array_equal(unfold(s[0], s.shape[0], prog), s):
+                    return False
+            except Exception:
+                return False
+        return True
+
+    if repro(seek):                                   # plain desire, no wall at all
+        return False
+    size = scenes[0].shape[-1]
+    for r in range(scenes[0].shape[-2]):
+        for c in range(size):
+            stamped = compose(wall_at(r, c), seek)
+            if repro(compose(stamped, clear_at(r, c))) or repro(compose(stamped, erase(3))):
+                return False
+    return True
 
 
 def _witness_belief_program(av, gv, aw, gw, pr, pc):
@@ -1060,12 +1165,20 @@ def belief_rival_specs(m):
             ('transient phantom + shove goal',
              _seq_str(Wb, _stepstr(gv, dn), _seek(gv, av), Cb)),
         ]
-    # belief_wall: transient real wall (the tightest single-grid analogue) + no-wall physics
+    # belief_wall: transient real wall (the tightest single-grid analogue) + no-wall
+    # physics.  Both are now expressiveness-excluded rather than behavioural
+    # competitors: a bystander sits on the phantom-wall cell, so the stamp destroys it
+    # and the transient rival renders a scene the world never showed (it still gets the
+    # agent's PATH right, which is why the margin table reports it separately).  Spelled
+    # out anyway, exactly as the false-obstacle rivals are, so the table shows the
+    # closest non-mental analogues failing rather than silently omitting them.
     av, gv, pw = m['av'], m['gv'], m['pw']
     W, C = _wall(*pw), _clear(*pw)
     return [
         ('no wall (physics)',                _seek(gv, av)),
         ('transient wall (stamp/act/erase)', _seq_str(W, _seek(gv, av), C)),
+        ('transient wall (stamp/act/erase 3)',
+         _seq_str(W, _seek(gv, av), '(erase 3)')),
     ]
 
 
@@ -1140,8 +1253,8 @@ def make_false_obstacle_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE,
                                      seed=0, max_T=8, k=K_SCENES):
     """Single agent, false about BOTH the obstacle and the goal location.
 
-    Forces the literal single-value commit sync_to_world(av): the agent detours
-    around a wall it mis-locates while heading for a goal it mis-locates, and both
+    Forces the literal single-value commit sync_to_world(av): the agent hallucinates
+    an obstacle that is not there while heading for a goal it mis-locates, and both
     the real wall (value 3) and the real goal stay put in the world.  A task is kept
     only if sync_to_world(av) reproduces every scene AND every scope complement
     (sync_all, sync_except k for every world value k, incl. the wall) fails on all of
@@ -1153,6 +1266,23 @@ def make_false_obstacle_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE,
     the transient-wall sweep the old `_false_obstacle_rival_explainable` ran: a
     stamp-and-clear schedule fitted to one realised path does not survive the same
     two wall cells being approached from four directions.
+
+    The derive does NOT erase the real wall.  It used to open with
+    `clear_at(real wall)` — the agent believing the obstacle to be at (br,bc)
+    *instead of* (wr,wc) — but the real wall is drawn from the free cells, so it
+    almost never obstructs the believed-world walk and that token was measurably
+    vacuous: dropping it still reproduced every scene of every task in the family.
+    That mattered, because certification is DERIVE-RELATIVE.  Whether a scope
+    complement undercuts the agency commit depends on what the derive leaves lying
+    in the model, so certifying against a derive with a redundant token in it
+    certifies the wrong program: the searcher prices the SHORTER derive, and against
+    that one `sync_except(gv)` reproduced a quarter of the family — which is how a
+    `sync_all` commit turned up on a real-wall scene in the jul-26 phase-2 runs and
+    tripped the "should be impossible" warning downstream.  Certifying the derive
+    the searcher will actually reach for closes it at generation time.  The family's
+    claim is unchanged: the agent is still wrong about the obstacle (it detours
+    around a wall that is not there) and wrong about the goal, and both mistakes are
+    UNCOMMITTED, which is what every scope complement must drag and fail on.
     """
     rng = np.random.default_rng(seed)
     tasks = []
@@ -1215,7 +1345,19 @@ def make_false_obstacle_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE,
                     return None
             g[wr, wc] = 3                                       # REAL wall in the world
 
-            derive = _seq(clear_at(wr, wc), wall_at(br, bc), step(gv, dg),
+            # Bystander on the BELIEVED-wall cell, for the same reason belief_wall has
+            # one (see make_belief_tasks).  The real wall makes `erase 3` fail here —
+            # it would delete a wall the world keeps — but `clear_at (br,bc)` leaves the
+            # real wall alone and takes only the phantom back down, so the transient
+            # rival still reproduced 9/24 of this family until the phantom cell had
+            # something on it to lose.  The believed wall is stamped on the PRIVATE copy,
+            # so sync_to_world(av) leaves bv standing in the world.
+            bv = _bystander_value(av, gv, (br, bc))
+            if g[br, bc] != 0:
+                return None
+            g[br, bc] = bv
+
+            derive = _seq(wall_at(br, bc), step(gv, dg),
                           optimize(neg_distance(gv), av))
             prog = fork(derive, sync_to_world(av))
             x_full = unfold(g, max_T, prog)
@@ -1231,7 +1373,10 @@ def make_false_obstacle_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE,
             # agent came from) stay present & distinct: no clobber, no accidental move.
             if any(x[t][gr, gc] != gv or x[t][wr, wc] != 3 for t in range(T)):
                 return None
-            if not all((x[t] == v).sum() == 1 for t in range(T) for v in (av, gv)):
+            # …and the bystander survives intact on the believed-wall cell: the model
+            # has a wall there, so the agent never routes through it and the commit
+            # never lands av on it.
+            if not all((x[t] == v).sum() == 1 for t in range(T) for v in (av, gv, bv)):
                 return None
             if not all((x[t] == 3).sum() == 1 for t in range(T)):
                 return None
@@ -1240,12 +1385,14 @@ def make_false_obstacle_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE,
                 return None
             return ((av, gv, (br, bc), (wr, wc), dgname), x,
                     {'kind': 'belief', 'av': av, 'gv': gv,
-                     'pw': (br, bc), 'real_wall': (wr, wc),
+                     'pw': (br, bc), 'real_wall': (wr, wc), 'bv': bv,
                      'displaced_to': (bgr, bgc), 'dir': dgname})
 
         def certify(scs, m, av=av, gv=gv):
-            (br, bc), (wr, wc), dgname = m['pw'], m['real_wall'], m['dir']
-            derive = _seq(clear_at(wr, wc), wall_at(br, bc), step(gv, DIRS[dgname]),
+            # the derive certified here is EXACTLY the one `propose` ran — see the
+            # derive-relativity note in the docstring.
+            (br, bc), dgname = m['pw'], m['dir']
+            derive = _seq(wall_at(br, bc), step(gv, DIRS[dgname]),
                           optimize(neg_distance(gv), av))
             return _scope_complements_all_fail(scs, lambda _s: derive, av)
 

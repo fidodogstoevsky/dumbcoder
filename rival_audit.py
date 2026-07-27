@@ -21,7 +21,7 @@ from scenes import solves, solves_any
 from tasks import (make_belief_tasks,
                    make_witness_belief_tasks, make_goal_displacement_tasks,
                    make_two_observer_tasks, make_false_obstacle_belief_tasks,
-                   COMBOS, DIRS, belief_variant, belief_rival_specs)
+                   COMBOS, DIRS, SIZE, belief_variant, belief_rival_specs)
 
 # full-run corpus (run_phase non-smoke): n_bel=6, n_goal=6, n_belvar=3, belief_extra=3
 print("generating corpora (same seeds as run_phase)…", flush=True)
@@ -146,6 +146,88 @@ for x, m, fam in tasks:
 print(f"  {n_vuln}/{len(tasks)} tasks reproducible by a snd_gg readout on EVERY scene")
 print(f"  {n_vuln_1}/{len(tasks)} would have been on a single scene "
       f"(the leak the k-scene format closes)")
+
+# ── transient-wall RELOCATION sweep (the wall families' tightest single-grid rival) ──
+# The named E*/C* rivals above pin the wall to one hard-coded cell, and
+# `belief_rival_specs` pins it to the task's own `pw`.  Neither asks the question that
+# actually matters: is there ANY cell whose stamp-act-undo schedule reproduces the whole
+# scene set?  Two different things can go wrong, and the sweep separates them:
+#
+#   hit AT pw     — the private/world distinction has collapsed.  The world has nothing
+#                   at the phantom cell for a world-level stamp to disturb, so the
+#                   transient wall is extensionally the belief in every frame.  This is
+#                   what took all 24 belief_wall solves in both jul-26 phase-2 runs, and
+#                   what the bystander in `make_belief_tasks` closes.
+#   hit ELSEWHERE — the wall cell is not identified: some other cell bends all k routes
+#                   the same way, so `k` did not pin the literal down after all.
+#
+# `_no_transient_wall` already enforces this at generation time for belief_wall; this is
+# the regression check, and it also covers the families that carry no such certification
+# (witness excludes the rival structurally via the crossing witness, false-obstacle via
+# the real wall that `erase 3` would delete).  The undo set is closed: `clear_at q` is
+# the targeted spelling and `erase 3` the wholesale one, and an undo at a cell other
+# than q leaves the wall standing, so the sweep at q catches it.
+def _seq(*fs):
+    prog = fs[0]
+    for f in fs[1:]:
+        prog = compose(prog, f)
+    return prog
+
+
+def _transient_wall_schedules(m, r, c):
+    """Every stamp-act-undo program for a wall at (r,c), in this task's values.
+
+    For the witness family the witness's own seek has to appear too (it moves on the
+    real grid), in each position it could occupy relative to the stamp and the undo —
+    the same four orderings `belief_rival_specs` enumerates, but with the wall cell
+    swept rather than fixed at `pw`."""
+    W = wall_at(r, c)
+    oa = optimize(neg_distance(m['gv']), m['av'])
+    for C in (clear_at(r, c), erase(3)):
+        yield _seq(W, oa, C)                       # witness ignored / single agent
+        if 'aw' in m:
+            ow = optimize(neg_distance(m['gw']), m['aw'])
+            yield _seq(W, oa, C, ow)
+            yield _seq(ow, W, oa, C)
+            yield _seq(W, ow, oa, C)
+            yield _seq(W, oa, ow, C)
+
+
+print("\n=== transient-wall relocation sweep (wall-based belief families) ===", flush=True)
+wall_tasks = [(x, m, fam) for x, m, fam in tasks
+              if m['kind'] == 'belief' and 'pw' in m]
+n_all = n_any = n_at_pw = n_elsewhere = 0
+for x, m, fam in wall_tasks:
+    hit_all, hit_any = None, False
+    for r in range(SIZE):
+        for c in range(SIZE):
+            for prog in _transient_wall_schedules(m, r, c):
+                if solves(prog, x):
+                    hit_all = hit_all or (r, c)
+                elif solves_any(prog, x):
+                    hit_any = True
+            if hit_all:
+                break
+        if hit_all:
+            break
+    n_any += int(hit_any or bool(hit_all))
+    if hit_all:
+        n_all += 1
+        where = 'AT pw' if hit_all == tuple(m['pw']) else f'ELSEWHERE (pw={m["pw"]})'
+        n_at_pw += int(hit_all == tuple(m['pw']))
+        n_elsewhere += int(hit_all != tuple(m['pw']))
+        print(f"  VULNERABLE [{fam}] {belief_variant(m)} av={m['av']} gv={m['gv']} "
+              f"wall={hit_all} {where}")
+print(f"  {n_all}/{len(wall_tasks)} tasks reproduced on EVERY scene "
+      f"({n_any} on at least one)")
+if n_all:
+    print(f"  FAIL: {n_at_pw} at the phantom cell (the private/world distinction has "
+          f"collapsed — check the bystander),")
+    print(f"        {n_elsewhere} at another cell (the wall literal is not identified "
+          f"by the k scenes).")
+else:
+    print("  PASS: no stamp-act-undo schedule at ANY cell reproduces a full scene set.")
+
 
 # ── transient-shove audit (the displaced-goal families' tightest single-grid rival) ──
 # The wall families' hardest rival stamps a wall, acts, and erases it, so the wall never

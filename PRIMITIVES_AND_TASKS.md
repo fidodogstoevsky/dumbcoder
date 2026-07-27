@@ -314,12 +314,12 @@ the fine label; every other family here carries its own `kind`.
 - **filter** generated straight through `unfold`; distinct from belief by having no wall/fork.
 
 Two corpus facts about the `belief` family: in a cube run `belief_witness` stands in for
-the shallower `belief_wall` (the cube's `clear_at` lets a transient-wall rival mimic
-single-agent belief, so the witness scene is what keeps the private-copy `fork` the
-unique explanation); the `--plain-belief` diagnostic keeps `belief_wall`. And a cube
-*curriculum* run additionally emits a second, distinct-seeded batch of plain
-`belief_wall` tasks (`n_bel//2` per combo) — still ordinary `kind='belief'` with no
-distinguishing label.
+the shallower `belief_wall` (it is the deeper scene, and its crossing witness excludes
+the transient-wall rival structurally); the `--plain-belief` diagnostic keeps
+`belief_wall`, which now carries its own structural exclusion (the bystander, below)
+rather than relying on the rival being priced out. And a cube *curriculum* run
+additionally emits a second, distinct-seeded batch of plain `belief_wall` tasks
+(`n_bel//2` per combo) — still ordinary `kind='belief'` with no distinguishing label.
 
 #### `belief_wall` — false belief about an invisible obstacle
 - **root** `fn` · **count** `n_bel` per combo (used in `--no-cube` / `--plain-belief`; see witness below)
@@ -333,6 +333,25 @@ distinguishing label.
   and required to cost *extra* steps over the free-space shortest path. A merely
   monotone "detour" is another shortest path that plain desire reproduces with different
   tie-breaking; this is about the scene being well-posed, not about any named rival.
+- **bystander** an inert value `bv` (never `av`, `gv`, or `3`) sits on the phantom-wall
+  cell for the whole trajectory, keyed deterministically off the latent so all `k`
+  scenes agree. `k` fixes *where* the wall is, but on a bare grid it cannot tell a
+  believed wall from a real one stamped and taken back down before the frame renders:
+  the transient-wall rival `(compose (compose (wall_at r c) (optimize (neg_dist gv) av))
+  (erase 3))` reproduces every scene honestly. That is structural, so no `k` closes it —
+  it was merely *priced* out in phase 1, and took **all 24 `belief_wall` solves in both
+  jul-26 phase-2 runs** once `fork` was spelled out and `(erase 3)` undercut
+  `(clear_at r c)` by a token. `wall_at` overwrites `bv` and nothing in the DSL can put
+  it back (the only writers are `wall_at`→3 and `clear_at`→0), so a world-level stamp is
+  now visible in the rendered frame. This is `belief_witness`'s argument with a static
+  object in place of a crossing agent; it also closes `snd_gg` / `overlay` / `underlay`
+  at the commit position. It does **not** close the scope complements — `av` is the only
+  model-mover here, so `sync_all` ≡ `sync_except gv` ≡ `sync_to_world av` by
+  construction; that is `belief_false_obstacle`'s job.
+- **per-task** `_no_transient_wall`: a closed sweep over *every* cell `q` — stamp at `q`,
+  act, undo with either `clear_at q` or `erase 3` — plus the no-wall physics. None may
+  reproduce all `k` scenes. Without the bystander every task in the family fails this at
+  its own wall cell (and only there — `k` already pins the cell down).
 
 #### `belief_witness` — false belief with a non-believing witness (the cube default)
 - **root** `fn` · **count** `n_bel` per combo
@@ -423,10 +442,16 @@ distinguishing label.
 #### `belief_false_obstacle` (**fob**) — wrong about obstacle *and* goal, with a real wall
 - **root** `fn` · **count** `n_belvar` per combo · **cube only**
 - **program**
-  `fork( _seq(clear_at Wr, wall_at Wb, step gv dg, optimize(neg_dist gv) av),
-  sync_to_world av )` — on its private copy the agent erases the **real** wall `Wr`,
-  stamps the wall where it falsely believes it is `Wb`, shoves the goal toward its
-  believed location, then seeks; the world's real wall (value `3`) and goal stay put.
+  `fork( _seq(wall_at Wb, step gv dg, optimize(neg_dist gv) av), sync_to_world av )` —
+  on its private copy the agent stamps a wall where none exists `Wb`, shoves the goal
+  toward its believed location, then seeks; the world's real wall `Wr` (value `3`) and
+  goal stay put. The derive used to open with `clear_at Wr` (the agent mislocating the
+  real obstacle rather than hallucinating an extra one), but `Wr` is drawn from the free
+  cells and so rarely obstructs that the token was **vacuous on every task in the
+  family**. That mattered because certification is derive-relative (below): the searcher
+  prices the shorter derive, and against *that* one `sync_except gv` reproduced a quarter
+  of the family — which is how a `sync_all` commit reached a real-wall scene in the
+  jul-26 phase-2 runs.
 - **probes** the strongest form of the claim: the detour is bent by two *uncommitted*
   relocations, so **every scope complement must drag at least one world-value** and
   fails. Only single-value `sync_to_world(av)` leaves both put — so any solution is
@@ -434,8 +459,21 @@ distinguishing label.
   was *forced and found*, not merely argued extensionally equivalent.
 - **latent** `(av, gv, believed wall, real wall, shove)` — five literals, the most of
   any family, since the derive names both walls and the displacement.
+- **bystander** on the believed-wall cell, same as `belief_wall`. The real wall makes
+  `erase 3` fail here (it would delete a wall the world keeps), but `clear_at Wb` leaves
+  the real wall alone and takes only the phantom back down — so the transient rival
+  still reproduced **9/24** of this family until the phantom cell had something to lose.
+  Found by the relocation sweep in `rival_audit.py`, not by the named rivals, which pin
+  the wall to `Wb` and so never asked whether *some* cell works.
 - **per-task** `_scope_complements_all_fail`: `sync_to_world av` reproduces every scene
-  and no scope complement reproduces any, so the literal agency commit is forced.
+  and no scope complement reproduces any, so the literal agency commit is forced. This
+  is a **derive-relative** guarantee and is certified against *exactly the derive the
+  generator ran*. A scope commit is extensionally unconstrained on its own — it can
+  relocate any set of world values — so what rules it out is always the model
+  configuration a particular derive leaves behind; there is no derive-independent
+  version to certify. A run that still reports a degenerate/complement commit here has
+  found a **shorter derive the certification did not price**, and `experiment.py` now
+  prints that solution instead of asserting it cannot happen.
 
 #### `belief_dual` — two agents, contradictory false beliefs (**deleted**)
 - Two independent `fork(policy, sync_to_world av_i)` blocks, one per agent, each

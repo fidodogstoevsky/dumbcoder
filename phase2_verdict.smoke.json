@@ -1,5 +1,5 @@
 {
- "decomposed": false,
+ "decomposed": true,
  "smoke": true,
  "n_solved": 54,
  "n_total": 102,
@@ -22,9 +22,9 @@
   "readout": 1,
   "inpaint": 1,
   "multi_reg": 1,
-  "registration": 1,
   "reg_except": 1,
-  "perception": 1
+  "perception": 1,
+  "registration": 1
  },
  "first_solve_round_by_variant": {
   "physics": 1,
@@ -40,9 +40,9 @@
   "readout": 1,
   "inpaint": 1,
   "multi_reg": 1,
-  "registration": 1,
   "reg_except": 1,
-  "perception": 1
+  "perception": 1,
+  "registration": 1
  },
  "solved_by_kind": {
   "physics": 2,
@@ -90,15 +90,23 @@
    "optimize"
   ],
   "overlay": [
-   "fork",
+   "compose",
+   "compose_gp",
+   "dup",
+   "mapsnd",
    "overlay",
+   "pipe_gpg",
    "step"
   ],
   "comet": [
-   "fork",
+   "compose",
+   "compose_gp",
+   "dup",
+   "mapsnd",
    "neg_dist",
    "optimize",
-   "overlay"
+   "overlay",
+   "pipe_gpg"
   ],
   "flee": [
    "optimize"
@@ -106,7 +114,11 @@
   "deletion": [],
   "denoise": [],
   "underlay": [
-   "fork",
+   "compose",
+   "compose_gp",
+   "dup",
+   "mapsnd",
+   "pipe_gpg",
    "step"
   ],
   "obstacle": [
@@ -120,7 +132,7 @@
    "wall_at"
   ],
   "registration": [
-   "sync_to_world"
+   "register"
   ],
   "perception": [],
   "multi_reg": [],
@@ -200,11 +212,15 @@
     "neg_dist": 8
    },
    "overlay": {
-    "overlay": 2
+    "mapsnd": 2,
+    "overlay": 2,
+    "dup": 2
    },
    "comet": {
+    "mapsnd": 2,
     "neg_dist": 2,
-    "overlay": 2
+    "overlay": 2,
+    "dup": 2
    },
    "flee": {
     "distance": 2
@@ -216,7 +232,9 @@
     "erase": 2
    },
    "underlay": {
-    "underlay": 2
+    "underlay": 2,
+    "mapsnd": 2,
+    "dup": 2
    },
    "obstacle": {
     "neg_dist": 16,
@@ -227,10 +245,13 @@
     "wall_at": 4
    },
    "registration": {
-    "sync_to_world": 2
+    "locate": 2,
+    "register": 2,
+    "place": 2
    },
    "perception": {
-    "sync_to_model": 2
+    "via_swap": 2,
+    "sync_all": 2
    },
    "multi_reg": {
     "sync_all": 2
@@ -255,8 +276,8 @@
    "snd_gg",
    "sync_all",
    "sync_except",
-   "sync_to_model",
-   "underlay"
+   "underlay",
+   "via_swap"
   ],
   "unused_complements": []
  },
@@ -278,26 +299,23 @@
    "repr": "fn_4",
    "type": "fn",
    "tailtypes": [
+    "fn",
+    "fn_p_g"
+   ],
+   "body": "(pipe_gpg (compose_gp dup (mapsnd $0)) $1)",
+   "shared_holes": {},
+   "role": "other"
+  },
+  {
+   "repr": "fn_5",
+   "type": "fn",
+   "tailtypes": [
     "cellvalue",
     "cellvalue"
    ],
    "body": "(optimize (neg_dist $0) $1)",
    "shared_holes": {},
    "role": "desire_fragment"
-  },
-  {
-   "repr": "fn_5",
-   "type": "fn",
-   "tailtypes": [
-    "coord",
-    "coord",
-    "coord"
-   ],
-   "body": "(compose (wall_at $0 $2) (clear_at $1 $0))",
-   "shared_holes": {
-    "$0": 2
-   },
-   "role": "other"
   }
  ],
  "agent_constructor": null,
@@ -309,13 +327,14 @@
    "(bare prims)": 2
   },
   "desire": {
-   "fn_4": 8
+   "fn_5": 8
   },
   "overlay": {
-   "(bare prims)": 2
+   "fn_4": 2
   },
   "comet": {
-   "fn_4": 2
+   "fn_4": 2,
+   "fn_5": 2
   },
   "flee": {
    "(bare prims)": 2
@@ -327,14 +346,13 @@
    "(bare prims)": 2
   },
   "underlay": {
-   "(bare prims)": 2
+   "fn_4": 2
   },
   "obstacle": {
    "fn_3": 16
   },
   "relocate": {
-   "fn_5": 3,
-   "(bare prims)": 1
+   "(bare prims)": 4
   },
   "registration": {
    "(bare prims)": 2
@@ -367,11 +385,11 @@
    },
    "comet": {
     "n": 2,
-    "dl_base_median": 12.100711822509766,
-    "dl_lib_median": 11.40756607055664,
-    "saved_median": 0.693145751953125,
-    "saved_mean": 0.693145751953125,
-    "saved_total": 1.38629150390625
+    "dl_base_median": 15.566448211669922,
+    "dl_lib_median": 11.28978157043457,
+    "saved_median": 4.276666641235352,
+    "saved_mean": 4.276666641235352,
+    "saved_total": 8.553333282470703
    },
    "flee": {
     "n": 2,
@@ -408,55 +426,55 @@
    "relocate": {
     "n": 4,
     "dl_base_median": 13.34550666809082,
-    "dl_lib_median": 7.130898952484131,
-    "saved_median": 6.2146077156066895,
-    "saved_mean": 4.660955786705017,
-    "saved_total": 18.64382314682007
+    "dl_lib_median": 13.34550666809082,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
    },
    "registration": {
     "n": 2,
-    "dl_base_median": 4.499809741973877,
-    "dl_lib_median": 4.499809741973877,
+    "dl_base_median": 6.684611797332764,
+    "dl_lib_median": 6.684611797332764,
     "saved_median": 0.0,
     "saved_mean": 0.0,
     "saved_total": 0.0
    },
    "perception": {
     "n": 2,
-    "dl_base_median": 4.499809741973877,
-    "dl_lib_median": 4.499809741973877,
+    "dl_base_median": 4.158883094787598,
+    "dl_lib_median": 4.158883094787598,
     "saved_median": 0.0,
     "saved_mean": 0.0,
     "saved_total": 0.0
    },
    "multi_reg": {
     "n": 2,
-    "dl_base_median": 2.1972246170043945,
-    "dl_lib_median": 2.1972246170043945,
+    "dl_base_median": 2.079441547393799,
+    "dl_lib_median": 2.079441547393799,
     "saved_median": 0.0,
     "saved_mean": 0.0,
     "saved_total": 0.0
    },
    "reg_except": {
     "n": 2,
-    "dl_base_median": 4.499809741973877,
-    "dl_lib_median": 4.499809741973877,
+    "dl_base_median": 4.382026672363281,
+    "dl_lib_median": 4.382026672363281,
     "saved_median": 0.0,
     "saved_mean": 0.0,
     "saved_total": 0.0
    },
    "inpaint": {
     "n": 2,
-    "dl_base_median": 2.1972246170043945,
-    "dl_lib_median": 2.1972246170043945,
+    "dl_base_median": 2.079441547393799,
+    "dl_lib_median": 2.079441547393799,
     "saved_median": 0.0,
     "saved_mean": 0.0,
     "saved_total": 0.0
    },
    "readout": {
     "n": 2,
-    "dl_base_median": 2.1972246170043945,
-    "dl_lib_median": 2.1972246170043945,
+    "dl_base_median": 2.079441547393799,
+    "dl_lib_median": 2.079441547393799,
     "saved_median": 0.0,
     "saved_mean": 0.0,
     "saved_total": 0.0
@@ -466,45 +484,8 @@
   "nonmental_saved_median": 0.0,
   "n_belief_using_ctor": 0
  },
- "mdl_margin": {
-  "by_variant": {
-   "belief_wall": {
-    "n_tasks": 5,
-    "n_tasks_with_competitor": 5,
-    "n_competitor_pairs": 5,
-    "margin_lib_min": 1.0216522216796875,
-    "margin_lib_median": 9.43348503112793,
-    "margin_lib_max": 9.43348503112793,
-    "margin_base_median": 1.0216522216796875
-   },
-   "belief_goal": {
-    "n_tasks": 7,
-    "n_tasks_with_competitor": 0,
-    "n_competitor_pairs": 0,
-    "margin_lib_min": null,
-    "margin_lib_median": null,
-    "margin_lib_max": null,
-    "margin_base_median": null
-   },
-   "belief_false_obstacle": {
-    "n_tasks": 1,
-    "n_tasks_with_competitor": 0,
-    "n_competitor_pairs": 0,
-    "margin_lib_min": null,
-    "margin_lib_median": null,
-    "margin_lib_max": null,
-    "margin_base_median": null
-   }
-  },
-  "n_competitor_pairs": 5,
-  "pct_competitors_longer": 100.0,
-  "n_competitors_shorter": 0,
-  "n_excluded_shorter": 8,
-  "n_action_right_scene_wrong": 0,
-  "margin_lib_median": 9.43348503112793,
-  "margin_lib_min": 1.0216522216796875
- },
- "mdl_margin_note": "STALE: mdl_margins.json was priced from a run older than this one; re-run mdl_margin.py to price THIS library",
+ "mdl_margin": null,
+ "mdl_margin_note": "no mdl_margins.decomposed.json yet \u2014 run `python mdl_margin.py --decomposed --smoke` to price belief against its rivals",
  "constructor_found": false,
  "constructor_shared": false,
  "belief_uses_ctor": false,
@@ -526,12 +507,12 @@
    "branch": "master",
    "dirty": true
   },
-  "timestamp": "2026-07-27T17:52:52Z",
+  "timestamp": "2026-07-27T18:19:15Z",
   "host": "eduvpn-uva-stu-145-3-16-66.vpn.uva.nl",
   "python": "3.12.7",
-  "argv": "phase1.py --smoke",
+  "argv": "phase2.py --smoke",
   "knobs": {
-   "decomposed": false,
+   "decomposed": true,
    "smoke": true,
    "cube": true,
    "t_fn": 15,
@@ -579,6 +560,6 @@
    "belief_fob": 25,
    "relocate": 26
   },
-  "repro": "commit 127c8d9+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-27T17:52:52Z"
+  "repro": "commit 127c8d9+dirty | phase2 (decomposed, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-27T18:19:15Z"
  }
 }

@@ -76,7 +76,7 @@ To learn, in our setting, is to grow one's conceptual vocabulary by enriching it
 
 == What is given, and what must be learned <audit>
 
-
+We argue that 
 
 The argument of @problem is only as strong as the audit of the learner's starting point. If any part of the apparatus — the interpreter, the type system, the primitive library — already encodes the world/model distinction, or already carries a notion of agency, then a discovered belief abstraction shows nothing, because belief was present from the start in a thin disguise. This section makes the audit explicit.
 

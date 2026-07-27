@@ -320,9 +320,13 @@ def run(decomposed=False, smoke=False, run_path=None, ground_truth=False):
           f"{[d.repr for d in D.invented]})")
 
     # every wall-belief task (including the extra distinct-seeded batch) is a genuine
-    # belief_wall variant.  They matter most here: for plain wall-belief the transient-
-    # wall rival reproduces the FULL scene, so MDL (not the witness/expressiveness) is
-    # the operative discriminator.
+    # belief_wall variant.  The transient-wall rival used to reproduce the FULL scene
+    # here, which made plain wall-belief the one family where MDL — rather than
+    # expressiveness — was the operative discriminator.  It no longer does: an inert
+    # bystander now sits on the phantom-wall cell, so a world-level stamp destroys
+    # something the rendered frame keeps (see tasks.make_belief_tasks).  Expect these
+    # rivals to land in the 'reproduces the agents, not the scene' bucket rather than
+    # among the competitors — belief_wall is now excluded structurally, like witness.
     records = []
     n_bad = 0
     n_missing = 0

@@ -1,16 +1,17 @@
 """Belief solve-rate figure (phases 1-2): solved / total per belief variant.
 
 `solve_dynamics.py` charts WHEN belief becomes reachable (the S-curve) and `corpus_dl.py`
-charts the compression it buys.  This script asks the flatter, prior question: of the four
-belief families the curriculum poses — wall / witness / goal-displacement / dual — HOW MANY
-did the search actually solve?  It is the honest denominator behind every later belief
+charts the compression it buys.  This script asks the flatter, prior question: of the five
+belief families the curriculum poses — goal-displacement / two-observer / wall / witness /
+false-obstacle — HOW MANY did the search actually solve?  It is the honest denominator behind every later belief
 claim: a bar per variant, its solved height against the full-corpus total.
 
-  wall    (belief_wall)    — plain transient-wall belief; the transient-wall rival
-                             reproduces the whole scene, so MDL is the discriminator.
-  witness (belief_witness) — a crossing witness rules the transient-wall rival out.
-  goal    (belief_goal)    — the agent chases a privately-displaced goal.
-  dual    (belief_dual)    — two mind-bearing agents, two private worlds.
+  goal      (belief_goal)      — the agent chases a privately-displaced goal (the trunk).
+  observers (belief_observers) — two agents, one goal, one grid: only one gets a model.
+  wall      (belief_wall)      — plain transient-wall belief; the transient-wall rival
+                                 reproduces the whole scene, so MDL is the discriminator.
+  witness   (belief_witness)   — a crossing witness rules the transient-wall rival out.
+  false-obst(belief_false_obstacle) — a real wall forces the literal agency commit.
 
 The bar heights are DERIVED FROM AN ACTUAL RUN, not ground truth.  `experiment.run_phase`
 (phase1.py / phase2.py) writes `phase{1,2}_run[.smoke].json` — the programs enumeration
@@ -44,28 +45,28 @@ from mdl_margin import build_corpus
 
 
 # ── belief variants (the bars) — same fine labels as tasks.belief_variant ───────
-VAR_ORDER = ['belief_wall', 'belief_witness', 'belief_goal', 'belief_dual',
+VAR_ORDER = ['belief_goal', 'belief_observers', 'belief_wall', 'belief_witness',
              'belief_false_obstacle']
 VAR_LABEL = {
+    'belief_goal':    'goal',
+    'belief_observers': 'observers',
     'belief_wall':    'wall',
     'belief_witness': 'witness',
-    'belief_goal':    'goal',
-    'belief_dual':    'dual',
     'belief_false_obstacle': 'false-obst.',
 }
 VAR_SUB = {
+    'belief_goal':    'displaced private goal',
+    'belief_observers': 'one believer, one bystander',
     'belief_wall':    'transient-wall belief',
     'belief_witness': 'crossing witness',
-    'belief_goal':    'displaced private goal',
-    'belief_dual':    'two private worlds',
     'belief_false_obstacle': 'forced literal commit',
 }
 # tints of the belief blue: all belief, subtypes (deep → light).
 VAR_COLOR = {
-    'belief_wall':    '#0b4f9e',
-    'belief_witness': '#2a78d6',
-    'belief_goal':    '#5a9de8',
-    'belief_dual':    '#8fbdf0',
+    'belief_goal':    '#0b4f9e',
+    'belief_observers': '#2a78d6',
+    'belief_wall':    '#5a9de8',
+    'belief_witness': '#8fbdf0',
     'belief_false_obstacle': '#b9d5f5',
 }
 INK, MUTED, GRID, BG = '#0b0b0b', '#52514e', '#e6e6e2', '#fcfcfb'

@@ -1,0 +1,106 @@
+{
+ "phase": 1,
+ "decomposed": false,
+ "smoke": true,
+ "source": "phase1_run.smoke.json",
+ "library": [
+  "fn_3",
+  "fn_4",
+  "fn_5"
+ ],
+ "agent_ctor": "fn_3",
+ "agent_ctor_uses": 7,
+ "n_solved_belief": 13,
+ "tiled": false,
+ "columns": [
+  "fn_3",
+  "fn_4",
+  "fn_5"
+ ],
+ "combos": [
+  {
+   "gv": 1,
+   "av": 7,
+   "solved": 3,
+   "variants": [
+    "belief_false_obstacle",
+    "belief_goal",
+    "belief_wall"
+   ],
+   "counts": {
+    "fn_3": 1,
+    "fn_4": 0,
+    "fn_5": 2
+   }
+  },
+  {
+   "gv": 4,
+   "av": 9,
+   "solved": 2,
+   "variants": [
+    "belief_goal",
+    "belief_wall"
+   ],
+   "counts": {
+    "fn_3": 1,
+    "fn_4": 1,
+    "fn_5": 0
+   }
+  },
+  {
+   "gv": 6,
+   "av": 2,
+   "solved": 2,
+   "variants": [
+    "belief_goal",
+    "belief_wall"
+   ],
+   "counts": {
+    "fn_3": 1,
+    "fn_4": 1,
+    "fn_5": 0
+   }
+  },
+  {
+   "gv": 7,
+   "av": 6,
+   "solved": 1,
+   "variants": [
+    "belief_goal"
+   ],
+   "counts": {
+    "fn_3": 1,
+    "fn_4": 0,
+    "fn_5": 0
+   }
+  },
+  {
+   "gv": 8,
+   "av": 5,
+   "solved": 2,
+   "variants": [
+    "belief_goal",
+    "belief_wall"
+   ],
+   "counts": {
+    "fn_3": 1,
+    "fn_4": 0,
+    "fn_5": 1
+   }
+  },
+  {
+   "gv": 9,
+   "av": 8,
+   "solved": 3,
+   "variants": [
+    "belief_goal",
+    "belief_wall"
+   ],
+   "counts": {
+    "fn_3": 2,
+    "fn_4": 0,
+    "fn_5": 1
+   }
+  }
+ ]
+}

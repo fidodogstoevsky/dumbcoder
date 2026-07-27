@@ -66,6 +66,7 @@ from ecd import (
 )
 from dsl import unfold
 from prims import make_symmetric_prims
+from scenes import as_scenes
 from tasks import (
     COMBOS, make_goal_displacement_tasks, belief_rival_specs, _agent_pos,
 )
@@ -114,10 +115,16 @@ def _rebuild_library(decomposed, smoke, run_path):
 
 
 # ── the probe over a battery of held-out Sally-Anne scenes ────────────────────────────
-def _probe_scene(D, Q, x, m):
+def _probe_scene(D, Q, task, m):
     """On one held-out goal-displacement scene, evaluate the mental reading and the
     shortest non-mental rival under the library.  Returns a record with each program's
-    library form, DL, and the cell its agent settles on in the final frame."""
+    library form, DL, and the cell its agent settles on in the final frame.
+
+    A held-out TASK is k scenes sharing one latent program; the probe is a
+    single-scene picture (the Sally-Anne figure shows one grid), so it reads the
+    task's representative scene.  `m` is that scene's own meta, so `displaced_to`
+    below is the believed cell for exactly the scene being drawn."""
+    x = as_scenes(task).rep
     av, gv = m['av'], m['gv']
     believed = tuple(m['displaced_to'])
     true_goal = _agent_pos(x[-1], gv)            # the true goal never moves

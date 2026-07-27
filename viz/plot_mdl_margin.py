@@ -11,7 +11,7 @@ Two line styles carry the crux:
   dashed = priced in base primitives (no abstractions) — the honest lower bound.
 
 Everything to the right of the 0 line means the mental reading is the shorter description.
-Variants with no non-mental behavioural competitor (goal-displacement, dual) are named in
+Variants with no non-mental behavioural competitor (goal-displacement, two-observer) are named in
 the annotation: there, expressiveness alone excludes every non-mental program.
 
     python plot_mdl_margin.py                 # reads mdl_margins[.decomposed].json
@@ -33,17 +33,17 @@ VAR_COLOR = {
     'belief_wall':    '#2a78d6',   # slot 1 — blue
     'belief_witness': '#eb6834',   # slot 8 — orange
     'belief_goal':    '#1baf7a',   # aqua (used only if it ever gains competitors)
-    'belief_dual':    '#4a3aa7',   # violet
+    'belief_observers': '#4a3aa7', # violet (likewise: no single-grid competitor)
     'belief_false_obstacle': '#b8860b',  # dark goldenrod (forced-literal family)
 }
 VAR_LABEL = {
     'belief_wall':    'wall (phantom obstacle)',
     'belief_witness': 'witness (false belief + bystander)',
     'belief_goal':    'goal-displacement',
-    'belief_dual':    'dual (contradictory beliefs)',
+    'belief_observers': 'two observers (selective attribution)',
     'belief_false_obstacle': 'false-obstacle (forced literal commit)',
 }
-VAR_ORDER = ['belief_wall', 'belief_witness', 'belief_goal', 'belief_dual',
+VAR_ORDER = ['belief_goal', 'belief_observers', 'belief_wall', 'belief_witness',
              'belief_false_obstacle']
 
 INK, MUTED, GRID = '#0b0b0b', '#52514e', '#e6e6e2'

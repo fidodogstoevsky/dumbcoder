@@ -54,12 +54,13 @@ from ecd import (
     mat_key, mat_key_id, tr, normalize, simplify,
 )
 from dsl import unfold
+from scenes import as_scenes, solves
 from prims import make_symmetric_prims
 from tasks import (
     COMBOS,
     make_physics_tasks, make_desire_tasks,
     make_belief_tasks, make_witness_belief_tasks,
-    make_goal_displacement_tasks, make_dual_belief_tasks,
+    make_goal_displacement_tasks, make_two_observer_tasks,
     make_false_obstacle_belief_tasks,
     belief_rival_specs, belief_variant,
     make_overlay_tasks, make_comet_tasks, make_registration_tasks,
@@ -107,19 +108,31 @@ def _observed_agents(m):
     already pins every distinguishing cell (witness, goal, wall) without our having to
     enumerate the discriminating value here."""
     agents = [m['av']]
-    if 'av2' in m:            # dual belief: a second believer
-        agents.append(m['av2'])
+    if 'observer' in m:       # two observers: the agent with the TRUE belief
+        agents.append(m['observer'])
     if 'aw' in m:             # witness belief: the non-believing witness
         agents.append(m['aw'])
     return agents
 
 
 def _unfold_rival(D, x, rival_str):
-    "Render a rival from x's initial frame over x's horizon; None if it raises during unfold."
+    """Render a rival over EVERY scene of the task; None if it raises during unfold.
+
+    Returns the list of rendered scene sequences, so the competitor test below can ask
+    the only question that matters for a k-scene task: does this rival explain the
+    whole set, or just one member of it."""
     try:
-        return unfold(x[0], x.shape[0], tr(D, rival_str)())
+        prog = tr(D, rival_str)()
     except Exception:
         return None
+    out = []
+    for s in as_scenes(x):
+        try:
+            r = unfold(s[0], s.shape[0], prog)
+        except Exception:
+            return None
+        out.append(r)
+    return out
 
 
 def _reproduces_scene(xr, x):
@@ -132,8 +145,16 @@ def _reproduces_scene(xr, x):
     expressiveness, not by MDL.  Full-frame equality is both stricter and simpler than the
     old agents-only trajectory check, which let such a wrong-scene rival masquerade as a
     competitor and — being shorter on a few tasks — spuriously trip the 'genuine shorter
-    competitor' warning.  A rival that raised during unfold (xr is None) is not a competitor."""
-    return xr is not None and np.array_equal(xr, x)
+    competitor' warning.  A rival that raised during unfold (xr is None) is not a competitor.
+
+    With k-scene tasks the condition applies to EVERY scene: the searcher would only
+    have returned this rival if it reproduced the whole set, so a rival that renders
+    one scene and fails the next was never a competitor for the task."""
+    if xr is None:
+        return False
+    scenes = list(as_scenes(x))
+    return len(xr) == len(scenes) and all(np.array_equal(a, b)
+                                          for a, b in zip(xr, scenes))
 
 
 def _reproduces_agents(xr, x, m):
@@ -144,18 +165,25 @@ def _reproduces_agents(xr, x, m):
     NOT decide competitor status."""
     if xr is None:
         return False
-    T = x.shape[0]
-    return all(_agent_pos(xr[t], a) == _agent_pos(x[t], a)
-               for a in _observed_agents(m) for t in range(T))
+    agents = _observed_agents(m)
+    for r, s in zip(xr, as_scenes(x)):
+        if r.shape != s.shape:
+            return False
+        if not all(_agent_pos(r[t], a) == _agent_pos(s[t], a)
+                   for a in agents for t in range(s.shape[0])):
+            return False
+    return True
 
 
 # ── corpus (mirrors experiment.run_phase's full-run corpus; kept in step by seeds) ──
-def build_corpus(smoke=False):
+def build_corpus(smoke=False, k=None):
     """The full phase-1/2 mixed corpus: physics/desire/overlay/comet/registration +
-    the eight symmetric cube corners, plus belief wall/witness/goal-displacement/dual
-    and a second distinct-seeded batch of plain wall-belief tasks.  Sizes/seeds match
+    the eight symmetric cube corners, plus belief wall/witness/goal-displacement/
+    two-observer and a second distinct-seeded batch of plain wall-belief tasks.  Sizes/seeds match
     experiment.run_phase so the stitched library equals the one a real phase converges to.
-    Returns a flat list of (x, meta)."""
+    Returns a flat list of (task, meta), each task a `Scenes` of k trajectories."""
+    import tasks as _tasks
+    k = _tasks.K_SCENES if k is None else int(k)
     if smoke:
         n_phys, n_des, n_ov, n_reg, n_bel, n_corner = 2, 1, 2, 2, 1, 2
         n_comet, n_belvar, n_goal, n_obstacle, n_relocate = 2, 1, 2, 2, 4
@@ -163,34 +191,34 @@ def build_corpus(smoke=False):
         n_phys, n_des, n_ov, n_reg, n_bel, n_corner = 4, 2, 4, 4, 6, 4
         n_comet, n_belvar, n_goal, n_obstacle, n_relocate = 4, 3, 6, 6, 16
 
-    phys = make_physics_tasks(n_phys, seed=0)
-    des  = make_desire_tasks(n_des, COMBOS, seed=1)
-    ov   = make_overlay_tasks(n_ov, seed=3)
-    comet = make_comet_tasks(n_comet, seed=5)
-    reg  = make_registration_tasks(n_reg, seed=4)
+    phys = make_physics_tasks(n_phys, seed=0, k=k)
+    des  = make_desire_tasks(n_des, COMBOS, seed=1, k=k)
+    ov   = make_overlay_tasks(n_ov, seed=3, k=k)
+    comet = make_comet_tasks(n_comet, seed=5, k=k)
+    reg  = make_registration_tasks(n_reg, seed=4, k=k)
     # cube run: witness belief is the headline single-agent family (transient-wall rival
     # excluded by the crossing witness); plain belief seeds the fork(policy, sync) token.
-    bel  = make_witness_belief_tasks(n_bel, COMBOS, seed=2)
-    gdb  = make_goal_displacement_tasks(n_goal, COMBOS, seed=23)
-    dual = make_dual_belief_tasks(n_belvar, COMBOS, seed=24)
+    bel  = make_witness_belief_tasks(n_bel, COMBOS, seed=2, k=k)
+    gdb  = make_goal_displacement_tasks(n_goal, COMBOS, seed=23, k=k)
+    obs  = make_two_observer_tasks(n_belvar, COMBOS, seed=27, k=k)
     # false-obstacle belief: real wall in the world forbids the scope-complement commit,
     # so every solution is the literal sync_to_world(av) (see experiment.run_phase).
-    fob  = make_false_obstacle_belief_tasks(n_belvar, COMBOS, seed=25)
-    belief_extra = make_belief_tasks(max(1, n_bel // 2), COMBOS, seed=22)
+    fob  = make_false_obstacle_belief_tasks(n_belvar, COMBOS, seed=25, k=k)
+    belief_extra = make_belief_tasks(max(1, n_bel // 2), COMBOS, seed=22, k=k)
 
-    fn_corner = (make_flee_tasks(n_corner, seed=10)
-                 + make_deletion_tasks(n_corner, seed=11)
-                 + make_denoise_tasks(n_corner, seed=12)
-                 + make_underlay_tasks(n_corner, seed=19)
-                 + make_obstacle_tasks(n_obstacle, seed=18)
-                 + make_relocation_tasks(n_relocate, seed=26))
-    pair_corner = (make_perception_tasks(n_corner, seed=13)
-                   + make_multi_registration_tasks(n_corner, seed=14)
-                   + make_registration_except_tasks(n_corner, seed=15)
-                   + make_inpainting_tasks(n_corner, seed=16)
-                   + make_readout_tasks(n_corner, seed=17))
+    fn_corner = (make_flee_tasks(n_corner, seed=10, k=k)
+                 + make_deletion_tasks(n_corner, seed=11, k=k)
+                 + make_denoise_tasks(n_corner, seed=12, k=k)
+                 + make_underlay_tasks(n_corner, seed=19, k=k)
+                 + make_obstacle_tasks(n_obstacle, seed=18, k=k)
+                 + make_relocation_tasks(n_relocate, seed=26, k=k))
+    pair_corner = (make_perception_tasks(n_corner, seed=13, k=k)
+                   + make_multi_registration_tasks(n_corner, seed=14, k=k)
+                   + make_registration_except_tasks(n_corner, seed=15, k=k)
+                   + make_inpainting_tasks(n_corner, seed=16, k=k)
+                   + make_readout_tasks(n_corner, seed=17, k=k))
 
-    tasks = (phys + des + ov + comet + bel + gdb + dual + fob + belief_extra
+    tasks = (phys + des + ov + comet + bel + gdb + obs + fob + belief_extra
              + fn_corner + reg + pair_corner)
     # dedupe identical matrices (would skew stitch counts)
     seen, out = set(), []
@@ -415,8 +443,8 @@ def _print_summary(records):
         n_tasks_with_comp[v] += int(has)
 
     by_variant = {}
-    for var in ('belief_wall', 'belief_witness', 'belief_goal', 'belief_dual',
-                'belief_false_obstacle'):
+    for var in ('belief_goal', 'belief_observers', 'belief_wall',
+                'belief_witness', 'belief_false_obstacle'):
         if var not in n_tasks:
             continue
         cl = comp[var]

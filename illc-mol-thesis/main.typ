@@ -36,6 +36,7 @@
 #include "chapter4.typ"
 #include "chapter5.typ"
 #include "chapter6.typ"
+#include "appendix.typ"
 #pagebreak()
 
 #load-bib(read("chapter1.bib") + read("chapter2.bib"), main: true)

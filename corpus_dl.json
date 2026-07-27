@@ -1,0 +1,137 @@
+{
+ "decomposed": false,
+ "phase": 1,
+ "smoke": true,
+ "n_rounds": 2,
+ "n_tasks": 67,
+ "family_counts": {
+  "physics": 2,
+  "desire": 8,
+  "world": 44,
+  "belief": 13
+ },
+ "signature_round": 1,
+ "signature_drop": 149.2249617576599,
+ "final_library": [
+  "fn_0",
+  "fn_1",
+  "fn_2"
+ ],
+ "rounds": [
+  {
+   "round": 0,
+   "n_invented": 0,
+   "invented": [],
+   "n_solved": 0,
+   "corpus_dl": 813.6503429412842,
+   "library_cost": 0.0,
+   "total_dl": 813.6503429412842,
+   "by_family": {
+    "physics": 11.26957893371582,
+    "desire": 57.953819274902344,
+    "world": 414.16436195373535,
+    "belief": 330.26258277893066
+   }
+  },
+  {
+   "round": 1,
+   "n_invented": 3,
+   "invented": [
+    "fn_0",
+    "fn_1",
+    "fn_2"
+   ],
+   "n_solved": 59,
+   "corpus_dl": 604.1082139015198,
+   "library_cost": 23.390494346618652,
+   "total_dl": 627.4987082481384,
+   "by_family": {
+    "physics": 11.982929229736328,
+    "desire": 55.26204299926758,
+    "world": 355.8256206512451,
+    "belief": 181.03762102127075
+   }
+  },
+  {
+   "round": 2,
+   "n_invented": 3,
+   "invented": [
+    "fn_0",
+    "fn_1",
+    "fn_2"
+   ],
+   "n_solved": 67,
+   "corpus_dl": 577.3923516273499,
+   "library_cost": 28.806594848632812,
+   "total_dl": 606.1989464759827,
+   "by_family": {
+    "physics": 11.982929229736328,
+    "desire": 60.807220458984375,
+    "world": 357.21191215515137,
+    "belief": 147.39028978347778
+   }
+  }
+ ],
+ "provenance": {
+  "git": {
+   "commit": "4f6b84cbc58895e4c38b2f15db395a0b7f4238be",
+   "commit_short": "4f6b84c",
+   "branch": "master",
+   "dirty": true
+  },
+  "timestamp": "2026-07-25T17:18:40Z",
+  "host": "eduvpn-uva-stu-145-3-16-66.vpn.uva.nl",
+  "python": "3.12.7",
+  "argv": "phase1.py --smoke",
+  "knobs": {
+   "decomposed": false,
+   "smoke": true,
+   "cube": true,
+   "t_fn": 15,
+   "t_fn_round1": 15,
+   "t_reg": 8,
+   "ecd_iters": 2,
+   "stitch_iters": 3,
+   "dream_on": true,
+   "dream_iters": 120,
+   "plain_belief": false,
+   "curriculum": true,
+   "k": 4,
+   "n_phys": 2,
+   "n_des": 1,
+   "n_ov": 2,
+   "n_comet": 2,
+   "n_reg": 2,
+   "n_bel": 1,
+   "n_belvar": 1,
+   "n_goal": 2,
+   "n_corner": 2,
+   "n_obstacle": 2,
+   "n_relocate": 4
+  },
+  "seeds": {
+   "physics": 0,
+   "desire": 1,
+   "belief": 2,
+   "overlay": 3,
+   "registration": 4,
+   "comet": 5,
+   "flee": 10,
+   "deletion": 11,
+   "denoise": 12,
+   "perception": 13,
+   "multi_reg": 14,
+   "reg_except": 15,
+   "inpaint": 16,
+   "readout": 17,
+   "obstacle": 18,
+   "underlay": 19,
+   "belief_extra": 22,
+   "belief_goal": 23,
+   "belief_dual": 24,
+   "belief_fob": 25,
+   "relocate": 26
+  },
+  "repro": "commit 4f6b84c+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-25T17:18:40Z"
+ }
+}

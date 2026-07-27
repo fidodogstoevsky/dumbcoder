@@ -1,12 +1,12 @@
 {
  "provenance": {
   "git": {
-   "commit": "aa37df181ee852d2d21c374299f374cc2ccfbf2c",
-   "commit_short": "aa37df1",
+   "commit": "4f6b84cbc58895e4c38b2f15db395a0b7f4238be",
+   "commit_short": "4f6b84c",
    "branch": "master",
    "dirty": true
   },
-  "timestamp": "2026-07-19T09:29:56Z",
+  "timestamp": "2026-07-25T17:18:40Z",
   "host": "eduvpn-uva-stu-145-3-16-66.vpn.uva.nl",
   "python": "3.12.7",
   "argv": "phase1.py --smoke",
@@ -23,6 +23,7 @@
    "dream_iters": 120,
    "plain_belief": false,
    "curriculum": true,
+   "k": 4,
    "n_phys": 2,
    "n_des": 1,
    "n_ov": 2,
@@ -58,7 +59,7 @@
    "belief_fob": 25,
    "relocate": 26
   },
-  "repro": "commit aa37df1+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-19T09:29:56Z"
+  "repro": "commit 4f6b84c+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-25T17:18:40Z"
  },
  "phase": 1,
  "decomposed": false,
@@ -69,16 +70,37 @@
   "fn_1",
   "fn_2"
  ],
- "n_belief_solved": 8,
+ "n_belief_solved": 13,
  "belief_variants_solved": {
-  "belief_goal": 8
+  "belief_goal": 7,
+  "belief_false_obstacle": 1,
+  "belief_wall": 5
  },
  "structural": {
   "by_donor_family": {
-   "desire": {
-    "n_belief_targets": 8,
+   "physics": {
+    "n_belief_targets": 1,
     "target_variants": {
-     "belief_goal": 64
+     "belief_goal": 1
+    },
+    "roles": [
+     "physics step"
+    ],
+    "min_depth": 2,
+    "fragments": [
+     {
+      "shape": "(step #v up)",
+      "role": "physics step",
+      "count": 1
+     }
+    ]
+   },
+   "desire": {
+    "n_belief_targets": 13,
+    "target_variants": {
+     "belief_goal": 56,
+     "belief_false_obstacle": 8,
+     "belief_wall": 40
     },
     "roles": [
      "action policy (seek)"
@@ -88,31 +110,68 @@
      {
       "shape": "(optimize (neg_dist #v) #v)",
       "role": "action policy (seek)",
-      "count": 64
+      "count": 104
      }
     ]
    },
    "belief_goal": {
-    "n_belief_targets": 4,
+    "n_belief_targets": 2,
     "target_variants": {
-     "belief_goal": 16
+     "belief_goal": 10
     },
     "roles": [
      "agent block (fork \u2227 commit)"
     ],
-    "min_depth": 1,
+    "min_depth": 2,
     "fragments": [
      {
       "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
       "role": "agent block (fork \u2227 commit)",
-      "count": 16
+      "count": 10
+     }
+    ]
+   },
+   "flee": {
+    "n_belief_targets": 7,
+    "target_variants": {
+     "belief_goal": 14
+    },
+    "roles": [
+     "flee policy"
+    ],
+    "min_depth": 2,
+    "fragments": [
+     {
+      "shape": "(optimize (distance #v) #v)",
+      "role": "flee policy",
+      "count": 14
+     }
+    ]
+   },
+   "obstacle": {
+    "n_belief_targets": 6,
+    "target_variants": {
+     "belief_false_obstacle": 16,
+     "belief_wall": 80
+    },
+    "roles": [
+     "belief's derive (wall policy)"
+    ],
+    "min_depth": 1,
+    "fragments": [
+     {
+      "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+      "role": "belief's derive (wall policy)",
+      "count": 96
      }
     ]
    },
    "registration": {
-    "n_belief_targets": 8,
+    "n_belief_targets": 12,
     "target_variants": {
-     "belief_goal": 16
+     "belief_goal": 14,
+     "belief_false_obstacle": 2,
+     "belief_wall": 8
     },
     "roles": [
      "agency commit"
@@ -122,16 +181,60 @@
      {
       "shape": "(sync_to_world #v)",
       "role": "agency commit",
-      "count": 16
+      "count": 24
+     }
+    ]
+   },
+   "reg_except": {
+    "n_belief_targets": 2,
+    "target_variants": {
+     "belief_goal": 2,
+     "belief_wall": 2
+    },
+    "roles": [
+     "fragment"
+    ],
+    "min_depth": 1,
+    "fragments": [
+     {
+      "shape": "(sync_except #v)",
+      "role": "fragment",
+      "count": 4
+     }
+    ]
+   },
+   "perception": {
+    "n_belief_targets": 1,
+    "target_variants": {
+     "belief_goal": 2
+    },
+    "roles": [
+     "fragment"
+    ],
+    "min_depth": 1,
+    "fragments": [
+     {
+      "shape": "(sync_to_model #v)",
+      "role": "fragment",
+      "count": 2
      }
     ]
    }
   },
   "edges": [
    {
+    "donor_label": "physics",
+    "donor_kid": "92e2ad7c9d0afedaf260a3bfaa4352a3fb5205df",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(step #v up)",
+    "role": "physics step",
+    "depth": 2
+   },
+   {
     "donor_label": "desire",
-    "donor_kid": "fa583465976a2309707458c697e5e5857239a0b7",
-    "target_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
+    "donor_kid": "44a71425158b6d1c544051f79dca34400f52f268",
+    "target_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
     "target_variant": "belief_goal",
     "shape": "(optimize (neg_dist #v) #v)",
     "role": "action policy (seek)",
@@ -139,8 +242,8 @@
    },
    {
     "donor_label": "desire",
-    "donor_kid": "fa583465976a2309707458c697e5e5857239a0b7",
-    "target_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
+    "donor_kid": "44a71425158b6d1c544051f79dca34400f52f268",
+    "target_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
     "target_variant": "belief_goal",
     "shape": "(optimize (neg_dist #v) #v)",
     "role": "action policy (seek)",
@@ -148,8 +251,8 @@
    },
    {
     "donor_label": "desire",
-    "donor_kid": "fa583465976a2309707458c697e5e5857239a0b7",
-    "target_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
+    "donor_kid": "44a71425158b6d1c544051f79dca34400f52f268",
+    "target_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
     "target_variant": "belief_goal",
     "shape": "(optimize (neg_dist #v) #v)",
     "role": "action policy (seek)",
@@ -157,8 +260,8 @@
    },
    {
     "donor_label": "desire",
-    "donor_kid": "fa583465976a2309707458c697e5e5857239a0b7",
-    "target_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
+    "donor_kid": "44a71425158b6d1c544051f79dca34400f52f268",
+    "target_kid": "b47a35f677973c5b1775644f8b1a208862592304",
     "target_variant": "belief_goal",
     "shape": "(optimize (neg_dist #v) #v)",
     "role": "action policy (seek)",
@@ -166,8 +269,17 @@
    },
    {
     "donor_label": "desire",
-    "donor_kid": "fa583465976a2309707458c697e5e5857239a0b7",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
+    "donor_kid": "44a71425158b6d1c544051f79dca34400f52f268",
+    "target_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "44a71425158b6d1c544051f79dca34400f52f268",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
     "target_variant": "belief_goal",
     "shape": "(optimize (neg_dist #v) #v)",
     "role": "action policy (seek)",
@@ -175,8 +287,8 @@
    },
    {
     "donor_label": "desire",
-    "donor_kid": "fa583465976a2309707458c697e5e5857239a0b7",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
+    "donor_kid": "44a71425158b6d1c544051f79dca34400f52f268",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
     "target_variant": "belief_goal",
     "shape": "(optimize (neg_dist #v) #v)",
     "role": "action policy (seek)",
@@ -184,812 +296,2225 @@
    },
    {
     "donor_label": "desire",
-    "donor_kid": "fa583465976a2309707458c697e5e5857239a0b7",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
+    "donor_kid": "44a71425158b6d1c544051f79dca34400f52f268",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "44a71425158b6d1c544051f79dca34400f52f268",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "44a71425158b6d1c544051f79dca34400f52f268",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "44a71425158b6d1c544051f79dca34400f52f268",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "44a71425158b6d1c544051f79dca34400f52f268",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "44a71425158b6d1c544051f79dca34400f52f268",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3f0308c9be806342a97ac7522d2510e02f611e08",
+    "target_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
     "target_variant": "belief_goal",
     "shape": "(optimize (neg_dist #v) #v)",
     "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3f0308c9be806342a97ac7522d2510e02f611e08",
+    "target_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3f0308c9be806342a97ac7522d2510e02f611e08",
+    "target_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3f0308c9be806342a97ac7522d2510e02f611e08",
+    "target_kid": "b47a35f677973c5b1775644f8b1a208862592304",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3f0308c9be806342a97ac7522d2510e02f611e08",
+    "target_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3f0308c9be806342a97ac7522d2510e02f611e08",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3f0308c9be806342a97ac7522d2510e02f611e08",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3f0308c9be806342a97ac7522d2510e02f611e08",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3f0308c9be806342a97ac7522d2510e02f611e08",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3f0308c9be806342a97ac7522d2510e02f611e08",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3f0308c9be806342a97ac7522d2510e02f611e08",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3f0308c9be806342a97ac7522d2510e02f611e08",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3f0308c9be806342a97ac7522d2510e02f611e08",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+    "target_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+    "target_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+    "target_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+    "target_kid": "b47a35f677973c5b1775644f8b1a208862592304",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+    "target_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+    "target_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+    "target_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+    "target_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+    "target_kid": "b47a35f677973c5b1775644f8b1a208862592304",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+    "target_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+    "target_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+    "target_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+    "target_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+    "target_kid": "b47a35f677973c5b1775644f8b1a208862592304",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+    "target_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+    "target_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+    "target_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+    "target_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+    "target_kid": "b47a35f677973c5b1775644f8b1a208862592304",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+    "target_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+    "target_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+    "target_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+    "target_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+    "target_kid": "b47a35f677973c5b1775644f8b1a208862592304",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+    "target_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "ae510b1c5172023f244add9be002ef5919cd45ab",
+    "target_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "ae510b1c5172023f244add9be002ef5919cd45ab",
+    "target_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "ae510b1c5172023f244add9be002ef5919cd45ab",
+    "target_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "ae510b1c5172023f244add9be002ef5919cd45ab",
+    "target_kid": "b47a35f677973c5b1775644f8b1a208862592304",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "ae510b1c5172023f244add9be002ef5919cd45ab",
+    "target_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "ae510b1c5172023f244add9be002ef5919cd45ab",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "ae510b1c5172023f244add9be002ef5919cd45ab",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 4
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "ae510b1c5172023f244add9be002ef5919cd45ab",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "ae510b1c5172023f244add9be002ef5919cd45ab",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "ae510b1c5172023f244add9be002ef5919cd45ab",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "ae510b1c5172023f244add9be002ef5919cd45ab",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "ae510b1c5172023f244add9be002ef5919cd45ab",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "desire",
+    "donor_kid": "ae510b1c5172023f244add9be002ef5919cd45ab",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(optimize (neg_dist #v) #v)",
+    "role": "action policy (seek)",
+    "depth": 2
+   },
+   {
+    "donor_label": "belief_goal",
+    "donor_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
+    "role": "agent block (fork \u2227 commit)",
+    "depth": 2
+   },
+   {
+    "donor_label": "belief_goal",
+    "donor_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
+    "role": "agent block (fork \u2227 commit)",
+    "depth": 2
+   },
+   {
+    "donor_label": "belief_goal",
+    "donor_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
+    "role": "agent block (fork \u2227 commit)",
+    "depth": 2
+   },
+   {
+    "donor_label": "belief_goal",
+    "donor_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
+    "role": "agent block (fork \u2227 commit)",
+    "depth": 2
+   },
+   {
+    "donor_label": "belief_goal",
+    "donor_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
+    "role": "agent block (fork \u2227 commit)",
+    "depth": 2
+   },
+   {
+    "donor_label": "belief_goal",
+    "donor_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
+    "role": "agent block (fork \u2227 commit)",
+    "depth": 2
+   },
+   {
+    "donor_label": "belief_goal",
+    "donor_kid": "b47a35f677973c5b1775644f8b1a208862592304",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
+    "role": "agent block (fork \u2227 commit)",
+    "depth": 2
+   },
+   {
+    "donor_label": "belief_goal",
+    "donor_kid": "b47a35f677973c5b1775644f8b1a208862592304",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
+    "role": "agent block (fork \u2227 commit)",
+    "depth": 2
+   },
+   {
+    "donor_label": "belief_goal",
+    "donor_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
+    "role": "agent block (fork \u2227 commit)",
+    "depth": 2
+   },
+   {
+    "donor_label": "belief_goal",
+    "donor_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
+    "role": "agent block (fork \u2227 commit)",
+    "depth": 2
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "25a600dd65ae4ad35750a535fe8b8edc2c6c2e88",
+    "target_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 2
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "25a600dd65ae4ad35750a535fe8b8edc2c6c2e88",
+    "target_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 2
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "25a600dd65ae4ad35750a535fe8b8edc2c6c2e88",
+    "target_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 2
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "25a600dd65ae4ad35750a535fe8b8edc2c6c2e88",
+    "target_kid": "b47a35f677973c5b1775644f8b1a208862592304",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 2
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "25a600dd65ae4ad35750a535fe8b8edc2c6c2e88",
+    "target_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 2
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "25a600dd65ae4ad35750a535fe8b8edc2c6c2e88",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 4
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "25a600dd65ae4ad35750a535fe8b8edc2c6c2e88",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 4
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "cacc247d7636f78203abc2234628a26c3806d670",
+    "target_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 2
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "cacc247d7636f78203abc2234628a26c3806d670",
+    "target_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 2
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "cacc247d7636f78203abc2234628a26c3806d670",
+    "target_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 2
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "cacc247d7636f78203abc2234628a26c3806d670",
+    "target_kid": "b47a35f677973c5b1775644f8b1a208862592304",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 2
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "cacc247d7636f78203abc2234628a26c3806d670",
+    "target_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 2
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "cacc247d7636f78203abc2234628a26c3806d670",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 4
+   },
+   {
+    "donor_label": "flee",
+    "donor_kid": "cacc247d7636f78203abc2234628a26c3806d670",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+    "target_variant": "belief_goal",
+    "shape": "(optimize (distance #v) #v)",
+    "role": "flee policy",
+    "depth": 4
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d9f5a5e9806c71167eb008a610ce5e08a52f9ade",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d9f5a5e9806c71167eb008a610ce5e08a52f9ade",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d9f5a5e9806c71167eb008a610ce5e08a52f9ade",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d9f5a5e9806c71167eb008a610ce5e08a52f9ade",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d9f5a5e9806c71167eb008a610ce5e08a52f9ade",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d9f5a5e9806c71167eb008a610ce5e08a52f9ade",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "84e13aecf76fdeb9562129eb200c89187083f512",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "84e13aecf76fdeb9562129eb200c89187083f512",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "84e13aecf76fdeb9562129eb200c89187083f512",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "84e13aecf76fdeb9562129eb200c89187083f512",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "84e13aecf76fdeb9562129eb200c89187083f512",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "84e13aecf76fdeb9562129eb200c89187083f512",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "e46c1526bbd6d60aa00d8c42e43195972d255572",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "e46c1526bbd6d60aa00d8c42e43195972d255572",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "e46c1526bbd6d60aa00d8c42e43195972d255572",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "e46c1526bbd6d60aa00d8c42e43195972d255572",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "e46c1526bbd6d60aa00d8c42e43195972d255572",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "e46c1526bbd6d60aa00d8c42e43195972d255572",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "793e747640c55198ce2848d07acb0de1b14bc52a",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "793e747640c55198ce2848d07acb0de1b14bc52a",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "793e747640c55198ce2848d07acb0de1b14bc52a",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "793e747640c55198ce2848d07acb0de1b14bc52a",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "793e747640c55198ce2848d07acb0de1b14bc52a",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "793e747640c55198ce2848d07acb0de1b14bc52a",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d013379d17adc5b9835fab529692a28d2bb86388",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d013379d17adc5b9835fab529692a28d2bb86388",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d013379d17adc5b9835fab529692a28d2bb86388",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d013379d17adc5b9835fab529692a28d2bb86388",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d013379d17adc5b9835fab529692a28d2bb86388",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d013379d17adc5b9835fab529692a28d2bb86388",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "81264fc2171598b899ff5bf4ef549ff150de8407",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "81264fc2171598b899ff5bf4ef549ff150de8407",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "81264fc2171598b899ff5bf4ef549ff150de8407",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "81264fc2171598b899ff5bf4ef549ff150de8407",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "81264fc2171598b899ff5bf4ef549ff150de8407",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "81264fc2171598b899ff5bf4ef549ff150de8407",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d17804526829c485499a038dd1682d43598e2801",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d17804526829c485499a038dd1682d43598e2801",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d17804526829c485499a038dd1682d43598e2801",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d17804526829c485499a038dd1682d43598e2801",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d17804526829c485499a038dd1682d43598e2801",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "d17804526829c485499a038dd1682d43598e2801",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "1fee177967764308831ac258a692179ba31f2cc7",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "1fee177967764308831ac258a692179ba31f2cc7",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "1fee177967764308831ac258a692179ba31f2cc7",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "1fee177967764308831ac258a692179ba31f2cc7",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "1fee177967764308831ac258a692179ba31f2cc7",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "1fee177967764308831ac258a692179ba31f2cc7",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "ab5403a8416d5c1c99fc988edc405ce3e1a9f933",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "ab5403a8416d5c1c99fc988edc405ce3e1a9f933",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "ab5403a8416d5c1c99fc988edc405ce3e1a9f933",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "ab5403a8416d5c1c99fc988edc405ce3e1a9f933",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "ab5403a8416d5c1c99fc988edc405ce3e1a9f933",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "ab5403a8416d5c1c99fc988edc405ce3e1a9f933",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "5042f5c3241d05b5d4d752aab33fc2b8e1e3567e",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "5042f5c3241d05b5d4d752aab33fc2b8e1e3567e",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "5042f5c3241d05b5d4d752aab33fc2b8e1e3567e",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "5042f5c3241d05b5d4d752aab33fc2b8e1e3567e",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "5042f5c3241d05b5d4d752aab33fc2b8e1e3567e",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "5042f5c3241d05b5d4d752aab33fc2b8e1e3567e",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "a3ed8006b87a4f515fc1eddb9660505406c8ab66",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "a3ed8006b87a4f515fc1eddb9660505406c8ab66",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "a3ed8006b87a4f515fc1eddb9660505406c8ab66",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "a3ed8006b87a4f515fc1eddb9660505406c8ab66",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "a3ed8006b87a4f515fc1eddb9660505406c8ab66",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "a3ed8006b87a4f515fc1eddb9660505406c8ab66",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "7c7c943a9aab450e127e3e72b4369800a44c2356",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "7c7c943a9aab450e127e3e72b4369800a44c2356",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "7c7c943a9aab450e127e3e72b4369800a44c2356",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "7c7c943a9aab450e127e3e72b4369800a44c2356",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "7c7c943a9aab450e127e3e72b4369800a44c2356",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "7c7c943a9aab450e127e3e72b4369800a44c2356",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "8aaee50c444a73e9a7c4edab17a24208c7de66ad",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "8aaee50c444a73e9a7c4edab17a24208c7de66ad",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "8aaee50c444a73e9a7c4edab17a24208c7de66ad",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "8aaee50c444a73e9a7c4edab17a24208c7de66ad",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "8aaee50c444a73e9a7c4edab17a24208c7de66ad",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "8aaee50c444a73e9a7c4edab17a24208c7de66ad",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "b2452afd28c988e47f3ec235426680f50aaa643a",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "b2452afd28c988e47f3ec235426680f50aaa643a",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "b2452afd28c988e47f3ec235426680f50aaa643a",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "b2452afd28c988e47f3ec235426680f50aaa643a",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "b2452afd28c988e47f3ec235426680f50aaa643a",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "b2452afd28c988e47f3ec235426680f50aaa643a",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "e32ad933643cb50983c014ff0b1975880389e4c4",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "e32ad933643cb50983c014ff0b1975880389e4c4",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "e32ad933643cb50983c014ff0b1975880389e4c4",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "e32ad933643cb50983c014ff0b1975880389e4c4",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "e32ad933643cb50983c014ff0b1975880389e4c4",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "e32ad933643cb50983c014ff0b1975880389e4c4",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "dfba52d0c84381c4fb61769139ea48180ab10532",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "dfba52d0c84381c4fb61769139ea48180ab10532",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "dfba52d0c84381c4fb61769139ea48180ab10532",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "dfba52d0c84381c4fb61769139ea48180ab10532",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "dfba52d0c84381c4fb61769139ea48180ab10532",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "obstacle",
+    "donor_kid": "dfba52d0c84381c4fb61769139ea48180ab10532",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
+    "role": "belief's derive (wall policy)",
+    "depth": 1
+   },
+   {
+    "donor_label": "registration",
+    "donor_kid": "22fce858b46da55fa2b3b4180185a2db4443fd7d",
+    "target_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
+    "target_variant": "belief_goal",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
+   },
+   {
+    "donor_label": "registration",
+    "donor_kid": "22fce858b46da55fa2b3b4180185a2db4443fd7d",
+    "target_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
+    "target_variant": "belief_goal",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
+   },
+   {
+    "donor_label": "registration",
+    "donor_kid": "22fce858b46da55fa2b3b4180185a2db4443fd7d",
+    "target_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
+    "target_variant": "belief_goal",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
+   },
+   {
+    "donor_label": "registration",
+    "donor_kid": "22fce858b46da55fa2b3b4180185a2db4443fd7d",
+    "target_kid": "b47a35f677973c5b1775644f8b1a208862592304",
+    "target_variant": "belief_goal",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
+   },
+   {
+    "donor_label": "registration",
+    "donor_kid": "22fce858b46da55fa2b3b4180185a2db4443fd7d",
+    "target_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_variant": "belief_goal",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
+   },
+   {
+    "donor_label": "registration",
+    "donor_kid": "22fce858b46da55fa2b3b4180185a2db4443fd7d",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
     "depth": 3
    },
    {
-    "donor_label": "desire",
-    "donor_kid": "fa583465976a2309707458c697e5e5857239a0b7",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
+    "donor_label": "registration",
+    "donor_kid": "22fce858b46da55fa2b3b4180185a2db4443fd7d",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
     "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "29cea855c39874e58444efe49de7f38e7590ba19",
-    "target_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "29cea855c39874e58444efe49de7f38e7590ba19",
-    "target_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "29cea855c39874e58444efe49de7f38e7590ba19",
-    "target_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "29cea855c39874e58444efe49de7f38e7590ba19",
-    "target_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "29cea855c39874e58444efe49de7f38e7590ba19",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "29cea855c39874e58444efe49de7f38e7590ba19",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "29cea855c39874e58444efe49de7f38e7590ba19",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
     "depth": 3
    },
    {
-    "donor_label": "desire",
-    "donor_kid": "29cea855c39874e58444efe49de7f38e7590ba19",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
+    "donor_label": "registration",
+    "donor_kid": "22fce858b46da55fa2b3b4180185a2db4443fd7d",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
    },
    {
-    "donor_label": "desire",
-    "donor_kid": "0dd95b66fae92ff0c0b385fdc1b8663f3817faa7",
-    "target_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
+    "donor_label": "registration",
+    "donor_kid": "22fce858b46da55fa2b3b4180185a2db4443fd7d",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
    },
    {
-    "donor_label": "desire",
-    "donor_kid": "0dd95b66fae92ff0c0b385fdc1b8663f3817faa7",
-    "target_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
+    "donor_label": "registration",
+    "donor_kid": "22fce858b46da55fa2b3b4180185a2db4443fd7d",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
    },
    {
-    "donor_label": "desire",
-    "donor_kid": "0dd95b66fae92ff0c0b385fdc1b8663f3817faa7",
-    "target_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
+    "donor_label": "registration",
+    "donor_kid": "22fce858b46da55fa2b3b4180185a2db4443fd7d",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
    },
    {
-    "donor_label": "desire",
-    "donor_kid": "0dd95b66fae92ff0c0b385fdc1b8663f3817faa7",
-    "target_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
+    "donor_label": "registration",
+    "donor_kid": "22fce858b46da55fa2b3b4180185a2db4443fd7d",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
    },
    {
-    "donor_label": "desire",
-    "donor_kid": "0dd95b66fae92ff0c0b385fdc1b8663f3817faa7",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
+    "donor_label": "registration",
+    "donor_kid": "c6c36d7f6e0dc27ad37437e39b27555a333b1c52",
+    "target_kid": "44791b30e6796fe9161978788a6694de2e05d3ff",
     "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
    },
    {
-    "donor_label": "desire",
-    "donor_kid": "0dd95b66fae92ff0c0b385fdc1b8663f3817faa7",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
+    "donor_label": "registration",
+    "donor_kid": "c6c36d7f6e0dc27ad37437e39b27555a333b1c52",
+    "target_kid": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
     "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
    },
    {
-    "donor_label": "desire",
-    "donor_kid": "0dd95b66fae92ff0c0b385fdc1b8663f3817faa7",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
+    "donor_label": "registration",
+    "donor_kid": "c6c36d7f6e0dc27ad37437e39b27555a333b1c52",
+    "target_kid": "9c9138c371af0e942dfa89ea395b43972b745ef1",
     "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
+   },
+   {
+    "donor_label": "registration",
+    "donor_kid": "c6c36d7f6e0dc27ad37437e39b27555a333b1c52",
+    "target_kid": "b47a35f677973c5b1775644f8b1a208862592304",
+    "target_variant": "belief_goal",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
+   },
+   {
+    "donor_label": "registration",
+    "donor_kid": "c6c36d7f6e0dc27ad37437e39b27555a333b1c52",
+    "target_kid": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+    "target_variant": "belief_goal",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
+    "depth": 1
+   },
+   {
+    "donor_label": "registration",
+    "donor_kid": "c6c36d7f6e0dc27ad37437e39b27555a333b1c52",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+    "target_variant": "belief_goal",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
     "depth": 3
    },
    {
-    "donor_label": "desire",
-    "donor_kid": "0dd95b66fae92ff0c0b385fdc1b8663f3817faa7",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
+    "donor_label": "registration",
+    "donor_kid": "c6c36d7f6e0dc27ad37437e39b27555a333b1c52",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
     "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "9d2b49ba05d3d42b70c9bbe73f488e096a265c32",
-    "target_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "9d2b49ba05d3d42b70c9bbe73f488e096a265c32",
-    "target_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "9d2b49ba05d3d42b70c9bbe73f488e096a265c32",
-    "target_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "9d2b49ba05d3d42b70c9bbe73f488e096a265c32",
-    "target_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "9d2b49ba05d3d42b70c9bbe73f488e096a265c32",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "9d2b49ba05d3d42b70c9bbe73f488e096a265c32",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "9d2b49ba05d3d42b70c9bbe73f488e096a265c32",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
+    "shape": "(sync_to_world #v)",
+    "role": "agency commit",
     "depth": 3
    },
    {
-    "donor_label": "desire",
-    "donor_kid": "9d2b49ba05d3d42b70c9bbe73f488e096a265c32",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "bdf357e4262dcae6ed77cdd8aae376d8939ed152",
-    "target_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "bdf357e4262dcae6ed77cdd8aae376d8939ed152",
-    "target_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "bdf357e4262dcae6ed77cdd8aae376d8939ed152",
-    "target_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "bdf357e4262dcae6ed77cdd8aae376d8939ed152",
-    "target_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "bdf357e4262dcae6ed77cdd8aae376d8939ed152",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "bdf357e4262dcae6ed77cdd8aae376d8939ed152",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "bdf357e4262dcae6ed77cdd8aae376d8939ed152",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 3
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "bdf357e4262dcae6ed77cdd8aae376d8939ed152",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "d0b85a72c24e7b2eae5cac809ba4eb14df746f79",
-    "target_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "d0b85a72c24e7b2eae5cac809ba4eb14df746f79",
-    "target_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "d0b85a72c24e7b2eae5cac809ba4eb14df746f79",
-    "target_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "d0b85a72c24e7b2eae5cac809ba4eb14df746f79",
-    "target_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "d0b85a72c24e7b2eae5cac809ba4eb14df746f79",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "d0b85a72c24e7b2eae5cac809ba4eb14df746f79",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "d0b85a72c24e7b2eae5cac809ba4eb14df746f79",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 3
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "d0b85a72c24e7b2eae5cac809ba4eb14df746f79",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "3cf65067413443a9f82f7dc720b82492a5486bd9",
-    "target_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "3cf65067413443a9f82f7dc720b82492a5486bd9",
-    "target_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "3cf65067413443a9f82f7dc720b82492a5486bd9",
-    "target_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "3cf65067413443a9f82f7dc720b82492a5486bd9",
-    "target_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "3cf65067413443a9f82f7dc720b82492a5486bd9",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "3cf65067413443a9f82f7dc720b82492a5486bd9",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "3cf65067413443a9f82f7dc720b82492a5486bd9",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 3
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "3cf65067413443a9f82f7dc720b82492a5486bd9",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "80bad63143cd67e9579c0cab5054c363e0924b15",
-    "target_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "80bad63143cd67e9579c0cab5054c363e0924b15",
-    "target_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "80bad63143cd67e9579c0cab5054c363e0924b15",
-    "target_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "80bad63143cd67e9579c0cab5054c363e0924b15",
-    "target_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 2
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "80bad63143cd67e9579c0cab5054c363e0924b15",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "80bad63143cd67e9579c0cab5054c363e0924b15",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "80bad63143cd67e9579c0cab5054c363e0924b15",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 3
-   },
-   {
-    "donor_label": "desire",
-    "donor_kid": "80bad63143cd67e9579c0cab5054c363e0924b15",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
-    "target_variant": "belief_goal",
-    "shape": "(optimize (neg_dist #v) #v)",
-    "role": "action policy (seek)",
-    "depth": 4
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 2
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 2
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 1
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 2
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 2
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 2
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 1
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 2
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 2
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 2
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 1
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 2
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 2
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 2
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 1
-   },
-   {
-    "donor_label": "belief_goal",
-    "donor_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
-    "target_variant": "belief_goal",
-    "shape": "(fork (compose (optimize (distance #v) #v) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
-    "role": "agent block (fork \u2227 commit)",
-    "depth": 2
-   },
-   {
     "donor_label": "registration",
-    "donor_kid": "68a3a68ac545f3b58267b1bc79d55473e49705db",
-    "target_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
-    "target_variant": "belief_goal",
+    "donor_kid": "c6c36d7f6e0dc27ad37437e39b27555a333b1c52",
+    "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+    "target_variant": "belief_false_obstacle",
     "shape": "(sync_to_world #v)",
     "role": "agency commit",
     "depth": 1
    },
    {
     "donor_label": "registration",
-    "donor_kid": "68a3a68ac545f3b58267b1bc79d55473e49705db",
-    "target_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
-    "target_variant": "belief_goal",
+    "donor_kid": "c6c36d7f6e0dc27ad37437e39b27555a333b1c52",
+    "target_kid": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+    "target_variant": "belief_wall",
     "shape": "(sync_to_world #v)",
     "role": "agency commit",
     "depth": 1
    },
    {
     "donor_label": "registration",
-    "donor_kid": "68a3a68ac545f3b58267b1bc79d55473e49705db",
-    "target_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
-    "target_variant": "belief_goal",
+    "donor_kid": "c6c36d7f6e0dc27ad37437e39b27555a333b1c52",
+    "target_kid": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+    "target_variant": "belief_wall",
     "shape": "(sync_to_world #v)",
     "role": "agency commit",
     "depth": 1
    },
    {
     "donor_label": "registration",
-    "donor_kid": "68a3a68ac545f3b58267b1bc79d55473e49705db",
-    "target_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
-    "target_variant": "belief_goal",
+    "donor_kid": "c6c36d7f6e0dc27ad37437e39b27555a333b1c52",
+    "target_kid": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+    "target_variant": "belief_wall",
     "shape": "(sync_to_world #v)",
     "role": "agency commit",
     "depth": 1
    },
    {
     "donor_label": "registration",
-    "donor_kid": "68a3a68ac545f3b58267b1bc79d55473e49705db",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
-    "target_variant": "belief_goal",
+    "donor_kid": "c6c36d7f6e0dc27ad37437e39b27555a333b1c52",
+    "target_kid": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+    "target_variant": "belief_wall",
     "shape": "(sync_to_world #v)",
     "role": "agency commit",
     "depth": 1
    },
    {
-    "donor_label": "registration",
-    "donor_kid": "68a3a68ac545f3b58267b1bc79d55473e49705db",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
+    "donor_label": "reg_except",
+    "donor_kid": "819f46515082cdccb9e631eb5d8117396887126d",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
     "target_variant": "belief_goal",
-    "shape": "(sync_to_world #v)",
-    "role": "agency commit",
+    "shape": "(sync_except #v)",
+    "role": "fragment",
     "depth": 1
    },
    {
-    "donor_label": "registration",
-    "donor_kid": "68a3a68ac545f3b58267b1bc79d55473e49705db",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
-    "target_variant": "belief_goal",
-    "shape": "(sync_to_world #v)",
-    "role": "agency commit",
-    "depth": 2
-   },
-   {
-    "donor_label": "registration",
-    "donor_kid": "68a3a68ac545f3b58267b1bc79d55473e49705db",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
-    "target_variant": "belief_goal",
-    "shape": "(sync_to_world #v)",
-    "role": "agency commit",
+    "donor_label": "reg_except",
+    "donor_kid": "819f46515082cdccb9e631eb5d8117396887126d",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(sync_except #v)",
+    "role": "fragment",
     "depth": 1
    },
    {
-    "donor_label": "registration",
-    "donor_kid": "f23736f9a175984b8f1cae81c01f4bdbdecae076",
-    "target_kid": "be5ddfa58faa30488a37de164e10599600d1834a",
+    "donor_label": "reg_except",
+    "donor_kid": "95d250fc2d45402d7aaa1f0193e783e79e1cf71c",
+    "target_kid": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
     "target_variant": "belief_goal",
-    "shape": "(sync_to_world #v)",
-    "role": "agency commit",
+    "shape": "(sync_except #v)",
+    "role": "fragment",
     "depth": 1
    },
    {
-    "donor_label": "registration",
-    "donor_kid": "f23736f9a175984b8f1cae81c01f4bdbdecae076",
-    "target_kid": "b14b331fb07dcf5dd869c01fc0af3c068b9f902b",
-    "target_variant": "belief_goal",
-    "shape": "(sync_to_world #v)",
-    "role": "agency commit",
+    "donor_label": "reg_except",
+    "donor_kid": "95d250fc2d45402d7aaa1f0193e783e79e1cf71c",
+    "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+    "target_variant": "belief_wall",
+    "shape": "(sync_except #v)",
+    "role": "fragment",
     "depth": 1
    },
    {
-    "donor_label": "registration",
-    "donor_kid": "f23736f9a175984b8f1cae81c01f4bdbdecae076",
-    "target_kid": "ed01a8df6f6aa3da2c83df24c301e2bebdc90f8a",
+    "donor_label": "perception",
+    "donor_kid": "cb237dc8863704e2d43b0da0e581e6735074d3bb",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
     "target_variant": "belief_goal",
-    "shape": "(sync_to_world #v)",
-    "role": "agency commit",
+    "shape": "(sync_to_model #v)",
+    "role": "fragment",
     "depth": 1
    },
    {
-    "donor_label": "registration",
-    "donor_kid": "f23736f9a175984b8f1cae81c01f4bdbdecae076",
-    "target_kid": "0ff3f032b31c5402d1a03c827ed5a5a910316901",
+    "donor_label": "perception",
+    "donor_kid": "e6dcbdde625ddd4e73a40820815b44c6697ecd31",
+    "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
     "target_variant": "belief_goal",
-    "shape": "(sync_to_world #v)",
-    "role": "agency commit",
-    "depth": 1
-   },
-   {
-    "donor_label": "registration",
-    "donor_kid": "f23736f9a175984b8f1cae81c01f4bdbdecae076",
-    "target_kid": "22a430fb68ebcb895e74b724aa1154f83f75572d",
-    "target_variant": "belief_goal",
-    "shape": "(sync_to_world #v)",
-    "role": "agency commit",
-    "depth": 1
-   },
-   {
-    "donor_label": "registration",
-    "donor_kid": "f23736f9a175984b8f1cae81c01f4bdbdecae076",
-    "target_kid": "43044c8e54ef3b54aea01a150d6b697f7020dc70",
-    "target_variant": "belief_goal",
-    "shape": "(sync_to_world #v)",
-    "role": "agency commit",
-    "depth": 1
-   },
-   {
-    "donor_label": "registration",
-    "donor_kid": "f23736f9a175984b8f1cae81c01f4bdbdecae076",
-    "target_kid": "a7683cbeb4bfddf39c5b61dfd05825906d18e6e6",
-    "target_variant": "belief_goal",
-    "shape": "(sync_to_world #v)",
-    "role": "agency commit",
-    "depth": 2
-   },
-   {
-    "donor_label": "registration",
-    "donor_kid": "f23736f9a175984b8f1cae81c01f4bdbdecae076",
-    "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
-    "target_variant": "belief_goal",
-    "shape": "(sync_to_world #v)",
-    "role": "agency commit",
+    "shape": "(sync_to_model #v)",
+    "role": "fragment",
     "depth": 1
    }
   ]
@@ -1015,45 +2540,68 @@
    },
    {
     "repr": "fn_1",
-    "role": "desire_fragment",
-    "body": "(optimize (neg_dist $0) $1)",
-    "body_shape": "(optimize (neg_dist #v) #v)",
+    "role": "wall_policy",
+    "body": "(compose (wall_at $3 $2) (optimize (neg_dist $1) $0))",
+    "body_shape": "(compose (wall_at #c #c) (optimize (neg_dist #v) #v))",
     "is_belief_subshape": true,
-    "belief_users": [],
+    "belief_users": [
+     "belief_wall"
+    ],
     "donor_families": [
-     "comet",
-     "desire",
      "obstacle"
     ],
-    "scaffold": false
+    "scaffold": true
    },
    {
     "repr": "fn_2",
-    "role": "wall_policy",
-    "body": "(compose (optimize (neg_dist $3) $2) (wall_at $1 $0))",
-    "body_shape": "(compose (optimize (neg_dist #v) #v) (wall_at #c #c))",
-    "is_belief_subshape": false,
-    "belief_users": [],
-    "donor_families": [
-     "obstacle"
+    "role": "agent_constructor",
+    "body": "(fork (compose (wall_at c2 $1) (optimize (neg_dist $2) $0)) (sync_to_world $0))",
+    "body_shape": "(fork (compose (wall_at #c #c) (optimize (neg_dist #v) #v)) (sync_to_world #v))",
+    "is_belief_subshape": true,
+    "belief_users": [
+     "belief_false_obstacle",
+     "belief_wall"
     ],
-    "scaffold": false
+    "donor_families": [],
+    "scaffold": true
    }
   ]
  },
  "assembly": {
   "belief_goal": {
-   "target_kid": "a69bb1b6194f3e1f13ba1d888a4bcbbb6dbe649b",
-   "sol": "(fork (compose (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 1)) (sync_to_world 1)) (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7))) (sync_to_world 7))",
+   "target_kid": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+   "sol": "(fork (compose (step 1 up) (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7))) (sync_to_model 1))",
    "root_abstraction": [
     "fn_0"
    ],
    "lines": [
     "(fork",
     "  (compose",
-    "    (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 1)) (sync_to_world 1))   \u27f5 belief_goal  [agent block (fork \u2227 commit)]",
+    "    (step 1 up)   \u27f5 physics  [physics step]",
     "    (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7))   \u27f5 belief_goal  [agent block (fork \u2227 commit)])",
+    "  (sync_to_model 1)   \u27f5 perception  [fragment])"
+   ]
+  },
+  "belief_false_obstacle": {
+   "target_kid": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+   "sol": "(fork (compose (wall_at c2 c4) (optimize (neg_dist 1) 7)) (sync_to_world 7))",
+   "root_abstraction": [
+    "fn_2"
+   ],
+   "lines": [
+    "(fork",
+    "  (compose (wall_at c2 c4) (optimize (neg_dist 1) 7))   \u27f5 obstacle  [belief's derive (wall policy)]",
     "  (sync_to_world 7)   \u27f5 registration  [agency commit])"
+   ]
+  },
+  "belief_wall": {
+   "target_kid": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+   "sol": "(fork (compose (wall_at c3 c2) (optimize (neg_dist 6) 2)) (sync_except 6))",
+   "root_abstraction": [],
+   "lines": [
+    "(fork",
+    "  (compose (wall_at c3 c2) (optimize (neg_dist 6) 2))   \u27f5 obstacle  [belief's derive (wall policy)]",
+    "  (sync_except 6)   \u27f5 reg_except  [fragment])"
    ]
   }
  }

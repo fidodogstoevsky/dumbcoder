@@ -19,6 +19,7 @@ from copy import deepcopy
 from time import time
 
 from dsl import *
+from scenes import Scenes, as_scenes, solves
 
 ###############################################################################
 ######                              library                               #####
@@ -701,12 +702,19 @@ class _EnumDone(Exception):
 
 def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=0,
                       root_type=None, templates=None):
-    """Enumerate programs from the DSL and match against task trajectories.
+    """Enumerate programs from the DSL and match against tasks.
 
-    root_type=fn       : programs are grid->grid fns; wrapped as unfold(x[0], T, f).
-    root_type=fn_p_g   : programs are pair->grid commits; wrapped as
-                         unfold_with_template(x[0], templates[key], T, c) (file14).
-                         The second grid is a given template, not a derived model.
+    A task is a `Scenes` — k trajectories sharing one latent program — and a
+    program solves it only by reproducing EVERY scene (see scenes.solves).  A
+    bare (T, H, W) trajectory is accepted as a 1-scene task.
+
+    root_type=fn       : programs are grid->grid fns; each scene is wrapped as
+                         unfold(scene[0], T_scene, f).
+    root_type=fn_p_g   : programs are pair->grid commits; each scene is wrapped as
+                         unfold_with_template(scene[0], template_i, T_scene, c)
+                         (file14).  The second grid is a given template, not a
+                         derived model, so templates[key] is a list of k templates
+                         — one per scene, in scene order.
     """
     import dsl as _dsl
     if root_type is None:
@@ -722,8 +730,10 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
     LOGPGAP = 2
     done = False
-    targets = {mat_key(x): x for x in Xs}
-    ig_map = {mat_key(x): (x[0], x.shape[0]) for x in Xs}
+    # (key, task, per-scene templates) — the templates are None for fn-rooted runs.
+    targets = [(mat_key(x), as_scenes(x),
+                templates.get(mat_key(x)) if _is_pair else None)
+               for x in Xs]
 
     def cb(tree, logp):
         """called once per enumerated program."""
@@ -741,32 +751,31 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
         if not callable(val):
             return
         cnt += 1
-        candidates = []
-        for tkey, (actual_g, T) in ig_map.items():
-            try:
-                out = (_dsl.unfold_with_template(actual_g, templates[tkey], T, val) if _is_pair else
-                       _dsl.unfold(actual_g, T, val))
-                if isinstance(out, np.ndarray) and 0 not in out.shape:
-                    candidates.append(mat_key(out))
-            except Exception:
-                pass
 
         if not(cnt % 100) and time() - stime > timeout:
             done = True
             raise _EnumDone()
 
-        for okey in candidates:
-            if okey in targets:
-                # collapse spurious nesting before storing, so the length tiebreak
-                # below compares minimal forms and stitch never sees redundant
-                # wrappers (which it would otherwise abstract and propagate).
-                stree = simplify(deepcopy(tree))
-                if okey not in solutions:
-                    print(f'[{cnt:6d}] caught {stree}', flush=True)
-                if okey not in solutions or length(stree) < length(solutions[okey]):
-                    solutions[okey] = stree
-                if all(mat_key(x) in solutions for x in Xs):
-                    done = True
+        for tkey, task, tmpl in targets:
+            # `solves` short-circuits on the first scene that disagrees, so the
+            # k-scene format costs ~1 unfold per task for the overwhelming
+            # majority of enumerated programs — the same as the old single-scene
+            # matcher.  Only a program that already reproduced scene 1 pays for
+            # the remaining k-1, and that is exactly the coincidence we want
+            # tested rather than accepted.
+            if not solves(val, task, tmpl):
+                continue
+            # collapse spurious nesting before storing, so the length tiebreak
+            # below compares minimal forms and stitch never sees redundant
+            # wrappers (which it would otherwise abstract and propagate).
+            stree = simplify(deepcopy(tree))
+            if tkey not in solutions:
+                print(f'[{cnt:6d}] caught {stree}', flush=True)
+            if tkey not in solutions or length(stree) < length(solutions[tkey]):
+                solutions[tkey] = stree
+
+        if all(tkey in solutions for tkey, _, _ in targets):
+            done = True
 
         if done:
             raise _EnumDone()
@@ -866,18 +875,23 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
         if Qmodel is None:
             q = uniform_type_q()
             if content_aware_q:
-                # Boost integer literals whose value appears in x[0] to log-prob 0
-                # (cost-free). For an av=4 task this drops the target program from
-                # window 7 (~14 nats) to window ~9 nats, so both av=1 and av=4
-                # tasks are solved quickly and proportionally in iteration 1.
-                visible = {int(v) for v in np.unique(x[0]) if v not in (0, 3)}
+                # Boost integer literals visible in the task's initial grids to
+                # log-prob 0 (cost-free). For an av=4 task this drops the target
+                # program from window 7 (~14 nats) to window ~9 nats, so both av=1
+                # and av=4 tasks are solved quickly and proportionally in iter 1.
+                # The k scenes of a task share the program's literals by
+                # construction, so the union over scenes is the same set the
+                # single-scene version computed — just read off more evidence.
+                visible = as_scenes(x).values
                 for d in D.ds:
                     if d.tailtypes is None and d.type == cellvalue and d.head in visible:
                         q[D.index(d)] = 0.0
         else:
             with th.no_grad():
-                logits = Qmodel(tc_mat(x)[None])          # (1, nd)
-                q = F.log_softmax(logits.squeeze(0), dim=-1)   # (nd,)
+                # the grid encoder reads ONE trajectory; give it a representative
+                # scene (the task's scenes differ only in placement, not program).
+                logits = Qmodel(tc_mat(as_scenes(x).rep)[None])  # (1, nd)
+                q = F.log_softmax(logits.squeeze(0), dim=-1)     # (nd,)
 
         return q
 
@@ -925,12 +939,19 @@ def ECD(Xs, D, timeout=60, per_task_timeout=None, budget=0, max_iterations=10, s
             {k: v for k, v in rewritten_map.items() if k in full_keys})
 
 def mat_key(x):
+    """Task identity.  A `Scenes` hashes over ALL its scenes, so two tasks are the
+    same only if every scene agrees; a bare trajectory keeps the old single-matrix
+    key, which is what the output-side comparisons still use."""
+    if isinstance(x, Scenes):
+        return x.key
     return (x.shape, x.tobytes())
 
 
 def mat_key_id(x):
-    "Stable hex id for a task matrix — a JSON-serialisable form of `mat_key` (same x → same id)."
+    "Stable hex id for a task — a JSON-serialisable form of `mat_key` (same task → same id)."
     import hashlib
+    if isinstance(x, Scenes):
+        return x.id
     return hashlib.sha1(repr(x.shape).encode() + x.tobytes()).hexdigest()
 
 
@@ -1124,38 +1145,93 @@ def uniform_type_q(D):
     return q
 
 
+def content_boost(D, q, x):
+    """Force to cost 0 the terminals the task's own frames make visible.  Mutates q.
+
+    Shared by experiment.content_q and dreamed_q so the two cannot drift.  They were
+    separate copies of this trick, and the coord branch below existed only in
+    content_q: any still-unsolved task with a REAL wall silently lost the boost the
+    moment its family entered a dreamed round and switched Qs.
+
+      * cellvalue literals visible anywhere in the task's scenes.  The k scenes of a
+        task share the program's literals by construction, so the union over scenes
+        is the same set a single scene gave — just evidenced more than once.
+      * coord terminals naming a REAL, visible wall (value 3) — the obstacle family's
+        wall, not belief's phantom one — so obstacle need not brute-force all
+        SIZE×SIZE wall positions (~5k programs -> ~tens).  We scan ALL frames, not
+        just frame 0: the wall is stamped during the trajectory (unfold starts on a
+        wall-free grid), so it is absent from x[0].  Belief never renders its wall
+        into the world frames, so this never fires there — belief's wall coordinate
+        stays a uniform-cost latent, as it must, and the cheap-obstacle path can
+        never leak into the belief search.
+
+    (ECD.task_Q keeps its own inlined cellvalue-only boost: it is the reference /
+    ECD-compatibility driver, not the path the phases enumerate on.)
+    """
+    task = as_scenes(x)
+    visible = task.values
+    wall_coords = {int(k) for s in task
+                   for trc in np.argwhere(s == 3) for k in trc[1:]}
+    for d in D.ds:
+        if d.tailtypes is not None:
+            continue
+        if d.type == cellvalue and d.head in visible:
+            q[D.index(d)] = 0.0
+        elif d.type == coord and d.head in wall_coords:
+            q[D.index(d)] = 0.0
+    return q
+
+
+# Weight on the uniform prior in dreamed_q's mixture — also the damage cap: no
+# primitive can cost more than log(1/DREAM_PRIOR_W) nats above its uniform cost, so
+# a family the recognition model has never seen stays reachable within a bounded
+# number of extra budget windows.
+DREAM_PRIOR_W = 0.5
+
+
 def dreamed_q(qmodel, D, x):
     """Recognition-model Q for one task, on the SAME cost scale as content_q.
 
     A bare model_q is mis-scaled for the budget enumerator and, trained only on the
     families solved so far, can suppress the rare primitives a still-unsolved family
-    (belief) needs.  dreamed_q fixes both so dreaming can only *help*:
+    (belief) needs.  dreamed_q fixes both:
 
       * TYPE-CONDITIONAL: the model's logits are re-softmaxed within each type group,
         so a program's summed cost is comparable to the uniform/content prior rather
         than living on the model's global scale (a ~10-node program would otherwise
         land many budget windows later and time out before it's reached).
-      * FLOORED AT UNIFORM: q = max(model, uniform_type_q).  The model can make a
-        primitive CHEAPER (tried earlier) but never push one below its uniform
-        reachability — so the model's confident guesses are explored first while every
-        program reachable under the uniform baseline stays reachable.
-      * VISIBLE-LITERAL BOOST: integer literals present in frame 0 are forced to cost
-        0, the content trick the uniform baseline depends on (which a bare model Q,
-        replacing content_q, would otherwise discard).
+      * MIXED WITH UNIFORM, NOT FLOORED AT IT.  This was q = max(model, uniform_type_q),
+        justified as "the model can make a primitive cheaper but never less reachable,
+        so dreaming can only help".  The floor does preserve reachability — but not
+        TIME-to-reach, and time-to-reach is what a timed enumerator spends.  Both
+        arguments are per-type distributions summing to 1, so their elementwise max
+        sums to 1 + TV(model, uniform) > 1: every primitive gets cheaper and none gets
+        dearer, which deflates the whole cost scale instead of reordering it.
+        solve_enumeration sweeps fixed-width budget windows [2i, 2i+2) under a single
+        wall clock, so deflation does not pull the model's guesses to the front — it
+        pulls EVERYTHING into the early windows and fattens each one.  A confident
+        model takes up to ~log 2 nats off per node; over a ~10-node belief program
+        that is ~7 nats, i.e. ~3.5 extra windows of junk enumerated ahead of it.
+        Measured on the 2026-07-26 runs: dreamed rounds solved FEWER tasks per round
+        than uniform ones (phase-1 round 2: +88 dreamed vs +103 uniform; 290 vs 291
+        final).  The mixture keeps each type group's mass at exactly 1 while capping
+        how far the model can push any primitive ABOVE its uniform cost at
+        log(1/DREAM_PRIOR_W) nats — which is what the floor was really buying.
+      * CONTENT BOOST: via the shared content_boost, so this Q prices the task's own
+        visible terminals exactly as the uniform/content baseline does.  The coord
+        half of that boost used to be missing here.
     """
+    import math
     with th.no_grad():
-        logits = qmodel(tc_mat(x)[None]).squeeze(0)        # (nd,)
-    q = th.full((len(D),), -float('inf'))
+        logits = qmodel(tc_mat(as_scenes(x).rep)[None]).squeeze(0)  # (nd,)
+    model = th.full((len(D),), -float('inf'))
     for _tp, idxs in D.bytype.items():                     # per-type renormalize
         idxs_t = th.tensor(idxs)
-        q[idxs_t] = F.log_softmax(logits[idxs_t], dim=-1)
-    q = th.maximum(q, uniform_type_q(D))                   # model can only help
-    visible = {int(v) for v in np.unique(x[0]) if v not in (0, 3)}
-    for d in D.ds:
-        # only cellvalue literals are content-priced; coord is a latent (see dsl.py)
-        if d.tailtypes is None and d.type == cellvalue and d.head in visible:
-            q[D.index(d)] = 0.0                            # content literal boost
-    return q
+        model[idxs_t] = F.log_softmax(logits[idxs_t], dim=-1)
+    # log((1-w)·model + w·uniform): still sums to 1 within each type group
+    q = th.logaddexp(model + math.log(1.0 - DREAM_PRIOR_W),
+                     uniform_type_q(D) + math.log(DREAM_PRIOR_W))
+    return content_boost(D, q, x)
 
 def dream(D, soltrees=[], training_Xs=None, root_type=None, n_iters=600):
     import dsl as _dsl
@@ -1171,11 +1247,16 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, n_iters=600):
 
     _fantasy_type = root_type
 
+    # The recognition model conditions on ONE trajectory, so a multi-scene task
+    # contributes each of its scenes separately: same programs, k× the grid
+    # evidence, and the replay source below can draw any scene of a solved task.
+    _train_scenes = [s for x in (training_Xs or []) for s in as_scenes(x)]
+
     # Pre-compute grid parameters for fantasy generation.
     # Infer grid size and goal values from training tasks so nothing is hardcoded.
     _av_list = [1]
-    _sz      = training_Xs[0].shape[1] if training_Xs else 5
-    _gv_list = sorted({int(v) for x in (training_Xs or [])
+    _sz      = _train_scenes[0].shape[1] if _train_scenes else 5
+    _gv_list = sorted({int(v) for x in _train_scenes
                        for v in np.unique(x[0])
                        if v not in (0, 3) and int(v) not in _av_list}) or [2]
     # Corpus scene statistics, so fantasy grids match the mix the model must encode.
@@ -1185,8 +1266,8 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, n_iters=600):
     # so a multi-entity grid only *lets* a sampled program drive two movers — it exercises
     # the encoder's second mover/goal slots rather than manufacturing belief scenes.
     _ent_counts = [int(((np.unique(x[0]) != 0) & (np.unique(x[0]) != 3)).sum())
-                   for x in (training_Xs or [])]
-    _val_pool   = sorted({int(v) for x in (training_Xs or [])
+                   for x in _train_scenes]
+    _val_pool   = sorted({int(v) for x in _train_scenes
                           for v in np.unique(x[0]) if v not in (0, 3)}) or [1, 2]
     _multi_frac = (sum(c >= 4 for c in _ent_counts) / len(_ent_counts)
                    if _ent_counts else 0.0)
@@ -1231,7 +1312,7 @@ def dream(D, soltrees=[], training_Xs=None, root_type=None, n_iters=600):
                     ig = _fresh_ig()
                     T  = int(randint(3, 8))
                 else:
-                    src = training_Xs[randint(len(training_Xs))] if training_Xs else None
+                    src = _train_scenes[randint(len(_train_scenes))] if _train_scenes else None
                     if src is None:
                         continue
                     ig = src[0]

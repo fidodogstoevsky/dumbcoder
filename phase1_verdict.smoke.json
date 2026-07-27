@@ -1,19 +1,19 @@
 {
  "decomposed": false,
  "smoke": true,
- "n_solved": 58,
- "n_total": 100,
+ "n_solved": 54,
+ "n_total": 102,
  "stitch_iters": 3,
  "ecd_iters": 2,
  "t_fn": 15,
  "t_fn_round1": 15,
- "constructor_round": 1,
+ "constructor_round": null,
  "first_solve_round_by_kind": {
   "physics": 1,
   "desire": 1,
   "overlay": 1,
   "comet": 1,
-  "belief": 1,
+  "flee": 1,
   "deletion": 1,
   "denoise": 1,
   "underlay": 1,
@@ -31,7 +31,7 @@
   "desire": 1,
   "overlay": 1,
   "comet": 1,
-  "belief_goal": 1,
+  "flee": 1,
   "deletion": 1,
   "denoise": 1,
   "underlay": 1,
@@ -49,7 +49,7 @@
   "desire": 8,
   "overlay": 2,
   "comet": 2,
-  "belief": 6,
+  "flee": 2,
   "deletion": 2,
   "denoise": 2,
   "underlay": 2,
@@ -68,6 +68,7 @@
   "overlay": 2,
   "comet": 2,
   "belief": 48,
+  "flee": 2,
   "deletion": 2,
   "denoise": 2,
   "underlay": 2,
@@ -99,12 +100,8 @@
    "optimize",
    "overlay"
   ],
-  "belief": [
-   "compose",
-   "fork",
-   "neg_dist",
-   "optimize",
-   "sync_to_world"
+  "flee": [
+   "optimize"
   ],
   "deletion": [],
   "denoise": [],
@@ -132,7 +129,7 @@
   "readout": []
  },
  "belief_commit": {
-  "literal": 5,
+  "literal": 0,
   "degenerate": 0,
   "complement": 0
  },
@@ -145,13 +142,13 @@
    "complement": 0
   },
   "belief_goal": {
-   "solved": 6,
+   "solved": 0,
    "total": 16,
-   "literal": 5,
+   "literal": 0,
    "degenerate": 0,
    "complement": 0
   },
-  "belief_dual": {
+  "belief_observers": {
    "solved": 0,
    "total": 8,
    "literal": 0,
@@ -173,6 +170,12 @@
    "complement": 0
   }
  },
+ "selective_attribution": {
+  "n": 8,
+  "solved": 0,
+  "believer_only": 0,
+  "observer_committed": 0
+ },
  "false_obstacle": {
   "n": 8,
   "literal": 0,
@@ -183,8 +186,8 @@
   "fork_general": true,
   "sync_general": true,
   "wall_general": true,
-  "belief_uses_both": true,
-  "agency_unique": true,
+  "belief_uses_both": false,
+  "agency_unique": false,
   "belief_is_wall_based": true,
   "no_belief_complement": true
  },
@@ -200,8 +203,11 @@
     "overlay": 2
    },
    "comet": {
-    "overlay": 2,
-    "neg_dist": 2
+    "neg_dist": 2,
+    "overlay": 2
+   },
+   "flee": {
+    "distance": 2
    },
    "deletion": {
     "clear_at": 2
@@ -217,8 +223,8 @@
     "wall_at": 16
    },
    "relocate": {
-    "wall_at": 4,
-    "clear_at": 4
+    "clear_at": 4,
+    "wall_at": 4
    },
    "registration": {
     "sync_to_world": 2
@@ -244,6 +250,7 @@
   "any_complement_used": true,
   "used_complements": [
    "clear_at",
+   "distance",
    "erase",
    "snd_gg",
    "sync_all",
@@ -251,9 +258,7 @@
    "sync_to_model",
    "underlay"
   ],
-  "unused_complements": [
-   "distance"
-  ]
+  "unused_complements": []
  },
  "invented": [
   {
@@ -261,14 +266,13 @@
    "type": "fn",
    "tailtypes": [
     "cellvalue",
-    "cellvalue"
+    "cellvalue",
+    "coord",
+    "coord"
    ],
-   "body": "(fork (compose (optimize (distance $1) $1) (optimize (neg_dist $1) $0)) (sync_to_world $0))",
-   "shared_holes": {
-    "$1": 3,
-    "$0": 2
-   },
-   "role": "agent_constructor_wallfree"
+   "body": "(compose (wall_at $3 $2) (optimize (neg_dist $1) $0))",
+   "shared_holes": {},
+   "role": "wall_policy"
   },
   {
    "repr": "fn_4",
@@ -287,21 +291,19 @@
    "tailtypes": [
     "coord",
     "coord",
-    "cellvalue",
-    "cellvalue"
+    "coord"
    ],
-   "body": "(compose (optimize (neg_dist $3) $2) (wall_at $1 $0))",
-   "shared_holes": {},
-   "role": "wall_policy"
+   "body": "(compose (wall_at $0 $2) (clear_at $1 $0))",
+   "shared_holes": {
+    "$0": 2
+   },
+   "role": "other"
   }
  ],
- "agent_constructor": "fn_3",
- "agent_constructor_shared_holes": {
-  "$1": 3,
-  "$0": 2
- },
- "agent_constructor_n_shared_holes": 2,
- "agent_constructor_max_hole_uses": 3,
+ "agent_constructor": null,
+ "agent_constructor_shared_holes": {},
+ "agent_constructor_n_shared_holes": 0,
+ "agent_constructor_max_hole_uses": 0,
  "abstraction_usage_by_kind": {
   "physics": {
    "(bare prims)": 2
@@ -315,9 +317,8 @@
   "comet": {
    "fn_4": 2
   },
-  "belief": {
-   "fn_3": 6,
-   "fn_4": 1
+  "flee": {
+   "(bare prims)": 2
   },
   "deletion": {
    "(bare prims)": 2
@@ -329,11 +330,11 @@
    "(bare prims)": 2
   },
   "obstacle": {
-   "fn_5": 8,
-   "fn_4": 8
+   "fn_3": 16
   },
   "relocate": {
-   "(bare prims)": 4
+   "fn_5": 3,
+   "(bare prims)": 1
   },
   "registration": {
    "(bare prims)": 2
@@ -372,13 +373,13 @@
     "saved_mean": 0.693145751953125,
     "saved_total": 1.38629150390625
    },
-   "belief": {
-    "n": 6,
-    "dl_base_median": 24.306785583496094,
-    "dl_lib_median": 6.907755374908447,
-    "saved_median": 17.399030208587646,
-    "saved_mean": 23.314231872558594,
-    "saved_total": 139.88539123535156
+   "flee": {
+    "n": 2,
+    "dl_base_median": 7.600902557373047,
+    "dl_lib_median": 7.600902557373047,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
    },
    "deletion": {
     "n": 2,
@@ -399,18 +400,18 @@
    "obstacle": {
     "n": 16,
     "dl_base_median": 15.424949645996094,
-    "dl_lib_median": 12.429216384887695,
-    "saved_median": 2.9957332611083984,
-    "saved_mean": 2.9957332611083984,
-    "saved_total": 47.931732177734375
+    "dl_lib_median": 10.126630783081055,
+    "saved_median": 5.298318862915039,
+    "saved_mean": 5.298318862915039,
+    "saved_total": 84.77310180664062
    },
    "relocate": {
     "n": 4,
     "dl_base_median": 13.34550666809082,
-    "dl_lib_median": 13.34550666809082,
-    "saved_median": 0.0,
-    "saved_mean": 0.0,
-    "saved_total": 0.0
+    "dl_lib_median": 7.130898952484131,
+    "saved_median": 6.2146077156066895,
+    "saved_mean": 4.660955786705017,
+    "saved_total": 18.64382314682007
    },
    "registration": {
     "n": 2,
@@ -461,37 +462,71 @@
     "saved_total": 0.0
    }
   },
-  "belief_by_variant": {
+  "belief_by_variant": {},
+  "nonmental_saved_median": 0.0,
+  "n_belief_using_ctor": 0
+ },
+ "mdl_margin": {
+  "by_variant": {
+   "belief_wall": {
+    "n_tasks": 5,
+    "n_tasks_with_competitor": 5,
+    "n_competitor_pairs": 5,
+    "margin_lib_min": 1.0216522216796875,
+    "margin_lib_median": 9.43348503112793,
+    "margin_lib_max": 9.43348503112793,
+    "margin_base_median": 1.0216522216796875
+   },
    "belief_goal": {
-    "n": 6,
-    "dl_base_median": 24.306785583496094,
-    "dl_lib_median": 6.907755374908447,
-    "saved_median": 17.399030208587646,
-    "saved_mean": 23.314231872558594,
-    "saved_total": 139.88539123535156
+    "n_tasks": 7,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   },
+   "belief_false_obstacle": {
+    "n_tasks": 1,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
    }
   },
-  "nonmental_saved_median": 0.0,
-  "n_belief_using_ctor": 6
+  "n_competitor_pairs": 5,
+  "pct_competitors_longer": 100.0,
+  "n_competitors_shorter": 0,
+  "n_excluded_shorter": 8,
+  "n_action_right_scene_wrong": 0,
+  "margin_lib_median": 9.43348503112793,
+  "margin_lib_min": 1.0216522216796875
  },
- "mdl_margin": null,
- "mdl_margin_note": "no mdl_margins.json yet \u2014 run `python mdl_margin.py --smoke` to price belief against its rivals",
- "constructor_found": true,
- "constructor_shared": true,
- "belief_uses_ctor": true,
- "nonmental_free_of_ctor": true,
+ "mdl_margin_note": "STALE: mdl_margins.json was priced from a run older than this one; re-run mdl_margin.py to price THIS library",
+ "constructor_found": false,
+ "constructor_shared": false,
+ "belief_uses_ctor": false,
+ "nonmental_free_of_ctor": false,
  "failures": [
+  "belief_uses_both",
+  "agency_unique",
+  "constructor_found",
+  "constructor_shared",
+  "belief_uses_ctor",
+  "nonmental_free_of_ctor",
   "cube_ok"
  ],
  "ok": false,
  "provenance": {
   "git": {
-   "commit": "a0be18821b1eb06c81bdb095897fa8a6fecb2052",
-   "commit_short": "a0be188",
+   "commit": "4f6b84cbc58895e4c38b2f15db395a0b7f4238be",
+   "commit_short": "4f6b84c",
    "branch": "master",
    "dirty": true
   },
-  "timestamp": "2026-07-24T16:36:39Z",
+  "timestamp": "2026-07-27T14:15:23Z",
   "host": "eduvpn-uva-stu-145-3-16-66.vpn.uva.nl",
   "python": "3.12.7",
   "argv": "phase1.py --smoke",
@@ -508,6 +543,7 @@
    "dream_iters": 120,
    "plain_belief": false,
    "curriculum": true,
+   "k": 4,
    "n_phys": 2,
    "n_des": 1,
    "n_ov": 2,
@@ -539,10 +575,10 @@
    "underlay": 19,
    "belief_extra": 22,
    "belief_goal": 23,
-   "belief_dual": 24,
+   "belief_observers": 27,
    "belief_fob": 25,
    "relocate": 26
   },
-  "repro": "commit a0be188+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-24T16:36:39Z"
+  "repro": "commit 4f6b84c+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-27T14:15:23Z"
  }
 }

@@ -52,10 +52,10 @@ HERO = '#2a78d6'        # the belief blue — the agent-constructor column
 _FN_RE = re.compile(r'\bfn_\d+\b')
 
 # variant marker glyphs, so a cell can show WHICH belief families sit at each (gv,av).
-VAR_MARK = {'belief_wall': '■', 'belief_witness': '◆', 'belief_goal': '▲', 'belief_dual': '●',
-            'belief_false_obstacle': '★'}
+VAR_MARK = {'belief_wall': '■', 'belief_witness': '◆', 'belief_goal': '▲',
+            'belief_observers': '●', 'belief_false_obstacle': '★'}
 VAR_LABEL = {'belief_wall': 'wall', 'belief_witness': 'witness',
-             'belief_goal': 'goal', 'belief_dual': 'dual',
+             'belief_goal': 'goal', 'belief_observers': 'two observers',
              'belief_false_obstacle': 'false-obstacle'}
 
 

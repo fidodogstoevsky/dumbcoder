@@ -86,9 +86,10 @@ from dsl import (
 )
 from tasks import (
     make_physics_tasks, make_desire_tasks, make_belief_tasks,
-    _physically_explainable, COMBOS, SIZE, DIRS,
+    K_SCENES, _collect, COMBOS, SIZE, DIRS,
     make_overlay_tasks,
 )
+from scenes import Scenes, as_scenes, solves
 from prims import make_stack_prims
 
 # core parts whose presence in a solution we report (pre-stitch)
@@ -117,21 +118,31 @@ def crossblur_prog(v, d1, d2):
     return pipe_gsg(prod, peek)
 
 
-def _low_arity_explainable(x, g, v):
-    "True if x is reproduced by a depth-≤1 program (physics, or a one-direction blur)."
-    T = x.shape[0]
-    if _physically_explainable(x, g):
-        return True
+def _low_arity_explainable(scenes, v):
+    """True if the TASK is reproduced by a depth-≤1 program: a bare `step v d`, or a
+    single-direction `fork(step v d, overlay)` blur.
+
+    A closed, fully enumerated set (the depth-≤1 programs over this family's one
+    value), not an open-ended rival battery — it is what makes "crossblur is a
+    genuine two-direction effect" a checked claim rather than an assumed one.
+    Checked over the whole scene set, since a rival must fit every scene.
+    """
+    def all_scenes(f):
+        return all(_reproduces_scene(s, f) for s in scenes)
     for d in DIRS.values():
-        try:
-            if np.array_equal(unfold(g, T, fork(step(v, d), overlay)), x):
-                return True
-        except Exception:
-            pass
+        if all_scenes(step(v, d)) or all_scenes(fork(step(v, d), overlay)):
+            return True
     return False
 
 
-def make_crossblur_tasks(n, size=SIZE, vals=(1, 4), seed=0):
+def _reproduces_scene(s, f):
+    try:
+        return np.array_equal(unfold(s[0], s.shape[0], f), s)
+    except Exception:
+        return False
+
+
+def make_crossblur_tasks(n, size=SIZE, vals=(1, 4), seed=0, k=K_SCENES):
     """Two-direction motion trail: w ∪ shift_d1(w) ∪ shift_d2(w), iterated.
 
     Generated through the grid-stack at height 3 (so a solve failure is search, not
@@ -145,12 +156,13 @@ def make_crossblur_tasks(n, size=SIZE, vals=(1, 4), seed=0):
     # non-opposite direction pairs, so the trail is a true 2-D spread
     pairs = [('right', 'down'), ('right', 'up'), ('left', 'down'), ('left', 'up')]
     rng = np.random.default_rng(seed)
-    tasks = []
-    attempts = 0
-    while len(tasks) < n and attempts < 5000:
-        attempts += 1
-        v = int(rng.choice(vals))
-        d1n, d2n = pairs[int(rng.integers(len(pairs)))]
+
+    def propose(rng, target=None):
+        if target is None:
+            v = int(rng.choice(vals))
+            d1n, d2n = pairs[int(rng.integers(len(pairs)))]
+        else:
+            v, d1n, d2n = target
         # start near the corner the trail spreads away from, so it stays mostly on-grid
         r = int(rng.integers(0, 2)); c = int(rng.integers(0, 2))
         T = int(rng.integers(3, 5))
@@ -158,11 +170,14 @@ def make_crossblur_tasks(n, size=SIZE, vals=(1, 4), seed=0):
         g[r, c] = v
         x = unfold(g, T, crossblur_prog(v, DIRS[d1n], DIRS[d2n]))
         if np.array_equal(x[0], x[-1]):          # must actually spread
-            continue
-        if _low_arity_explainable(x, g, v):      # must require depth-2
-            continue
-        tasks.append((x, {'kind': 'crossblur', 'val': v, 'd1': d1n, 'd2': d2n}))
-    return tasks
+            return None
+        return (v, d1n, d2n), x, {'kind': 'crossblur', 'val': v, 'd1': d1n, 'd2': d2n}
+
+    def certify(scs, m):
+        return not _low_arity_explainable(scs, m['val'])   # must require depth-2
+
+    return _collect(propose, n, k, rng, attempts=20000, target_tries=2000,
+                    certify=certify)
 
 
 # ── DSL: lean atomic core + the stack calculus (isolates the ARITY axis) ──────────
@@ -187,9 +202,9 @@ def uniform_type_q(D):
 
 
 def content_q(D, x):
-    "uniform type Q, with integer literals visible in frame 0 boosted to cost 0"
+    "uniform type Q, with integer literals visible in the task's grids boosted to cost 0"
     q = uniform_type_q(D)
-    visible = {int(v) for v in np.unique(x[0]) if v not in (0, 3)}
+    visible = as_scenes(x).values
     for d in D.ds:
         # only cellvalue literals are content-priced; coord stays at uniform cost.
         if d.tailtypes is None and d.type == cellvalue and d.head in visible:
@@ -229,9 +244,9 @@ def verify_ground_truth(D, tasks):
             tree = tr(D, f"(fork (compose (wall_at c{pr} c{pc}) "
                          f"(optimize (neg_dist {m['gv']}) {m['av']})) "
                          f"(sync_to_world {m['av']}))")
-        out = unfold(x[0], x.shape[0], tree())
-        assert np.array_equal(out, x), f"ground truth failed for {k}: {m}"
-    print(f"  ground-truth check: {len(tasks)} tasks verified via Delta trees")
+        assert solves(tree(), x), f"ground truth failed for {k}: {m}"
+    print(f"  ground-truth check: {len(tasks)} tasks "
+          f"({sum(t.k for t, _ in tasks)} scenes) verified via Delta trees")
 
     # the decomposition identity: depth-1 stack belief == atomic fork+sync
     g = np.zeros((SIZE, SIZE), dtype=int); g[0, 0] = 1; g[3, 3] = 2
@@ -432,7 +447,7 @@ def _wake_sleep_solve(D, tasks, *, t_fn, maxdepth, rounds, stitch_iters,
 
 # ── Main ───────────────────────────────────────────────────────────────────────────
 
-def main(smoke=False, dream_on=True):
+def main(smoke=False, dream_on=True, k=K_SCENES):
     if smoke:
         n_phys, n_des, n_ov, n_bel, n_cb = 2, 1, 2, 1, 2
         t_fn, stitch_iters, maxdepth = 20, 3, 11
@@ -443,11 +458,11 @@ def main(smoke=False, dream_on=True):
         rounds, dream_iters = 3, 600
 
     print("Generating mixed corpus…")
-    phys = make_physics_tasks(n_phys, seed=0)
-    des  = make_desire_tasks(n_des, COMBOS, seed=1)
-    ov   = make_overlay_tasks(n_ov, seed=3)
-    bel  = make_belief_tasks(n_bel, COMBOS, seed=2)
-    cb   = make_crossblur_tasks(n_cb, seed=5)
+    phys = make_physics_tasks(n_phys, seed=0, k=k)
+    des  = make_desire_tasks(n_des, COMBOS, seed=1, k=k)
+    ov   = make_overlay_tasks(n_ov, seed=3, k=k)
+    bel  = make_belief_tasks(n_bel, COMBOS, seed=2, k=k)
+    cb   = make_crossblur_tasks(n_cb, seed=5, k=k)
 
     fn_tasks = phys + des + ov + bel + cb
     seen, tasks = set(), []
@@ -652,7 +667,7 @@ def _crossblur_stack_str(m):
 # — including arity 2 — are demonstrably reachable, and the joint run's arity-1 choice
 # is a genuine MDL preference rather than a search failure.
 
-def run_ablation(smoke=False, dream_on=True):
+def run_ablation(smoke=False, dream_on=True, k=K_SCENES):
     if smoke:
         n_phys, n_des, n_ov, n_bel, n_cb = 2, 1, 2, 1, 2
         t_fn, stitch_iters, maxdepth = 60, 3, 13
@@ -681,11 +696,11 @@ def run_ablation(smoke=False, dream_on=True):
     print("  abstractions that make the deep belief/crossblur programs reachable.\n")
 
     # SAME mixed corpus as the joint run; only the DSL is ablated.
-    phys = make_physics_tasks(n_phys, seed=0)
-    des  = make_desire_tasks(n_des, COMBOS, seed=1)
-    ov   = make_overlay_tasks(n_ov, seed=3)
-    bel  = make_belief_tasks(n_bel, COMBOS, seed=2)
-    cb   = make_crossblur_tasks(n_cb, seed=5)
+    phys = make_physics_tasks(n_phys, seed=0, k=k)
+    des  = make_desire_tasks(n_des, COMBOS, seed=1, k=k)
+    ov   = make_overlay_tasks(n_ov, seed=3, k=k)
+    bel  = make_belief_tasks(n_bel, COMBOS, seed=2, k=k)
+    cb   = make_crossblur_tasks(n_cb, seed=5, k=k)
     seen, tasks = set(), []
     for x, m in phys + des + ov + bel + cb:
         k = mat_key(x)
@@ -713,8 +728,7 @@ def run_ablation(smoke=False, dream_on=True):
             s = _crossblur_stack_str(m)
         else:
             s = _belief_stack_str(m)
-        out = unfold(x[0], x.shape[0], tr(D, s)())
-        assert np.array_equal(out, x), f"ablation ground-truth failed for {k}: {m}"
+        assert solves(tr(D, s)(), x), f"ablation ground-truth failed for {k}: {m}"
     print(f"  ground-truth check: {len(tasks)} tasks reproduced through the ablated DSL\n")
 
     print("SOLVE — wake-sleep over the ablated DSL (same machinery as the joint run)")

@@ -2,7 +2,9 @@
 
 #mol-chapter("Learning as Bayesian Program Synthesis")
 
-== Bayesian Cognitive Modeling
+== Levels of analysis and reverse engineering
+
+_state that the thesis' claim is computational with ECD as an algorithmic representation_
 
 
 - Marr's levels of analysis
@@ -38,31 +40,19 @@ reverse engineering means start at the computational level, understand what the 
 
 rational analysis framework. analyze cognitionin terms of adaptive solutions to environmental problems [Anderson 1990]
 
-=== Rational constructivism
+== Bayesian inference: the logic of learning
 
-middle way between nativism and empiricism, where domain-general statistical mechanisms construct domain-specific structural knowledge
+explain prior/likelihood, size principle, Bayes as normative solution
 
-"how do our minds get so much from so little?" @griffiths_bayesian_2024
+== Programs as the hypothesis space
 
-how children's minds grow [Gopnik & Meltzoff, 1997]
+- Language of Thought
+- compositionality/productivity
+- lambda calculus
+- Fodor/Goodman/Rule
+- symbols vs. vectors
 
-Bayesian cognitive models explain how people learn with abstract structured knowledge [Gopnik & Tenenbaum, 2007; Griffiths, Chater, Kemp, Perfors, & Tenenbaum, 2010; Perfors, Tenenbaum, & Wonnacott, 2010; Griffiths, Sobel, Tenenbaum, & Gopnik, 2011b; Xu, 2019; Spelke, 2022]
-
-unifying the two @griffiths_bayesian_2024, moving beyond dichotomies: 
-- empiricism versus nativism
-- domain-general versus domain-specific
-- logic versus probability
-- symbols versus statistics
-
-"How can domain-general mechanisms of learning and representation build domain-specific systems of knowledge? How can structured symbolic knowledge be acquired through statistical learning?" @tenenbaum_how_2011
-
-Powerful abstractions can be learned surprisingly quickly, together with or prior to learning the more concrete knowledge they constrain. Structured symbolic representations need not be rigid, static, hard-wired, or brittle. Embedded in a probabilistic framework, they can grow dynamically and robustly in response to the sparse, noisy data of experience. @tenenbaum_how_2011
-
-=== explain Bayesian inference - first generally here and then specifically over programs? or just itnroduce it there? 
-
-== The language of thought as a representational medium
-
-=== bayesian inference over structured representations
+*bayesian inference over structured representations*
 
 contrast the symbolic approach (structured, compositional) with the connectionist approach (unstructured, associative weights), arguing that programs capture the productivity and open-endedness of human thought
 
@@ -81,7 +71,7 @@ and for other learning tasks [Piantadosi, Goodman, Ellis, & Tenenbaum, 2008]
 
 
 
-=== why programs for theory of mind?
+*why programs for theory of mind?*
 
 By the classical theory of concept formation, concepts have a lot of qualities that are reminiscent of programs @bruner_study_2009
 - concepts are represented compositionally
@@ -114,9 +104,12 @@ symbolic programs give learner the freedom to adopt any syntax that is useful [G
 
 Siskind gives the example `lift(x,y)=CAUSE(x,GO(y,UP))` for knowledge as compositional programs [Siskind 1996]
 
-== Bayesian program induction as the learning engine
+== Bayesian program synthesis
 
-Prior vs. Likelihood: Introduce Bayes' Rule as the engine of learning, where the learner trades off the simplicity of a program (the prior) against its fit to observed behavior (the likelihood)
+- Bayes over programs
+- prior as program size/description length
+
+Prior vs. Likelihood: learner trades off the simplicity of a program (the prior) against its fit to observed behavior (the likelihood)
 
 Piantadosi 2012:
 - likelihopod function that uses the size principle, penalize overly broad hypotheses [Tenenbaum 1999]
@@ -137,7 +130,13 @@ _Without the constraints imposed by the prior, no meaningful generalizations wou
 
 since knowledge is programs, learning is program induction [Kitzelmann, 2009; Flener & Schmid, 2008; Gulwani et al., 2017]
 
-== Hierarchical Bayesian models
+== Learning the language itself
+
+- HBMs
+- overhypotheses
+- blessing
+
+=== Hierarchical Bayesian models
 
 Blessing of abstraction, overhypotheses, HBMs
 
@@ -203,43 +202,5 @@ Explain how refactoring and compression automate the discovery of new social pri
 === Sleep: dreaming (amortized inference)
 
 explain the neural recognition network as a way to "compile" slow, deliberative Bayesian search into fast, "intuitive" social reasoning.
-
-== Learning theory of mind via inverse planning
-
-agents as approximately rational actors, inverse planning
-
-defining the generative model. agents move in an environment (MDP/POMDP) to maximize utility efficiency
-
-Bayesian inverse planning [Baker, Saxe, and Tenenbaum (2009)]
-
-“naive utility calculus” [Jara-Ettinger, Gweon, Tenenbaum, and Schulz (2015)]
-
-Assume that the observer sees the agent as a rational planner. Then planning computation is solution to markov decision process.
-- input: utility and belief functions defined over agent's state space and state-action transition functions
-- output: series of actions the agent should perfoirm to maximize utility or fiulfill goals @lake_building_2016
-
-then the observer can simualte what the agent would do if the agent had certain goals/policies etc, and thus infer those from what actually happens by comparing the simulation to reality. @lake_building_2016 analogy to physics simulations. Say I want to figure out 
-
-First we have principle of rationality, expetation that agents will plan rationally given their world model. Then we reverseengineer what their mental states are that caused their behavior, based onthat principle. Formalizing Dennet's intentional stance. @baker_action_2009
-
-Explanation by rationalization, Bayesian theory of mind framework [Baker 2012]
-
-model causal relation betwene beliefs, goals, actions as rational probabilistic planning in markov decision problem. [baker 2012]
-
-observer uses Bayesian induction to work backward from a trajectory to the most likely goals and beliefs
-
-humans can easily observe agents' actions and then infer the beliefs desires and intentions that led to those actions, assuming that the agent is approximately rational and goal directed
-
-[Baker, Saxe, and Tenenbaum (2009)], [Lucas, Griffiths, et al. (2014)], [Jern, Lucas, and Kemp (2017)], [Jara-Ettinger, Gweon, Schulz, and Tenenbaum (2016)]
-[Baker, Jara-Ettinger, Saxe, and Tenenbaum (2017)]
-[Ullman et al. (2009)]
-
-Forward-planning/rational decisionmaking: given an agent's intentions etc, predict their future actions
-
-inverse planning: given an agent's actions, what were their intentions/beliefs/world mdoel?
-
-use Bayes rule to produce posterior over possibel mental states
-
-Baker et al 2017
 
 #load-bib(read("chapter1.bib") + read("chapter2.bib"))

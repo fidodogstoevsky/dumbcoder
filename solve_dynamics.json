@@ -1,0 +1,509 @@
+{
+ "provenance": {
+  "git": {
+   "commit": "4f6b84cbc58895e4c38b2f15db395a0b7f4238be",
+   "commit_short": "4f6b84c",
+   "branch": "master",
+   "dirty": true
+  },
+  "timestamp": "2026-07-25T17:18:40Z",
+  "host": "eduvpn-uva-stu-145-3-16-66.vpn.uva.nl",
+  "python": "3.12.7",
+  "argv": "phase1.py --smoke",
+  "knobs": {
+   "decomposed": false,
+   "smoke": true,
+   "cube": true,
+   "t_fn": 15,
+   "t_fn_round1": 15,
+   "t_reg": 8,
+   "ecd_iters": 2,
+   "stitch_iters": 3,
+   "dream_on": true,
+   "dream_iters": 120,
+   "plain_belief": false,
+   "curriculum": true,
+   "k": 4,
+   "n_phys": 2,
+   "n_des": 1,
+   "n_ov": 2,
+   "n_comet": 2,
+   "n_reg": 2,
+   "n_bel": 1,
+   "n_belvar": 1,
+   "n_goal": 2,
+   "n_corner": 2,
+   "n_obstacle": 2,
+   "n_relocate": 4
+  },
+  "seeds": {
+   "physics": 0,
+   "desire": 1,
+   "belief": 2,
+   "overlay": 3,
+   "registration": 4,
+   "comet": 5,
+   "flee": 10,
+   "deletion": 11,
+   "denoise": 12,
+   "perception": 13,
+   "multi_reg": 14,
+   "reg_except": 15,
+   "inpaint": 16,
+   "readout": 17,
+   "obstacle": 18,
+   "underlay": 19,
+   "belief_extra": 22,
+   "belief_goal": 23,
+   "belief_dual": 24,
+   "belief_fob": 25,
+   "relocate": 26
+  },
+  "repro": "commit 4f6b84c+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-25T17:18:40Z"
+ },
+ "phase": 1,
+ "source": "phase1_traj.smoke.json",
+ "n_rounds": 2,
+ "totals": {
+  "physics": 2,
+  "desire": 8,
+  "world": 44,
+  "belief": 13
+ },
+ "cumulative": {
+  "physics": [
+   0,
+   2,
+   2
+  ],
+  "desire": [
+   0,
+   8,
+   8
+  ],
+  "world": [
+   0,
+   44,
+   44
+  ],
+  "belief": [
+   0,
+   5,
+   13
+  ]
+ },
+ "pairs": [
+  {
+   "id": "6c5704dd272148c4db5be8d992e826eeb7d00f55",
+   "kind": "belief",
+   "family": "belief",
+   "solve_round": 2,
+   "miss_time": 15.006341707892716,
+   "solve_time": 3.010416666045785,
+   "speedup": 4.984805551054735
+  },
+  {
+   "id": "4d3cf603de97619048d935af9a8fb7ebe5561120",
+   "kind": "belief",
+   "family": "belief",
+   "solve_round": 2,
+   "miss_time": 15.002096208743751,
+   "solve_time": 3.8070021253079176,
+   "speedup": 3.9406587427450814
+  },
+  {
+   "id": "109540b93c641d487ad26aeeea3ee9a70f199f6b",
+   "kind": "belief",
+   "family": "belief",
+   "solve_round": 2,
+   "miss_time": 15.000291833188385,
+   "solve_time": 2.3141571660526097,
+   "speedup": 6.481967626587455
+  },
+  {
+   "id": "cdb8a706dc0e67b026079026ee10a7dce8bfeb89",
+   "kind": "belief",
+   "family": "belief",
+   "solve_round": 2,
+   "miss_time": 15.001809167210013,
+   "solve_time": 12.91286737518385,
+   "speedup": 1.161772109271464
+  },
+  {
+   "id": "d1e5e8673ef70e1c30efb069ea192f988d71ffde",
+   "kind": "belief",
+   "family": "belief",
+   "solve_round": 2,
+   "miss_time": 15.003079916816205,
+   "solve_time": 1.8334792922250926,
+   "speedup": 8.182846667773713
+  },
+  {
+   "id": "ca395e9cf5a791bf2a3850511c93df5b3a26eaea",
+   "kind": "belief",
+   "family": "belief",
+   "solve_round": 2,
+   "miss_time": 15.00003937492147,
+   "solve_time": 13.556098958011717,
+   "speedup": 1.1065159247791105
+  },
+  {
+   "id": "e06dbe046395929b9c2da16ac3cb4ed1cadc8c34",
+   "kind": "belief",
+   "family": "belief",
+   "solve_round": 2,
+   "miss_time": 15.000072124879807,
+   "solve_time": 12.120644208043814,
+   "speedup": 1.2375639336830855
+  },
+  {
+   "id": "cff164741e1345c4899bbd43d3192e0f8b33f863",
+   "kind": "belief",
+   "family": "belief",
+   "solve_round": 2,
+   "miss_time": 15.001345416996628,
+   "solve_time": 13.471346167381853,
+   "speedup": 1.1135743399809115
+  }
+ ],
+ "immediate": [
+  {
+   "id": "92e2ad7c9d0afedaf260a3bfaa4352a3fb5205df",
+   "kind": "physics",
+   "family": "physics",
+   "solve_round": 1,
+   "solve_time": 0.0037324996665120125
+  },
+  {
+   "id": "bb58ed7dbd556cd29dc0ca613c1de5f8ca43ad26",
+   "kind": "physics",
+   "family": "physics",
+   "solve_round": 1,
+   "solve_time": 0.0028402088209986687
+  },
+  {
+   "id": "44a71425158b6d1c544051f79dca34400f52f268",
+   "kind": "desire",
+   "family": "desire",
+   "solve_round": 1,
+   "solve_time": 0.006444583181291819
+  },
+  {
+   "id": "3f0308c9be806342a97ac7522d2510e02f611e08",
+   "kind": "desire",
+   "family": "desire",
+   "solve_round": 1,
+   "solve_time": 0.002286083996295929
+  },
+  {
+   "id": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
+   "kind": "desire",
+   "family": "desire",
+   "solve_round": 1,
+   "solve_time": 0.002196582965552807
+  },
+  {
+   "id": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
+   "kind": "desire",
+   "family": "desire",
+   "solve_round": 1,
+   "solve_time": 0.0050007919780910015
+  },
+  {
+   "id": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
+   "kind": "desire",
+   "family": "desire",
+   "solve_round": 1,
+   "solve_time": 0.005162083078175783
+  },
+  {
+   "id": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
+   "kind": "desire",
+   "family": "desire",
+   "solve_round": 1,
+   "solve_time": 0.00398729182779789
+  },
+  {
+   "id": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
+   "kind": "desire",
+   "family": "desire",
+   "solve_round": 1,
+   "solve_time": 0.002676708623766899
+  },
+  {
+   "id": "ae510b1c5172023f244add9be002ef5919cd45ab",
+   "kind": "desire",
+   "family": "desire",
+   "solve_round": 1,
+   "solve_time": 0.004099417012184858
+  },
+  {
+   "id": "81450a7341dd3134b38575e761ed0b1a2027e628",
+   "kind": "overlay",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.04239462502300739
+  },
+  {
+   "id": "ae088020dd5f64245630ee6d202768f3570df7b5",
+   "kind": "overlay",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.02989658433943987
+  },
+  {
+   "id": "567f6e0aece16452553b8b91e107efbc9e508057",
+   "kind": "comet",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.06322279060259461
+  },
+  {
+   "id": "b5b19e1247f9cb0bd6a926e55a404ba4af582e9f",
+   "kind": "comet",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.055732791777700186
+  },
+  {
+   "id": "44791b30e6796fe9161978788a6694de2e05d3ff",
+   "kind": "belief",
+   "family": "belief",
+   "solve_round": 1,
+   "solve_time": 5.051816250197589
+  },
+  {
+   "id": "3b0aa6a2915f363a0631dbc11d8dd8e88e66fcfe",
+   "kind": "belief",
+   "family": "belief",
+   "solve_round": 1,
+   "solve_time": 5.568364250008017
+  },
+  {
+   "id": "9c9138c371af0e942dfa89ea395b43972b745ef1",
+   "kind": "belief",
+   "family": "belief",
+   "solve_round": 1,
+   "solve_time": 7.032098290976137
+  },
+  {
+   "id": "b47a35f677973c5b1775644f8b1a208862592304",
+   "kind": "belief",
+   "family": "belief",
+   "solve_round": 1,
+   "solve_time": 8.935399999842048
+  },
+  {
+   "id": "8b1fa416b134ca559fb9bd92b55cf1a1a8fdceae",
+   "kind": "belief",
+   "family": "belief",
+   "solve_round": 1,
+   "solve_time": 8.102949124760926
+  },
+  {
+   "id": "25a600dd65ae4ad35750a535fe8b8edc2c6c2e88",
+   "kind": "flee",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.00649183290079236
+  },
+  {
+   "id": "cacc247d7636f78203abc2234628a26c3806d670",
+   "kind": "flee",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.004856334067881107
+  },
+  {
+   "id": "e39d334cf8de3feb2bac1aed92720f9448565142",
+   "kind": "deletion",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.052912207785993814
+  },
+  {
+   "id": "2c564eba89952f1ed7f3d21d39af21a07d1fa1b8",
+   "kind": "deletion",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.04712729109451175
+  },
+  {
+   "id": "121f74b3ea696fc2c8e4b727cc0a581eddd8ef59",
+   "kind": "denoise",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.0006533339619636536
+  },
+  {
+   "id": "b1b7dcf9002036a9fdd351b63c4a097590712784",
+   "kind": "denoise",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.001464084256440401
+  },
+  {
+   "id": "7b73fd6ca0f0416923acc0ad2a97d6817294336b",
+   "kind": "underlay",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.07199575006961823
+  },
+  {
+   "id": "4eb69c3b90eb173dcad211daf6f54b608f43aa19",
+   "kind": "underlay",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.07850070903077722
+  },
+  {
+   "id": "d9f5a5e9806c71167eb008a610ce5e08a52f9ade",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.7089534997940063
+  },
+  {
+   "id": "84e13aecf76fdeb9562129eb200c89187083f512",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.8628091248683631
+  },
+  {
+   "id": "e46c1526bbd6d60aa00d8c42e43195972d255572",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.9108573752455413
+  },
+  {
+   "id": "793e747640c55198ce2848d07acb0de1b14bc52a",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.7465870408341289
+  },
+  {
+   "id": "d013379d17adc5b9835fab529692a28d2bb86388",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.550831540953368
+  },
+  {
+   "id": "81264fc2171598b899ff5bf4ef549ff150de8407",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.5013188333250582
+  },
+  {
+   "id": "d17804526829c485499a038dd1682d43598e2801",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.5018109576776624
+  },
+  {
+   "id": "1fee177967764308831ac258a692179ba31f2cc7",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.46745516592636704
+  },
+  {
+   "id": "ab5403a8416d5c1c99fc988edc405ce3e1a9f933",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.6608130419626832
+  },
+  {
+   "id": "5042f5c3241d05b5d4d752aab33fc2b8e1e3567e",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.8724226667545736
+  },
+  {
+   "id": "a3ed8006b87a4f515fc1eddb9660505406c8ab66",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.7467796658165753
+  },
+  {
+   "id": "7c7c943a9aab450e127e3e72b4369800a44c2356",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.5922172497957945
+  },
+  {
+   "id": "8aaee50c444a73e9a7c4edab17a24208c7de66ad",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.5582820419222116
+  },
+  {
+   "id": "b2452afd28c988e47f3ec235426680f50aaa643a",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.744155041873455
+  },
+  {
+   "id": "e32ad933643cb50983c014ff0b1975880389e4c4",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.8282799581065774
+  },
+  {
+   "id": "dfba52d0c84381c4fb61769139ea48180ab10532",
+   "kind": "obstacle",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.667237457819283
+  },
+  {
+   "id": "e2c43b229033e6f0f44bcf9df12a2b6673f64237",
+   "kind": "relocate",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.08003045804798603
+  },
+  {
+   "id": "1d5c47d158e5c751547cb123f6da547d7549a35f",
+   "kind": "relocate",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.03924983320757747
+  },
+  {
+   "id": "a445c7dabeb74cec44f7b532ef8fb20d255a44b0",
+   "kind": "relocate",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.03574616741389036
+  },
+  {
+   "id": "9df81c84fb60bb980824c427b4d6bfc4856dafd9",
+   "kind": "relocate",
+   "family": "world",
+   "solve_round": 1,
+   "solve_time": 0.04827966680750251
+  }
+ ],
+ "has_timings": true,
+ "headline": {
+  "worst_miss": 15.003079916816205,
+  "worst_solve": 1.8334792922250926,
+  "worst_speedup": 8.182846667773713,
+  "median_miss": 15.00157729210332,
+  "median_solve": 7.963823166675866,
+  "n_belief_collapsed": 8
+ }
+}

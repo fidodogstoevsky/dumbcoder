@@ -1,0 +1,791 @@
+[gkaminer@int4 dumbcoder-nodream]$ cat slurm_24925375.out
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+ENV /home/gkaminer/.conda/envs/dumbcoder/bin/python | PY 3.12.13 | numpy 2.5.1 | torch 2.13.0+cpu | stitch_core /home/gkaminer/.conda/envs/dumbcoder/lib/python3.12/site-packages/stitch_core/__init__.py
+========================================================================
+PROVENANCE — quote this line in any caption reporting these numbers
+========================================================================
+  commit 2178981+dirty | phase2 (decomposed) | t_fn=3600 t_fn_round1=1200 t_reg=30 ecd_iters=6 stitch_iters=6 dream=off curriculum=on | n_bel=6 n_goal=6 n_obstacle=6 n_relocate=16 | 2026-07-26T15:33:28Z
+  WARNING: working tree was DIRTY at launch — the commit above does not fully
+           determine this run.  Commit before a run whose numbers are cited.
+  host tcn737.local.snellius.surf.nl | python 3.12.13 | argv: phase2.py --t-fn 3600 --ecd-iters 6 --no-dream
+
+Generating corpus…
+  belief variants: +48 goal-displacement, +24 two-observer, +24 false-obstacle (all kind=belief; false-obstacle forbids the scope-complement commit)
+  [curriculum] +24 extra plain wall-belief tasks (kind=belief) to seed the fork(policy, sync) abstraction.
+  4 physics, 16 desire, 4 overlay, 4 comet, 4 registration, 168 belief — 300 total
+  corner families: 4 flee, 4 deletion, 4 denoise, 48 obstacle, 16 relocate, 4 underlay, 4 perception, 4 multi_reg, 4 reg_except, 4 inpaint, 4 readout
+
+DSL: 45 primitives — CUBE run (core + symmetric complements, decomposed plumbing)
+  added corners: ['bimap', 'clear_at', 'distance', 'dup', 'erase', 'locate', 'mapfst', 'mapsnd', 'pair_blank', 'place', 'register', 'snd_gg', 'swap', 'sync_all', 'sync_except', 'sync_to_model', 'underlay', 'via_swap']
+  ground-truth check: 300 tasks / 1200 scenes verified via Delta trees
+decomposition identity: fork ≡ commit∘mapsnd(derive)∘dup and sync ≡ register(locate, place) verified on 168 belief tasks (every scene)
+
+========================================================================
+WAKE-SLEEP — up to 6 ECD rounds (enumerate ↦ joint stitch), 32 workers
+  fn Q: uniform/content (no dreaming); registration Q: uniform
+========================================================================
+
+--- round 1/6: 276 fn + 24 fn_p_g unsolved; |D|=45 (0 invented); fn Q=uniform/content; t_fn=1200s (round-1 cap) ---
+    [instr] agency constructor in D: ABSENT; belief solved (replay-eligible): 0/168
+[     4] caught (step 4 up)
+      + solved [physics] in 0.0s: (step 4 up)
+[     2] caught (step 4 right)
+      + solved [physics] in 0.0s: (step 4 right)
+[     5] caught (step 4 down)
+      + solved [physics] in 0.0s: (step 4 down)
+[     2] caught (step 4 right)
+      + solved [physics] in 0.0s: (step 4 right)
+[    13] caught (optimize (neg_dist 2) 1)
+      + solved [desire] in 0.0s: (optimize (neg_dist 2) 1)
+[    13] caught (optimize (neg_dist 2) 1)
+      + solved [desire] in 0.0s: (optimize (neg_dist 2) 1)
+[    13] caught (optimize (neg_dist 5) 4)
+      + solved [desire] in 0.0s: (optimize (neg_dist 5) 4)
+[    13] caught (optimize (neg_dist 5) 4)
+[    13] caught (optimize (neg_dist 7) 6)
+      + solved [desire] in 0.0s: (optimize (neg_dist 5) 4)
+      + solved [desire] in 0.0s: (optimize (neg_dist 7) 6)
+[    13] caught (optimize (neg_dist 7) 6)
+[    13] caught (optimize (neg_dist 9) 8)
+      + solved [desire] in 0.0s: (optimize (neg_dist 7) 6)
+[    13] caught (optimize (neg_dist 6) 2)
+      + solved [desire] in 0.0s: (optimize (neg_dist 9) 8)
+[    13] caught (optimize (neg_dist 9) 8)
+      + solved [desire] in 0.0s: (optimize (neg_dist 9) 8)
+      + solved [desire] in 0.0s: (optimize (neg_dist 6) 2)
+[    13] caught (optimize (neg_dist 6) 2)
+      + solved [desire] in 0.0s: (optimize (neg_dist 6) 2)
+[    13] caught (optimize (neg_dist 8) 5)
+[    13] caught (optimize (neg_dist 8) 5)
+      + solved [desire] in 0.0s: (optimize (neg_dist 8) 5)
+[    12] caught (optimize (neg_dist 1) 7)
+[    12] caught (optimize (neg_dist 1) 7)
+      + solved [desire] in 0.0s: (optimize (neg_dist 8) 5)
+[    12] caught (optimize (neg_dist 4) 9)
+      + solved [desire] in 0.0s: (optimize (neg_dist 1) 7)
+      + solved [desire] in 0.0s: (optimize (neg_dist 1) 7)
+[    12] caught (optimize (neg_dist 4) 9)
+      + solved [desire] in 0.0s: (optimize (neg_dist 4) 9)
+      + solved [desire] in 0.0s: (optimize (neg_dist 4) 9)
+[  8007] caught (pipe_gpg (compose_gp dup (mapsnd (step 4 right))) overlay)
+[  8028] caught (pipe_gpg (compose_gp dup (mapsnd (step 4 down))) overlay)
+[  8007] caught (pipe_gpg (compose_gp dup (mapsnd (step 1 right))) overlay)
+[  8014] caught (pipe_gpg (compose_gp dup (mapsnd (step 1 left))) overlay)
+      + solved [overlay] in 4.3s: (pipe_gpg (compose_gp dup (mapsnd (step 1 left))) overlay)
+      + solved [overlay] in 3.0s: (pipe_gpg (compose_gp dup (mapsnd (step 4 down))) overlay)
+      + solved [overlay] in 2.8s: (pipe_gpg (compose_gp dup (mapsnd (step 4 right))) overlay)
+      + solved [overlay] in 3.2s: (pipe_gpg (compose_gp dup (mapsnd (step 1 right))) overlay)
+[ 21643] caught (pipe_gpg (compose_gp dup (mapsnd (optimize (neg_dist 8) 5))) overlay)
+      + solved [comet] in 9.7s: (pipe_gpg (compose_gp dup (mapsnd (optimize (neg_dist 8) 5))) overlay)
+[ 21643] caught (pipe_gpg (compose_gp dup (mapsnd (optimize (neg_dist 7) 6))) overlay)
+[ 21643] caught (pipe_gpg (compose_gp dup (mapsnd (optimize (neg_dist 2) 1))) overlay)
+      + solved [comet] in 11.0s: (pipe_gpg (compose_gp dup (mapsnd (optimize (neg_dist 2) 1))) overlay)
+      + solved [comet] in 10.5s: (pipe_gpg (compose_gp dup (mapsnd (optimize (neg_dist 7) 6))) overlay)
+[ 21632] caught (pipe_gpg (compose_gp dup (mapsnd (optimize (neg_dist 1) 7))) overlay)
+      + solved [comet] in 11.0s: (pipe_gpg (compose_gp dup (mapsnd (optimize (neg_dist 1) 7))) overlay)
+[199764] caught (compose (compose (wall_at c2 c4) (optimize (neg_dist 7) 6)) (clear_at c2 c4))
+[154113] caught (compose (compose (wall_at c0 c1) (optimize (neg_dist 7) 6)) (clear_at c0 c1))
+      + solved [belief_false_obstacle] in 132.2s: (compose (compose (wall_at c2 c4) (optimize (neg_dist 7) 6)) (clear_at c2 c4))
+      + solved [belief_false_obstacle] in 110.5s: (compose (compose (wall_at c0 c1) (optimize (neg_dist 7) 6)) (clear_at c0 c1))
+[349916] caught (compose (compose (wall_at c2 c4) (optimize (neg_dist 9) 8)) (erase 3))
+[352016] caught (compose (compose (wall_at c3 c2) (optimize (neg_dist 7) 6)) (erase 3))
+[341444] caught (compose (compose (wall_at c0 c2) (optimize (neg_dist 5) 4)) (erase 3))
+[349168] caught (compose (compose (wall_at c2 c3) (optimize (neg_dist 2) 1)) (erase 3))
+[352004] caught (compose (compose (wall_at c3 c2) (optimize (neg_dist 5) 4)) (erase 3))
+[345692] caught (compose (compose (wall_at c1 c3) (optimize (neg_dist 9) 8)) (erase 3))
+[344259] caught (compose (compose (wall_at c1 c1) (optimize (neg_dist 6) 2)) (erase 3))
+[    17] caught (optimize (distance 4) 1)
+[    17] caught (optimize (distance 4) 1)
+[    16] caught (optimize (distance 1) 4)
+[    17] caught (optimize (distance 4) 1)
+[   188] caught (clear_at c1 c3)
+[   196] caught (clear_at c3 c1)
+[   186] caught (clear_at c1 c1)
+[   192] caught (clear_at c2 c2)
+[     3] caught (erase 4)
+[     2] caught (erase 2)
+[     3] caught (erase 4)
+[     1] caught (erase 1)
+[347792] caught (compose (compose (wall_at c2 c1) (optimize (neg_dist 7) 6)) (erase 3))
+[349187] caught (compose (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)) (erase 3))
+[ 21547] caught (pipe_gpg (compose_gp dup (mapsnd (step 1 left))) underlay)
+[ 21547] caught (pipe_gpg (compose_gp dup (mapsnd (step 1 left))) underlay)
+[   727] caught (compose (wall_at c1 c2) (optimize (neg_dist 2) 1))
+[   827] caught (compose (wall_at c3 c2) (optimize (neg_dist 2) 1))
+[   767] caught (compose (wall_at c2 c4) (optimize (neg_dist 2) 1))
+[   787] caught (compose (wall_at c2 c0) (optimize (neg_dist 2) 1))
+[   493] caught (compose (wall_at c2 c2) (optimize (neg_dist 2) 1))
+[   501] caught (compose (wall_at c3 c3) (optimize (neg_dist 2) 1))
+[   485] caught (compose (wall_at c1 c1) (optimize (neg_dist 5) 4))
+[   485] caught (compose (wall_at c1 c1) (optimize (neg_dist 5) 4))
+[   727] caught (compose (wall_at c1 c2) (optimize (neg_dist 5) 4))
+[   827] caught (compose (wall_at c3 c2) (optimize (neg_dist 5) 4))
+[   767] caught (compose (wall_at c1 c0) (optimize (neg_dist 5) 4))
+[   827] caught (compose (wall_at c3 c2) (optimize (neg_dist 5) 4))
+[   501] caught (compose (wall_at c3 c3) (optimize (neg_dist 7) 6))
+[ 21547] caught (pipe_gpg (compose_gp dup (mapsnd (step 1 left))) underlay)
+[   767] caught (compose (wall_at c2 c4) (optimize (neg_dist 7) 6))
+[   817] caught (compose (wall_at c3 c1) (optimize (neg_dist 7) 6))
+[   727] caught (compose (wall_at c1 c2) (optimize (neg_dist 7) 6))
+[   767] caught (compose (wall_at c2 c4) (optimize (neg_dist 7) 6))
+[   767] caught (compose (wall_at c2 c4) (optimize (neg_dist 7) 6))
+[   837] caught (compose (wall_at c4 c1) (optimize (neg_dist 9) 8))
+[   757] caught (compose (wall_at c2 c3) (optimize (neg_dist 9) 8))
+[   857] caught (compose (wall_at c4 c3) (optimize (neg_dist 9) 8))
+[   787] caught (compose (wall_at c2 c0) (optimize (neg_dist 9) 8))
+[   493] caught (compose (wall_at c2 c2) (optimize (neg_dist 9) 8))
+[   485] caught (compose (wall_at c1 c1) (optimize (neg_dist 9) 8))
+[   827] caught (compose (wall_at c3 c2) (optimize (neg_dist 6) 2))
+[   827] caught (compose (wall_at c3 c2) (optimize (neg_dist 6) 2))
+[   493] caught (compose (wall_at c2 c2) (optimize (neg_dist 6) 2))
+[   727] caught (compose (wall_at c1 c2) (optimize (neg_dist 6) 2))
+[   501] caught (compose (wall_at c3 c3) (optimize (neg_dist 6) 2))
+[   501] caught (compose (wall_at c3 c3) (optimize (neg_dist 6) 2))
+[   727] caught (compose (wall_at c1 c2) (optimize (neg_dist 8) 5))
+[   737] caught (compose (wall_at c1 c3) (optimize (neg_dist 8) 5))
+[   747] caught (compose (wall_at c1 c4) (optimize (neg_dist 8) 5))
+[   827] caught (compose (wall_at c4 c0) (optimize (neg_dist 8) 5))
+[   837] caught (compose (wall_at c4 c1) (optimize (neg_dist 8) 5))
+[   492] caught (compose (wall_at c2 c2) (optimize (neg_dist 1) 7))
+[   847] caught (compose (wall_at c4 c2) (optimize (neg_dist 8) 5))
+[   836] caught (compose (wall_at c4 c1) (optimize (neg_dist 1) 7))
+[   796] caught (compose (wall_at c2 c1) (optimize (neg_dist 1) 7))
+[   500] caught (compose (wall_at c3 c3) (optimize (neg_dist 1) 7))
+[   806] caught (compose (wall_at c3 c0) (optimize (neg_dist 1) 7))
+[   483] caught (compose (optimize (neg_dist 1) 7) (wall_at c2 c1))
+[   726] caught (compose (wall_at c1 c2) (optimize (neg_dist 4) 9))
+[   726] caught (compose (wall_at c1 c2) (optimize (neg_dist 4) 9))
+[   726] caught (compose (wall_at c1 c2) (optimize (neg_dist 4) 9))
+[   816] caught (compose (wall_at c3 c1) (optimize (neg_dist 4) 9))
+[   492] caught (compose (wall_at c2 c2) (optimize (neg_dist 4) 9))
+[   216] caught (compose (wall_at c4 c0) (clear_at c2 c4))
+[    71] caught (compose (wall_at c0 c0) (clear_at c0 c2))
+[    72] caught (compose (wall_at c0 c0) (clear_at c3 c0))
+[   130] caught (compose (wall_at c0 c3) (clear_at c2 c0))
+[   254] caught (compose (wall_at c3 c3) (clear_at c1 c2))
+[    93] caught (compose (wall_at c4 c0) (clear_at c0 c4))
+[   196] caught (compose (wall_at c2 c3) (clear_at c3 c0))
+[    67] caught (compose (wall_at c3 c4) (clear_at c4 c3))
+[   826] caught (compose (wall_at c4 c0) (optimize (neg_dist 4) 9))
+[   190] caught (compose (wall_at c2 c4) (clear_at c1 c1))
+[   351] caught (compose (wall_at c1 c4) (clear_at c2 c0))
+[   181] caught (compose (wall_at c0 c3) (clear_at c4 c2))
+[   392] caught (compose (wall_at c3 c2) (clear_at c1 c4))
+[   249] caught (compose (wall_at c1 c0) (clear_at c2 c3))
+[   351] caught (compose (wall_at c1 c4) (clear_at c3 c0))
+[   214] caught (compose (wall_at c4 c1) (clear_at c2 c1))
+[    73] caught (compose (wall_at c2 c2) (clear_at c4 c4))
+[ 21580] caught (pipe_gpg (compose_gp dup (mapsnd (step 4 right))) underlay)
+[351299] caught (compose (compose (wall_at c3 c1) (optimize (neg_dist 6) 2)) (erase 3))
+[348496] caught (compose (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)) (erase 3))
+[348508] caught (compose (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)) (erase 3))
+[352018] caught (compose (compose (wall_at c3 c2) (optimize (neg_dist 8) 5)) (erase 3))
+[349202] caught (compose (compose (wall_at c2 c3) (optimize (neg_dist 8) 5)) (erase 3))
+[345668] caught (compose (compose (wall_at c1 c3) (optimize (neg_dist 5) 4)) (erase 3))
+[344944] caught (compose (compose (wall_at c1 c2) (optimize (neg_dist 2) 1)) (erase 3))
+[353392] caught (compose (compose (wall_at c3 c4) (optimize (neg_dist 2) 1)) (erase 3))
+[344978] caught (compose (compose (wall_at c1 c2) (optimize (neg_dist 8) 5)) (erase 3))
+[353363] caught (compose (compose (wall_at c3 c4) (optimize (neg_dist 1) 7)) (erase 3))
+[351251] caught (compose (compose (wall_at c3 c1) (optimize (neg_dist 1) 7)) (erase 3))
+[347748] caught (compose (compose (wall_at c2 c1) (optimize (neg_dist 4) 9)) (erase 3))
+[351972] caught (compose (compose (wall_at c3 c2) (optimize (neg_dist 4) 9)) (erase 3))
+[352659] caught (compose (compose (wall_at c3 c3) (optimize (neg_dist 1) 7)) (erase 3))
+[344228] caught (compose (compose (wall_at c1 c1) (optimize (neg_dist 4) 9)) (erase 3))
+      + solved [belief_wall] in 359.2s: (compose (compose (wall_at c1 c2) (optimize (neg_dist 2) 1)) (erase 3))
+      + solved [belief_wall] in 367.7s: (compose (compose (wall_at c3 c4) (optimize (neg_dist 2) 1)) (erase 3))
+      + solved [belief_wall] in 279.8s: (compose (compose (wall_at c2 c3) (optimize (neg_dist 2) 1)) (erase 3))
+      + solved [belief_wall] in 347.4s: (compose (compose (wall_at c1 c3) (optimize (neg_dist 5) 4)) (erase 3))
+      + solved [belief_wall] in 279.1s: (compose (compose (wall_at c0 c2) (optimize (neg_dist 5) 4)) (erase 3))
+      + solved [belief_wall] in 281.3s: (compose (compose (wall_at c3 c2) (optimize (neg_dist 5) 4)) (erase 3))
+      + solved [belief_wall] in 301.5s: (compose (compose (wall_at c2 c1) (optimize (neg_dist 7) 6)) (erase 3))
+      + solved [belief_wall] in 329.9s: (compose (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)) (erase 3))
+      + solved [belief_wall] in 279.1s: (compose (compose (wall_at c3 c2) (optimize (neg_dist 7) 6)) (erase 3))
+      + solved [belief_wall] in 341.5s: (compose (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)) (erase 3))
+      + solved [belief_wall] in 287.4s: (compose (compose (wall_at c1 c3) (optimize (neg_dist 9) 8)) (erase 3))
+      + solved [belief_wall] in 264.4s: (compose (compose (wall_at c2 c4) (optimize (neg_dist 9) 8)) (erase 3))
+      + solved [belief_wall] in 302.0s: (compose (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)) (erase 3))
+      + solved [belief_wall] in 296.5s: (compose (compose (wall_at c1 c1) (optimize (neg_dist 6) 2)) (erase 3))
+      + solved [belief_wall] in 319.8s: (compose (compose (wall_at c3 c1) (optimize (neg_dist 6) 2)) (erase 3))
+      + solved [belief_wall] in 333.1s: (compose (compose (wall_at c2 c3) (optimize (neg_dist 8) 5)) (erase 3))
+      + solved [belief_wall] in 330.9s: (compose (compose (wall_at c3 c2) (optimize (neg_dist 8) 5)) (erase 3))
+      + solved [belief_wall] in 267.7s: (compose (compose (wall_at c1 c2) (optimize (neg_dist 8) 5)) (erase 3))
+      + solved [belief_wall] in 290.7s: (compose (compose (wall_at c3 c3) (optimize (neg_dist 1) 7)) (erase 3))
+      + solved [belief_wall] in 267.3s: (compose (compose (wall_at c3 c1) (optimize (neg_dist 1) 7)) (erase 3))
+      + solved [belief_wall] in 258.7s: (compose (compose (wall_at c3 c4) (optimize (neg_dist 1) 7)) (erase 3))
+      + solved [belief_wall] in 276.1s: (compose (compose (wall_at c3 c2) (optimize (neg_dist 4) 9)) (erase 3))
+      + solved [belief_wall] in 280.5s: (compose (compose (wall_at c1 c1) (optimize (neg_dist 4) 9)) (erase 3))
+      + solved [belief_wall] in 264.0s: (compose (compose (wall_at c2 c1) (optimize (neg_dist 4) 9)) (erase 3))
+      + solved [flee] in 0.0s: (optimize (distance 4) 1)
+      + solved [flee] in 0.0s: (optimize (distance 4) 1)
+      + solved [flee] in 0.0s: (optimize (distance 1) 4)
+      + solved [flee] in 0.0s: (optimize (distance 4) 1)
+      + solved [deletion] in 0.0s: (clear_at c1 c3)
+      + solved [deletion] in 0.0s: (clear_at c3 c1)
+      + solved [deletion] in 0.0s: (clear_at c1 c1)
+      + solved [deletion] in 0.0s: (clear_at c2 c2)
+      + solved [denoise] in 0.0s: (erase 4)
+      + solved [denoise] in 0.0s: (erase 2)
+      + solved [denoise] in 0.0s: (erase 4)
+      + solved [denoise] in 0.0s: (erase 1)
+      + solved [underlay] in 11.1s: (pipe_gpg (compose_gp dup (mapsnd (step 1 left))) underlay)
+      + solved [underlay] in 18.2s: (pipe_gpg (compose_gp dup (mapsnd (step 1 left))) underlay)
+      + solved [underlay] in 11.6s: (pipe_gpg (compose_gp dup (mapsnd (step 1 left))) underlay)
+      + solved [underlay] in 12.1s: (pipe_gpg (compose_gp dup (mapsnd (step 4 right))) underlay)
+      + solved [obstacle] in 0.3s: (compose (wall_at c1 c2) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c2) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c4) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c0) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.2s: (compose (wall_at c2 c2) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.2s: (compose (wall_at c3 c3) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.2s: (compose (wall_at c1 c1) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.2s: (compose (wall_at c1 c1) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.2s: (compose (wall_at c1 c2) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c2) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.3s: (compose (wall_at c1 c0) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.2s: (compose (wall_at c3 c2) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.2s: (compose (wall_at c3 c3) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.2s: (compose (wall_at c2 c4) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.2s: (compose (wall_at c3 c1) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.2s: (compose (wall_at c1 c2) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.2s: (compose (wall_at c2 c4) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c4) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.2s: (compose (wall_at c4 c1) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.2s: (compose (wall_at c2 c3) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.3s: (compose (wall_at c4 c3) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.2s: (compose (wall_at c2 c0) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.2s: (compose (wall_at c2 c2) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.2s: (compose (wall_at c1 c1) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.2s: (compose (wall_at c3 c2) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c2) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.2s: (compose (wall_at c2 c2) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.2s: (compose (wall_at c1 c2) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.2s: (compose (wall_at c3 c3) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.2s: (compose (wall_at c3 c3) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.2s: (compose (wall_at c1 c2) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.2s: (compose (wall_at c1 c3) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.2s: (compose (wall_at c1 c4) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.3s: (compose (wall_at c4 c0) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.3s: (compose (wall_at c4 c1) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.2s: (compose (wall_at c4 c2) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.2s: (compose (wall_at c2 c2) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.2s: (compose (wall_at c2 c1) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.2s: (compose (wall_at c4 c1) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.2s: (compose (wall_at c3 c3) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c0) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.1s: (compose (optimize (neg_dist 1) 7) (wall_at c2 c1))
+      + solved [obstacle] in 0.2s: (compose (wall_at c1 c2) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.2s: (compose (wall_at c1 c2) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.2s: (compose (wall_at c1 c2) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c1) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.2s: (compose (wall_at c2 c2) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.3s: (compose (wall_at c4 c0) (optimize (neg_dist 4) 9))
+      + solved [relocate] in 0.0s: (compose (wall_at c4 c0) (clear_at c2 c4))
+      + solved [relocate] in 0.0s: (compose (wall_at c0 c0) (clear_at c0 c2))
+      + solved [relocate] in 0.0s: (compose (wall_at c0 c0) (clear_at c3 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c0 c3) (clear_at c2 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c3 c3) (clear_at c1 c2))
+      + solved [relocate] in 0.0s: (compose (wall_at c4 c0) (clear_at c0 c4))
+      + solved [relocate] in 0.0s: (compose (wall_at c2 c3) (clear_at c3 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c3 c4) (clear_at c4 c3))
+      + solved [relocate] in 0.0s: (compose (wall_at c1 c4) (clear_at c2 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c2 c4) (clear_at c1 c1))
+      + solved [relocate] in 0.0s: (compose (wall_at c3 c2) (clear_at c1 c4))
+      + solved [relocate] in 0.0s: (compose (wall_at c0 c3) (clear_at c4 c2))
+      + solved [relocate] in 0.0s: (compose (wall_at c1 c0) (clear_at c2 c3))
+      + solved [relocate] in 0.0s: (compose (wall_at c1 c4) (clear_at c3 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c4 c1) (clear_at c2 c1))
+      + solved [relocate] in 0.0s: (compose (wall_at c2 c2) (clear_at c4 c4))
+    per-task time (s): 134 solved [slowest solve 367.7]
+    (misses burned up to 1200.0s each; the uniform --t-fn can drop toward slowest-solve=367.7s to cut wasted early-round time without losing a solve)
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     4] caught underlay
+[     4] caught underlay
+[     4] caught underlay
+[     4] caught underlay
+[     5] caught sync_all
+[     5] caught sync_all
+[     5] caught sync_all
+[     5] caught sync_all
+[     7] caught (sync_except 1)
+[     7] caught (sync_except 1)
+[     8] caught (sync_except 2)
+[    10] caught (sync_except 4)
+[    20] caught (via_swap sync_all)
+[    20] caught (via_swap sync_all)
+[    20] caught (via_swap sync_all)
+[    20] caught (via_swap sync_all)
+[    32] caught (register (locate 1) (place 1))
+[    43] caught (register (locate 2) (place 2))
+[    65] caught (register (locate 4) (place 4))
+[    65] caught (register (locate 4) (place 4))
+      + solved [inpaint]: underlay
+      + solved [perception]: (via_swap sync_all)
+      + solved [perception]: (via_swap sync_all)
+      + solved [readout]: snd_gg
+      + solved [reg_except]: (sync_except 2)
+      + solved [inpaint]: underlay
+      + solved [multi_reg]: sync_all
+      + solved [multi_reg]: sync_all
+      + solved [registration]: (register (locate 4) (place 4))
+      + solved [multi_reg]: sync_all
+      + solved [readout]: snd_gg
+      + solved [registration]: (register (locate 1) (place 1))
+      + solved [inpaint]: underlay
+      + solved [perception]: (via_swap sync_all)
+      + solved [inpaint]: underlay
+      + solved [reg_except]: (sync_except 1)
+      + solved [reg_except]: (sync_except 4)
+      + solved [reg_except]: (sync_except 1)
+      + solved [multi_reg]: sync_all
+      + solved [readout]: snd_gg
+      + solved [readout]: snd_gg
+      + solved [perception]: (via_swap sync_all)
+      + solved [registration]: (register (locate 2) (place 2))
+      + solved [registration]: (register (locate 4) (place 4))
+    solved 158/300 (+158 this round)
+running stitch_core.compress on 158 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_0: (compose (wall_at #3 #2) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_1: (compose (fn_0 #3 #2 #1 #0) (erase 3))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_2: (pipe_gpg (compose_gp dup (mapsnd #0)))  [fn, fn_p_g] -> fn
+added abstraction fn_3: (compose (wall_at #3 #2) (clear_at #1 #0))  [coord, coord, coord, coord] -> fn
+added abstraction fn_4: (optimize (neg_dist #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_5: (fn_0 #1 #0 c2)  [cellvalue, cellvalue, coord] -> fn
+
+--- round 2/6: 142 fn + 0 fn_p_g unsolved; |D|=51 (6 invented); fn Q=uniform/content; t_fn=3600s ---
+    [instr] agency constructor in D: ABSENT; belief solved (replay-eligible): 26/168
+[1130728] caught (compose (fn_2 (fn_5 5 4 c3) sync_all) (fn_4 2 1))
+[1104738] caught (compose (fn_2 (fn_5 2 1 c1) sync_all) (fn_4 5 4))
+[1130228] caught (compose (fn_2 (fn_5 9 8 c2) sync_all) (fn_4 5 2))
+[1127726] caught (compose (fn_2 (fn_5 6 2 c2) sync_all) (fn_4 1 4))
+[1130228] caught (compose (fn_2 (fn_5 9 8 c2) sync_all) (fn_4 2 1))
+[1130225] caught (compose (fn_2 (fn_5 5 4 c2) sync_all) (fn_4 1 2))
+[1130225] caught (compose (fn_2 (fn_5 7 6 c2) sync_all) (fn_4 2 5))
+[1125233] caught (compose (fn_2 (fn_5 6 2 c2) sync_all) (fn_4 5 4))
+[1130225] caught (compose (fn_2 (fn_5 8 5 c2) sync_all) (fn_4 1 4))
+[1129725] caught (compose (fn_2 (fn_5 7 6 c1) sync_all) (fn_4 1 5))
+[1130228] caught (compose (fn_2 (fn_5 7 6 c2) sync_all) (fn_4 5 2))
+[1130228] caught (compose (fn_2 (fn_5 5 4 c2) sync_all) (fn_4 2 1))
+[1130225] caught (compose (fn_2 (fn_5 9 8 c2) sync_all) (fn_4 4 5))
+[1129728] caught (compose (fn_2 (fn_5 7 6 c1) sync_all) (fn_4 5 1))
+      + solved [belief_witness] in 2384.9s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c2) (optimize (neg_dist 2) 1)))) sync_all) (optimize (neg_dist 5) 4))
+      + solved [belief_witness] in 2698.5s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 5) 4)))) sync_all) (optimize (neg_dist 2) 1))
+      + solved [belief_witness] in 2460.6s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 5) 4)))) sync_all) (optimize (neg_dist 1) 2))
+      + solved [belief_witness] in 2358.1s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c2) (optimize (neg_dist 5) 4)))) sync_all) (optimize (neg_dist 2) 1))
+      + solved [belief_witness] in 2799.6s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c2) (optimize (neg_dist 7) 6)))) sync_all) (optimize (neg_dist 5) 1))
+      + solved [belief_witness] in 2642.2s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)))) sync_all) (optimize (neg_dist 5) 2))
+      + solved [belief_witness] in 2629.9s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c2) (optimize (neg_dist 7) 6)))) sync_all) (optimize (neg_dist 1) 5))
+      + solved [belief_witness] in 2483.9s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)))) sync_all) (optimize (neg_dist 2) 5))
+      + solved [belief_witness] in 2385.4s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)))) sync_all) (optimize (neg_dist 5) 2))
+      + solved [belief_witness] in 2426.9s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)))) sync_all) (optimize (neg_dist 2) 1))
+      + solved [belief_witness] in 2762.6s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)))) sync_all) (optimize (neg_dist 4) 5))
+      + solved [belief_witness] in 2509.3s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 6) 2)))) sync_all) (optimize (neg_dist 5) 4))
+      + solved [belief_witness] in 2389.4s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 6) 2)))) sync_all) (optimize (neg_dist 1) 4))
+      + solved [belief_witness] in 2525.2s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 8) 5)))) sync_all) (optimize (neg_dist 1) 4))
+[1102733] caught (compose (fn_2 (fn_5 1 7 c2) sync_all) (fn_4 4 2))
+[1130228] caught (compose (fn_2 (fn_5 8 5 c2) sync_all) (fn_4 4 1))
+[674892] caught (fn_2 (compose (step 5 up) (fn_4 5 4)) (sync_except 5))
+[674007] caught (fn_2 (compose (step 2 up) (fn_4 2 1)) (sync_except 2))
+[1112732] caught (compose (fn_2 (fn_5 4 9 c2) sync_all) (fn_4 5 1))
+[674211] caught (fn_2 (compose (step 2 down) (fn_4 2 1)) (sync_except 2))
+[1102730] caught (compose (fn_2 (fn_5 1 7 c2) sync_all) (fn_4 2 5))
+[674892] caught (fn_2 (compose (step 5 up) (fn_4 5 4)) (sync_except 5))
+[674211] caught (fn_2 (compose (step 7 down) (fn_4 7 6)) (sync_except 7))
+[1113226] caught (compose (fn_2 (fn_5 4 9 c3) sync_all) (fn_4 1 5))
+[674007] caught (fn_2 (compose (step 7 up) (fn_4 7 6)) (sync_except 7))
+[674211] caught (fn_2 (compose (step 5 down) (fn_4 5 4)) (sync_except 5))
+[1122725] caught (compose (fn_2 (fn_5 4 9 c2) sync_all) (fn_4 1 2))
+      + solved [belief_witness] in 2617.8s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 8) 5)))) sync_all) (optimize (neg_dist 4) 1))
+      + solved [belief_witness] in 2678.2s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 1) 7)))) sync_all) (optimize (neg_dist 2) 5))
+      + solved [belief_witness] in 2305.9s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 1) 7)))) sync_all) (optimize (neg_dist 4) 2))
+      + solved [belief_witness] in 2668.5s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 4) 9)))) sync_all) (optimize (neg_dist 1) 2))
+      + solved [belief_witness] in 2525.8s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c2) (optimize (neg_dist 4) 9)))) sync_all) (optimize (neg_dist 1) 5))
+[675096] caught (fn_2 (compose (step 9 down) (fn_4 9 8)) (sync_except 9))
+      + solved [belief_witness] in 2306.5s: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 4) 9)))) sync_all) (optimize (neg_dist 5) 1))
+[674892] caught (fn_2 (compose (step 9 up) (fn_4 9 8)) (sync_except 9))
+[674211] caught (fn_2 (compose (step 6 down) (fn_4 6 2)) (sync_except 6))
+[674892] caught (fn_2 (compose (step 9 up) (fn_4 9 8)) (sync_except 9))
+[674007] caught (fn_2 (compose (step 7 up) (fn_4 7 6)) (sync_except 7))
+[674875] caught (fn_2 (compose (step 6 up) (fn_4 6 2)) (sync_except 6))
+      + solved [belief_goal] in 1524.3s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 2 down) (optimize (neg_dist 2) 1)))) (sync_except 2))
+      + solved [belief_goal] in 1488.8s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 2 up) (optimize (neg_dist 2) 1)))) (sync_except 2))
+      + solved [belief_goal] in 1559.3s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 5 up) (optimize (neg_dist 5) 4)))) (sync_except 5))
+      + solved [belief_goal] in 1685.4s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 5 down) (optimize (neg_dist 5) 4)))) (sync_except 5))
+      + solved [belief_goal] in 1485.1s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 5 up) (optimize (neg_dist 5) 4)))) (sync_except 5))
+      + solved [belief_goal] in 1682.1s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 7 up) (optimize (neg_dist 7) 6)))) (sync_except 7))
+      + solved [belief_goal] in 1594.2s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 7 down) (optimize (neg_dist 7) 6)))) (sync_except 7))
+[674007] caught (fn_2 (compose (step 8 up) (fn_4 8 5)) (sync_except 8))
+[675096] caught (fn_2 (compose (step 8 down) (fn_4 8 5)) (sync_except 8))
+[673360] caught (fn_2 (compose (step 1 down) (fn_4 1 7)) (sync_except 1))
+[673173] caught (fn_2 (compose (step 1 up) (fn_4 1 7)) (sync_except 1))
+      + solved [belief_goal] in 1781.5s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 7 up) (optimize (neg_dist 7) 6)))) (sync_except 7))
+[673173] caught (fn_2 (compose (step 4 up) (fn_4 4 9)) (sync_except 4))
+[674245] caught (fn_2 (compose (step 4 down) (fn_4 4 9)) (sync_except 4))
+[673173] caught (fn_2 (compose (step 4 up) (fn_4 4 9)) (sync_except 4))
+      + solved [belief_goal] in 1545.6s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 9 up) (optimize (neg_dist 9) 8)))) (sync_except 9))
+      + solved [belief_goal] in 1237.6s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 9 down) (optimize (neg_dist 9) 8)))) (sync_except 9))
+[673377] caught (fn_2 (compose (step 1 down) (fn_4 1 7)) (sync_except 1))
+      + solved [belief_goal] in 1241.7s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 9 up) (optimize (neg_dist 9) 8)))) (sync_except 9))
+[674245] caught (fn_2 (compose (step 4 down) (fn_4 4 9)) (sync_except 4))
+      + solved [belief_goal] in 1574.3s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 6 up) (optimize (neg_dist 6) 2)))) (sync_except 6))
+      + solved [belief_goal] in 1324.3s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 6 down) (optimize (neg_dist 6) 2)))) (sync_except 6))
+      + solved [belief_goal] in 1402.9s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 8 up) (optimize (neg_dist 8) 5)))) (sync_except 8))
+      + solved [belief_goal] in 1329.3s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 8 down) (optimize (neg_dist 8) 5)))) (sync_except 8))
+      + solved [belief_goal] in 1553.2s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 1 down) (optimize (neg_dist 1) 7)))) (sync_except 1))
+[ 67281] caught (compose (fn_1 c0 c4 2 1) (wall_at c2 c2))
+      + solved [belief_goal] in 1575.6s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 1 up) (optimize (neg_dist 1) 7)))) (sync_except 1))
+      + solved [belief_goal] in 1951.1s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 1 down) (optimize (neg_dist 1) 7)))) (sync_except 1))
+      + solved [belief_goal] in 1785.1s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 4 up) (optimize (neg_dist 4) 9)))) (sync_except 4))
+      + solved [belief_goal] in 1548.8s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 4 down) (optimize (neg_dist 4) 9)))) (sync_except 4))
+      + solved [belief_goal] in 1301.2s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 4 up) (optimize (neg_dist 4) 9)))) (sync_except 4))
+      + solved [belief_goal] in 1428.0s: (pipe_gpg (compose_gp dup (mapsnd (compose (step 4 down) (optimize (neg_dist 4) 9)))) (sync_except 4))
+[280359] caught (compose (fn_1 c0 c4 9 8) (wall_at c2 c3))
+[330959] caught (compose (fn_1 c3 c1 6 2) (wall_at c2 c4))
+[320074] caught (compose (fn_1 c1 c4 1 7) (wall_at c3 c0))
+      + solved [belief_false_obstacle] in 147.6s: (compose (compose (compose (wall_at c0 c4) (optimize (neg_dist 2) 1)) (erase 3)) (wall_at c2 c2))
+[1192411] caught (fn_2 (compose (fn_0 8 5 c2 c2) (fn_0 5 8 c2 c3)) (sync_except 8))
+      + solved [belief_false_obstacle] in 619.2s: (compose (compose (compose (wall_at c0 c4) (optimize (neg_dist 9) 8)) (erase 3)) (wall_at c2 c3))
+      + solved [belief_false_obstacle] in 715.3s: (compose (compose (compose (wall_at c3 c1) (optimize (neg_dist 6) 2)) (erase 3)) (wall_at c2 c4))
+      + solved [belief_false_obstacle] in 2503.2s: (pipe_gpg (compose_gp dup (mapsnd (compose (compose (wall_at c2 c2) (optimize (neg_dist 5) 8)) (compose (wall_at c3 c2) (optimize (neg_dist 8) 5))))) (sync_except 8))
+      + solved [belief_false_obstacle] in 644.9s: (compose (compose (compose (wall_at c1 c4) (optimize (neg_dist 1) 7)) (erase 3)) (wall_at c3 c0))
+    per-task time (s): 47 solved [slowest solve 2799.6]
+    (misses burned up to 3600.0s each; the uniform --t-fn can drop toward slowest-solve=2799.6s to cut wasted early-round time without losing a solve)
+    solved 205/300 (+47 this round)
+running stitch_core.compress on 205 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (compose (wall_at #3 #2) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_7: (pipe_gpg (compose_gp dup (mapsnd (compose (step #0 #2) (optimize (neg_dist #0) #1)))) (sync_except #0))  [cellvalue, cellvalue, dir] -> fn
+added abstraction fn_8: (compose (pipe_gpg (compose_gp dup (mapsnd (fn_0 #4 #3 c2 #2))) sync_all) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_9: (compose (fn_0 #3 #2 #1 #0) (erase 3))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_10: (pipe_gpg (compose_gp dup (mapsnd #0)))  [fn, fn_p_g] -> fn
+added abstraction fn_11: (compose (wall_at #3 #2) (clear_at #1 #0))  [coord, coord, coord, coord] -> fn
+
+--- round 3/6: 95 fn + 0 fn_p_g unsolved; |D|=51 (6 invented); fn Q=uniform/content; t_fn=3600s ---
+    [instr] agency constructor in D: fn_7 (wall-free); belief solved (replay-eligible): 73/168
+[  8244] caught (compose (optimize (neg_dist 2) 8) (fn_7 2 1 down))
+[  8243] caught (compose (optimize (neg_dist 2) 6) (fn_7 2 1 up))
+[  8243] caught (compose (optimize (neg_dist 7) 8) (fn_7 7 6 up))
+[  8734] caught (compose (optimize (neg_dist 5) 2) (fn_7 5 4 down))
+[  8733] caught (compose (optimize (neg_dist 7) 1) (fn_7 7 6 up))
+[  8733] caught (compose (optimize (neg_dist 5) 1) (fn_7 5 4 up))
+[  8244] caught (compose (optimize (neg_dist 7) 9) (fn_7 7 6 down))
+[  8733] caught (compose (optimize (neg_dist 5) 2) (fn_7 5 4 up))
+[  8243] caught (compose (optimize (neg_dist 2) 8) (fn_7 2 1 up))
+[  8733] caught (compose (optimize (neg_dist 9) 1) (fn_7 9 8 up))
+[  8734] caught (compose (optimize (neg_dist 9) 5) (fn_7 9 8 down))
+[  8733] caught (compose (optimize (neg_dist 9) 7) (fn_7 9 8 up))
+[  8734] caught (compose (optimize (neg_dist 6) 1) (fn_7 6 2 down))
+[  8733] caught (compose (optimize (neg_dist 8) 4) (fn_7 8 5 up))
+[  9203] caught (compose (optimize (neg_dist 6) 5) (fn_7 6 2 up))
+[  9203] caught (compose (optimize (neg_dist 6) 5) (fn_7 6 2 up))
+[  9203] caught (compose (optimize (neg_dist 8) 7) (fn_7 8 5 up))
+[  6343] caught (compose (optimize (neg_dist 1) 6) (fn_7 1 7 up))
+[  6344] caught (compose (optimize (neg_dist 1) 2) (fn_7 1 7 down))
+[  6813] caught (compose (optimize (neg_dist 1) 8) (fn_7 1 7 up))
+[  7303] caught (compose (optimize (neg_dist 4) 1) (fn_7 4 9 up))
+[  6343] caught (compose (optimize (neg_dist 4) 5) (fn_7 4 9 up))
+[  8244] caught (compose (optimize (neg_dist 8) 9) (fn_7 8 5 down))
+[  7304] caught (compose (optimize (neg_dist 4) 2) (fn_7 4 9 down))
+      + solved [belief_observers] in 15.0s: (compose (optimize (neg_dist 2) 6) (pipe_gpg (compose_gp dup (mapsnd (compose (step 2 up) (optimize (neg_dist 2) 1)))) (sync_except 2)))
+      + solved [belief_observers] in 15.0s: (compose (optimize (neg_dist 2) 8) (pipe_gpg (compose_gp dup (mapsnd (compose (step 2 down) (optimize (neg_dist 2) 1)))) (sync_except 2)))
+      + solved [belief_observers] in 23.3s: (compose (optimize (neg_dist 2) 8) (pipe_gpg (compose_gp dup (mapsnd (compose (step 2 up) (optimize (neg_dist 2) 1)))) (sync_except 2)))
+      + solved [belief_observers] in 21.3s: (compose (optimize (neg_dist 5) 2) (pipe_gpg (compose_gp dup (mapsnd (compose (step 5 up) (optimize (neg_dist 5) 4)))) (sync_except 5)))
+      + solved [belief_observers] in 16.3s: (compose (optimize (neg_dist 5) 2) (pipe_gpg (compose_gp dup (mapsnd (compose (step 5 down) (optimize (neg_dist 5) 4)))) (sync_except 5)))
+      + solved [belief_observers] in 18.6s: (compose (optimize (neg_dist 5) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (step 5 up) (optimize (neg_dist 5) 4)))) (sync_except 5)))
+      + solved [belief_observers] in 17.3s: (compose (optimize (neg_dist 7) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (step 7 up) (optimize (neg_dist 7) 6)))) (sync_except 7)))
+      + solved [belief_observers] in 20.2s: (compose (optimize (neg_dist 7) 9) (pipe_gpg (compose_gp dup (mapsnd (compose (step 7 down) (optimize (neg_dist 7) 6)))) (sync_except 7)))
+      + solved [belief_observers] in 15.0s: (compose (optimize (neg_dist 7) 8) (pipe_gpg (compose_gp dup (mapsnd (compose (step 7 up) (optimize (neg_dist 7) 6)))) (sync_except 7)))
+      + solved [belief_observers] in 24.6s: (compose (optimize (neg_dist 9) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (step 9 up) (optimize (neg_dist 9) 8)))) (sync_except 9)))
+      + solved [belief_observers] in 15.9s: (compose (optimize (neg_dist 9) 5) (pipe_gpg (compose_gp dup (mapsnd (compose (step 9 down) (optimize (neg_dist 9) 8)))) (sync_except 9)))
+      + solved [belief_observers] in 16.6s: (compose (optimize (neg_dist 9) 7) (pipe_gpg (compose_gp dup (mapsnd (compose (step 9 up) (optimize (neg_dist 9) 8)))) (sync_except 9)))
+      + solved [belief_observers] in 22.2s: (compose (optimize (neg_dist 6) 5) (pipe_gpg (compose_gp dup (mapsnd (compose (step 6 up) (optimize (neg_dist 6) 2)))) (sync_except 6)))
+      + solved [belief_observers] in 16.9s: (compose (optimize (neg_dist 6) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (step 6 down) (optimize (neg_dist 6) 2)))) (sync_except 6)))
+      + solved [belief_observers] in 18.5s: (compose (optimize (neg_dist 6) 5) (pipe_gpg (compose_gp dup (mapsnd (compose (step 6 up) (optimize (neg_dist 6) 2)))) (sync_except 6)))
+      + solved [belief_observers] in 16.0s: (compose (optimize (neg_dist 8) 4) (pipe_gpg (compose_gp dup (mapsnd (compose (step 8 up) (optimize (neg_dist 8) 5)))) (sync_except 8)))
+      + solved [belief_observers] in 25.4s: (compose (optimize (neg_dist 8) 9) (pipe_gpg (compose_gp dup (mapsnd (compose (step 8 down) (optimize (neg_dist 8) 5)))) (sync_except 8)))
+      + solved [belief_observers] in 21.7s: (compose (optimize (neg_dist 8) 7) (pipe_gpg (compose_gp dup (mapsnd (compose (step 8 up) (optimize (neg_dist 8) 5)))) (sync_except 8)))
+      + solved [belief_observers] in 21.0s: (compose (optimize (neg_dist 1) 8) (pipe_gpg (compose_gp dup (mapsnd (compose (step 1 up) (optimize (neg_dist 1) 7)))) (sync_except 1)))
+      + solved [belief_observers] in 18.7s: (compose (optimize (neg_dist 1) 2) (pipe_gpg (compose_gp dup (mapsnd (compose (step 1 down) (optimize (neg_dist 1) 7)))) (sync_except 1)))
+      + solved [belief_observers] in 12.5s: (compose (optimize (neg_dist 1) 6) (pipe_gpg (compose_gp dup (mapsnd (compose (step 1 up) (optimize (neg_dist 1) 7)))) (sync_except 1)))
+      + solved [belief_observers] in 13.4s: (compose (optimize (neg_dist 4) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (step 4 up) (optimize (neg_dist 4) 9)))) (sync_except 4)))
+      + solved [belief_observers] in 13.1s: (compose (optimize (neg_dist 4) 2) (pipe_gpg (compose_gp dup (mapsnd (compose (step 4 down) (optimize (neg_dist 4) 9)))) (sync_except 4)))
+      + solved [belief_observers] in 10.9s: (compose (optimize (neg_dist 4) 5) (pipe_gpg (compose_gp dup (mapsnd (compose (step 4 up) (optimize (neg_dist 4) 9)))) (sync_except 4)))
+[1256736] caught (fn_10 (fn_8 5 8 c1 0 8) (register (locate 5) (place 5)))
+      + solved [belief_false_obstacle] in 3308.7s: (pipe_gpg (compose_gp dup (mapsnd (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c2) (optimize (neg_dist 0) 8)))) sync_all) (optimize (neg_dist 8) 5)))) (register (locate 5) (place 5)))
+    per-task time (s): 25 solved [slowest solve 3308.7]
+    (misses burned up to 3600.0s each; the uniform --t-fn can drop toward slowest-solve=3308.7s to cut wasted early-round time without losing a solve)
+    solved 230/300 (+25 this round)
+running stitch_core.compress on 230 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (pipe_gpg (compose_gp dup (mapsnd (compose (step #0 #2) (optimize (neg_dist #0) #1)))) (sync_except #0))  [cellvalue, cellvalue, dir] -> fn
+added abstraction fn_7: (compose (wall_at #3 #2) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_8: (compose (pipe_gpg (compose_gp dup (mapsnd (fn_1 #4 #3 c2 #2))) sync_all) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_9: (compose (optimize (neg_dist #2) #3) (fn_0 #2 #1 #0))  [dir, cellvalue, cellvalue, cellvalue] -> fn
+added abstraction fn_10: (compose (fn_1 #3 #2 #1 #0) (erase 3))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_11: (pipe_gpg (compose_gp dup (mapsnd #0)))  [fn, fn_p_g] -> fn
+
+--- round 4/6: 70 fn + 0 fn_p_g unsolved; |D|=51 (6 invented); fn Q=uniform/content; t_fn=3600s ---
+    [instr] agency constructor in D: fn_6 (wall-free); belief solved (replay-eligible): 98/168
+[ 29982] caught (compose (fn_9 down 1 2 1) (optimize (distance 2) 1))
+      + solved [belief_goal] in 123.2s: (compose (compose (optimize (neg_dist 2) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (step 2 down) (optimize (neg_dist 2) 1)))) (sync_except 2))) (optimize (distance 2) 1))
+[ 29560] caught (compose (fn_9 up 7 1 7) (optimize (distance 1) 7))
+      + solved [belief_goal] in 75.4s: (compose (compose (optimize (neg_dist 1) 7) (pipe_gpg (compose_gp dup (mapsnd (compose (step 1 up) (optimize (neg_dist 1) 7)))) (sync_except 1))) (optimize (distance 1) 7))
+    per-task time (s): 2 solved [slowest solve 123.2]
+    (misses burned up to 3600.0s each; the uniform --t-fn can drop toward slowest-solve=123.2s to cut wasted early-round time without losing a solve)
+    solved 232/300 (+2 this round)
+running stitch_core.compress on 232 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (pipe_gpg (compose_gp dup (mapsnd (compose (step #0 #2) (optimize (neg_dist #0) #1)))) (sync_except #0))  [cellvalue, cellvalue, dir] -> fn
+added abstraction fn_7: (compose (wall_at #3 #2) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_8: (compose (pipe_gpg (compose_gp dup (mapsnd (fn_1 #4 #3 c2 #2))) sync_all) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_9: (compose (optimize (neg_dist #2) #3) (fn_0 #2 #1 #0))  [dir, cellvalue, cellvalue, cellvalue] -> fn
+added abstraction fn_10: (compose (fn_1 #3 #2 #1 #0) (erase 3))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_11: (pipe_gpg (compose_gp dup (mapsnd #0)))  [fn, fn_p_g] -> fn
+
+--- round 5/6: 68 fn + 0 fn_p_g unsolved; |D|=51 (6 invented); fn Q=uniform/content; t_fn=3600s ---
+    [instr] agency constructor in D: fn_6 (wall-free); belief solved (replay-eligible): 100/168
+    per-task time (s): 0 solved
+    solved 232/300 (+0 this round)
+running stitch_core.compress on 232 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (pipe_gpg (compose_gp dup (mapsnd (compose (step #0 #2) (optimize (neg_dist #0) #1)))) (sync_except #0))  [cellvalue, cellvalue, dir] -> fn
+added abstraction fn_7: (compose (wall_at #3 #2) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_8: (compose (pipe_gpg (compose_gp dup (mapsnd (fn_1 #4 #3 c2 #2))) sync_all) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_9: (compose (optimize (neg_dist #2) #3) (fn_0 #2 #1 #0))  [dir, cellvalue, cellvalue, cellvalue] -> fn
+added abstraction fn_10: (compose (fn_1 #3 #2 #1 #0) (erase 3))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_11: (pipe_gpg (compose_gp dup (mapsnd #0)))  [fn, fn_p_g] -> fn
+    no new tasks solved this round (uniform/content Q) — wake-sleep stalled (raise t_fn / ecd_iters, or the abstraction belief needs hasn't formed).
+  wrote run artifact (232 solved programs) to phase2_run.json
+  wrote trajectory artifact (232 solved programs, 4 rounds) to phase2_traj.json
+
+========================================================================
+(A) USAGE CENSUS — which core parts each family reaches for (pre-stitch)
+========================================================================
+  physics       4/4 solved   uses: ['step']
+  desire        16/16 solved   uses: ['neg_dist', 'optimize']
+  overlay       4/4 solved   uses: ['compose', 'compose_gp', 'dup', 'mapsnd', 'overlay', 'pipe_gpg', 'step']
+  comet         4/4 solved   uses: ['compose', 'compose_gp', 'dup', 'mapsnd', 'neg_dist', 'optimize', 'overlay', 'pipe_gpg']
+  registration  4/4 solved   uses: ['register']
+  belief        100/168 solved   uses: ['compose', 'compose_gp', 'dup', 'mapsnd', 'neg_dist', 'optimize', 'pipe_gpg', 'register', 'step', 'sync_to_world', 'wall_at']
+  flee          4/4 solved   uses: ['optimize']
+  deletion      4/4 solved   uses: []
+  denoise       4/4 solved   uses: []
+  obstacle      48/48 solved   uses: ['compose', 'neg_dist', 'optimize', 'wall_at']
+  relocate      16/16 solved   uses: ['compose', 'wall_at']
+  underlay      4/4 solved   uses: ['compose', 'compose_gp', 'dup', 'mapsnd', 'pipe_gpg', 'step']
+  perception    4/4 solved   uses: []
+  multi_reg     4/4 solved   uses: []
+  reg_except    4/4 solved   uses: []
+  inpaint       4/4 solved   uses: []
+  readout       4/4 solved   uses: []
+
+  belief variants (pooled as kind='belief' above; agency commit form):
+    belief_goal            24/48 solved   commit: 0 literal, 24 degenerate
+    belief_observers       24/24 solved   commit: 0 literal, 24 degenerate
+    belief_wall            24/24 solved   commit: 0 literal, 0 degenerate
+    belief_witness         20/48 solved   commit: 0 literal, 20 degenerate
+    belief_false_obstacle  8/24 solved   commit: 1 literal, 0 degenerate, 1 complement
+
+  two observers, one world — SELECTIVE attribution:
+  0/24 solved scenes commit for the believer and NOT for the observer
+  (0 attribute a private model to the bystander, whose walk is plain desire)
+
+  fork used outside belief (overlay/comet)   : True
+  sync used outside belief (registration)    : True
+  wall_at used outside belief (obstacle)     : True
+  belief reuses BOTH fork and sync           : True
+  fork∧sync agency is unique to belief       : True
+  wall-belief solutions are wall-based       : True   (plain/false-obstacle only; goal/observers are displaced-goal, not wall)
+
+  DISCLOSURE — agency commit on minimal scenes
+  68/69 belief solutions commit via a SCOPE complement (sync_except gv / sync_all) rather
+  than sync_to_world(av).  On a scene whose only committed model-mover is the
+  agent, 'move everything but the goal' == 'move the agent' — the two commits are
+  extensionally identical (verified for every belief family).  It is the SAME
+  fork-structured belief with the agency hole expressed on the goal rather than
+  the actor, NOT a non-belief rival; counted as the agency commit above.
+  For goal-displacement this is INTRINSIC, not sampled: on a two-value scene
+  sync_except(gv) moves exactly {av}, so it IS sync_to_world(av) on every
+  expressible scene.  Certified at construction (_goal_scope_certified): every
+  OTHER scope complement fails per scene; the family whose scenes FORCE the
+  literal spelling is false-obstacle, below.
+
+  FORCED LITERAL COMMIT — false-obstacle family (degeneracy excluded by construction)
+  8/24 false-obstacle tasks solved; commit forms: 1 literal, 0 degenerate, 1 complement.
+  Every solved one commits via the literal sync_to_world(av): no scope complement
+  reproduces these scenes (real wall stays put), so the agency commit is FORCED
+  and found — not merely argued extensionally equal to a cheaper complement.
+  WARNING: 0 degenerate + 1 complement — a scope commit reproduced (or was found on) a real-wall scene;
+  should be impossible here; check _scope_complements_all_fail / _belief_commit_form.
+
+========================================================================
+(A′) CUBE CENSUS — which symmetric corner each family selected
+     (commit-axis corners judged AT the world-level commit; the other
+      axes — grid-edit / utility / bifunctor / pairing — over the program)
+========================================================================
+  physics       (none)
+  desire        neg_dist×16
+  overlay       overlay×4, dup×4, mapsnd×4
+  comet         overlay×4, neg_dist×4, dup×4, mapsnd×4
+  registration  place×4, register×4, locate×4
+  belief        neg_dist×52, wall_at×52, erase×28, dup×22, mapsnd×22, sync_to_world×20, clear_at×2, register×1, locate×1, place×1, sync_except×1
+  flee          distance×4
+  deletion      clear_at×4
+  denoise       erase×4
+  obstacle      neg_dist×48, wall_at×48
+  relocate      clear_at×16, wall_at×16
+  underlay      mapsnd×4, underlay×4, dup×4
+  perception    via_swap×4, sync_all×4
+  multi_reg     sync_all×4
+  reg_except    sync_except×4
+  inpaint       underlay×4
+  readout       snd_gg×4
+
+  belief keeps the agency corner (register + wall_at)      : True
+  belief avoids every symmetric complement                 : False
+    (note: 68 belief solve(s) committed via a scope complement extensionally
+     equal to register(av) — the degenerate agency commit, not a complement; see (A))
+  some complement is used elsewhere (field is live)        : True
+  complements claimed by another family                    : ['clear_at', 'distance', 'erase', 'snd_gg', 'sync_all', 'sync_except', 'underlay', 'via_swap']
+
+========================================================================
+(B) JOINT COMPRESSION — final library over all 232 solutions (last stitch: iterations=6)
+========================================================================
+
+  invented abstractions:
+    fn_6 «agent_constructor_degenerate»  [cellvalue, cellvalue, dir] -> fn
+      body: (pipe_gpg (compose_gp dup (mapsnd (compose (step $0 $2) (optimize (neg_dist $0) $1)))) (sync_except $0))
+      *** AGENT TYPE CONSTRUCTOR (belief — degenerate scope-complement commit) ***
+          shared holes: $0 (x3)  — actor AND committer (commit expressed on the goal)
+    fn_7 «wall_policy»  [cellvalue, cellvalue, coord, coord] -> fn
+      body: (compose (wall_at $3 $2) (optimize (neg_dist $1) $0))
+      (obstacle/belief policy: stamp wall ▸ navigate — the shared derive)
+    fn_8 «agent_constructor_degenerate»  [cellvalue, cellvalue, coord, cellvalue, cellvalue] -> fn
+      body: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at $2 c2) (optimize (neg_dist $3) $4)))) sync_all) (optimize (neg_dist $1) $0))
+      *** AGENT TYPE CONSTRUCTOR (belief — degenerate scope-complement commit) ***
+    fn_9 «agent_constructor_degenerate»  [dir, cellvalue, cellvalue, cellvalue] -> fn
+      body: (compose (optimize (neg_dist $2) $3) (pipe_gpg (compose_gp dup (mapsnd (compose (step $2 $0) (optimize (neg_dist $2) $1)))) (sync_except $2)))
+      *** AGENT TYPE CONSTRUCTOR (belief — degenerate scope-complement commit) ***
+          shared holes: $2 (x4)  — actor AND committer (commit expressed on the goal)
+    fn_10 «wall_policy»  [coord, coord, cellvalue, cellvalue] -> fn
+      body: (compose (compose (wall_at $0 $1) (optimize (neg_dist $2) $3)) (erase 3))
+      (obstacle/belief policy: stamp wall ▸ navigate — the shared derive)
+    fn_11 «other»  [fn, fn_p_g] -> fn
+      body: (pipe_gpg (compose_gp dup (mapsnd $0)) $1)
+
+  (no literal sync_to_world constructor invented; using the degenerate scope-complement
+   form fn_6 as the agent constructor — extensionally the agency commit)
+
+  abstraction usage by family (from stitch's rewritten programs):
+    physics       (bare prims)×4
+    desire        (bare prims)×16
+    overlay       fn_11×4
+    comet         fn_11×4
+    registration  (bare prims)×4
+    belief        fn_10×28, fn_9×26, fn_6×22, fn_8×21, fn_7×3, fn_11×2
+    flee          (bare prims)×4
+    deletion      (bare prims)×4
+    denoise       (bare prims)×4
+    obstacle      fn_7×47, (bare prims)×1
+    relocate      (bare prims)×16
+    underlay      fn_11×4
+    perception    (bare prims)×4
+    multi_reg     (bare prims)×4
+    reg_except    (bare prims)×4
+    inpaint       (bare prims)×4
+    readout       (bare prims)×4
+
+========================================================================
+(B′) ABSTRACTION GENERALITY — does seek/policy carry holes for (gv, av)?
+========================================================================
+
+  desire: 8 distinct (gv,av) combos solved & rewritten
+    (no seek/policy abstraction reached these rewritten programs)
+
+  obstacle: 8 distinct (gv,av) combos solved & rewritten
+    fn_7 [policy]  reused by 8/8 combos  holes=4
+        body: (compose (wall_at $3 $2) (optimize (neg_dist $1) $0))
+
+  belief: 8 distinct (gv,av) combos solved & rewritten
+    fn_8 [policy]  reused by 8/8 combos  holes=5
+        body: (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at $2 c2) (optimize (neg_dist $3) $4)))) sync_all) (optimize (neg_dist $1) $0))
+    fn_6 [seek]  reused by 8/8 combos  holes=3
+        body: (pipe_gpg (compose_gp dup (mapsnd (compose (step $0 $2) (optimize (neg_dist $0) $1)))) (sync_except $0))
+    fn_9 [seek]  reused by 8/8 combos  holes=4
+        body: (compose (optimize (neg_dist $2) $3) (pipe_gpg (compose_gp dup (mapsnd (compose (step $2 $0) (optimize (neg_dist $2) $1)))) (sync_except $2)))
+    fn_10 [policy]  reused by 8/8 combos  holes=4
+        body: (compose (compose (wall_at $0 $1) (optimize (neg_dist $2) $3)) (erase 3))
+    fn_7 [policy]  reused by 2/8 combos  holes=4
+        body: (compose (wall_at $3 $2) (optimize (neg_dist $1) $0))
+
+  distinct belief (gv,av) combos in corpus            : 8
+  widest combo-span of one OBSTACLE policy (leading)  : 8
+  widest combo-span of one belief seek/policy (confirm): 8
+  => policy GENERALIZES into belief: one abstraction serves multiple combos via
+     holes — belief's skeleton is genuinely shallow.
+
+========================================================================
+(B″) DL CENSUS — what the library buys each family, in nats
+========================================================================
+
+  family        solves    before     after     saved   (median nats per task; saved > 0 = the library is shorter)
+  ------------------------------------------------------------------
+  desire            16      7.86      7.86      0.00
+  comet              4     16.09     12.51      3.58
+  registration       4      6.68      6.68      0.00
+  belief            50     24.56     13.38     13.26  <- belief
+  flee               4      7.86      7.86      0.00
+  deletion           4      5.78      5.78      0.00
+  denoise            4      4.87      4.87      0.00
+  obstacle          48     16.21     10.39      5.82
+  relocate          16     14.13     14.13      0.00
+  perception         4      4.16      4.16      0.00
+  multi_reg          4      2.08      2.08      0.00
+  reg_except         4      4.38      4.38      0.00
+  inpaint            4      2.08      2.08      0.00
+  readout            4      2.08      2.08      0.00
+
+  belief by variant:
+    belief_wall             24 solves     23.64 ->    10.39  (saved  13.26)
+    belief_witness          20 solves     34.87 ->    13.38  (saved  21.48)
+    belief_false_obstacle    6 solves     31.99 ->    18.74  (saved  13.26)
+
+  belief: 24.56 nats before the library -> 13.38 after (median saving 13.26; 812.47 over 50 solves)
+  other families' median saving, for scale: 0.00 nats/task
+  belief solves whose library form invokes fn_6 (the constructor): 0/50
+
+========================================================================
+VERDICT
+========================================================================
+  (A) parts are general    : fork∉belief-only=True, sync∉belief-only=True, wall∉belief-only=True
+  (A) only agency is unique: fork∧sync unique to belief=True, belief recombines=True, wall-based=True
+  (A) no scope-complement rival among belief solves : False   (1 complement, 68 degenerate, 1 literal)
+  (B) constructor invented : True (fn_6, arity 3; 1 shared agency hole(s): $0×3)
+  (B) constructor is belief-specific: used by belief=True, absent from other families=True
+  (B) belief DL before -> after the library: 24.56 -> 13.38 nats (median saving 13.26 over 50 solves;
+      0/50 invoke the constructor; other families save 0.00 nats/task for scale)
+  (B) MDL margin over non-belief rivals: unavailable — no mdl_margins.decomposed.json yet — run `python mdl_margin.py --decomposed` to price belief against its rivals
+  (A′) cube: belief picks the lone asymmetric corner over the full field: False
+
+  => not fully demonstrated this run (raise timeouts / n_bel / stitch_iters,
+     or drop --smoke).
+     failed criteria: ['no_belief_complement', 'cube_ok']
+  wrote verdict artifact to phase2_verdict.json
+[gkaminer@int4 dumbcoder-nodream]$ 

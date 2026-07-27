@@ -1,0 +1,501 @@
+{
+ "provenance": {
+  "git": {
+   "commit": "4f6b84cbc58895e4c38b2f15db395a0b7f4238be",
+   "commit_short": "4f6b84c",
+   "branch": "master",
+   "dirty": true
+  },
+  "timestamp": "2026-07-25T17:18:40Z",
+  "host": "eduvpn-uva-stu-145-3-16-66.vpn.uva.nl",
+  "python": "3.12.7",
+  "argv": "phase1.py --smoke",
+  "knobs": {
+   "decomposed": false,
+   "smoke": true,
+   "cube": true,
+   "t_fn": 15,
+   "t_fn_round1": 15,
+   "t_reg": 8,
+   "ecd_iters": 2,
+   "stitch_iters": 3,
+   "dream_on": true,
+   "dream_iters": 120,
+   "plain_belief": false,
+   "curriculum": true,
+   "k": 4,
+   "n_phys": 2,
+   "n_des": 1,
+   "n_ov": 2,
+   "n_comet": 2,
+   "n_reg": 2,
+   "n_bel": 1,
+   "n_belvar": 1,
+   "n_goal": 2,
+   "n_corner": 2,
+   "n_obstacle": 2,
+   "n_relocate": 4
+  },
+  "seeds": {
+   "physics": 0,
+   "desire": 1,
+   "belief": 2,
+   "overlay": 3,
+   "registration": 4,
+   "comet": 5,
+   "flee": 10,
+   "deletion": 11,
+   "denoise": 12,
+   "perception": 13,
+   "multi_reg": 14,
+   "reg_except": 15,
+   "inpaint": 16,
+   "readout": 17,
+   "obstacle": 18,
+   "underlay": 19,
+   "belief_extra": 22,
+   "belief_goal": 23,
+   "belief_dual": 24,
+   "belief_fob": 25,
+   "relocate": 26
+  },
+  "repro": "commit 4f6b84c+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-25T17:18:40Z"
+ },
+ "phase": 1,
+ "decomposed": false,
+ "smoke": true,
+ "source": "phase1_run.smoke.json",
+ "library": [
+  "fn_0",
+  "fn_1",
+  "fn_2"
+ ],
+ "n_belief_tasks": 13,
+ "n_belief_unsolved": 35,
+ "summary": {
+  "by_variant": {
+   "belief_wall": {
+    "n_tasks": 5,
+    "n_tasks_with_competitor": 5,
+    "n_competitor_pairs": 5,
+    "margin_lib_min": 1.0216522216796875,
+    "margin_lib_median": 9.43348503112793,
+    "margin_lib_max": 9.43348503112793,
+    "margin_base_median": 1.0216522216796875
+   },
+   "belief_goal": {
+    "n_tasks": 7,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   },
+   "belief_false_obstacle": {
+    "n_tasks": 1,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   }
+  },
+  "n_competitor_pairs": 5,
+  "pct_competitors_longer": 100.0,
+  "n_competitors_shorter": 0,
+  "n_excluded_shorter": 8,
+  "n_action_right_scene_wrong": 0,
+  "margin_lib_median": 9.43348503112793,
+  "margin_lib_min": 1.0216522216796875
+ },
+ "records": [
+  {
+   "variant": "belief_goal",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6))",
+   "found_lib": "(fn_0 6 7)",
+   "dl_found_base": 24.306785583496094,
+   "dl_found_lib": 6.907755374908447,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.600902557373047,
+     "dl_lib": 7.600902557373047,
+     "margin_base": -16.705883026123047,
+     "margin_lib": 0.6931471824645996
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 15.894952774047852,
+     "dl_lib": 15.894952774047852,
+     "margin_base": -8.411832809448242,
+     "margin_lib": 8.987197399139404
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))",
+   "found_lib": "(fn_0 8 9)",
+   "dl_found_base": 24.306785583496094,
+   "dl_found_lib": 6.907755374908447,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.600902557373047,
+     "dl_lib": 7.600902557373047,
+     "margin_base": -16.705883026123047,
+     "margin_lib": 0.6931471824645996
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 15.894952774047852,
+     "dl_lib": 15.894952774047852,
+     "margin_base": -8.411832809448242,
+     "margin_lib": 8.987197399139404
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(fork (compose (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 9)) (sync_to_world 9)) (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))) (sync_except 9))",
+   "found_lib": "(fork (compose (fn_0 9 8) (fn_0 8 9)) (sync_except 9))",
+   "dl_found_base": 57.71855163574219,
+   "dl_found_lib": 22.920490264892578,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.600902557373047,
+     "dl_lib": 7.600902557373047,
+     "margin_base": -50.11764907836914,
+     "margin_lib": -15.319587707519531
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.189002990722656,
+     "dl_lib": 24.189002990722656,
+     "margin_base": -33.52954864501953,
+     "margin_lib": 1.2685127258300781
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))",
+   "found_lib": "(fn_0 2 6)",
+   "dl_found_base": 24.306785583496094,
+   "dl_found_lib": 6.907755374908447,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.600902557373047,
+     "dl_lib": 7.600902557373047,
+     "margin_base": -16.705883026123047,
+     "margin_lib": 0.6931471824645996
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 15.894952774047852,
+     "dl_lib": 15.894952774047852,
+     "margin_base": -8.411832809448242,
+     "margin_lib": 8.987197399139404
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))",
+   "found_lib": "(fn_0 5 8)",
+   "dl_found_base": 24.306785583496094,
+   "dl_found_lib": 6.907755374908447,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.600902557373047,
+     "dl_lib": 7.600902557373047,
+     "margin_base": -16.705883026123047,
+     "margin_lib": 0.6931471824645996
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 15.894952774047852,
+     "dl_lib": 15.894952774047852,
+     "margin_base": -8.411832809448242,
+     "margin_lib": 8.987197399139404
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(fork (compose (step 1 up) (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7))) (sync_to_model 1))",
+   "found_lib": "(fork (compose (step 1 up) (fn_0 7 1)) (sync_to_model 1))",
+   "dl_found_base": 39.403228759765625,
+   "dl_found_lib": 22.004199981689453,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.600902557373047,
+     "dl_lib": 7.600902557373047,
+     "margin_base": -31.802326202392578,
+     "margin_lib": -14.403297424316406
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.189002990722656,
+     "dl_lib": 24.189002990722656,
+     "margin_base": -15.214225769042969,
+     "margin_lib": 2.184803009033203
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9))",
+   "found_lib": "(fn_0 9 4)",
+   "dl_found_base": 24.306785583496094,
+   "dl_found_lib": 6.907755374908447,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.600902557373047,
+     "dl_lib": 7.600902557373047,
+     "margin_base": -16.705883026123047,
+     "margin_lib": 0.6931471824645996
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 15.894952774047852,
+     "dl_lib": 15.894952774047852,
+     "margin_base": -8.411832809448242,
+     "margin_lib": 8.987197399139404
+    }
+   ]
+  },
+  {
+   "variant": "belief_false_obstacle",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(fork (compose (wall_at c2 c4) (optimize (neg_dist 1) 7)) (sync_to_world 7))",
+   "found_lib": "(fn_2 7 c4 1)",
+   "dl_found_base": 22.227344512939453,
+   "dl_found_lib": 8.517192840576172,
+   "rivals": [
+    {
+     "label": "no belief (seek past real wall)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.600902557373047,
+     "dl_lib": 7.600902557373047,
+     "margin_base": -14.626441955566406,
+     "margin_lib": -0.916290283203125
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 15.894952774047852,
+     "dl_lib": 15.894952774047852,
+     "margin_base": -6.332391738891602,
+     "margin_lib": 7.37775993347168
+    },
+    {
+     "label": "transient phantom + shove goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 31.543046951293945,
+     "dl_lib": 31.543046951293945,
+     "margin_base": 9.315702438354492,
+     "margin_lib": 23.025854110717773
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(fork (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)) (sync_to_world 8))",
+   "found_lib": "(fn_2 8 c2 9)",
+   "dl_found_base": 22.227344512939453,
+   "dl_found_lib": 8.517192840576172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.600902557373047,
+     "dl_lib": 7.600902557373047,
+     "margin_base": -14.626441955566406,
+     "margin_lib": -0.916290283203125
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": true,
+     "reproduces_agents": true,
+     "dl_base": 23.24899673461914,
+     "dl_lib": 17.9506778717041,
+     "margin_base": 1.0216522216796875,
+     "margin_lib": 9.43348503112793
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(fork (compose (wall_at c3 c2) (optimize (neg_dist 6) 2)) (sync_except 6))",
+   "found_lib": "(fork (fn_1 2 6 c2 c3) (sync_except 6))",
+   "dl_found_base": 22.227344512939453,
+   "dl_found_lib": 16.929025650024414,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.600902557373047,
+     "dl_lib": 7.600902557373047,
+     "margin_base": -14.626441955566406,
+     "margin_lib": -9.328123092651367
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": true,
+     "reproduces_agents": true,
+     "dl_base": 23.24899673461914,
+     "dl_lib": 17.9506778717041,
+     "margin_base": 1.0216522216796875,
+     "margin_lib": 1.0216522216796875
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(fork (compose (wall_at c2 c4) (optimize (neg_dist 8) 5)) (sync_to_world 5))",
+   "found_lib": "(fn_2 5 c4 8)",
+   "dl_found_base": 22.227344512939453,
+   "dl_found_lib": 8.517192840576172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.600902557373047,
+     "dl_lib": 7.600902557373047,
+     "margin_base": -14.626441955566406,
+     "margin_lib": -0.916290283203125
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": true,
+     "reproduces_agents": true,
+     "dl_base": 23.24899673461914,
+     "dl_lib": 17.9506778717041,
+     "margin_base": 1.0216522216796875,
+     "margin_lib": 9.43348503112793
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(fork (compose (wall_at c2 c3) (optimize (neg_dist 1) 7)) (sync_to_world 7))",
+   "found_lib": "(fn_2 7 c3 1)",
+   "dl_found_base": 22.227344512939453,
+   "dl_found_lib": 8.517192840576172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.600902557373047,
+     "dl_lib": 7.600902557373047,
+     "margin_base": -14.626441955566406,
+     "margin_lib": -0.916290283203125
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": true,
+     "reproduces_agents": true,
+     "dl_base": 23.24899673461914,
+     "dl_lib": 17.9506778717041,
+     "margin_base": 1.0216522216796875,
+     "margin_lib": 9.43348503112793
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(fork (compose (wall_at c3 c2) (optimize (neg_dist 4) 9)) (sync_to_world 9))",
+   "found_lib": "(fork (fn_1 9 4 c2 c3) (sync_to_world 9))",
+   "dl_found_base": 22.227344512939453,
+   "dl_found_lib": 16.929025650024414,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.600902557373047,
+     "dl_lib": 7.600902557373047,
+     "margin_base": -14.626441955566406,
+     "margin_lib": -9.328123092651367
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": true,
+     "reproduces_agents": true,
+     "dl_base": 23.24899673461914,
+     "dl_lib": 17.9506778717041,
+     "margin_base": 1.0216522216796875,
+     "margin_lib": 1.0216522216796875
+    }
+   ]
+  }
+ ]
+}

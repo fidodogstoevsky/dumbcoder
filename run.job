@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
 #SBATCH --time=08:00:00
-#SBATCH --output=slurm_%A.out
+#SBATCH --output=../dumbcoder-runs/slurm_%A.out
 
 # Parameterized single-phase runner.
 #
@@ -30,6 +30,14 @@
 # Phase flags: --t-fn N (per-task fn timeout, sec)  --ecd-iters N (wake-sleep
 #              rounds)  --k N (scenes per task)  --no-dream (uniform-Q baseline)
 #              --smoke (tiny/fast)  --samples (one trajectory per family).
+#
+# The --output path above is relative to the SUBMIT dir ($SRC), i.e. it resolves to
+# $RUNS/slurm_%A.out — deliberately OUTSIDE the checkout.  SLURM opens that file the
+# moment the job starts, so a log written into $SRC would be an untracked file that
+# dirties the tree, and the clean-tree guard below would fail the *next* submission
+# on the *previous* job's log.  (.gitignore cannot fix this: it is itself untracked,
+# so an ignore rule never reaches the cluster through git pull.)  $RUNS must exist
+# before the first sbatch — `mkdir -p ~/dumbcoder-runs`.
 
 set -u
 
@@ -79,8 +87,9 @@ echo "CELL $CELL | writing artifacts to $OUT"
 srun python "$SRC/$SCRIPT" "$@"
 status=$?
 
-# Park the slurm log next to the artifacts it describes, so each cell directory is
-# self-contained (the original stays in the submit dir; %A is the job id).
-cp "${SLURM_SUBMIT_DIR:-$SRC}/slurm_${SLURM_JOB_ID}.out" "$OUT/${CELL}.log" 2>/dev/null
+# Park a copy of the slurm log next to the artifacts it describes, so each cell
+# directory is self-contained.  The live log is $RUNS/slurm_<jobid>.out (see the
+# --output directive); this copy is a snapshot taken as the job ends.
+cp "$RUNS/slurm_${SLURM_JOB_ID}.out" "$OUT/${CELL}.log" 2>/dev/null
 
 exit $status

@@ -7,31 +7,44 @@
 #SBATCH --time=08:00:00
 #SBATCH --output=slurm_%A.out
 
-# Parameterized single-phase runner.  Everything after the job file on the sbatch
-# command line is forwarded verbatim to python, so this one file runs any phase
-# with any flags:
+# Parameterized single-phase runner.
 #
-#     sbatch --job-name=phase1 run.job phase1.py --t-fn 1200
-#     sbatch --job-name=phase2 run.job phase2.py --t-fn 1200
-#     sbatch --job-name=phase3 --time=02:00:00 run.job phase3_arity.py
+#     sbatch --job-name=<cell> run.job <cell> <script.py> [flags...]
 #
-# sbatch CLI flags override the #SBATCH directives above, so set --job-name per
-# phase (keeps squeue/sacct readable) and give shorter phases a tighter --time.
-# %A in --output is the job ID, so each submission gets its own slurm file.
+# <cell> names the run: artifacts land in $RUNS/<cell>/, so the four cells of the
+# dream ablation never overwrite each other's phase{1,2}_{run,traj,verdict}.json.
+# Everything after <script.py> is forwarded verbatim to python.
 #
-# The header matches template.job (genoa, 32 cores, CPU-only — torch uses CPU Q
-# tensors, nothing touches a GPU).  Use template.job to run all three phases back
-# to back; use this to run one phase at a time.
+#     sbatch --job-name=p1-dream   run.job p1-dream   phase1.py --t-fn 3600 --ecd-iters 6
+#     sbatch --job-name=p1-nodream run.job p1-nodream phase1.py --t-fn 3600 --ecd-iters 6 --no-dream
+#     sbatch --job-name=phase3 --time=02:00:00 run.job arity phase3_arity.py
+#
+# WHY THE OUTPUT DIR IS OUTSIDE THE CHECKOUT.  The phase artifacts are tracked
+# files, so a run that writes them into the repo root dirties the tree it is
+# reporting the commit of — build_provenance then stamps `<sha>+dirty` and the
+# numbers are not citable.  (That, plus rsyncing sources over a stale checkout,
+# is why every Jul-26 run carried the DIRTY warning.)  Keep $HOME/dumbcoder a
+# clean `git pull`-ed checkout and let runs write elsewhere; git_provenance reads
+# the repo via the source file's own path, so the cd below does not confuse it.
 #
 # Phase flags: --t-fn N (per-task fn timeout, sec)  --ecd-iters N (wake-sleep
-#              rounds)  --smoke (tiny/fast)  --samples (one trajectory per family).
+#              rounds)  --k N (scenes per task)  --no-dream (uniform-Q baseline)
+#              --smoke (tiny/fast)  --samples (one trajectory per family).
+
+set -u
+
+SRC="$HOME/dumbcoder"          # clean checkout: source only, never written to
+RUNS="$HOME/dumbcoder-runs"    # run outputs, outside the tree
+
+if [ "$#" -lt 2 ]; then
+  echo "usage: sbatch [--job-name=X] run.job <cell> <script.py> [flags...]" >&2
+  exit 2
+fi
+CELL="$1"; SCRIPT="$2"; shift 2
 
 module purge
 module load 2023
 module load Anaconda3/2023.07-2
-
-# Our job starts in the directory where we call sbatch.
-cd $HOME/dumbcoder
 
 # Activate our environment.  FAIL LOUDLY if the env is missing: the Jul-12 runs
 # silently fell back to base conda (EnvironmentNameNotFound) and produced an
@@ -47,5 +60,27 @@ source activate dumbcoder || { echo "FATAL: could not activate conda env 'dumbco
 python -c "import sys, numpy, torch, stitch_core; print('ENV', sys.executable, '| PY', sys.version.split()[0], '| numpy', numpy.__version__, '| torch', torch.__version__, '| stitch_core', stitch_core.__file__)" \
   || { echo 'FATAL: env stamp failed — stitch_core (or numpy/torch) not importable in env dumbcoder; refusing to run a no-compression job'; exit 1; }
 
-# Forward the phase script + all its flags (sbatch passes them as positional args).
-srun python "$@"
+# Refuse to launch a run whose numbers could not be cited afterwards.  A dirty
+# source tree means the commit in the provenance header does not determine the
+# run; better to fail in 2 seconds than to discover it 8 hours later in the log.
+if [ -n "$(cd "$SRC" && git status --porcelain 2>/dev/null)" ]; then
+  echo "FATAL: $SRC is dirty — commit/pull to a clean tree before a run whose numbers are cited:" >&2
+  (cd "$SRC" && git status --short) >&2
+  exit 1
+fi
+echo "SOURCE $SRC @ $(cd "$SRC" && git rev-parse --short HEAD) (clean)"
+
+OUT="$RUNS/$CELL"
+mkdir -p "$OUT"
+cd "$OUT" || exit 1
+export PYTHONPATH="$SRC:${PYTHONPATH:-}"
+echo "CELL $CELL | writing artifacts to $OUT"
+
+srun python "$SRC/$SCRIPT" "$@"
+status=$?
+
+# Park the slurm log next to the artifacts it describes, so each cell directory is
+# self-contained (the original stays in the submit dir; %A is the job id).
+cp "${SLURM_SUBMIT_DIR:-$SRC}/slurm_${SLURM_JOB_ID}.out" "$OUT/${CELL}.log" 2>/dev/null
+
+exit $status

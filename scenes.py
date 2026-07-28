@@ -6,7 +6,8 @@ program: the corpus is finite and the DSL is not, so for any one scene there is
 almost always a shorter program that reproduces it for the wrong reason.  The
 phantom-wall belief tasks made this concrete — a literal `(step av down)` in
 fork's derive slot reproduced one detour exactly, so search dropped the wall and
-`belief_is_wall_based` came out False.  Every such coincidence was previously met
+`obstacle_belief_misrepresents_obstacle` came out False.  Every such coincidence
+was previously met
 with another hand-written rejection filter in the generator, which is patching a
 representation that has infinitely many holes.
 

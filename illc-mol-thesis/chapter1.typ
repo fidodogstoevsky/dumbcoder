@@ -165,4 +165,8 @@ The theory theory scores best on the theoretical requirements stated in, but doe
 
 I'm gonna end the section by noting that while the theory theory provides a powerful metaphor, it lacks a precise computational backbone to explain how children search through the infinite space of possible theories. Basically that the strength of the nativist argument lies in part in the supposed lack of algorithms for learning those structured representations. then this sets up chapter 2 to introduce bayesian program induction (via DreamCoder) as that formal implementation. 
 
+Of the three positions surveyed in @perspectives, constructivism (the theory theory) comes closest to accounting for the features of theory of mind (@explanandum) that a theory of its acquisition ought to account for. But it's a mostly descriptive account: it doesn't specify which process does the theory construction, nor by what standards one theory is preferred to another. Without specifics, the nativist can say that no such constructive process exists, that it only looks like construction but is really just maturation of a native system.
+
+Without an answer, the nativist can reply that no such process exists, and that what looks like construction is really maturation of something already in place. The strength of that reply is parasitic on the absence of a mechanism, and the business of this chapter is to supply one.
+
 #load-bib(read("chapter1.bib") + read("chapter2.bib"))

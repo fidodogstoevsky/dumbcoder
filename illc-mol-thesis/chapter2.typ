@@ -4,187 +4,170 @@
 
 == Levels of analysis and reverse engineering
 
-Of the three positions surveyed in @perspectives, constructivism (the theory theory) comes closest to accounting for the features of theory of mind (@explanandum) that a theory of its acquisition ought to account for. But it's a mostly descriptive account: it doesn't specify which process does the theory construction, nor by what standards one theory is preferred to another. Without specifics, the nativist can say that no such constructive process exists, that it only looks like construction but is really just maturation of a native system. In this chapter we'll describe a model of a particular constructive process. 
-
-//Without an answer, the nativist can reply that no such process exists, and that what looks like construction is really maturation of something already in place. The strength of that reply is parasitic on the absence of a mechanism, and the business of this chapter is to supply one.
-
 We proceed at Marr's computational level of analysis of information-processing systems @marr_vision_2010, in the tradition of "reverse-engineering" the mind @griffiths_bayesian_2024. Whereas in engineering we start from a computational problem and build a system that solves it, in reverse-engineering we start with a system and figure out what computational problem it solves: what information is its input, what results are its output, and what counts as a solution. Then once the problem is stated in these abstract terms we can ask which of the systems we know how to build solve problems of that shape, and then we model the mind as a system of that kind @griffiths_bayesian_2024.
 
 @perfors_learnability_2011
 
-The problem solved 
+We'll start by stating the computational problem that the mind solves, based on the ToM features listed in @explanandum. The mind takes as input a trajectory of bodies through space, and outputs the process that generated the trajectory. The output process is formulated in terms of mental states (beliefs, desires, intentions) that don't appear in the data. The trajectory underdetermines the process, since any behaviour is compatible with indefinitely many belief-desire pairs. So no amount of further observation eliminates all but one.
 
-So we should ask first what problem a mindreader is solving. @explanandum has already supplied most of the answer. The data available to the learner is a trajectory of bodies through space. What must be recovered is the process that generated that trajectory, and that process runs through states --- beliefs, desires, intentions --- that never appear in the data. The trajectory underdetermines the process: any behaviour is compatible with indefinitely many belief-desire pairs, and no amount of further observation eliminates all but one.
+Stated this way the problem is an instance of a familiar one. Given data, entertain hypotheses about the process that generated it. Then assign each a prior plausibility, and revise those plausibilities as new data comes in. There's already a known answer to the normative question of how such revision ought to proceed: Bayes' rule.
 
-Stated that way, the problem is an instance of a familiar one. Given data, entertain hypotheses about the process that generated it, assign each a prior plausibility, and revise those plausibilities as the data comes in. And there is a known answer to the question of how such revision _ought_ to go: Bayes' rule specifies the ideal solution, and thereby generates predictions that can be checked against what people actually do @griffiths_bayesian_2024. If human judgements line up with those predictions, we have grounds for thinking that this is the problem being solved --- and a model we can use to build machines that solve it the same way.
-
-That is the shape of the claim this thesis makes. The computational-level thesis is that acquiring a theory of mind is the problem of finding the best explanation of observed behaviour, where "best" is fixed not by taste but by the logic of Bayesian inference: a trade-off between the prior plausibility of an explanation and how well it fits the data. @sec-bayes makes that trade-off precise, and @sec-programs argues that the hypotheses being traded off are best understood as _programs_.
-
-=== What is claimed, and what is not
-
-Fixing the level fixes the scope of the claim, and it is worth being explicit about what falls outside it. We are not studying how a child in fact comes to learn theory of mind. That is the province of developmental and cognitive psychology, and nothing here should be read as a proposal about neural implementation or about the moment-to-moment course of a particular child's development.
-
-Nor is the claim that children run the algorithm presented in @sec-dreamcoder. ECD, the wake-sleep library-learning system described there and implemented in Chapter 4, is offered as an algorithmic-level _realisation_ of the computational-level claim: a demonstration that the problem, so stated, is solvable by a mechanism that begins with no mental vocabulary at all. Its role in the argument is one of sufficiency rather than fidelity. If a learner equipped only with domain-general primitives and a preference for short programs comes to posit belief-like structure, then positing such structure is something a learner _can_ do rather than something it must be given --- and the nativist's inference from "no mechanism has been named" to "no mechanism exists" is blocked. Whether human learners use this mechanism, or some other one that solves the same problem, is a further question that this thesis does not settle.
-
-There is a caveat to the tidy division of levels, and it matters for @sec-hbm. Many early Bayesian models addressed the computational level alone, characterising cognition as approximately optimal statistical inference in a fixed environment without reference to how the computation is carried out. The hierarchical models discussed later sit somewhere between the computational and the algorithmic: they describe cognition as approximately optimal inference in probabilistic models defined over a learner's subjective and dynamically growing mental representations of the world's structure, rather than over some objective and fixed world statistics @tenenbaum_how_2011. Once the hypothesis space is itself something the learner builds and rebuilds, the question of what the learner is doing can no longer be cleanly separated from the question of what it is doing it _with_. That entanglement is not a defect of the account; it is the part of the account that does the developmental work.
-
-// --- source notes for this section, retained ---
-// - identify the computational problem that the mind is trying to solve: the problem is find
-//   the best explanation. we argue that best is determined logically by bayes' rule. so it's
-//   doing bayesian updating. then the algorithmic level is the procedure at which it's
-//   produced, ECD
-// - engineering: building AI, building algorithms that solve computational problems
-// - reverse-engineering: identify the abstract computational problems that the mind must
-//   solve to do what it does. knowing that the mind solves these certain problems, what are
-//   the AI systems we have that can solve problems like that. Then we can model the mind as
-//   that kind of system.
-// - bayesian models focus on the computational level, the logic of the problem, what the
-//   information processing system is doing. [Marr 1982]
-// - rational analysis framework. analyze cognition in terms of adaptive solutions to
-//   environmental problems [Anderson 1990]  <- NOT YET IN chapter2.bib
+Our computational-level claim is that acquiring a theory of mind is the problem of finding the best explanation of observed behaviour. The best explanation is one that takes into account both the prior plausibility of an explanation and how well it fits with the data. In @sec-bayes we show how to revise plausibilities given these two factors, and in @sec-programs we argue that candidate explanations are best understood as programs. 
 
 == Bayesian inference: the logic of learning <sec-bayes>
 
-explain prior/likelihood, size principle, Bayes as normative solution
+Say a learner observes data $d$, a trajectory of bodies through space. A learner's task is to choose among possible explanations $cal(H)$ a hypothesis $h$ that best explains the trajectory. The task is to choose the most plausible hypothesis given the data, i.e. to find the hypothesis whose posterior probability $P(h|d)$ is highest. In calculating this quantity, the learner should weigh two things. First, the prior probability $P(h)$: how plausable was hypothesis $h$ before any data $d$ was observed at all? Second, the likelihood $P(d|h)$: how well does hypothesis $h$ account for the data $d$, now that data is available? Bayes' rule specifies how to combine these considerations: 
+
+$
+P(h|d) = (P(d|h) P(h)) / (sum_(h' in cal(H)) P(d|h') P(h'))
+$
+
+Since the denominator is a normalising constant that doesn't depend on $h$, it can be ignored for the purpose of ranking hypotheses against each other. So we rewrite the equation as the proportion
+
+$
+  P(h|d) prop P(d|h) P(h)
+$
+
+i.e. the _posterior_ probability  $P(h|d)$ of a hypothesis $h$ given data $d$ is proportional to the _likelihood_ $P(d|h)$ of the data $d$ given hypothesis $h$ times the _prior_ probability $P(h)$ of hypothesis $h$ before data $d$ was observed. 
+
+The prior $P(h)$ expresses the a priori plausibility of a hypothesis, i.e. how likely the learner takes $h$ to be, independent of the current observations. So the prior encodes the learner's background knowledge. For example a hypothesis that is outright impossible has prior $P(h)=0$ so it's excluded from $cal(H)$ and no data observation can increase its posterior probability. The prior determines which explanations are more natural, so we can start to generalize from among the indefinitely many hypotheses consistent with the data @xu_word_2007. 
+
+Anything can be a prior, since it's just what encodes the learner's background knowledge, assumptions, and preferences. In this thesis the prior we'll focus on is the preference for simplicity. Hypotheses that are short, that reuse existing structure rather than stipulating new structure, will have higher priors than hypotheses that are long and idiosyncratic. This assumption is supported by accounts of human rule-based concept learning @goodman_rational_2008 @chater_simplicity_2003. In @sec-programs we'll say precisely how the simplicty of a hypothesis is calculated, after we've said what hypotheses are made of.
+
+The likelihood $P(d|h)$ expresses how probable the observed data would be if the hypothesis were true. In our setting a candidate hypothesis either explains the observed behaviour (i.e. it reproduces the trajectory exactly) or it does not. So the likelihood is all-or-nothing: the data have probability zero $P(d|h)=0$ if they disagree with the hypothesis, and constant probability $P(d|h)=c$ otherwise @goodman_rational_2008. The binary likelihood can only ever eliminate hypotheses, since those with likelihood $P(d|h)=0$ yield posterior $P(h|d)=0$. So once a set of hypotheses all fit the data perfectly (only those with likelihood $P(d|h)=c$ remain), the likelihood can't distinguish between the remaining hypotheses and their ranking is decided entirely by the prior. 
+
+Though it might seem like the binary likelihood does less than a graded likelihood, the size principle shows this isn't the case [Tenenbaum 1999]. The likelihood is a probability distribution over data, so its mass must sum to one across every observation the hypothesis could have produced. So a hypothesis that is compatible with many different observations spreads its mass thinly across all of them, while a hypothesis compatible with only a few concentrates its mass on those few. If $h$ picks out a set of possible observations of size $|h|$ and assigns them uniform probability, then a single observation drawn from that set has
+
+$
+P(d|h) = 1/(|h|), quad "and for" n "independent observations" quad P(d_1, ..., d_n|h) = 1/(|h|^n)
+$
+
+so that the advantage of the narrower hypothesis (smaller $|h|$) grows exponentially in the number of examples $n$. Two hypotheses can both be perfectly consistent with the data and still be sharply distinguished, because the broader one makes the data look like a coincidence. Seeing the same tightly clustered observations again and again would be a suspicious coincidence under a hypothesis that permitted a much wider range. But under a hypothesis that permits a narrow range, seeing the same tight cluster is more probable. The likelihood ratio gives the quantity of how suspicious the coincidence is @xu_word_2007.
+
+Bayes' rule is a theorem of the probability calculus: given the basic commitment to representing degrees of belief as probabilities, it is the unique coherent way to revise them in light of evidence [Jaynes 2003; MacKay 2003]. Having stated the computational problem the mind faces, Bayes' rule specifies the ideal solution. And the ideal solution generates predictions that can be checked against what people actually do. If human judgements line up with those predictions, we have grounds for modeling the mind as solving the Bayesian inference problem, and we have an explanation of _why_ people behave as they do rather than merely a description of the fact that they do @griffiths_bayesian_2024 @marr_vision_2010.
+
+To be clear this claim is at the computational level, not at the algorithmic level. Nobody is saying that a child computes posterior probabilities, or represents the hypothesis space $cal(H)$ explicitly, etc. The claim is that the child's behavior approximates the solution to an inference problem whose ideal form is described by Bayes' rule. It's not an algorithmic-level claim about the procedure by which the child does this, though we'll later introduce an algorithm for approximating this inference.
 
 == Programs as the hypothesis space <sec-programs>
 
-- Language of Thought
-- compositionality/productivity
-- lambda calculus
-- Fodor/Goodman/Rule
-- symbols vs. vectors
+Bayes rule is a schema for how a prior and likelihood should be combined, but it doesn't specify what the hypotheses are that the prior ranges over. In this section we will argue that, for our purposes, we ought to represent hypotheses as programs.
 
-*bayesian inference over structured representations*
+By our indicator-likelihood setup (@sec-bayes), to compute the likelihood of a hypothesis we need to know whether it explains the trajectory or not. So the hypothesis must be executable, it has to be something that can be run, something that produces a predicted trajectory that can be compared against the actual trajectory. A hypothesis has to be a generative process that the learner can simulate, it can't just be a description. So a program is a natural candidate for a representation, since it takes an input and can be executed to produce an output.
 
-contrast the symbolic approach (structured, compositional) with the connectionist approach (unstructured, associative weights), arguing that programs capture the productivity and open-endedness of human thought
+The prior we're using is the preference for hypothesis simplicity and reuse. So we should use a hypothesis representation consisting of parts that can be counted and of structure that can be shared. A hypothesis represented as a point in a high-dimensional parameter space has no natural notion of a part, and hence no natural notion of being shorter than its rival. Representing hypotheses as programs, their compositional structure lets us easily assign a hypothesis' prior by counting its corresponding program's description length. And hypotheses lend themselves well to composition. 
 
-concepts can be embedded and composed etc.
+The main features of ToM capabilitiy (@explanandum) accord well with programs as represenations of mental theories. ToM is productive and systematic, and mental attribution operators embed. A finite learner can only have an unbounded and systematic capacity if the hypotheses are built out of parts by rules of combination. @fodor_connectionism_nodate So $cal(H)$ must be given by a grammar, so that finitely many parts generate infinitely many wholes, and so that anything that can occupy an argument position can occupy it in any hypothesis. Also since ToM acquisition involves acquiring a vocabulary of attitudes that don't appear in the data (@explanandum), the representational medium has to allow a learner to introduce new terms that can be used in hypotheses, which is made possible by program representations. 
 
-defining probabilities over structured symbolic forms of representation like graphs, grammars, predicate logic, relational schemas, and functional programs @griffiths_bayesian_2024
+=== The language of thought
 
-only programs capture full breadth and depth of people's complex capabilities to udnerstand and execute algorithms[Goodman et al 2015]
+The claim that mental representations are structured symbolic objects, combined by syntactic rules and semantically evaluated as a function of their parts, is the language-of-thought hypothesis [Fodor 1975] @fodor_connectionism_nodate. The idea is older than its name. The classical theory of concept formation already treats concepts as compositional: as logical combinations of features that function as rules for classifying objects, with concept learning being the business of deducing the right rule @bruner_study_2009. Siskind's `lift(x,y) = CAUSE(x, GO(y, UP))` is a compact illustration @siskind_computational_nodate: the meaning of a verb is not an atom paired with a set of scenes, it's an expression assembled from a small stock of recurring elements, which is why knowing it brings with it the ability to understand indefinitely many further expressions built from the same elements.
 
-with code we can model both procedural and declarative knowledge using a single format of representation @rule_precis_nodate
+The contrast class is the associationist and connectionist tradition described in @empiricism, where learning is estimating strengths in an associative memory, weights in a network, or parameters of a high-dimensional nonlinear function, over representations that are large numerical vectors @tenenbaum_how_2011. Nothing here denies that such systems learn. The point is narrower, and it's the one made in @explanandum: a vector has no parts in the relevant sense, so a representational scheme built from vectors gives the learner no way to reuse a solved sub-problem as a named unit in a later one, and gives the modeller no principled prior over which explanations count as simple. Bayesian cognitive models have accordingly had their most success defining probabilities over structured symbolic representations, such as graphs, grammars, predicate logic, relational schemas, and functional programs @griffiths_bayesian_2024 @tenenbaum_how_2011.
 
-Lambda calculus as formal language for compositional semantics [Heim & Kratzer, 1998] [Steedman, 2000]
+=== From logical formulas to programs
 
-and for other learning tasks [Piantadosi, Goodman, Ellis, & Tenenbaum, 2008]
-[Liang, Jordan, & Klein, 2009, 2010] [Zettlemoyer & Collins, 2005, 2007]
+Granting that hypotheses are structured symbolic objects still leaves open which structured objects they are. The reason to take them to be programs specifically, rather than formulas of a logic or nodes in a graph, is that programs are the only proposal on offer that meets all four requirements at once.
 
+Programs execute, which is what the likelihood needs. Programs are compositional in the strong sense required, since the value of a composite expression is a function of the values of its parts, and any expression of the right type can appear in any argument position of the right type. Programs are universal, in that a program can express any effectively computable relationship between an input and an output [Turing 1936] @tuking_computable_nodate, which matters because we don't want to prejudge which relationships between situation and behaviour a learner might have to represent. And programs are the one medium in which procedural and declarative knowledge can be modelled in a single format and made to interact @rule_precis_nodate: a hypothesis can state that the marble is in the basket and also do something, and both are just code.
 
+Programs also capture something that formulas don't, namely people's algorithmic abilities. Humans do not merely classify; they carry out procedures, and they understand procedures they have never carried out. Among the various proposals for conceptual representation, only programs plausibly capture the full breadth and depth of this @goodman_concepts_nodate. This is a long-standing line: the treatment of human problem solving as symbol manipulation @newell_elements_1958, of thinking as a production system @lovett_thinking_nodate, and of the mind as something that gets its leverage by building a compact program that corresponds to the structure of the world @baum_what_2004. It is also why the program view travels: a program is the kind of thing that can be instantiated in different media without being identical to any of them @lupyan_how_2016. And if knowledge is programs, then learning is program induction, an inference problem with a substantial literature of its own @flener_introduction_2008 @gulwani_program_2017, which is what will let us name an actual mechanism in @sec-dreamcoder rather than merely a metaphor.
 
-*why programs for theory of mind?*
+The formalism we adopt is the $lambda$-calculus. It's minimal, having only variables, abstraction, and application, so a model built on it can be honest about what it assumes; it's universal, so the choice of formalism doesn't itself restrict what's learnable; it's closed under composition, so any two hypotheses of compatible type combine into a third; and it's higher-order, so a hypothesis can take another hypothesis as an argument, which is exactly what the embedding requirement demands. It's a standard choice for compositional semantics [Heim & Kratzer 1998] [Steedman 2000] and for models of learning in other domains [Piantadosi, Goodman, Ellis, & Tenenbaum 2008] [Liang, Jordan, & Klein 2009] [Zettlemoyer & Collins 2005] @piantadosi_bootstrapping_2012 @schmidt_meaning_nodate.
 
-By the classical theory of concept formation, concepts have a lot of qualities that are reminiscent of programs @bruner_study_2009
-- concepts are represented compositionally
-- concepts are logical combinations of features of objects
-- concepts are rules for classifying objects
-- concept learning is deducing correct classification rule
+The feature of the $lambda$-calculus that matters most for our purposes is abstraction, since abstraction is precisely the operation of taking a recurring piece of structure and giving it a name. A named subexpression is a new term whose content is fixed entirely by what it does in combination with other terms, which is the third requirement above. This is the point at which a learner can come to possess a term that names no observable. In @sec-hbm we'll see that the stock of such terms need not be fixed in advance, and in @sec-dreamcoder that there's an algorithm which introduces them on the basis of what has already been solved.
 
-necessity of structured symbolic mental representations [Fodor 1975]
+=== Why programs for theory of mind in particular
 
-[Lake 2017]
+The considerations so far are general, and would apply as well to intuitive physics or number. But there's a further reason that's specific to our domain, which is that the thing being attributed is already a program.
 
-how else would we capture/account for human's algorithmic abilities, if not with mental programs? [Goodman 2015]
-- knowledge decomposes into concepts
+To attribute a mental state to an agent is to say something about the process by which the agent selects its actions: what it's trying to bring about, what it takes the world to be like, and how it gets from those to a movement. That is a specification of a procedure, and the natural way to write down a procedure is as code. Bayesian theory-of-mind models make this explicit by modelling the observed agent as a planner, and by casting attribution as inference over the inputs to that planner @baker_action_2009; the general pattern of using an embedded evaluation to capture the choices of another agent is a recurring one in models of intuitive psychology [Stuhlmüller & Goodman 2013] @goodman_concepts_nodate. In a program-structured hypothesis space, an agent's belief can be a private copy of the world that the agent's own policy is run against, so that the same interpreter which produces behaviour from a true world model produces different behaviour from a false one, without any additional machinery.
 
-mind is a program that corresponds to the world. and in fact that's how we can learn so quickly, [Baum 2003]
+Nesting is the other reason. Second-order mentalizing requires representations that recursively contain representations of the same kind, and simulation-based reasoning about other minds can be nested in a way that reasoning about physics need not be, since we routinely think about agents thinking about agents @lake_building_2016. In a compositional program language, this costs nothing extra: an operator that takes a model and a policy and returns behaviour can be applied to its own output. The recursion is a consequence of the representational medium rather than an extra stipulation, which is exactly the situation @explanandum asks for.
 
-programs are the universal mental thing that can be instantiated in different mediums, languages, etc [Lupyan & Bergens 2016]
+It's worth being clear about the status of the claim. We're not asserting that the brain implements a $lambda$-calculus interpreter, any more than @sec-bayes asserted that a child computes posterior probabilities. The claim is at the computational level: the child's competence is well described as inference over a space of hypotheses that compose, execute, embed, and can be measured for size, and programs are the best-understood formal object with those properties.
 
-social reasoning requires recursive, compositional representations to handle nested mental states. There's no cleaner way of doing this than with programs. it's basically already a program.
+=== The prior as description length
 
-learning is programming. learning a concept is building a program composed of lower level primitives, building an algorithm that does something. symbolic programs are the best formal knowledge representation @rule_precis_nodate
+We can now redeem the promise made in @sec-bayes and say what the simplicity prior actually measures. If hypotheses are expressions generated by a grammar, then a distribution over the grammar's productions induces a distribution over expressions: the probability of an expression is the product of the probabilities of the choices made in generating it. Long expressions involve more choices, so they receive less probability, and the preference for simplicity falls out of the generative process rather than being imposed on top of it. Taking negative logarithms, the quantity $-log P(h)$ is a description length in nats, the cost of writing $h$ down in a code optimal for that distribution. So maximizing the posterior means minimizing description length plus misfit, and since our likelihood is all-or-nothing, among the hypotheses that fit it means minimizing description length outright.
 
-embedded queries for choices of another agent, intuitive psychology [Stuhlmüller & Goodman, 2013] [Goodman 2015]
+This gives the prior a concrete and countable content: a hypothesis is expensive to the extent that it uses many primitives, and cheap to the extent that it reuses structure that's already available. This is the prior of the rational rules model, which assumes that learners prefer simplicity and reuse in compositional hypotheses, and which has been shown to account for human rule-based concept learning @goodman_rational_2008 @chater_simplicity_2003.
 
-Human thinking as computation, computational model [Newell et al 1958, Newell et al 1959]
+But notice what this makes the prior depend on. Description length is only defined relative to a stock of primitives, and the same hypothesis is short in one language and long in another. So the simplicity prior isn't a fixed measure of naturalness; it's a measure relative to a vocabulary, and a hypothesis becomes simple exactly when the vocabulary contains the right terms. That is a problem if the vocabulary has to be stipulated in advance, since then whatever the model finds natural was put there by the modeller, which is the objection we'll press against Bayesian theory of mind in the next chapter. It's an opportunity if the vocabulary can itself be learned. @sec-hbm argues that it can.
 
-Thinking is a production system [Lovett & Anderson 2005]
+// ── raw notes retained from the outline; fold in or delete ──────────────────
+// symbolic programs give learner the freedom to adopt any syntax that is useful [Gopnik & Wellman 2012]
+// [Lake 2017] — building machines that learn and think like people
+// knowledge decomposes into concepts [Goodman 2015]
+// NB: bib key `tuking_computable_nodate` is a typo for Turing; fix in chapter2.bib
 
-symbolic programs give learner the freedom to adopt any syntax that is useful [Gopnick & Wellman 2012]
+== Program induction and the search problem <sec-search>
 
-Siskind gives the example `lift(x,y)=CAUSE(x,GO(y,UP))` for knowledge as compositional programs [Siskind 1996]
+We now have all three components. The hypotheses are programs (@sec-programs), the prior is $P(h) prop e^(-"DL"(h))$ where $"DL"(h)$ is the description length of $h$ under the learner's current stock of primitives (@sec-programs), and the likelihood is all-or-nothing, positive if $h$ reproduces the observed behaviour and zero otherwise (@sec-bayes). Substituting into Bayes' rule, the posterior is
 
-== Bayesian program synthesis
+$
+P(h|d) prop e^(-"DL"(h)) dot bb(1)[h "reproduces" d]
+$
 
-- Bayes over programs
-- prior as program size/description length
+and the hypothesis a learner should adopt is
 
-Prior vs. Likelihood: learner trades off the simplicity of a program (the prior) against its fit to observed behavior (the likelihood)
+$
+h^* = "argmin"_(h in cal(H)) "DL"(h) quad "subject to" quad h(x) = y "for every" (x,y) in d
+$
 
-Piantadosi 2012:
-- likelihopod function that uses the size principle, penalize overly broad hypotheses [Tenenbaum 1999]
-  - used for cross situational word learning [Frank, Goodman, and Tenenbaum (2007)]
-  - used for solving subset problem in compositional semantics [Piantadosi et al. (2008)]
-- prior is from rational rules model [Tenenbaum, Feldman, and Griffiths (2008)] which first linked probabilistic inference with formal, compositional, representations
-  - assumes learners prefer simplicity
+That is, the shortest program that reproduces the data. The two factors have not disappeared into each other; the likelihood is doing the work of restricting attention to the programs that actually fit, and the prior is doing the work of choosing among them. But because the likelihood is binary, it can only ever draw a boundary, and once we're inside that boundary the ranking is by description length alone. Bayesian induction over programs, with this likelihood, just _is_ minimum description length. The data $d$ here is a set of situation-behaviour pairs: an arrangement of the world the agent was in, and what the agent then did. A single such pair is weakly constraining, so in the implementation a task will consist of several scenes that share one latent program, and a hypothesis has to reproduce all of them at once. This is the size principle from @sec-bayes doing its work: a program that gets four scenes right by accident is a much more suspicious coincidence than one that gets a single scene right by accident.
 
-likelihood is: data have zero probability if they disagree with classificaiton rule, and constant probability otherwise [Goodman 2008]
+This is a satisfying place to arrive, because it's the child-as-scientist metaphor of @constructivism turned into something with a definite content. Prefer the simplest theory that accounts for the evidence, where "simplest" is no longer a gesture but a number of nats, and "accounts for" is no longer a gesture but reproduction of the observations. But it's a specification of _what_ the learner should end up with, not a procedure for getting there, and here we start to move from the computational level toward the algorithmic one @marr_vision_2010 @tenenbaum_how_2011. And as soon as we ask how $h^*$ is to be found, the picture becomes much less comfortable.
 
-Bayesian inference: rational framework for updating beliefs given observed data [Jaynes, 2003; Mackay, 2003]
+The trouble is that this optimization is about as badly behaved as an optimization can be. The space is infinite, since a grammar with any recursion generates unboundedly many expressions, and the number of expressions of a given size grows exponentially in that size. There's no gradient to follow, because programs are discrete: there's no meaningful sense in which one is _slightly_ perturbed into another. Worst of all, the binary likelihood gives no partial credit. A program that differs from a correct one by a single token receives exactly the same likelihood as a program picked at random, namely zero. So there's no signal anywhere in the space to hill-climb on, and no way to tell that one is getting warm. The very feature that made the likelihood so clean in @sec-bayes is what makes the search blind.
 
-background knowledge is constrained hyptohesis space, finer-grained knowledge is the prior degrees of belief in the hypotheses [Griffiths 2024]
+What one can do, and what the algorithm in @sec-dreamcoder does, is enumerate hypotheses in decreasing order of prior probability, checking each against the data until one fits. This is the right thing to do in the sense that it finds $h^*$, and it's the only general strategy available given that nothing weaker than a full check tells us whether a candidate works. But the cost is the obvious one. Since $P(h) prop e^(-"DL"(h))$, enumerating every program of description length at most $ell$ takes time on the order of $e^ell$. The time to find a solution is exponential in the description length of that solution under the current library.
 
-_The likelihood reflects the fit between hypothe- sis and data, and the prior indicates the a priori plausibility of a hypothesis (which might decrease for hypotheses that have low frequency, are complicated, or seem otherwise improbable). The contribution of these two factors to the conclusions that we should draw is fairly natural and makes intuitive sense in a variety of contexts. Returning to an exam- ple introduced in chapter 1, if you see John coughing (your data d), you might consider three hypotheses about the cause of the cough: a cold (h 1 ), lung disease (h 2 ), or heartburn (h 3 ). You might rule out heartburn on the basis of fit, since it might only slightly increase the chance of coughing. A cold and lung disease both fit well with the cough—they increase the probability of coughing—but they differ in plausibility. Normally, a cold is far more com- mon than lung disease, and thus might be the hypothesis that you would select to explain the coughing. However, the plausibility of these two hypotheses might change if you were passing by a hospital and saw John coughing inside. All inductive inferences require con- sidering fit and plausibility. Bayes’ rule just tells you how they should be combined to reach a conclusion, using the common language of probability theory to determine the impact of each factor. In the context of cognitive science, priors become a useful way of describing the inductive_ [Griffiths 2004]
+This deserves emphasis, because it changes what the prior is doing. In @sec-programs the description length was introduced as a way of _ranking_ hypotheses: shorter means more probable, and among the programs that fit the data, the shortest wins. We can now see that it also determines which hypotheses are _reachable_. A hypothesis that is forty nats long under the learner's current vocabulary is not merely improbable; it is not going to be found. The prior is simultaneously a measure of plausibility and a budget, and a concept's being expressible in the language is no guarantee whatever that it's learnable in the language.
 
-_Without the constraints imposed by the prior, no meaningful generalizations would be possible. Without the likelihood, nothing could be learned from multiple examples beyond simply eliminating inconsistent hypotheses. ... The prior determines which concepts count as “natural,” whereas the likelihood generates the specificity preference and determines how the strength of that preference—and thus the sharpness of generalization—increases as a function of the number of examples._ [Xu 2007]
+That's the pivot on which the rest of the thesis turns. If what a learner can acquire at a given moment is fixed by what's short in its current vocabulary, and if the vocabulary changes as a result of what has already been acquired, then the ordering of acquisition is not something we have to stipulate. It's a consequence. A concept becomes learnable at the point where earlier learning has made it short enough to be found, which is precisely the cumulative, staged picture that @explanandum demanded and that neither of the alternatives in @perspectives could deliver a mechanism for. The delay between goal attribution and false-belief attribution stops being a fact to be accommodated and becomes something the model can be asked to predict.
 
-since knowledge is programs, learning is program induction [Kitzelmann, 2009; Flener & Schmid, 2008; Gulwani et al., 2017]
+There are two ways to attack an exponential search of this kind, and the system we adopt uses both. The first is to change the language so that the target gets shorter: if a recurring piece of structure is given a name and added to the stock of primitives, every program that uses it becomes cheaper, and a program that was previously out of reach can fall within the budget. This is library learning, and it is the subject of @sec-hbm and of the abstraction phase in @sec-dreamcoder. The second is to give up on enumerating in prior order and instead enumerate under a learned proposal distribution, one that has been trained to guess which primitives are likely to be useful for a task that looks like this one. This is amortized inference, and it's the dreaming phase in @sec-dreamcoder. Neither makes the problem tractable in general, and neither is guaranteed to return $h^*$; the claim is only that together they make particular problems tractable that were not tractable before. Search over theories, treated in this way as a stochastic process rather than an exhaustive one, has been used to model theory change directly @ullman_theory_nodate.
+
+It's worth noticing that the nativist argument of @nativism can be restated in these terms, and that doing so makes it stronger. The poverty-of-stimulus claim is usually put as a claim about data: there isn't enough of it to fix the target. But the sharper version is a claim about search: even granting the learner all the data it could want, and granting it the right hypothesis space, the target is exponentially far away, so something must be built in to put it within reach. We take this objection seriously, and the answer this thesis offers is not that the search is easy. It's that the distance is not fixed, because the language is not fixed. How a learner could come to change its own language is the subject of the next section.
+
+// ── raw notes retained from the outline; folded into 2.2/2.3 or superseded ──
+// Piantadosi 2012's ingredients: size-principle likelihood [Tenenbaum 1999]
+//   (cross-situational word learning [Frank, Goodman & Tenenbaum 2007];
+//   subset problem in compositional semantics [Piantadosi et al. 2008])
+//   + rational rules prior [Goodman, Tenenbaum, Feldman & Griffiths 2008]
+// "since knowledge is programs, learning is program induction"
+//   [Kitzelmann 2009; Flener & Schmid 2008; Gulwani et al. 2017] — now at 2.3
+// Griffiths cough example + Xu 2007 prior/likelihood quote — now at 2.2
 
 == Learning the language itself <sec-hbm>
 
-- HBMs
-- overhypotheses
-- blessing
+@sec-search left us with a pragmatic reason to want the learner's language to change: the target is exponentially far away, and shortening it is the only way to bring it within reach. That's a reason of convenience, and taken by itself it's a little suspicious. If we're permitted to adjust the vocabulary whenever the search is going badly, then we can make anything learnable by adding a primitive that does the work, and the model explains nothing. What's needed is an account on which changing the language is not a device we apply from outside but something the learner does as part of the same inference it was already doing. This section gives that account, and the claim is that a prior can itself be learned, by exactly the machinery of @sec-bayes applied one level up.
 
 === Hierarchical Bayesian models
 
-Blessing of abstraction, overhypotheses, HBMs
+The move is to stop treating the prior as a fixed input. In the setup of @sec-bayes the learner has a hypothesis space $cal(H)$ and a prior $P(h)$, and both are given. But a prior is a probability distribution, and a probability distribution can be parameterized, and a parameter can be given a distribution of its own and inferred from data like anything else. A hierarchical Bayesian model does this: it posits not a single level of hypotheses but several, with the hypotheses at each level constraining the space and the prior at the level below [Gelman, Carlin, Stern & Rubin 1995]. Bayesian inference is then run across all levels jointly. In Griffiths' phrase, we get "hypothesis spaces of hypothesis spaces, with priors on priors" @griffiths_bayesian_2024, and the effect is that the prior needed for a specific learning task can itself be learned, over a longer timescale, at the same time as it constrains the learning going on beneath it.
 
-Explain how learning overhypotheses enables a learner to acquire the form of a theory (i.e. agents are rational) before learning specific goals
+Knowledge at the upper level is _overhypothetical_: it's not a hypothesis about the data but a hypothesis about what the hypotheses about the data are like. Two standard examples show the shape of this. In categorization, a learner can acquire the overhypothesis that categories of a certain ontological kind tend to be homogeneous in shape but variable in colour, and this abstract knowledge about feature variability then licenses generalizing a new category from a single example @kemp_discovery_2008 @kemp_learning_2007. In causal learning, a learner can acquire abstract laws about the character of causal relationships — the role of exogenous intervention in fixing causal direction, the features that mark an event as an intervention — and those laws then constrain which directed graphs are entertained when explaining particular sequences of events @tenenbaum_how_2011 @goodman_learning_2011. In both cases the upper level is doing exactly what @sec-search showed a prior has to do: not merely ranking the lower-level hypotheses but cutting the space of them down to something a learner could search.
 
-abstract knowledge can be acquired faster than specific facts, by pooling evidence across multiple scenarios. This could explain how children acquire core social constraints early in life. 
+That last point is worth dwelling on, because it's the reason hierarchy is not an optional refinement. For any cognitively realistic task it's simply impossible to enumerate every logically possible hypothesis together with its prior and likelihood; the space is combinatorial @tenenbaum_how_2011. So a learner needs structural constraints that say what kind of thing an explanation could be before it can consider any particular explanation. In the medical example, learning the two-class schema in which diseases cause symptoms leaves the learner with only the question of which diseases cause which symptoms, and that residual question is answerable from a fraction of the data the unconstrained problem would demand. Structure at the top makes search at the bottom feasible.
 
-theory of mind is the overhypothesis that structures instances
+This also marks a shift in what kind of model we're building. Early Bayesian models addressed the computational level only, characterizing cognition as approximately optimal statistical inference in a fixed environment without saying how the computation was carried out. Hierarchical models sit between the computational and algorithmic levels, describing "cognition as approximately optimal inference in probabilistic models defined over a learner's subjective and dynamically growing mental representations of the world's structure, rather than some objective and fixed world statistics" @tenenbaum_how_2011. The representations grow. That's the feature we need, and it's what @sec-dreamcoder will supply a concrete procedure for.
 
-early Bayesian models addressed only the computational level, just stated what the system can do (optimal statistical inference), without specifying how it does it. HBMs get closer to the algorithmic level, showing "cognition as approximately optimal inference in probabilistic models defined over a learner's subjective and dynamically growing mental representations of the world's structure, rather than some objective and fixed world statistics." @tenenbaum_how_2011
+=== The blessing of abstraction
 
-e.g. concept learning is set membership and causal reasoning is directed graph relations. but it's computationally prohibitive to list all the possible hypotheses, their priors and likelihoods, it's combinatorial. So there's higher level constraints like a bipartite graph or something (the mediacl example) @tenenbaum_how_2011
+One might expect the upper levels of such a model to be the last thing learned. They're further from the data, they're more abstract, and there are more of them to get wrong. The surprising finding is the reverse. Learning at the abstract level of a hierarchical Bayesian model is often faster than learning at the specific levels it constrains, so that abstract knowledge is in place _before_ the concrete knowledge that depends on it. This is the blessing of abstraction @kemp_learning_2007 @goodman_learning_2011 @perfors_learnability_2011.
 
-General reference for HBMs, assumptions at mulitple levels of abstraction [Gelman, Carlin, Stern, & Ru-bin, 1995]
+The reason is that the levels are fed by different amounts of evidence. A specific hypothesis is constrained only by the observations that bear on it directly, whereas an overhypothesis is constrained by every observation in every situation of the relevant kind, since all of them are instances of it. So the abstract level pools evidence across scenarios that are, from the point of view of the lower level, unrelated. A child who has watched many people pursue many different goals has seen very little evidence about what any one of them wants, but a great deal of evidence about the general shape of the relationship between wanting, seeing and doing.
 
-ideal learner of abstract knowledge is one that learns over a hierarchy of models [Tenenbaum, Griffiths, & Kemp, 2006]
+The consequence for our purposes is a striking one, and it's the strongest reply the framework makes to @nativism. A learner who is acquiring abstract and specific knowledge simultaneously turns out to be almost as efficient as a learner endowed with a fixed and correct abstract theory from the start @goodman_learning_2011. So the developmental evidence that abstract domain knowledge is in place early [Wellman & Gelman 1998] does not by itself favour nativism, because that's exactly the pattern a domain-general hierarchical learner produces. Earliness is not evidence of innateness. That inference, which is doing a great deal of work in the nativist argument, simply doesn't go through.
 
-The blessing of abstraction: Learning high level abstractions can be faster than learning low-level instances @kemp_learning_2007
+=== Bootstrapping and minimal nativism
 
-HBMs for domain-specific abstract causal knowledge @kemp_learning_2007 
+We can now state the position this thesis occupies. Learning gets off the ground by combining strong domain-general inferential and representational resources with minimal, skeletal domain-specific knowledge: "strong but domain-general inference and representational resources are aided by weaker, domain-specific perceptual input analyzers" @goodman_learning_2011. This is minimal nativism, and it is a nativism — nobody is claiming the learner starts from nothing. The disagreement with @nativism is over what has to be built in. On the modular view, what's innate includes the attitude concepts themselves, a proprietary representational format for ascribing them, and the agent-directed inferential machinery that operates on it @leslie_pretending_1994. On the view taken here, what's innate is a capacity to represent structured hypotheses, a preference for short ones, a procedure for searching, and enough perceptual apparatus to individuate objects and their motions. Everything specific to the mental is supposed to be constructed.
 
-HBMs for simple relational theories @kemp_discovery_2008
+The construction is cumulative, which is what makes it bootstrapping in Carey's sense @carey_origin_2011 @piantadosi_bootstrapping_2012 rather than a single inference. An abstraction acquired at one stage becomes a term in the language in which the next stage's hypotheses are written, and the cost of using it has already been paid. Applied to our domain, this predicts a particular relationship between the milestones of @timeline: theory of mind functions as the overhypothesis that structures particular attributions, and its components should become available in an order fixed by what each one is built out of. Goal-directedness is available early because it's an abstraction over a great many observed pursuits. Belief is available late because it's an abstraction over goal-directed pursuit together with perceptual access, and it cannot be assembled before its parts exist. The delay of @explanandum, which @nativism accommodates by maturation and @empiricism accommodates by frequency, here falls out of the compositional structure of what's being learned.
 
-a learner who is simultaneously learning abstract and specific knowledge is almost as efficient as a learner with an innate (i.e. fixed) and correct abstract theory
-@goodman_learning_2011
-
-HBMs for domain general causality learning @goodman_learning_2011
-
-"hypothesis spaces of hypothesis spaces, with priors on priors" @griffiths_bayesian_2024 So over a longer timescale you can learn the priors needed for a specific learning task.
-
-The overhypotheses constrain the space of lower-level hypotheses
-
-@kemp_discovery_2008 gives an example of how HBMs can be used to learn overhypotheses about feature-variability (e.g. the shape bias) which help to do categorization (the lower-level learning task)
-
-@tenenbaum_how_2011 gives an example of HBMs for constraining directed graph models, which are then used for explaining observed events. First learn intervention-based causality, then use that to constrain inferences about instances of causality. 
-
-introduce the idea that learning is bootstrapped and "gets off the ground" by combining strong, potentially innate, domain-general mechanisms with minimal, skeletal domain-specific knowledge
-
-Minimal nativism: "strong but domain-general inference and representational resources are aided by weaker, domain-specific perceptual input analyzers" @goodman_learning_2011
-
-first the most abstract domain knoweldge comes into place and then the specific knowledge [Wellman and Gelman 1998]
-
-@goodman_learning_2011
-
-blessing of abstraction also defined in @perfors_learnability_2011
+What this section has not given is a procedure. Hierarchical Bayesian inference specifies what an ideal learner of abstract knowledge would conclude [Tenenbaum, Griffiths & Kemp 2006], and joint inference across levels is at least as intractable as the single-level search of @sec-search — worse, since the space of possible priors is larger than the space of hypotheses. So the situation at the end of this section mirrors the situation at the end of @sec-bayes: we have a well-posed problem and a normative standard for its solution, and no way to reach it. What we need is an algorithm that approximates hierarchical Bayesian inference over the prior, in the specific case where the prior is a distribution over programs and the upper-level hypothesis is a library of primitives. That algorithm is the subject of @sec-dreamcoder.
 
 == The DreamCoder algorithm <sec-dreamcoder>
 

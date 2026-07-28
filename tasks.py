@@ -342,9 +342,9 @@ def make_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T=8,
     vary where the agent and goal start, which is exactly what makes the wall
     identifiable.  This is the family the single-scene format failed on: with one
     trajectory, a literal shove in fork's derive slot traced that detour and search
-    dropped `wall_at` entirely (belief_is_wall_based came out False in all four
-    runs).  A shove cannot bend four different routes, and a wall one cell off dies
-    on whichever scene routes through it.
+    dropped the obstacle entirely (obstacle_belief_misrepresents_obstacle came out
+    False in all four runs).  A shove cannot bend four different routes, and a wall
+    one cell off dies on whichever scene routes through it.
 
     Per scene the wall must still be load-bearing: placed on the true-belief BFS
     path, and required to cost EXTRA steps over the free-space shortest path.  A

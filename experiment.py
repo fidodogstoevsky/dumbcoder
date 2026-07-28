@@ -452,6 +452,62 @@ def _world_level_commits(tree):
     return out
 
 
+_WALL_VALUE = 3
+
+
+def _wall_cells(g):
+    "the set of cells a grid blocks — the obstacle configuration, order-free."
+    return frozenset(map(tuple, np.argwhere(np.asarray(g) == _WALL_VALUE)))
+
+
+def _model_misrepresents_obstacle(sol, x):
+    """Does this solution's private model disagree with the world about the obstacle?
+
+    The claim the wall-based belief families make is that the agent is WRONG ABOUT AN
+    OBSTACLE — so this runs the top-level fork's derive over the realised world
+    trajectory and asks whether the model it produces ever blocks a different set of
+    cells than the world it was derived from.
+
+    It replaces a token test (`'wall_at' in _core_uses(sol)`), which asked instead
+    whether the solution stamps a wall, and so only recognised ONE way of being wrong
+    about an obstacle.  The jul-28 phase-1 runs found another: a false-obstacle scene
+    solved by MOVING the real wall inside the model —
+
+        (fork (compose (optimize (neg_dist 2) 3) (optimize (neg_dist 9) 8))
+              (sync_to_world 8))
+
+    — the agent misplacing the obstacle it knows about rather than hallucinating a
+    second one.  That is if anything the better false belief, and `wall_at` never
+    appears in it.  Enumerating idioms instead (accept `optimize(·, 3)` too, then
+    `step(3, ·)`, …) just defers the next miss; the property wanted is semantic, so
+    it is tested semantically.
+
+    Note this is STRICTER as well as looser, and deliberately.  A non-fork program
+    derives no private model at all, so it returns False even when it stamps a wall:
+    a world-level wall-stamping rival — a non-mental theory that edits the world and
+    never models anything — used to satisfy the token test on the strength of
+    containing `wall_at`.  The obstacle has to be misrepresented IN A MODEL for the
+    family's claim to hold, which is exactly what `_fork_derive` scopes to.
+    """
+    derive = _fork_derive(simplify(normalize(deepcopy(sol))))
+    if derive is None:
+        return False
+    try:
+        f = derive()
+    except Exception:
+        return False
+    for scene in as_scenes(x):
+        for t in range(scene.shape[0]):
+            world = np.asarray(scene[t])
+            try:
+                model = f(world.copy())
+            except Exception:
+                continue
+            if _wall_cells(model) != _wall_cells(world):
+                return True
+    return False
+
+
 def _commit_axis_corners(D):
     """The corners that live on the COMMIT axis: those typed fn_p_g, i.e. the nodes
     that can occupy a fork's commit slot, plus register's own arguments (locate/place),
@@ -1411,6 +1467,24 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         if constructor_round is None and _belief_ctor_in_D(D)[0] is not None:
             constructor_round = it
 
+        # CHECKPOINT: persist the run + trajectory artifacts at the end of every round,
+        # not only after the loop.  A job killed mid-run (wall-clock limit, preemption)
+        # used to leave nothing at all on disk — a 14h run's several hundred solved
+        # programs, unrecoverable, because both writes sat after the loop.  Each round
+        # overwrites the same paths atomically, so a kill costs at most the round in
+        # progress.  The artifacts are self-contained (sols + this round's library +
+        # round stamps + timings), so mdl_margin / corpus_dl / solve_dynamics can be run
+        # on a truncated file exactly as on a completed one; only the verdict block
+        # below, which needs the finished loop, is lost.
+        save_run_artifact(D, all_tasks, sols, rewritten, decomposed, smoke,
+                          prov=prov, quiet=True)
+        save_trajectory_artifact(D, all_tasks, sols, solve_round, decomposed, smoke,
+                                 stitch_iters, ecd_iters, timing_log=timing_log,
+                                 prov=prov, quiet=True)
+        print(f"    checkpointed {len(sol_keys)} solved programs "
+              f"({len(D.invented)} abstractions) to the run/trajectory artifacts",
+              flush=True)
+
         if n_solved == n_total:
             print("    all tasks solved — wake-sleep converged.")
             break
@@ -1448,6 +1522,9 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                   f"+ fantasies ({dream_iters} steps)…", flush=True)
             qmodel = dream(D, replays, training_Xs=fn_Xs, root_type=fn, n_iters=dream_iters)
 
+    # Final write of both artifacts (the loop already checkpointed each round; this
+    # re-writes the same paths so a run that exits the loop without completing a round —
+    # ecd_iters == 0, or every task solved before the first stitch — still leaves them).
     # Persist this run's searched sols + library-rewritten programs so the MDL-margin
     # figure can price belief against its rivals under the library SEARCH found here,
     # not a ground-truth reconstruction (python mdl_margin.py --run <this file>).
@@ -1591,20 +1668,26 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         not any(_uses_agency(uses_by_kind.get(k, set()))
                 for k in _ALL_KINDS if k != 'belief')
     )
-    # Wall-based uniqueness is a claim about the families whose derive actually
-    # stamps a wall — plain-belief and false-obstacle.  The displaced-goal families
+    # Obstacle-belief uniqueness is a claim about the families whose agent is wrong
+    # about an OBSTACLE — plain-belief and false-obstacle.  The displaced-goal families
     # (goal-displacement, two-observer) represent the false belief as a moved GOAL
     # inside the private model (pure fork+sync, no wall), and witness-belief may
     # solve either way; the earlier `!= belief_goal` key wrongly pulled them into the
     # all() and made it unsatisfiable the moment any such task solved.  Restrict to
-    # the wall-based variants only.
-    _WALL_BASED_VARIANTS = {'belief_wall', 'belief_false_obstacle'}
+    # the obstacle-belief variants only.
+    _OBSTACLE_BELIEF_VARIANTS = {'belief_wall', 'belief_false_obstacle'}
     # the mirror set, used by the cube census below: false belief about an OBJECT
     _DISPLACED_GOAL_VARIANTS = {'belief_goal', 'belief_observers'}
-    belief_is_wall_based = all(
-        'wall_at' in _core_uses(sols[mat_key(x)])
+    # Every solve in those families must misrepresent the obstacle IN THE MODEL — see
+    # _model_misrepresents_obstacle for why this is a semantic test on the derived
+    # model rather than the `'wall_at' in _core_uses(...)` token test it replaces.
+    # Requiring the property of EVERY solve is only defensible now that the property
+    # is the family's actual claim: under a token test one legitimately different
+    # spelling failed the whole run, which is what the jul-28 cells hit.
+    obstacle_belief_misrepresents_obstacle = all(
+        _model_misrepresents_obstacle(sols[mat_key(x)], x)
         for x, m in all_tasks
-        if m['kind'] == 'belief' and belief_variant(m) in _WALL_BASED_VARIANTS
+        if m['kind'] == 'belief' and belief_variant(m) in _OBSTACLE_BELIEF_VARIANTS
         and sols.get(mat_key(x)) is not None
     )
     print(f"\n  fork used outside belief (overlay/comet)   : {fork_general}")
@@ -1612,7 +1695,8 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     print(f"  wall_at used outside belief (obstacle)     : {wall_general}")
     print(f"  belief reuses BOTH fork and sync           : {belief_uses_both}")
     print(f"  fork∧sync agency is unique to belief       : {agency_unique}")
-    print(f"  wall-belief solutions are wall-based       : {belief_is_wall_based}"
+    print(f"  obstacle-belief models misplace the wall   : "
+          f"{obstacle_belief_misrepresents_obstacle}"
           f"   (plain/false-obstacle only; goal/observers are displaced-goal, not wall)")
     if n_belief_degenerate:
         tot_bel = n_belief_literal + n_belief_degenerate
@@ -1714,10 +1798,10 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         for x, m in all_tasks:
             if m['kind'] == 'belief' and belief_variant(m) in _DISPLACED_GOAL_VARIANTS:
                 # ONLY the displaced-goal families are excluded: their derive moves the
-                # goal, it does not stamp the wall corner (see (A)'s belief_is_wall_based
+                # goal, it does not touch the wall corner (see (A)'s obstacle-belief
                 # exclusion above).  false-obstacle carries displaced_to too but IS
-                # wall-based, so keying on belief_variant keeps its literal wall solves
-                # in the census.
+                # an obstacle belief, so keying on belief_variant keeps its literal
+                # wall solves in the census.
                 continue
             sol = sols.get(mat_key(x))
             if sol is None:
@@ -1799,6 +1883,52 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
           f"solutions (last stitch: iterations={stitch_iters})")
     print("=" * 72)
 
+    # How many belief solves each invented abstraction actually appears in under the
+    # final library.  Computed up here because the constructor is RANKED by it (see
+    # _ctor_rank), before the `_absts_in` helper the usage census below defines.
+    _inv_names = [d.repr for d in D.invented]
+    belief_use_count = Counter()
+    for x, m in all_tasks:
+        if m['kind'] != 'belief':
+            continue
+        s = rewritten.get(mat_key(x))
+        if s is None:
+            continue
+        for a in _inv_names:
+            if _re.search(rf'\b{a}\b', s):
+                belief_use_count[a] += 1
+
+    def _ctor_rank(cand):
+        """Ordering over agent-constructor candidates: agency signature, then USE.
+
+        Ranking by shared-hole count alone (the previous rule) is unsound, because a
+        hole recurs for two quite different reasons.  It recurs because av is passed
+        to both the actor and the committer — the agency signature we mean to detect —
+        but it also recurs whenever an abstraction happens to name the same value
+        twice for any other reason, and a deeper, more redundant body has strictly
+        more chances to do so.  The count therefore rewards exactly the abstractions
+        it should be discounting.  Both jul-28 phase-1 cells show it: the no-dream run
+        named a triple-nested fork tower the agent constructor on 3 shared holes when
+        14 belief solves used it, passing over the clean
+        `(fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world $0))` that 84
+        of them used, and the dream run made the same trade 46-for-50.  (Two of those
+        extra holes came from the `(optimize (distance $x) $x)` self-repel that
+        dsl.optimize's guard now makes inert — but the ranking is wrong on its own
+        terms, so it is fixed here rather than left to depend on that.)
+
+        So: sharing at least one hole is the QUALIFYING condition — an abstraction
+        with none is a fork that merely happens to contain a sync, and stays a last
+        resort — and among qualifying candidates the one belief actually reaches for
+        wins.  Hole count only breaks ties.  This makes the reported constructor a
+        claim about the corpus rather than about stitch's arity bookkeeping, and it
+        keeps the verdict's "N/M belief solves invoke the constructor" line honest:
+        under the old rule the no-dream cell printed 0/113.
+        """
+        if cand is None:
+            return (-1, -1, -1)
+        d, _body, shared = cand
+        return (1 if shared else 0, belief_use_count[d.repr], len(shared))
+
     print("\n  invented abstractions:")
     agent_constructor = None        # literal sync_to_world / register commit (preferred)
     agent_constructor_degen = None  # degenerate scope-complement commit (fallback)
@@ -1824,12 +1954,13 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
             # penalising exactly the run with the all-literal agency signature.
             # Several matches can coexist: the general constructor AND stitch's
             # own specializations of it (e.g. fn_3 = (fn_0 1 2), which bakes av in
-            # as a literal so its shared hole collapses).  Keep the one that best
-            # exhibits the agency signature — most shared holes — not the last seen.
+            # as a literal so its shared hole collapses).  Keep the one that carries
+            # the agency signature AND that belief actually uses — see _ctor_rank.
             cand = (d, body, shared)
-            if agent_constructor is None or len(shared) > len(agent_constructor[2]):
+            if _ctor_rank(cand) > _ctor_rank(agent_constructor):
                 agent_constructor = cand
             print(f"      *** AGENT TYPE CONSTRUCTOR (belief) ***")
+            print(f"          used by {belief_use_count[d.repr]} belief solves")
             if shared:
                 print(f"          shared holes: "
                       + ', '.join(f'{v} (x{n})' for v, n in shared.items())
@@ -1840,9 +1971,10 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
             # FALLBACK — if stitch also invented a literal sync_to_world constructor that
             # one is preferred for the verdict.
             cand = (d, body, shared)
-            if agent_constructor_degen is None or len(shared) > len(agent_constructor_degen[2]):
+            if _ctor_rank(cand) > _ctor_rank(agent_constructor_degen):
                 agent_constructor_degen = cand
             print(f"      *** AGENT TYPE CONSTRUCTOR (belief — degenerate scope-complement commit) ***")
+            print(f"          used by {belief_use_count[d.repr]} belief solves")
             if shared:
                 print(f"          shared holes: "
                       + ', '.join(f'{v} (x{n})' for v, n in shared.items())
@@ -1920,7 +2052,9 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     print(f"  (A) parts are general    : fork∉belief-only={fork_general}, "
           f"sync∉belief-only={sync_general}, wall∉belief-only={wall_general}")
     print(f"  (A) only agency is unique: fork∧sync unique to belief={agency_unique}, "
-          f"belief recombines={belief_uses_both}, wall-based={belief_is_wall_based}")
+          f"belief recombines={belief_uses_both}, "
+          f"obstacle-belief misplaces the wall in-model="
+          f"{obstacle_belief_misrepresents_obstacle}")
     print(f"  (A) no scope-complement rival among belief solves : {no_belief_complement}"
           f"   ({n_belief_complement} complement, {n_belief_degenerate} degenerate, "
           f"{n_belief_literal} literal)")
@@ -1953,7 +2087,8 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     checks = {
         'fork_general': fork_general, 'sync_general': sync_general,
         'wall_general': wall_general, 'belief_uses_both': belief_uses_both,
-        'agency_unique': agency_unique, 'belief_is_wall_based': belief_is_wall_based,
+        'agency_unique': agency_unique,
+        'obstacle_belief_misrepresents_obstacle': obstacle_belief_misrepresents_obstacle,
         'no_belief_complement': no_belief_complement,
         'constructor_found': constructor_found, 'constructor_shared': constructor_shared,
         'belief_uses_ctor': belief_uses_ctor, 'nonmental_free_of_ctor': nonmental_free_of_ctor,
@@ -2009,7 +2144,9 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                           'complement': n_fob_comp},
         'A': {'fork_general': fork_general, 'sync_general': sync_general,
               'wall_general': wall_general, 'belief_uses_both': belief_uses_both,
-              'agency_unique': agency_unique, 'belief_is_wall_based': belief_is_wall_based,
+              'agency_unique': agency_unique,
+              'obstacle_belief_misrepresents_obstacle':
+                  obstacle_belief_misrepresents_obstacle,
               'no_belief_complement': no_belief_complement},
         # (A′) cube census
         'cube': {'enabled': bool(cube), 'cube_ok': cube_ok,
@@ -2025,6 +2162,12 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         'agent_constructor_shared_holes': ctor_shared_holes,
         'agent_constructor_n_shared_holes': n_shared_holes,
         'agent_constructor_max_hole_uses': max_hole_uses,
+        # what _ctor_rank selected on: how many belief solves invoke the chosen
+        # constructor, and the same count for every candidate, so the choice is
+        # auditable from the artifact without re-reading the log.
+        'agent_constructor_belief_uses': (belief_use_count[agent_constructor[0].repr]
+                                          if agent_constructor else 0),
+        'belief_uses_by_abstraction': dict(belief_use_count),
         'abstraction_usage_by_kind': fam_absts,
         # (B″) magnitudes: DL before (base prims) vs after (library) per family/variant,
         # and the belief-vs-rival margins mdl_margin.py priced under this library — the
@@ -2208,8 +2351,26 @@ def save_verdict_artifact(verdict, decomposed, smoke, path=None, prov=None):
     return path
 
 
+def _dump_json_atomic(out, path):
+    """Write `out` to `path` via a temp file + os.replace.
+
+    The run/trajectory artifacts are rewritten after EVERY ECD round (see the wake-sleep
+    loop), so the process can be killed — wall-clock limit, preemption — while a write is
+    in flight.  A plain open(path,'w') would then leave a truncated file where a whole
+    run's solved programs used to be; os.replace is atomic, so the file on disk is always
+    either the previous round's artifact or this one's, never a half-written mix."""
+    import json, os
+    tmp = f"{path}.tmp"
+    with open(tmp, 'w') as f:
+        json.dump(out, f, indent=1)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
+    return path
+
+
 def save_run_artifact(D, all_tasks, sols, rewritten, decomposed, smoke,
-                      path=None, prov=None):
+                      path=None, prov=None, quiet=False):
     """Persist a phase run's search output so `mdl_margin.py` can price belief against
     its rivals under the library THIS RUN actually found, rather than re-deriving one
     from ground truth.
@@ -2226,8 +2387,10 @@ def save_run_artifact(D, all_tasks, sols, rewritten, decomposed, smoke,
 
     `prov` is the run's provenance block (see build_provenance), so a margin figure
     drawn from this file can name the commit and budgets that produced it.
+
+    Called after every ECD round (checkpoint, quiet=True) and once more after the loop,
+    always to the same path: the file on disk describes the last COMPLETED round.
     """
-    import json
     if path is None:
         path = f"phase{2 if decomposed else 1}_run{'.smoke' if smoke else ''}.json"
     key2id = {mat_key(x): mat_key_id(x) for x, _ in all_tasks}
@@ -2237,7 +2400,10 @@ def save_run_artifact(D, all_tasks, sols, rewritten, decomposed, smoke,
         if sol is None or k not in key2id:
             continue
         kid = key2id[k]
-        sols_ser[kid] = str(simplify(normalize(sol)))
+        # deepcopy: normalize rewrites its argument in place, and this now runs mid-run
+        # (once per round) rather than only at the end — serialising must not mutate the
+        # solver's own sols.
+        sols_ser[kid] = str(simplify(normalize(deepcopy(sol))))
         kinds_ser[kid] = kind_of[k]
     rew_ser = {key2id[k]: s for k, s in rewritten.items()
                if k in key2id and s}
@@ -2251,15 +2417,15 @@ def save_run_artifact(D, all_tasks, sols, rewritten, decomposed, smoke,
         'rewritten': rew_ser,
         'kinds': kinds_ser,
     }
-    with open(path, 'w') as f:
-        json.dump(out, f, indent=1)
-    print(f"  wrote run artifact ({len(sols_ser)} solved programs) to {path}")
+    _dump_json_atomic(out, path)
+    if not quiet:
+        print(f"  wrote run artifact ({len(sols_ser)} solved programs) to {path}")
     return path
 
 
 def save_trajectory_artifact(D, all_tasks, sols, solve_round, decomposed, smoke,
                              stitch_iters, ecd_iters, path=None, timing_log=None,
-                             prov=None):
+                             prov=None, quiet=False):
     """Persist the per-round SEARCH TRAJECTORY so `corpus_dl.py` can rebuild the corpus
     description-length curve (DreamCoder-style: total DL of every solution under the
     current library, plus the library's own cost, per ECD round).
@@ -2287,8 +2453,13 @@ def save_trajectory_artifact(D, all_tasks, sols, solve_round, decomposed, smoke,
     the numbers that are otherwise only printed to the log.  fn_p_g (registration) tasks
     go through `solve_enumeration`, which does not return per-task times, so they are
     absent here; belief — the family the collapse is about — is an fn task and is present.
+
+    Called after every ECD round (checkpoint, quiet=True) and once more after the loop,
+    always to the same path: the file on disk describes the last COMPLETED round.  Note
+    `round` is stamped from `solve_round`, so a mid-run checkpoint carries the same round
+    attribution the final artifact would — a killed run's curve is a prefix of the full
+    one, not a distortion of it.
     """
-    import json
     if path is None:
         path = f"phase{2 if decomposed else 1}_traj{'.smoke' if smoke else ''}.json"
     key2id  = {mat_key(x): mat_key_id(x) for x, _ in all_tasks}
@@ -2299,7 +2470,8 @@ def save_trajectory_artifact(D, all_tasks, sols, solve_round, decomposed, smoke,
             continue
         kid = key2id[k]
         tasks_ser[kid] = {
-            'sol':   str(simplify(normalize(sol))),
+            # deepcopy: normalize mutates in place; see save_run_artifact.
+            'sol':   str(simplify(normalize(deepcopy(sol)))),
             'kind':  kind_of[k],
             'round': int(solve_round.get(k, ecd_iters)),
         }
@@ -2319,10 +2491,10 @@ def save_trajectory_artifact(D, all_tasks, sols, solve_round, decomposed, smoke,
         'tasks':        tasks_ser,
         'timings':      timings_ser,
     }
-    with open(path, 'w') as f:
-        json.dump(out, f, indent=1)
-    print(f"  wrote trajectory artifact ({len(tasks_ser)} solved programs, "
-          f"{out['n_rounds']} rounds) to {path}")
+    _dump_json_atomic(out, path)
+    if not quiet:
+        print(f"  wrote trajectory artifact ({len(tasks_ser)} solved programs, "
+              f"{out['n_rounds']} rounds) to {path}")
     return path
 
 

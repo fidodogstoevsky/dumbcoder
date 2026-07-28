@@ -107,11 +107,35 @@ def neg_distance(target_val):
     "int -> util: u(g,r,c) = -(BFS distance from (r,c) to nearest target_val cell)"
     def _u(g, r, c):
         return -_bfs_distance(g, r, c, target_val)
+    _u.target_val = target_val      # see optimize's self-reference guard
     return _u
 
 def optimize(u, agent_val):
-    "util, int -> fn: move agent_val one greedy step maximising u at the landing cell"
+    """util, int -> fn: move agent_val one greedy step maximising u at the landing cell.
+
+    SELF-REFERENCE GUARD.  A utility that measures the moving agent's own value is
+    not a preference over the world, and its argmax is degenerate: `distance(av)`
+    scores 0 at the agent's own cell and 1 at *every* neighbour, so the greedy scan
+    below — which takes the first strict improvement, in order up/down/left/right —
+    resolves a four-way tie into a committed step UP.  That made
+    `(optimize (distance v) v)` an exact synonym for `(step v up)`: free locomotion
+    synthesised out of the flee corner's utility complement, with none of `step`'s
+    direction literal to pay for.  The jul-28 phase-1 runs show what it costs — the
+    motif is what let two false-obstacle scenes solve with no `wall_at` at all, and
+    it inflated the shared-hole count of two invented abstractions enough that the
+    verdict named them the agent constructor over the clean `fork(seek, sync)`.
+
+    Fixing the tie-break instead would be wrong: genuine diagonal approaches tie
+    too (down and right are equally good when the goal is off both axes), and
+    freezing the agent there would break every seek policy.  The defect is the
+    self-reference, so that is what is guarded — no motion, since a preference for
+    being far from yourself ranks all four neighbours alike.  `neg_distance(av)` is
+    already inert under the same reading (0 at home, -1 everywhere adjacent); it is
+    covered here so the rule reads off the utility, not off which corner it came from.
+    """
     def _step(g):
+        if getattr(u, 'target_val', None) == agent_val:
+            return g.copy()
         h, w = g.shape
         agents = [(r, c) for r in range(h) for c in range(w) if g[r, c] == agent_val]
         if not agents:
@@ -486,6 +510,7 @@ def distance(target_val):
     "int -> util: the UTILITY complement of neg_distance — +BFS distance, so maximising it flees the nearest target_val (predator/prey, hazard avoidance)"
     def _u(g, r, c):
         return _bfs_distance(g, r, c, target_val)
+    _u.target_val = target_val      # see optimize's self-reference guard
     return _u
 
 def clear_at(r, c):

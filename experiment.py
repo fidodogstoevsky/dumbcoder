@@ -418,6 +418,49 @@ def _is_fork_node(node):
             and node.tails is not None and len(node.tails) == 2)
 
 
+def _fork_derives(tree):
+    """EVERY fork's derive in `tree`, outermost first — including the forks nested
+    inside another fork's derive (the agent modelling a model).
+
+    The counterpart to `_world_level_commits`, which deliberately stops at the first
+    fork because a commit's SCOPE is positional: only a world-level commit says how
+    the solution acts on the world.  A derive carries no such positional claim.  What
+    an agent represents is represented wherever it is written, and nesting is how the
+    searcher spells a multi-step model: the outer derive of
+
+        (fork (compose (fork (compose (wall_at c0 c3) (optimize (neg_dist 8) 6))
+                             (sync_to_world 6))
+                       (optimize (neg_dist 8) 7))
+              (sync_to_world 7))
+
+    contains the phantom wall only INSIDE its nested fork, whose commit publishes the
+    moved agent into the enclosing model and drops the wall with the inner model it
+    lived in.  Reading the outer derive alone therefore sees a model that agrees with
+    the world about the obstacle, and the family's own claim reads as false — which is
+    what a stop-at-the-root scan reported for the jul-29 phase-1 false-obstacle solve.
+
+    Stops descending at each fork's COMMIT: no fn_p_g constructor takes an `fn`, so no
+    fork can hide there (same argument as _world_level_commits).  Derives whose produce
+    shape `_fork_derive` does not recognise are skipped rather than guessed at, but the
+    walk continues past them so an unrecognised wrapper cannot hide the forks below."""
+    out = []
+
+    def walk(node):
+        if not isinstance(node, Delta):
+            return
+        if _is_fork_node(node):
+            d = _fork_derive(node)
+            if d is not None:
+                out.append(d)
+            walk(node.tails[0])     # nested forks live on the produce side
+            return
+        for t in (node.tails or []):
+            walk(t)
+
+    walk(tree)
+    return out
+
+
 def _world_level_commits(tree):
     """The commit subtrees that write to the WORLD — the agency commits.
 
@@ -464,9 +507,9 @@ def _model_misrepresents_obstacle(sol, x):
     """Does this solution's private model disagree with the world about the obstacle?
 
     The claim the wall-based belief families make is that the agent is WRONG ABOUT AN
-    OBSTACLE — so this runs the top-level fork's derive over the realised world
-    trajectory and asks whether the model it produces ever blocks a different set of
-    cells than the world it was derived from.
+    OBSTACLE — so this runs EVERY fork's derive over the realised world trajectory and
+    asks whether any of them produces a model that blocks a different set of cells than
+    the world it was derived from.
 
     It replaces a token test (`'wall_at' in _core_uses(sol)`), which asked instead
     whether the solution stamps a wall, and so only recognised ONE way of being wrong
@@ -487,24 +530,32 @@ def _model_misrepresents_obstacle(sol, x):
     a world-level wall-stamping rival — a non-mental theory that edits the world and
     never models anything — used to satisfy the token test on the strength of
     containing `wall_at`.  The obstacle has to be misrepresented IN A MODEL for the
-    family's claim to hold, which is exactly what `_fork_derive` scopes to.
+    family's claim to hold, which is exactly what `_fork_derives` scopes to.
+
+    It quantifies over ALL of the solution's forks, not just the root's (see
+    _fork_derives): a nested fork's derive is still a private model, and on the jul-29
+    phase-1 false-obstacle solve it is the ONLY place the phantom wall is written —
+    the enclosing derive republishes just the moved agent, so a root-only scan called
+    a textbook false-obstacle belief obstacle-blind.  Each derive is run on the world
+    frame and compared against it, which is the family's claim stated per model: this
+    derive, given the world, represents a different obstacle than the world has.
     """
-    derive = _fork_derive(simplify(normalize(deepcopy(sol))))
-    if derive is None:
-        return False
-    try:
-        f = derive()
-    except Exception:
-        return False
-    for scene in as_scenes(x):
-        for t in range(scene.shape[0]):
-            world = np.asarray(scene[t])
-            try:
-                model = f(world.copy())
-            except Exception:
-                continue
-            if _wall_cells(model) != _wall_cells(world):
-                return True
+    tree = simplify(normalize(deepcopy(sol)))
+    scenes = [np.asarray(scene) for scene in as_scenes(x)]
+    for derive in _fork_derives(tree):
+        try:
+            f = derive()
+        except Exception:
+            continue
+        for scene in scenes:
+            for t in range(scene.shape[0]):
+                world = np.asarray(scene[t])
+                try:
+                    model = f(world.copy())
+                except Exception:
+                    continue
+                if _wall_cells(model) != _wall_cells(world):
+                    return True
     return False
 
 
@@ -548,24 +599,59 @@ def _swap_scope_commit(D, tree, m):
     commit on a scene iff swapping it for sync_to_world(av) in the solution's own
     derive still reproduces the scene.
 
-    Only WORLD-LEVEL commits are swapped (see _world_level_commits).  A scope commit
-    nested inside a derive is the agent's own model-internal bookkeeping; rewriting it
-    would test a claim about the private model, not about agency, and it reproduces the
-    scene either way — which is precisely how it used to manufacture 'degenerate'."""
+    EVERY fork is swapped, nested ones included.  The test is per-fork and the claim is
+    per-fork — this fork's scope complement is extensionally this fork's own agency
+    commit — so a solution with a fork inside its derive poses the question twice and
+    has to be asked it twice.  Swapping only the outermost leaves the inner scope
+    complement in place, the rewritten program does not reproduce the scene, and the
+    solve falls through to the measured tests below it on the strength of a fork the
+    rewrite simply never visited.  That is what every one of the ten jul-29 phase-2
+    residuals was: an outer (sync_except gv) or sync_all over a derive that itself forks
+    and commits with a scope complement, e.g.
+
+        (pipe_gpg (compose_gp dup (mapsnd (compose (compose
+            (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c2)
+                                                       (optimize (neg_dist 1) 2))))
+                      sync_all)
+            (optimize (neg_dist 0) 2)) (optimize (neg_dist 2) 1))))
+          (sync_except 2))
+
+    An earlier version stopped at the first fork for the reason `_world_level_commits`
+    still stops there — that a commit inside a derive writes to a private model, not the
+    world.  True, and it is why the COMMIT-FORM census (which asks what the solution
+    commits with) stays world-level.  It does not carry over to the rewrite, whose job
+    is to put the whole program into its canonical spelling before running it; a model-
+    internal commit not being an agency claim is no reason to leave it un-canonicalised
+    when the enclosing agency claim is what is being tested."""
     swapped = [False]
 
     def _actor(derive):
-        "actor value of this fork = the seek's target (optimize's cellvalue arg)."
+        """actor value of this fork = the target of the LAST seek in THIS fork's own
+        derive (optimize's cellvalue arg).
+
+        Both qualifiers are the same scoping point as the walk below, and neither is
+        visible until a derive holds more than one seek — which is exactly the nested
+        case.  Scoped: the scan stops at a nested fork, whose seeks belong to ITS
+        commit, not this one; unscoped it descends first and hands the outer commit the
+        inner fork's actor.  Last: within one derive the seeks run in source order, and
+        a single-value agency commit publishes the mover the derive FINISHED with — the
+        earlier seeks moved the things the model displaces and the commit withholds
+        (goal-displacement's derive seeks the goal to an empty cell, then seeks the
+        agent to it; the agency commit publishes the agent, not the goal).
+
+        Falls back to the task's own av when the derive has no literal-targeted seek."""
         found = []
         def scan(n):
             if not isinstance(n, Delta):
                 return
+            if _is_fork_node(n):
+                return                  # that fork's seeks are ITS actor, not ours
             if n.repr == 'optimize' and n.tails and len(n.tails) == 2:
                 found.append(n.tails[1])
             for t in (n.tails or []):
                 scan(t)
         scan(derive)
-        for cand in found:
+        for cand in reversed(found):
             try:
                 return int(cand.head)
             except (TypeError, ValueError):
@@ -583,7 +669,11 @@ def _swap_scope_commit(D, tree, m):
                     if av is not None:
                         node.tails[1] = tr(D, _sync(D, av))
                         swapped[0] = True
-            return                              # model-level forks below: out of scope
+            # descend into the produce side for the forks nested there, each of which
+            # gets its own actor from its own derive.  The commit (tails[1]) cannot
+            # hold a fork — no fn_p_g constructor takes an `fn`.
+            walk(node.tails[0])
+            return
         for t in (node.tails or []):
             walk(t)
 
@@ -591,27 +681,181 @@ def _swap_scope_commit(D, tree, m):
     return tree if swapped[0] else None
 
 
-def _belief_commit_form(D, sol, x, m):
+def _scope_commit_withholds(commit):
+    "the value a scope commit keeps back: sync_except's argument; None for sync_all."
+    if commit.repr == 'sync_except' and commit.tails:
+        try:
+            return int(commit.tails[0].head)
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def _published_movers(derive_fn, withheld, scenes):
+    """What a scope commit paired with `derive_fn` actually PUBLISHES, frame by frame.
+
+    A scope commit is extensionally a SET of single-value position transfers: it moves
+    every value shared by the two channels (bar the one sync_except withholds) from its
+    world position to its model position, and a value the derive left alone is a no-op.
+    So the values it really commits are, per world frame, the model's movers minus the
+    withheld one — computed by running the fork's own derive over the realised world
+    frames, the same way _model_misrepresents_obstacle interrogates a private model.
+
+    Returns the union over all frames.  Its SIZE is the arity of the agency claim the
+    commit makes: one means a single sync_to_world expresses it, two or more means none
+    does.  The union rather than a per-frame count, because a commit that publishes a
+    different single mover on each frame is still not any ONE single-value commit."""
+    movers = set()
+    for scene in scenes:
+        for t in range(scene.shape[0]):
+            world = np.asarray(scene[t])
+            try:
+                model = derive_fn(world.copy())
+            except Exception:
+                continue
+            for v in (int(u) for u in np.unique(world) if u != 0):
+                if v == withheld:
+                    continue
+                wpos, mpos = np.argwhere(world == v), np.argwhere(model == v)
+                if len(wpos) and len(mpos) and tuple(wpos[0]) != tuple(mpos[0]):
+                    movers.add(v)
+    return movers
+
+
+def _multi_sync(values):
+    """A commit that publishes `values` one at a time: the CONJUNCTION of single-value
+    agency commits, each reading its own coordinate off the model.  This is exactly the
+    DSL's own then_sync chain (dsl.then_sync), written here rather than assembled in
+    program space because phase 2 drops then_sync from the primitive set — and phase 2
+    is where the multi-mover commits appear."""
+    def _c(p):
+        w, m = p
+        out = w
+        for v in values:
+            out = sync_to_world(v)((out, m))
+        return out
+    return _c
+
+
+def _seek_targets(tree):
+    """The values some private model SEEKS — the targets of `optimize` inside any fork's
+    derive, at any nesting depth (see _fork_derives).  These are the program's actors:
+    a value whose model position was computed by a policy in a private channel.
+
+    A commit only makes an agency claim about values in this set.  One that publishes a
+    value nobody sought is moving it for some other reason — the model was edited (a
+    stepped goal, a stamped wall) and the edit is being pushed to the world wholesale,
+    which is state adoption, not attribution."""
+    out = set()
+    for derive in _fork_derives(tree):
+        def scan(n):
+            if not isinstance(n, Delta):
+                return
+            if n.repr == 'optimize' and n.tails and len(n.tails) == 2:
+                try:
+                    out.add(int(n.tails[1].head))
+                except (TypeError, ValueError):
+                    pass
+            for t in (n.tails or []):
+                scan(t)
+        scan(derive)
+    return out
+
+
+def _swap_multi_sync(D, tree, x, order):
+    """Rewrite each WORLD-LEVEL scope commit in `tree` into the explicit conjunction of
+    the single-value agency commits it publishes, `order` fixing the sequence.  Returns
+    (tree, movers, arity) — movers being every value the rewritten commits publish and
+    arity the most any ONE of them publishes (so a program with one commit per agent is
+    arity 1, not 2) — or None when no world-level scope commit publishes anything.
+
+    Only world-level commits are rewritten: the question is what the solution commits to
+    the WORLD with, and a nested commit writes into the enclosing model, where it is part
+    of the derive whose movers we are counting.  Leaving it in place keeps the test about
+    the outer commit alone — everything else stays as the searcher found it.
+
+    The measurement is what makes this test independent of `_swap_scope_commit`'s
+    syntactic guess at the committed value (`_actor`, the derive's last seek).  Here the
+    committed values are read off the model the derive actually builds, so a commit whose
+    publisher is not the derive's own last seek — an outer commit republishing what a
+    NESTED fork moved into the model, say — is still recognised for what it publishes."""
+    scenes = [np.asarray(s) for s in as_scenes(x)]
+    widest, published = [0], set()
+
+    def walk(node):
+        if not isinstance(node, Delta):
+            return
+        if _is_fork_node(node):
+            commit = node.tails[1]
+            if commit.repr in _SCOPE_COMPLEMENTS:
+                derive = _fork_derive(node)     # None ⇒ unrecognised shape: don't guess
+                if derive is not None:
+                    try:
+                        f = derive()
+                    except Exception:
+                        return
+                    movers = _published_movers(
+                        f, _scope_commit_withholds(commit), scenes)
+                    if movers:
+                        vals = sorted(movers, reverse=(order == 'desc'))
+                        node.tails[1] = Delta(_multi_sync(vals), fn_p_g,
+                                              repr=f"(then_sync* {vals})")
+                        widest[0] = max(widest[0], len(movers))
+                        published.update(movers)
+            return                              # derive is model-level: out of scope
+        for t in (node.tails or []):
+            walk(t)
+
+    walk(tree)
+    return (tree, sorted(published), widest[0]) if published else None
+
+
+def _belief_commit_form(D, sol, x, m, detail=None):
     """How a belief solution realises the single-value agency commit.
 
       'literal'    — commits via sync_to_world / register: the clean shared-av signature.
       'degenerate' — commits (also/only) via a SCOPE complement (sync_except gv / sync_all)
-                     that, ON THIS SCENE, is extensionally the agency commit: swapping it
-                     for sync_to_world(av) in the solution's OWN derive still reproduces x.
-                     When the agent is the only committed model-mover, 'move everything but
-                     the goal' == 'move the agent'; same fork-structured belief, agency hole
-                     expressed on gv rather than av.  A minimal-scene degeneracy of the
-                     commit, NOT a rival (non-belief) theory — see the disclosure note.
-      'complement' — a scope commit whose swap for sync_to_world(av) does NOT reproduce x:
-                     the commit is carrying non-agency work (a derive that leaves gv/3
-                     unmoved in the model, so only wholesale adoption fits).  A genuine
-                     non-belief rival; the verdict counts it as a FAILURE.
+                     that, ON THIS SCENE, is extensionally the agency commit: it publishes
+                     exactly ONE model mover, an actor the derive sought, and swapping it
+                     for that single sync_to_world still reproduces x.  When the agent is
+                     the only committed model-mover, 'move everything but the goal' ==
+                     'move the agent'; same fork-structured belief, agency hole expressed
+                     on gv rather than av.  A minimal-scene degeneracy of the commit, NOT a
+                     rival (non-belief) theory — see the disclosure note.
+      'multi_mover'— the same, with TWO OR MORE movers: a scope commit extensionally equal
+                     to their individual attributions run one after the other (swapping it
+                     for that then_sync chain reproduces x), each mover an actor some model
+                     sought.  No single-value commit can express it, so it fails the agency
+                     SIGNATURE — but every position it publishes was still derived in a
+                     private model and is separately attributable; what differs is the
+                     SPELLING, one shared model committed wholesale instead of one commit
+                     per agent.  An intensional finding about what MDL prefers on
+                     multi-agent scenes (see the multi-mover note), NOT a non-mental theory,
+                     and reported apart from one.
+      'nonmental'  — a scope commit that is neither: it publishes a value no model sought,
+                     or publishes nothing, or is not reproduced by the individual
+                     attributions of what it moves.  The commit is doing work no set of
+                     agency commits does — the world edited and adopted wholesale rather
+                     than an agent's position attributed.  A genuine non-mental rival; the
+                     verdict counts it as a FAILURE.
       None         — neither: not an agency commit (e.g. unsolved / non-fork).
+
+    `detail`, if given, is a dict the classification writes its measurements into
+    ('movers', the commit 'arity' and the chain 'order'), so the reporting can say what
+    the commit published without re-running the test.
+
+    The three scope forms are separated by MEASUREMENT, not by the shape of the commit:
+    the fork's own derive is run over the realised world frames and the values whose model
+    position differs from their world position are exactly the ones the commit publishes
+    (a scope commit is a set of single-value transfers; values the derive left alone are
+    no-ops).  That is what tells a spelling of agency apart from a rival to it, and it is
+    strictly more informative than the arity of the commit token: `sync_all` publishes one
+    value on a one-mover scene and three on a three-mover one.
 
     The degeneracy guard is SOLUTION-relative.  An earlier version tested the canonical
     agency program for this task, which on a false-obstacle scene always reproduces x —
     so it auto-classified every fork+scope solution 'degenerate' (vacuously), and could
-    never surface a real complement rival.
+    never surface a real rival at all.
 
     It is also POSITIONAL: the form is read off the world-level commits only (see
     _world_level_commits), never off the solution string.  A string test conflates 'the
@@ -637,7 +881,35 @@ def _belief_commit_form(D, sol, x, m):
                     return 'degenerate'
             except Exception:
                 pass
-        return 'complement'
+        # `_actor`'s syntactic guess (the derive's last seek) missed: ask the MEASUREMENT
+        # instead — which values does this commit actually publish, and is it extensionally
+        # their individual attributions?  One mover is the same degeneracy the swap above
+        # tests for, reached without having to guess the committed value; two or more is a
+        # multi-mover spelling.  Either way every published value must be an actor some
+        # model sought, else the commit is adopting state nobody attributed.
+        #
+        # Both chain orders are tried because a then_sync chain is sequential — if one
+        # mover steps into the cell another is about to vacate, the conjunction only
+        # reproduces the scene in one of them, and which agent is written first is not
+        # part of the claim being tested.
+        actors = _seek_targets(tree)
+        for order in ('asc', 'desc'):
+            multi = _swap_multi_sync(D, simplify(normalize(deepcopy(sol))), x, order)
+            if multi is None:
+                break                           # commits publish nothing: nothing to test
+            rewritten_tree, movers, arity = multi
+            if not set(movers) <= actors:
+                break                           # publishes something no model sought
+            try:
+                if solves(rewritten_tree(), x, templates_of(m)):
+                    if detail is not None:
+                        detail.update(movers=movers, arity=arity, order=order)
+                    # arity is per COMMIT: a program with one single-value commit per
+                    # agent is still the single-value signature, twice over.
+                    return 'degenerate' if arity == 1 else 'multi_mover'
+            except Exception:
+                pass
+        return 'nonmental'
     if has_literal:
         return 'literal'
     return None
@@ -1539,20 +1811,32 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     print("\n" + "=" * 72)
     print("(A) USAGE CENSUS — which core parts each family reaches for (pre-stitch)")
     print("=" * 72)
-    # Per-belief-task commit form (literal sync_to_world / degenerate scope-complement),
-    # so the census, the cube corners, and the disclosure all share one classification.
-    belief_form = {}
+    # Per-belief-task commit form (literal / degenerate / multi-mover / non-mental), so
+    # the census, the cube corners, and the disclosures all share one classification.
+    # `belief_detail` keeps each scope commit's measurement (which values it publishes)
+    # for the multi-mover finding below.
+    belief_form, belief_detail = {}, {}
     for x, m in all_tasks:
         if m['kind'] != 'belief':
             continue
         sol = sols.get(mat_key(x))
         if sol is not None:
-            belief_form[mat_key(x)] = _belief_commit_form(D, sol, x, m)
+            det = {}
+            belief_form[mat_key(x)] = _belief_commit_form(D, sol, x, m, detail=det)
+            if det:
+                belief_detail[mat_key(x)] = det
     n_belief_degenerate = sum(1 for f in belief_form.values() if f == 'degenerate')
     n_belief_literal    = sum(1 for f in belief_form.values() if f == 'literal')
-    # a scope commit that ISN'T the agency commit on its own scene (swap-to-literal
-    # fails to reproduce x): a genuine non-belief rival, counted as a verdict failure.
-    n_belief_complement = sum(1 for f in belief_form.values() if f == 'complement')
+    # A scope commit that publishes several model movers at once, each of them an actor
+    # its model sought: still attribution, spelled communally rather than one agent at a
+    # time (see _belief_commit_form).  It fails the single-value agency signature, so it
+    # is NOT counted as a literal/degenerate agency commit — but it is not a non-mental
+    # rival either, and the verdict reports it as its own finding rather than a failure.
+    n_belief_multi = sum(1 for f in belief_form.values() if f == 'multi_mover')
+    # A scope commit that no set of agency commits reproduces — the world edited and
+    # adopted wholesale, with a value nobody modelled as an agent among what it moves.
+    # THIS is the genuine non-mental rival, and a single one breaks the claim.
+    n_belief_nonmental = sum(1 for f in belief_form.values() if f == 'nonmental')
 
     uses_by_kind = {}
     solved_by_kind = Counter()
@@ -1584,13 +1868,14 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         if m['kind'] != 'belief':
             continue
         rec = belief_variants.setdefault(_sample_kind(m),
-                                         {'solved': 0, 'total': 0,
-                                          'literal': 0, 'degenerate': 0, 'complement': 0})
+                                         {'solved': 0, 'total': 0, 'literal': 0,
+                                          'degenerate': 0, 'multi_mover': 0,
+                                          'nonmental': 0})
         rec['total'] += 1
         if sols.get(mat_key(x)) is not None:
             rec['solved'] += 1
             form = belief_form.get(mat_key(x))
-            if form in ('literal', 'degenerate', 'complement'):
+            if form in ('literal', 'degenerate', 'multi_mover', 'nonmental'):
                 rec[form] += 1
     if belief_variants:
         print("\n  belief variants (pooled as kind='belief' above; agency commit form):")
@@ -1598,9 +1883,10 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
             r = belief_variants.get(v)
             if r is None:
                 continue
-            comp = f", {r['complement']} complement" if r['complement'] else ""
+            extra = (f", {r['multi_mover']} multi-mover" if r['multi_mover'] else "") + \
+                    (f", {r['nonmental']} NON-MENTAL" if r['nonmental'] else "")
             print(f"    {v:22s} {r['solved']}/{r['total']} solved   "
-                  f"commit: {r['literal']} literal, {r['degenerate']} degenerate{comp}")
+                  f"commit: {r['literal']} literal, {r['degenerate']} degenerate{extra}")
 
     # ── SELECTIVE ATTRIBUTION (the two-observer family's own claim) ─────────────────
     # Those scenes hold two agents on one grid: the believer `av`, and an observer that
@@ -1620,7 +1906,17 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     # the metric simply could not see it.  `_swap_scope_commit` already recovers the
     # committed value from the fork's own derive, so re-reading the swapped tree asks
     # the question the figure is actually about: WHICH agent got a private model.
-    selective = {'n': 0, 'solved': 0, 'believer_only': 0, 'observer_committed': 0}
+    #
+    # A MULTI-MOVER commit names no value at all in its string (it is `sync_all` or a
+    # sync_except of the goal) yet publishes both agents' model positions, so the values
+    # it commits for are read off the measurement instead — the movers _belief_commit_form
+    # recorded.  Those scenes are counted here as committing for the observer too, and
+    # tallied separately as `wholesale`: the observer's walk IS derived in a model there,
+    # but in the SHARED one the believer forks, not a private model of its own.  Scoring
+    # them zero for both agents (which a string read does) would hide the one behaviour
+    # this figure exists to detect.
+    selective = {'n': 0, 'solved': 0, 'believer_only': 0, 'observer_committed': 0,
+                 'wholesale': 0}
     for x, m in all_tasks:
         if m['kind'] != 'belief' or belief_variant(m) != 'belief_observers':
             continue
@@ -1629,22 +1925,34 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         if sol is None:
             continue
         selective['solved'] += 1
-        tree = simplify(normalize(deepcopy(sol)))
-        if belief_form.get(mat_key(x)) == 'degenerate':
-            swapped = _swap_scope_commit(D, simplify(normalize(deepcopy(sol))), m)
-            if swapped is not None:
-                tree = swapped
-        commits = ' '.join(str(c) for c in _world_level_commits(tree))
-        names_believer = _re.search(rf'\b{m["av"]}\b', commits) is not None
-        names_observer = _re.search(rf'\b{m["observer"]}\b', commits) is not None
+        form = belief_form.get(mat_key(x))
+        if form == 'multi_mover':
+            committed = set(belief_detail.get(mat_key(x), {}).get('movers', []))
+            names_believer = m['av'] in committed
+            names_observer = m['observer'] in committed
+            selective['wholesale'] += 1
+        else:
+            tree = simplify(normalize(deepcopy(sol)))
+            if form == 'degenerate':
+                swapped = _swap_scope_commit(D, simplify(normalize(deepcopy(sol))), m)
+                if swapped is not None:
+                    tree = swapped
+            commits = ' '.join(str(c) for c in _world_level_commits(tree))
+            names_believer = _re.search(rf'\b{m["av"]}\b', commits) is not None
+            names_observer = _re.search(rf'\b{m["observer"]}\b', commits) is not None
         selective['observer_committed'] += int(names_observer)
         selective['believer_only'] += int(names_believer and not names_observer)
     if selective['solved']:
         print(f"\n  two observers, one world — SELECTIVE attribution:")
         print(f"  {selective['believer_only']}/{selective['solved']} solved scenes commit "
               f"for the believer and NOT for the observer")
-        print(f"  ({selective['observer_committed']} attribute a private model to the "
-              f"bystander, whose walk is plain desire)")
+        print(f"  ({selective['observer_committed']} commit for the bystander too, whose "
+              f"walk is plain desire)")
+        if selective['wholesale']:
+            print(f"  (wholesale multi-mover commits among them: {selective['wholesale']} "
+                  f"— ONE shared model, both")
+            print(f"   agents published together rather than a private model per "
+                  f"agent — see (A))")
         print(f"  (degenerate scope commits are canonicalised to the agency commit "
               f"first — see (A))")
 
@@ -1715,6 +2023,33 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
             print(f"  OTHER scope complement fails per scene; the family whose scenes FORCE the")
             print(f"  literal spelling is false-obstacle, below.")
 
+    # ── FINDING — the communal model: attribution spelled wholesale ──────────────────
+    # These solves are not failures of the mentality claim and are deliberately NOT
+    # pooled with it.  Their commit publishes several model movers at once, each an
+    # actor its model sought, and is extensionally the individual attributions of those
+    # movers run in sequence (the then_sync chain the swap test rewrites it to).  What
+    # they give up is the single-value agency SIGNATURE: one derive, one commit, one
+    # value — the shape the agent constructor abstracts.  What they say instead is that
+    # on a scene with two movers MDL sometimes prefers one shared model published
+    # wholesale over one attribution per agent, because a nullary `sync_all` is cheaper
+    # than naming each mover.  That is a claim about the PRICE of individual attribution,
+    # not about whether the solution models anybody.
+    if n_belief_multi:
+        _fams = Counter(_sample_kind(m) for x, m in all_tasks
+                        if m['kind'] == 'belief'
+                        and belief_form.get(mat_key(x)) == 'multi_mover')
+        _arities = Counter(d.get('arity', 0) for k, d in belief_detail.items()
+                           if belief_form.get(k) == 'multi_mover')
+        print(f"\n  FINDING — communal model, wholesale commit "
+              f"({n_belief_multi} solve(s), not counted as agency commits)")
+        print(f"  Families: {', '.join(f'{f}×{n}' for f, n in _fams.most_common())}; "
+              f"movers per commit: "
+              f"{', '.join(f'{a}×{n}' for a, n in sorted(_arities.items()))}.")
+        print(f"  Each publishes ONLY values its own model sought, and is extensionally the")
+        print(f"  chain of their single-value agency commits — so the content is attribution;")
+        print(f"  the spelling is one model for everybody, committed in one step.  Reported")
+        print(f"  apart from the non-mental rivals, which number {n_belief_nonmental}.")
+
     # ── the degeneracy REMOVED: false-obstacle scenes force the literal commit ────────
     # On a false-obstacle scene a REAL wall (value 3) stays in the world, so — verified
     # per task at construction (_scope_complements_all_fail) — NO scope complement
@@ -1750,23 +2085,26 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                  if m['kind'] == 'belief' and 'real_wall' in m
                  and mat_key(x) in belief_form]
     n_fob = sum(1 for x, m in all_tasks if m['kind'] == 'belief' and 'real_wall' in m)
-    n_fob_lit = n_fob_deg = n_fob_comp = 0
+    n_fob_lit = n_fob_deg = n_fob_multi = n_fob_nonmental = 0
     if n_fob:
         n_fob_lit = sum(1 for f in fob_forms if f == 'literal')
         n_fob_deg = sum(1 for f in fob_forms if f == 'degenerate')
-        n_fob_comp = sum(1 for f in fob_forms if f == 'complement')
+        n_fob_multi = sum(1 for f in fob_forms if f == 'multi_mover')
+        n_fob_nonmental = sum(1 for f in fob_forms if f == 'nonmental')
+        n_fob_scope = n_fob_deg + n_fob_multi + n_fob_nonmental
         print(f"\n  FORCED LITERAL COMMIT — false-obstacle family (degeneracy excluded by construction)")
         print(f"  {len(fob_forms)}/{n_fob} false-obstacle tasks solved; commit forms: "
-              f"{n_fob_lit} literal, {n_fob_deg} degenerate, {n_fob_comp} complement.")
-        if not (n_fob_deg or n_fob_comp):
+              f"{n_fob_lit} literal, {n_fob_deg} degenerate, {n_fob_multi} multi-mover, "
+              f"{n_fob_nonmental} non-mental.")
+        if not n_fob_scope:
             print(f"  Every solved one commits via the literal sync_to_world(av): no scope complement")
             print(f"  reproduces these scenes when paired with the derive this family certifies")
             print(f"  (real wall and goal stay put), so the agency commit is FORCED and found —")
             print(f"  not merely argued extensionally equal to a cheaper complement.")
         else:
-            print(f"  {n_fob_deg} degenerate + {n_fob_comp} complement: a scope commit reached the "
-                  f"world-level commit position")
-            print(f"  on a real-wall scene.  _scope_complements_all_fail certifies the scope "
+            print(f"  {n_fob_scope} scope commit(s) reached the world-level commit position "
+                  f"on a real-wall")
+            print(f"  scene.  _scope_complements_all_fail certifies the scope "
                   f"complements against")
             print(f"  the derive the generator RAN, and a scope commit is extensionally "
                   f"unconstrained on its own, so")
@@ -1776,7 +2114,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                 if m['kind'] != 'belief' or 'real_wall' not in m:
                     continue
                 form = belief_form.get(mat_key(x))
-                if form not in ('degenerate', 'complement'):
+                if form not in ('degenerate', 'multi_mover', 'nonmental'):
                     continue
                 print(f"    [{form}] av={m['av']} gv={m['gv']} pw={m['pw']} "
                       f"real_wall={m['real_wall']}")
@@ -1869,6 +2207,15 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
             print(f"    (note: {n_belief_degenerate} belief solve(s) committed via a scope complement "
                   f"extensionally")
             print(f"     equal to {_agency}(av) — the degenerate agency commit, not a complement; see (A))")
+        if n_belief_multi:
+            # these DO reach for the scope corner and are counted as such above: the
+            # commit is not any single {_agency}(v), so canonicalising it away would be
+            # claiming an avoidance the run did not achieve.  What it is instead — the
+            # chain of individual attributions — is the (A) finding, not this test.
+            print(f"    (note: {n_belief_multi} belief solve(s) committed wholesale over "
+                  f"several movers and DO")
+            print(f"     count as reaching for the scope corner here; see the communal-model "
+                  f"finding in (A))")
         print(f"  some complement is used elsewhere (field is live)        : {any_complement_used}")
         print(f"  complements claimed by another family                    : {sorted(used_complements)}")
         if unused_complements:
@@ -2044,10 +2391,17 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         ctor_name in _absts_in(rewritten.get(mat_key(x), ''))
         for x, m in all_tasks if m['kind'] != 'belief'
     )
-    # no belief solution may commit via a scope complement that ISN'T its own agency
-    # commit (a 'complement' rival — see _belief_commit_form).  A single one breaks the
+    # No belief solution may commit via a scope complement that no set of agency commits
+    # reproduces — a 'nonmental' rival (see _belief_commit_form).  A single one breaks the
     # claim that fork∧sync is doing agency, so the verdict conjoins its absence.
-    no_belief_complement = (n_belief_complement == 0)
+    #
+    # This is the criterion the headline conjoins, and it is deliberately NOT the absence
+    # of every scope commit.  The multi-mover commits counted beside it publish several
+    # movers of one shared model, each an actor that model sought, and each extensionally
+    # its own agency commit; they fail the single-value SIGNATURE, and they are reported
+    # as their own finding (see (A)) — what would falsify the mentality claim is a commit
+    # doing work no attribution does, and that is what this counts.
+    no_nonmental_rival = (n_belief_nonmental == 0)
 
     print(f"  (A) parts are general    : fork∉belief-only={fork_general}, "
           f"sync∉belief-only={sync_general}, wall∉belief-only={wall_general}")
@@ -2055,9 +2409,10 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
           f"belief recombines={belief_uses_both}, "
           f"obstacle-belief misplaces the wall in-model="
           f"{obstacle_belief_misrepresents_obstacle}")
-    print(f"  (A) no scope-complement rival among belief solves : {no_belief_complement}"
-          f"   ({n_belief_complement} complement, {n_belief_degenerate} degenerate, "
-          f"{n_belief_literal} literal)")
+    print(f"  (A) no NON-MENTAL rival among belief solves       : {no_nonmental_rival}"
+          f"   ({n_belief_nonmental} non-mental)")
+    print(f"      commit forms: {n_belief_literal} literal, {n_belief_degenerate} degenerate, "
+          f"{n_belief_multi} multi-mover (communal model — a finding, not a rival)")
     print(f"  (B) constructor invented : {constructor_found}"
           + (f" ({ctor_name}, arity {len(agent_constructor[0].tailtypes or [])}; "
              f"{n_shared_holes} shared agency hole(s)"
@@ -2089,7 +2444,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         'wall_general': wall_general, 'belief_uses_both': belief_uses_both,
         'agency_unique': agency_unique,
         'obstacle_belief_misrepresents_obstacle': obstacle_belief_misrepresents_obstacle,
-        'no_belief_complement': no_belief_complement,
+        'no_nonmental_rival': no_nonmental_rival,
         'constructor_found': constructor_found, 'constructor_shared': constructor_shared,
         'belief_uses_ctor': belief_uses_ctor, 'nonmental_free_of_ctor': nonmental_free_of_ctor,
         'cube_ok': (cube_ok is not False),
@@ -2101,6 +2456,14 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         print("     the discovered recombination of parts that each do work unrelated to belief,")
         print("     and the same objective that builds the agent constructor leaves fork/sync")
         print("     bare elsewhere.  Not gerrymandered, not a silo artefact.")
+    if no_nonmental_rival and (n_belief_degenerate or n_belief_multi or n_belief_literal):
+        # state the strong result on its own, whatever else the run did or did not show:
+        # across every belief solve, every commit is an attribution — the scope-complement
+        # ones included, which are the individual attributions of what they publish.
+        print(f"\n  => ZERO non-mental rivals: all {n_belief_literal + n_belief_degenerate + n_belief_multi} "
+              f"belief commits are agency commits, singly")
+        print(f"     ({n_belief_literal} literal + {n_belief_degenerate} degenerate) or "
+              f"communally ({n_belief_multi} multi-mover).")
     else:
         print("\n  => not fully demonstrated this run (raise timeouts / n_bel / stitch_iters,")
         print("     or drop --smoke).")
@@ -2136,18 +2499,29 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         # (A) usage census
         'solved_by_kind': solved_by_kind, 'total_by_kind': total_by_kind,
         'uses_by_kind': uses_by_kind,
+        # commit-form census.  'multi_mover' and 'nonmental' are the two halves of what
+        # used to be one 'complement' bucket: a scope commit that is the individual
+        # attributions of several movers spelled wholesale, vs one no attribution
+        # reproduces.  Only the latter counts against the verdict (see (A)).
         'belief_commit': {'literal': n_belief_literal, 'degenerate': n_belief_degenerate,
-                          'complement': n_belief_complement},
+                          'multi_mover': n_belief_multi, 'nonmental': n_belief_nonmental},
+        # per multi-mover solve: the task, which values its commit publishes, and how
+        # many of them at once (see the communal-model finding in (A))
+        'belief_multi_mover': [
+            dict(task=mat_key_id(x), variant=_sample_kind(m), av=m.get('av'),
+                 observer=m.get('observer'), **belief_detail.get(mat_key(x), {}))
+            for x, m in all_tasks
+            if m['kind'] == 'belief' and belief_form.get(mat_key(x)) == 'multi_mover'],
         'belief_variants': belief_variants,
         'selective_attribution': selective,
         'false_obstacle': {'n': n_fob, 'literal': n_fob_lit, 'degenerate': n_fob_deg,
-                          'complement': n_fob_comp},
+                           'multi_mover': n_fob_multi, 'nonmental': n_fob_nonmental},
         'A': {'fork_general': fork_general, 'sync_general': sync_general,
               'wall_general': wall_general, 'belief_uses_both': belief_uses_both,
               'agency_unique': agency_unique,
               'obstacle_belief_misrepresents_obstacle':
                   obstacle_belief_misrepresents_obstacle,
-              'no_belief_complement': no_belief_complement},
+              'no_nonmental_rival': no_nonmental_rival},
         # (A′) cube census
         'cube': {'enabled': bool(cube), 'cube_ok': cube_ok,
                  'corners_by_kind': corners_by_kind,

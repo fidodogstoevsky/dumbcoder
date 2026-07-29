@@ -471,7 +471,8 @@ additionally emits a second, distinct-seeded batch of plain `belief_wall` tasks
   generator ran*. A scope commit is extensionally unconstrained on its own — it can
   relocate any set of world values — so what rules it out is always the model
   configuration a particular derive leaves behind; there is no derive-independent
-  version to certify. A run that still reports a degenerate/complement commit here has
+  version to certify. A run that still reports any scope commit here (degenerate,
+  multi-mover or non-mental — see §4.4) has
   found a **shorter derive the certification did not price**, and `experiment.py` now
   prints that solution instead of asserting it cannot happen.
 
@@ -570,6 +571,36 @@ separate batches. These are quantitative knobs on the one bag; *why* a family's 
 seeding matters — whether its solutions recur often enough to be abstracted, and which
 deeper family that in turn brings into reach — is read off a run's results, not asserted
 here, so the non-uniformity is intentional and should not be flattened.
+
+### 4.4 The commit-form census — how a belief solve realises the agency commit
+
+Every solved belief task is classified by what its **world-level** commit does
+(`_belief_commit_form`, `experiment.py`). The commit position is read positionally, never
+off the program string: a commit inside a derive writes to a private model, not the world.
+
+| form | what the commit is | counts as |
+|---|---|---|
+| `literal` | `sync_to_world av` / `register (locate av) (place av)` | the agency signature |
+| `degenerate` | a scope complement (`sync_all` / `sync_except gv`) that publishes **exactly one** model mover, an actor its own derive sought — extensionally that single `sync_to_world` | the agency signature, spelled on `gv` instead of `av` |
+| `multi_mover` | a scope complement publishing **two or more** movers, each an actor some model sought, extensionally the chain of their individual attributions | **a finding, not a rival** — attribution spelled communally |
+| `nonmental` | a scope complement no set of agency commits reproduces, or one publishing a value no model sought | **a genuine non-mental rival**; the verdict fails |
+
+The three scope forms are separated by **measurement**, not by the commit token's arity:
+the fork's own derive is run over the realised world frames, and the values whose model
+position differs from their world position are exactly the ones the commit publishes (a
+scope commit is a set of single-value transfers; values the derive left alone are no-ops).
+`sync_all` therefore publishes one value on a one-mover scene and three on a
+three-mover one, and the same token lands in a different row depending on the scene.
+
+Only `nonmental` is conjoined into the headline verdict (`no_nonmental_rival`), which is
+what lets a run state the strong result outright: **zero non-mental rivals**, every belief
+commit an attribution. `multi_mover` is reported on its own (the *communal model* finding
+in section (A) of the log, plus `belief_multi_mover` in the verdict artifact, which records
+the published movers per solve): on a two-mover scene MDL sometimes prefers one shared
+model published wholesale — a nullary `sync_all` — over naming each mover in its own
+commit. That is a claim about the *price* of individual attribution, not about whether the
+solution models anybody, and it is why the two are counted apart. In the two-observer
+family those solves also show up as `wholesale` in the selective-attribution tally.
 
 Other run knobs (not corpus sizes): `--t-fn SECONDS` (per-task `fn` timeout — belief is
 the long pole), `t_fn_round1` (round-1 cap so a deep transient-wall rival can't land

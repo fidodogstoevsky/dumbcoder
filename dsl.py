@@ -311,6 +311,26 @@ def pipe_gpg(produce, commit):
         return commit(produce(g))
     return _f
 
+def compose_pg(endo, commit):
+    """fn_p_p, fn_p_g -> fn_p_g: (pair -> pair) then (pair -> grid).
+
+    The third and last composition of the pair category, and the only one that acts
+    on a pair the program did not itself produce: a template-rooted program IS an
+    fn_p_g, so without this there is no way to transform a *given* (working,
+    template) pair before committing it — the pair-map axis would be reachable only
+    behind a `dup`, where both channels start equal and half of it is inert.
+
+    It also subsumes `via_swap`, which was exactly this composition with `swap`
+    frozen into it: via_swap(c) ≡ compose_pg(swap, c).  Carrying both would put two
+    spellings of one corner in the DSL, so the decomposed prims (prims.py) take this
+    one and drop via_swap — the direction complement then decomposes all the way to
+    a general composer applied to the symmetry witness, the same move that replaced
+    atomic `sync_to_model` with `via_swap` in the first place.
+    """
+    def _c(p):
+        return commit(endo(p))
+    return _c
+
 def fork_decomposed(derive, commit):
     "the decomposition identity (for ground-truth checks): == fork(derive, commit)"
     return pipe_gpg(compose_gp(dup, mapsnd(derive)), commit)
@@ -497,6 +517,13 @@ def via_swap(c):
     Makes channel direction a search *choice* rather than a hardwired privilege:
     via_swap(sync_to_world(v)) == sync_to_model(v).  Lets the searcher express
     belief through the 'wrong' channel, so picking the direct wiring is informative.
+
+    SUPERSEDED, and no longer in any primitive set: it is `compose_pg(swap, c)` with
+    the swap frozen into the node, so carrying both put two spellings of one corner in
+    the DSL — and the frozen one always won by a node, which left `swap` with no task
+    it could be necessary for.  Kept here because the identity is what the
+    decomposition claim rests on, and because dropping it is a change a reader of the
+    older artifacts needs to find.
     """
     def _c(p):
         return c((p[1], p[0]))

@@ -99,6 +99,9 @@ from tasks import (
     make_relocation_tasks, make_underlay_tasks,
     make_perception_tasks, make_multi_registration_tasks,
     make_registration_except_tasks, make_inpainting_tasks, make_readout_tasks,
+    # one task per pair-plumbing complement (decomposed runs; `wipe` in both)
+    make_wipe_tasks, make_layer_composite_tasks,
+    make_drifting_registration_tasks, make_map_update_tasks,
 )
 from prims import make_core_prims, make_symmetric_prims
 
@@ -107,14 +110,17 @@ from prims import make_core_prims, make_symmetric_prims
 # primitives exist.  Reporting loops iterate these so new families show up
 # everywhere without per-call edits.
 _FN_KINDS   = ['physics', 'desire', 'overlay', 'comet', 'belief',
-               'flee', 'deletion', 'denoise', 'obstacle', 'relocate', 'underlay']
+               'flee', 'deletion', 'denoise', 'obstacle', 'relocate', 'underlay',
+               'wipe']
 _PAIR_KINDS = ['registration', 'perception', 'multi_reg', 'reg_except',
-               'inpaint', 'readout']
+               'inpaint', 'readout', 'composite', 'drift_reg', 'map_update']
 _CUBE_KINDS = ['flee', 'deletion', 'denoise', 'obstacle', 'relocate', 'underlay',
-               'perception', 'multi_reg', 'reg_except', 'inpaint', 'readout']
+               'perception', 'multi_reg', 'reg_except', 'inpaint', 'readout',
+               'wipe', 'composite', 'drift_reg', 'map_update']
 _ALL_KINDS  = ['physics', 'desire', 'overlay', 'comet', 'registration', 'belief',
                'flee', 'deletion', 'denoise', 'obstacle', 'relocate', 'underlay',
-               'perception', 'multi_reg', 'reg_except', 'inpaint', 'readout']
+               'perception', 'multi_reg', 'reg_except', 'inpaint', 'readout',
+               'wipe', 'composite', 'drift_reg', 'map_update']
 
 # Per-family generator seeds.  Kept in one table (rather than as literals at the
 # call sites) so the provenance header records the seeds the run ACTUALLY used —
@@ -131,6 +137,8 @@ TASK_SEEDS = {
     'readout': 17, 'obstacle': 18, 'underlay': 19,
     'belief_extra': 22, 'belief_goal': 23, 'belief_observers': 27,
     'belief_fob': 25, 'relocate': 26,
+    # the pair-plumbing complements (tasks.py: pair_blank / bimap / mapfst / swap)
+    'wipe': 28, 'composite': 29, 'drift_reg': 30, 'map_update': 31,
 }
 # 24 was `belief_dual`, deleted in favour of the two-observer family (tasks.py);
 # left unassigned so a run artifact's seed table stays unambiguous.
@@ -183,11 +191,13 @@ def _belief_ctor_in_D(D):
 # utility / grid-edit / bifunctor / pairing).  The cube test asks whether belief
 # still avoids ALL of these while the other families happily reach for them.
 _CORNERS = ('sync_to_world', 'sync_to_model', 'sync_all', 'sync_except',
-            'overlay', 'underlay', 'fst_gg', 'snd_gg', 'via_swap',
+            'overlay', 'underlay', 'fst_gg', 'snd_gg',
             'neg_dist', 'distance', 'wall_at', 'clear_at', 'erase',
-            # bifunctor axis (decomposed runs): belief's derive runs on the model
-            # channel (mapsnd); the complements act on the world channel or swap
-            # the channels (mapfst / swap / bimap).
+            # bifunctor / symmetry axes (decomposed runs): belief's derive runs on the
+            # model channel (mapsnd); the complements act on the world channel or
+            # exchange the channels (mapfst / bimap / swap).  `swap` also carries the
+            # DIRECTION axis there — sync_to_model decomposes to (compose_pg swap
+            # (register …)), so the atomic `via_swap` node it used to need is gone.
             'mapsnd', 'mapfst', 'swap', 'bimap',
             # pairing axis (decomposed runs): belief forks via the diagonal (dup);
             # the complement opens a fresh scratch channel instead (pair_blank).
@@ -232,10 +242,11 @@ def _sync(D, v):
 
 def _sync_model(D, v):
     """Ground-truth string for sync_to_model(v): atomic if available, else its
-    decomposition `(via_swap (register (locate v) (place v)))` (phase 2)."""
+    decomposition `(compose_pg swap (register (locate v) (place v)))` (phase 2) —
+    the agency commit run on the exchanged pair."""
     if any(d.repr == 'sync_to_model' for d in D.ds):
         return f"(sync_to_model {v})"
-    return f"(via_swap (register (locate {v}) (place {v})))"
+    return f"(compose_pg swap (register (locate {v}) (place {v})))"
 
 
 def _belief_gt_str(D, m):
@@ -288,7 +299,8 @@ def _belief_gt_str(D, m):
 # template-rooted (fn_p_g) families render through unfold_with_template; every other
 # family threads a single grid through plain unfold.
 _TEMPLATE_KINDS = frozenset({'registration', 'perception', 'multi_reg', 'reg_except',
-                             'inpaint', 'readout'})
+                             'inpaint', 'readout', 'composite', 'drift_reg',
+                             'map_update'})
 
 
 def gt_program_str(D, m):
@@ -338,6 +350,25 @@ def gt_program_str(D, m):
         return "underlay"
     if k == 'readout':
         return "snd_gg"
+    # ── pair-plumbing complements (see tasks.py) ─────────────────────────────
+    if k == 'wipe':
+        # the pairing corner where it exists; the erase CHAIN over the task's own
+        # value set where it does not — the one family with a spelling in both
+        # libraries, so the atomic control pays 8 nodes for the combinator run's 3.
+        if any(d.repr == 'pair_blank' for d in D.ds):
+            return "(pipe_gpg pair_blank snd_gg)"
+        prog = f"(erase {m['vals'][0]})"
+        for v in m['vals'][1:]:
+            prog = f"(compose {prog} (erase {v}))"      # left fold, as tasks._seq
+        return prog
+    if k == 'composite':
+        return (f"(compose_pg (bimap (step {m['drift']} {m['dir']}) "
+                f"(erase {m['masked']})) overlay)")
+    if k == 'drift_reg':
+        return (f"(compose_pg (mapfst (step {m['drift']} {m['dir']})) "
+                f"{_sync(D, m['val'])})")
+    if k == 'map_update':
+        return "(compose_pg swap sync_all)"
     # belief (wall / witness / goal-displacement / two-observer) — all agency-committed
     return _belief_gt_str(D, m)
 
@@ -418,6 +449,23 @@ def _is_fork_node(node):
             and node.tails is not None and len(node.tails) == 2)
 
 
+def _commit_core(commit):
+    """The atomic fn_p_g node a commit ultimately applies, with any `compose_pg`
+    pair-maps in front of it stripped off.
+
+    `compose_pg` (prims.py, decomposed runs) is the third composition of the pair
+    category — (pair -> pair) then (pair -> grid) — so a commit is no longer always
+    an atomic corner: `(compose_pg swap sync_all)` commits with sync_all, on the
+    exchanged pair.  Every test that asks WHICH commit a solution used reads the core;
+    every rewrite that asks whether the commit is extensionally the agency commit
+    replaces the whole subtree, wrapper included, because the wrapper is part of what
+    the commit does."""
+    while (isinstance(commit, Delta) and commit.repr == 'compose_pg'
+           and commit.tails and len(commit.tails) == 2):
+        commit = commit.tails[1]
+    return commit
+
+
 def _fork_derives(tree):
     """EVERY fork's derive in `tree`, outermost first — including the forks nested
     inside another fork's derive (the agent modelling a model).
@@ -452,7 +500,11 @@ def _fork_derives(tree):
             d = _fork_derive(node)
             if d is not None:
                 out.append(d)
-            walk(node.tails[0])     # nested forks live on the produce side
+            walk(node.tails[0])     # nested forks live on the produce side…
+            walk(node.tails[1])     # …and, since compose_pg, inside a commit's
+                                    # pair-map too: an `fn` can now sit under an
+                                    # fn_p_g, so the old "no fork can hide in a
+                                    # commit" argument no longer covers this walk.
             return
         for t in (node.tails or []):
             walk(t)
@@ -476,17 +528,21 @@ def _world_level_commits(tree):
     multi_reg / reg_except) ARE a bare commit: the program is itself fn_p_g and the
     model channel comes from the task template, so the root is the commit.
 
-    No fn_p_g constructor takes an `fn`, so no fork can hide inside a commit; it is
-    therefore sound to stop at each fork without descending into either tail."""
+    Each commit is returned as its CORE (see _commit_core): a `compose_pg` wrapper
+    puts a pair-map in front of the commit, and what the solution commits WITH is the
+    corner underneath it — the map itself is a structural corner, judged over the
+    whole program like the other off-axis ones.  A fork inside such a map is not a
+    world-level commit either: it computes a channel the outer commit then collapses,
+    which is the same reason a derive's own commit is out of scope here."""
     if isinstance(tree, Delta) and tree.type == fn_p_g:
-        return [tree]
+        return [_commit_core(tree)]
     out = []
 
     def walk(node):
         if not isinstance(node, Delta):
             return
         if _is_fork_node(node):
-            out.append(node.tails[1])
+            out.append(_commit_core(node.tails[1]))
             return                      # derive (tails[0]) is model-level: out of scope
         for t in (node.tails or []):
             walk(t)
@@ -564,7 +620,7 @@ def _commit_axis_corners(D):
     that can occupy a fork's commit slot, plus register's own arguments (locate/place),
     which exist only inside a register commit.  Read off the ACTIVE DSL rather than
     hardcoded, so phase 1 (atomic sync_to_world / sync_to_model) and phase 2
-    (register / via_swap) each get the right set."""
+    (register + swap-composed commits) each get the right set."""
     axis = {d.repr for d in D.ds if d.type == fn_p_g}
     return (axis | {'locate', 'place'}) & set(_CORNERS)
 
@@ -662,7 +718,11 @@ def _swap_scope_commit(D, tree, m):
         if not isinstance(node, Delta):
             return
         if _is_fork_node(node):
-            if node.tails[1].repr in _SCOPE_COMPLEMENTS:
+            # detect on the CORE commit, replace the WHOLE subtree: a `(compose_pg
+            # swap sync_all)` commits with a scope complement, but it is not the
+            # agency commit even when its core would be — the pair-map is part of what
+            # it does, so the canonical spelling replaces the wrapper too.
+            if _commit_core(node.tails[1]).repr in _SCOPE_COMPLEMENTS:
                 derive = _fork_derive(node)     # None ⇒ unrecognised shape: don't guess
                 if derive is not None:
                     av = _actor(derive)
@@ -670,9 +730,10 @@ def _swap_scope_commit(D, tree, m):
                         node.tails[1] = tr(D, _sync(D, av))
                         swapped[0] = True
             # descend into the produce side for the forks nested there, each of which
-            # gets its own actor from its own derive.  The commit (tails[1]) cannot
-            # hold a fork — no fn_p_g constructor takes an `fn`.
+            # gets its own actor from its own derive — and into the commit, which
+            # since compose_pg can hold an `fn` (and so a fork) inside a pair-map.
             walk(node.tails[0])
+            walk(node.tails[1])
             return
         for t in (node.tails or []):
             walk(t)
@@ -786,7 +847,9 @@ def _swap_multi_sync(D, tree, x, order):
         if not isinstance(node, Delta):
             return
         if _is_fork_node(node):
-            commit = node.tails[1]
+            commit = _commit_core(node.tails[1])   # a compose_pg wrapper commits with
+                                                   # its core; the rewrite replaces the
+                                                   # whole subtree either way
             if commit.repr in _SCOPE_COMPLEMENTS:
                 derive = _fork_derive(node)     # None ⇒ unrecognised shape: don't guess
                 if derive is not None:
@@ -960,15 +1023,46 @@ def _sample_kind(m):
     return m['kind'] if m['kind'] != 'belief' else belief_variant(m)
 
 
-def _select_samples(tasks, max_frames=6):
-    """One example per kind (first seen, in _ALL_KINDS order) as labelled panels.
+def _scene_panels(scene, m, i, max_frames):
+    """The labelled panels of ONE scene: world | template | result(s), or t0 … tn.
 
-    Each sample is {kind, tag, T, panels:[(label, grid), …]}.  fn families show
-    successive `unfold` frames t0…; fn_p_g families show world | template | result,
-    surfacing the otherwise-invisible constant template channel.  The rendered
-    grids are exactly what the searcher sees — belief's phantom wall lives only in
-    the private model, so it never appears here.  The single kind='belief' is split
-    into its variants (wall / witness / goal-displacement / two-observer) for display."""
+    `max_frames=None` (the default everywhere) means EVERY frame, and that is not a
+    cosmetic preference.  A trajectory task ends when the dynamic completes — the
+    agent arrives, and T is that arrival time, which differs from scene to scene by
+    construction (`scenes.py`: what varies across the k scenes is everything the
+    latent program does not name, trajectory length included).  Clipping the panels
+    at a fixed count destroys both facts at once: the clipped scenes all come out
+    the same length, so the figure asserts a shared arrival time the corpus
+    deliberately does not have, and the frame that is dropped is the LAST one — the
+    step onto the goal — so the agent appears to stop one cell short for no reason.
+    A cap here therefore does not merely shorten a figure, it misreports the task."""
+    if 'template' in m:                      # fn_p_g: world | template | result(s)
+        # each scene carries its own template channel (per_scene); the task's
+        # top-level copy is scene 0's, so only fall back to it for scene 0.
+        tmpl = m['per_scene'][i]['template'] if 'per_scene' in m else m['template']
+        extra = list(scene[1:] if max_frames is None else scene[1:max_frames - 1])
+        panels = [('world', scene[0]), ('template', tmpl)]
+        return panels + [(f't{t}', g) for t, g in enumerate(extra, start=1)]
+    n = len(scene) if max_frames is None else min(len(scene), max_frames)
+    return [(f't{t}', scene[t])              # fn: successive frames of the unfold
+            for t in range(n)]
+
+
+def _select_samples(tasks, max_frames=None):
+    """One example task per kind (first seen, in _ALL_KINDS order), all k scenes.
+
+    A task is a SET of k scenes sharing one latent program (scenes.py), so a sample
+    is {kind, tag, k, scenes:[{T, panels:[(label, grid), …]}, …]} — the display unit
+    is the scene set, because what a program must reproduce is every scene, not one.
+    `T`/`panels` are also lifted to the top level as scene 0's, so a consumer that
+    only wants a representative trajectory need not know about the set.
+
+    fn families show successive `unfold` frames t0…; fn_p_g families show
+    world | template | result, surfacing the otherwise-invisible template channel
+    (per scene — each scene has its own).  The rendered grids are exactly what the
+    searcher sees — belief's phantom wall lives only in the private model, so it
+    never appears here.  The single kind='belief' is split into its variants
+    (wall / witness / goal-displacement / two-observer) for display."""
     seen = {}
     for x, m in tasks:
         seen.setdefault(_sample_kind(m), (x, m))
@@ -983,43 +1077,51 @@ def _select_samples(tasks, max_frames=6):
         x, m = seen[kind]
         tag = ', '.join(f"{k}={v}" for k, v in m.items()
                         if k not in ('kind', 'template', 'per_scene'))
-        scene = x.rep                        # one representative scene of the set
-        if 'template' in m:                  # fn_p_g: world | template | result(s)
-            extra = list(scene[1:max_frames - 1])
-            panels = [('world', scene[0]), ('template', m['template'])]
-            panels += [(f't{t}', g) for t, g in enumerate(extra, start=1)]
-        else:                                # fn: successive frames of the unfold
-            panels = [(f't{t}', scene[t])
-                      for t in range(min(len(scene), max_frames))]
-        out.append({'kind': kind, 'tag': tag, 'T': int(scene.shape[0]),
-                    'k': x.k, 'panels': panels})
+        scenes = [{'T': int(scene.shape[0]),
+                   'panels': _scene_panels(scene, m, i, max_frames)}
+                  for i, scene in enumerate(x)]
+        out.append({'kind': kind, 'tag': tag, 'k': x.k, 'scenes': scenes,
+                    'T': scenes[0]['T'], 'panels': scenes[0]['panels']})
     return out
 
 
-def print_task_samples(tasks, max_frames=6):
-    "Text dump of one example trajectory per family (see _select_samples)."
+def print_task_samples(tasks, max_frames=None):
+    "Text dump of one example task per family — every scene (see _select_samples)."
     print("\n" + "=" * 72)
-    print("TASK SAMPLES — one example trajectory per family")
+    print("TASK SAMPLES — one example task per family, all k scenes")
     print("=" * 72)
     for s in _select_samples(tasks, max_frames):
-        print(f"\n  [{s['kind']}]  {{{s['tag']}}}   T={s['T']}")
-        labels = [lab for lab, _ in s['panels']]
-        grids  = [g for _, g in s['panels']]
-        print(_side_by_side(grids, labels))
+        print(f"\n  [{s['kind']}]  {{{s['tag']}}}   k={s['k']}")
+        for i, sc in enumerate(s['scenes']):
+            print(f"    scene {i + 1}/{s['k']}  T={sc['T']}")
+            print(_side_by_side([g for _, g in sc['panels']],
+                                [lab for lab, _ in sc['panels']]))
 
 
-def export_task_samples(tasks, path='task_samples.json', max_frames=6):
-    "Write one example per family to JSON for viz.typ (see _select_samples)."
+def export_task_samples(tasks, path='task_samples.json', max_frames=None):
+    "Write one example task per family — all k scenes — to JSON for viz.typ."
     import json
-    size = int(np.asarray(tasks[0][0]).shape[-1]) if tasks else 0
+
+    def _panels(panels):
+        return [{'label': lab, 'grid': np.asarray(g).astype(int).tolist()}
+                for lab, g in panels]
+
+    # grid width off a representative SCENE: a task is a `Scenes` set, and
+    # np.asarray of one is a 0-d object array with no shape to index.
+    size = int(np.asarray(tasks[0][0].rep).shape[-1]) if tasks else 0
+    samples = _select_samples(tasks, max_frames)
     data = {'size': size, 'samples': [
-        {'kind': s['kind'], 'tag': s['tag'], 'T': s['T'],
-         'panels': [{'label': lab, 'grid': np.asarray(g).astype(int).tolist()}
-                    for lab, g in s['panels']]}
-        for s in _select_samples(tasks, max_frames)]}
+        {'kind': s['kind'], 'tag': s['tag'], 'k': s['k'],
+         'scenes': [{'T': sc['T'], 'panels': _panels(sc['panels'])}
+                    for sc in s['scenes']],
+         # scene 0 lifted out, so the single-trajectory callers still work
+         'T': s['T'], 'panels': _panels(s['panels'])}
+        for s in samples]}
     with open(path, 'w') as f:
         json.dump(data, f, indent=1)
-    print(f"  wrote {len(data['samples'])} task samples to {path}")
+    n_scenes = sum(s['k'] for s in samples)
+    print(f"  wrote {len(data['samples'])} task samples "
+          f"({n_scenes} scenes) to {path}")
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────────
@@ -1350,9 +1452,9 @@ def check_decomposition_identities(tasks):
 ROUND1_T_FN_CAP = 1200.0
 
 
-def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn=None,
-              t_fn_round1=None, dream_on=True, plain_belief=False, curriculum=True,
-              k=None):
+def run_phase(decomposed=False, smoke=False, samples=False, samples_only=False,
+              ecd_iters=None, t_fn=None, t_fn_round1=None, dream_on=True,
+              plain_belief=False, curriculum=True, k=None):
     """One phase of the curriculum (phase 1 = atomic, phase 2 = decomposed).
 
     Both phases run the full symmetric cube over the one undifferentiated corpus
@@ -1374,6 +1476,10 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     tasks under that learned matrix-conditioned Q rather than the uniform/content prior.
     Pass `dream_on=False` (CLI `--no-dream`) to recover the uniform-Q baseline.
 
+    `samples` (CLI `--samples`) dumps and exports one example task per family for
+    viz.typ; `samples_only` (CLI `--samples-only`) stops right after that, which is
+    how task_samples.json is regenerated without paying for a search.
+
     `k` (CLI `--k`) is the number of scenes per task — see scenes.py.  Each task is a
     SET of trajectories sharing one latent program, and a program solves it only by
     reproducing all of them; that is what identifies the program's literals (belief's
@@ -1389,7 +1495,12 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         n_goal = 2
         n_obstacle = 2
         n_relocate = 4
-        _t_fn, t_reg, stitch_iters, _ecd_iters = 15, 8, 3, 2
+        # t_reg was 8s, well under what the deepest template families (composite /
+        # drift_reg, ~15.5 nats under the uniform Q the fn_p_g search uses) need —
+        # a smoke run then reported the bifunctor corner unreached for want of
+        # budget, which is exactly the false alarm the census is there to avoid.
+        # Measured: the whole 36-task template sweep of a FULL run finishes in ~38s.
+        _t_fn, t_reg, stitch_iters, _ecd_iters = 15, 45, 3, 2
     else:
         n_phys, n_des, n_ov, n_reg, n_bel, n_corner = 4, 2, 4, 4, 6, 4
         n_comet = 4
@@ -1408,7 +1519,11 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
         # reuse it as a single cheap token instead of re-deriving it inside the fork.
         n_obstacle = 6
         n_relocate = 16
-        _t_fn, t_reg, stitch_iters, _ecd_iters = 180, 30, 6, 4
+        # t_reg is ONE shared sweep over every still-unsolved template task, so it
+        # scales with the corpus, not the task: 30s covered six 1-2 node families and
+        # is tight for nine that now include three ~15-nat ones.  Cheap insurance
+        # next to the fn budget.
+        _t_fn, t_reg, stitch_iters, _ecd_iters = 180, 60, 6, 4
     t_fn = _t_fn if t_fn is None else t_fn
     ecd_iters = _ecd_iters if ecd_iters is None else ecd_iters
     # Per-round fn timeout schedule (DreamCoder-style curriculum): round 1 is capped
@@ -1541,12 +1656,30 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
                      + make_denoise_tasks(n_corner, seed=TASK_SEEDS['denoise'], k=k)
                      + make_underlay_tasks(n_corner, seed=TASK_SEEDS['underlay'], k=k)
                      + make_obstacle_tasks(n_obstacle, seed=TASK_SEEDS['obstacle'], k=k)
-                     + make_relocation_tasks(n_relocate, seed=TASK_SEEDS['relocate'], k=k))
+                     + make_relocation_tasks(n_relocate, seed=TASK_SEEDS['relocate'], k=k)
+                     # pairing corner (pair_blank): expressible in BOTH libraries — the
+                     # atomic one pays an erase per value — so it stays in either run.
+                     + make_wipe_tasks(n_corner, seed=TASK_SEEDS['wipe'], k=k))
         pair_corner = (make_perception_tasks(n_corner, seed=TASK_SEEDS['perception'], k=k)
                        + make_multi_registration_tasks(n_corner, seed=TASK_SEEDS['multi_reg'], k=k)
                        + make_registration_except_tasks(n_corner, seed=TASK_SEEDS['reg_except'], k=k)
                        + make_inpainting_tasks(n_corner, seed=TASK_SEEDS['inpaint'], k=k)
                        + make_readout_tasks(n_corner, seed=TASK_SEEDS['readout'], k=k))
+        # ── the pair-plumbing complements the DECOMPOSED library adds ───────────
+        # bimap / mapfst / swap are corners of the combinator library only: the
+        # atomic DSL has no node that maps both channels, none that maps the world
+        # channel of a given pair, and none that commits wholesale INTO the model,
+        # so these families have no atomic spelling at any length and are generated
+        # only where the searcher could solve them.  Their point is the cube census:
+        # with phase 2 the primary run, "belief picks mapsnd + dup and no swap" is
+        # only informative if some non-mental family picks each of the others.
+        if decomposed:
+            pair_corner += (
+                make_layer_composite_tasks(n_corner,
+                                           seed=TASK_SEEDS['composite'], k=k)
+                + make_drifting_registration_tasks(n_corner,
+                                                   seed=TASK_SEEDS['drift_reg'], k=k)
+                + make_map_update_tasks(n_corner, seed=TASK_SEEDS['map_update'], k=k))
 
     # fn-rooted families share the `unfold` interpreter; pair families are fn_p_g.
     fn_tasks = phys + des + ov + comet + bel + gdb + obs + fob + belief_extra + fn_corner
@@ -1575,6 +1708,8 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
     if samples:
         print_task_samples(fn_tasks + reg_tasks)
         export_task_samples(fn_tasks + reg_tasks)   # data for viz.typ
+        if samples_only:      # regenerating the figure data — no search wanted
+            return
 
     if cube:
         D = Deltas(make_symmetric_prims(decomposed=decomposed))
@@ -2159,15 +2294,18 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
 
         belief_corners = corners_by_kind.get('belief', Counter())
         # belief must keep exactly the agency corner and avoid every complement.  The
-        # commit-axis members (sync_to_model, sync_all, sync_except, underlay, snd_gg,
-        # via_swap) are counted only when belief COMMITS with them; the off-axis members
+        # commit-axis members (sync_to_model, sync_all, sync_except, underlay, snd_gg)
+        # are counted only when belief COMMITS with them; the off-axis members
         # are counted wherever they occur, including inside a derive — an agent that
         # erases the world's walls in its private model has still reached for `erase`.
         complements = {'sync_to_model', 'sync_all', 'sync_except', 'underlay',
-                       'snd_gg', 'via_swap', 'distance', 'clear_at', 'erase',
-                       # bifunctor / pairing complements (decomposed runs): belief
-                       # uses mapsnd + dup, so the wrong-channel / fresh-channel
-                       # corners are the ones it must avoid.
+                       'snd_gg', 'distance', 'clear_at', 'erase',
+                       # bifunctor / pairing / symmetry complements (decomposed runs):
+                       # belief uses mapsnd + dup and never exchanges the channels, so
+                       # the wrong-channel / fresh-channel / swapped corners are the
+                       # ones it must avoid.  In a decomposed run `swap` is also the
+                       # direction complement — sync_to_model decomposes to
+                       # (compose_pg swap (register …)) — so it carries that axis too.
                        'mapfst', 'swap', 'bimap', 'pair_blank'}
         # agency commit is sync_to_world atomically (phase 1) or its decomposition
         # register(locate)(place) (phase 2); either counts as keeping the corner.
@@ -2192,13 +2330,19 @@ def run_phase(decomposed=False, smoke=False, samples=False, ecd_iters=None, t_fn
             for k in _ALL_KINDS if k != 'belief'
         )) if corners_by_kind else set()
         any_complement_used = bool(used_complements)
-        # don't flag a complement as "unreached" if it has no dedicated family
-        # of its own (the bifunctor/pairing corners) or isn't even a primitive in the
-        # active DSL (e.g. sync_to_model, decomposed away to via_swap in phase 2).
+        # don't flag a complement as "unreached" if it isn't even a primitive in the
+        # active DSL (sync_to_model is decomposed away in phase 2; the bifunctor /
+        # pairing / symmetry corners do not exist in the atomic one).
+        #
+        # There is no longer a `no_home` exemption.  It used to list mapfst, swap,
+        # bimap and pair_blank — the four corners decomposition adds — because no
+        # task in the corpus needed them, which made belief's avoidance of them
+        # vacuous on exactly the axes the combinator library introduces.  Each now
+        # has its own minds-free family (tasks.py: composite / drift_reg / map_update
+        # / wipe), so an unreached one is a real finding again, and reported as such.
         present = {d.repr for d in D.ds}
-        no_home = {'mapfst', 'swap', 'bimap', 'pair_blank'}
         unused_complements = sorted(
-            (complements - no_home - (complements - present)) - used_complements)
+            (complements & present) - used_complements)
         cube_ok = belief_keeps_corner and belief_avoids_complements
         _agency = 'register' if decomposed else 'sync_to_world'
         print(f"\n  belief keeps the agency corner ({_agency} + wall_at){'':<{14 - len(_agency)}}: {belief_keeps_corner}")
@@ -2873,13 +3017,14 @@ def save_trajectory_artifact(D, all_tasks, sols, solve_round, decomposed, smoke,
 
 
 def cli_kwargs(argv):
-    "shared CLI parsing for the phase wrappers: --smoke --samples --ecd-iters N --t-fn N --t-fn-round1 N --k N --no-dream --plain-belief --no-curriculum"
+    "shared CLI parsing for the phase wrappers: --smoke --samples --samples-only --ecd-iters N --t-fn N --t-fn-round1 N --k N --no-dream --plain-belief --no-curriculum"
     def _opt(flag, cast):
         if flag in argv:
             return cast(argv[argv.index(flag) + 1])
         return None
     return dict(smoke='--smoke' in argv,
-                samples='--samples' in argv,
+                samples='--samples' in argv or '--samples-only' in argv,
+                samples_only='--samples-only' in argv,
                 ecd_iters=_opt('--ecd-iters', int),
                 t_fn=_opt('--t-fn', float),
                 t_fn_round1=_opt('--t-fn-round1', float),

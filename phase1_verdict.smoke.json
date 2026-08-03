@@ -1,8 +1,8 @@
 {
  "decomposed": false,
  "smoke": true,
- "n_solved": 54,
- "n_total": 102,
+ "n_solved": 56,
+ "n_total": 104,
  "stitch_iters": 3,
  "ecd_iters": 2,
  "t_fn": 15,
@@ -19,6 +19,7 @@
   "underlay": 1,
   "obstacle": 1,
   "relocate": 1,
+  "wipe": 1,
   "readout": 1,
   "inpaint": 1,
   "multi_reg": 1,
@@ -37,6 +38,7 @@
   "underlay": 1,
   "obstacle": 1,
   "relocate": 1,
+  "wipe": 1,
   "readout": 1,
   "inpaint": 1,
   "multi_reg": 1,
@@ -55,6 +57,7 @@
   "underlay": 2,
   "obstacle": 16,
   "relocate": 4,
+  "wipe": 2,
   "registration": 2,
   "perception": 2,
   "multi_reg": 2,
@@ -74,6 +77,7 @@
   "underlay": 2,
   "obstacle": 16,
   "relocate": 4,
+  "wipe": 2,
   "registration": 2,
   "perception": 2,
   "multi_reg": 2,
@@ -119,6 +123,9 @@
    "compose",
    "wall_at"
   ],
+  "wipe": [
+   "compose"
+  ],
   "registration": [
    "sync_to_world"
   ],
@@ -131,56 +138,65 @@
  "belief_commit": {
   "literal": 0,
   "degenerate": 0,
-  "complement": 0
+  "multi_mover": 0,
+  "nonmental": 0
  },
+ "belief_multi_mover": [],
  "belief_variants": {
   "belief_witness": {
    "solved": 0,
    "total": 8,
    "literal": 0,
    "degenerate": 0,
-   "complement": 0
+   "multi_mover": 0,
+   "nonmental": 0
   },
   "belief_goal": {
    "solved": 0,
    "total": 16,
    "literal": 0,
    "degenerate": 0,
-   "complement": 0
+   "multi_mover": 0,
+   "nonmental": 0
   },
   "belief_observers": {
    "solved": 0,
    "total": 8,
    "literal": 0,
    "degenerate": 0,
-   "complement": 0
+   "multi_mover": 0,
+   "nonmental": 0
   },
   "belief_false_obstacle": {
    "solved": 0,
    "total": 8,
    "literal": 0,
    "degenerate": 0,
-   "complement": 0
+   "multi_mover": 0,
+   "nonmental": 0
   },
   "belief_wall": {
    "solved": 0,
    "total": 8,
    "literal": 0,
    "degenerate": 0,
-   "complement": 0
+   "multi_mover": 0,
+   "nonmental": 0
   }
  },
  "selective_attribution": {
   "n": 8,
   "solved": 0,
   "believer_only": 0,
-  "observer_committed": 0
+  "observer_committed": 0,
+  "wholesale": 0
  },
  "false_obstacle": {
   "n": 8,
   "literal": 0,
   "degenerate": 0,
-  "complement": 0
+  "multi_mover": 0,
+  "nonmental": 0
  },
  "A": {
   "fork_general": true,
@@ -188,8 +204,8 @@
   "wall_general": true,
   "belief_uses_both": false,
   "agency_unique": false,
-  "belief_is_wall_based": true,
-  "no_belief_complement": true
+  "obstacle_belief_misrepresents_obstacle": true,
+  "no_nonmental_rival": true
  },
  "cube": {
   "enabled": true,
@@ -223,8 +239,11 @@
     "wall_at": 16
    },
    "relocate": {
-    "clear_at": 4,
-    "wall_at": 4
+    "wall_at": 4,
+    "clear_at": 4
+   },
+   "wipe": {
+    "erase": 2
    },
    "registration": {
     "sync_to_world": 2
@@ -304,6 +323,8 @@
  "agent_constructor_shared_holes": {},
  "agent_constructor_n_shared_holes": 0,
  "agent_constructor_max_hole_uses": 0,
+ "agent_constructor_belief_uses": 0,
+ "belief_uses_by_abstraction": {},
  "abstraction_usage_by_kind": {
   "physics": {
    "(bare prims)": 2
@@ -335,6 +356,9 @@
   "relocate": {
    "fn_5": 3,
    "(bare prims)": 1
+  },
+  "wipe": {
+   "(bare prims)": 2
   },
   "registration": {
    "(bare prims)": 2
@@ -413,6 +437,14 @@
     "saved_mean": 4.660955786705017,
     "saved_total": 18.64382314682007
    },
+   "wipe": {
+    "n": 2,
+    "dl_base_median": 18.42068099975586,
+    "dl_lib_median": 18.42068099975586,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
    "registration": {
     "n": 2,
     "dl_base_median": 4.499809741973877,
@@ -466,45 +498,8 @@
   "nonmental_saved_median": 0.0,
   "n_belief_using_ctor": 0
  },
- "mdl_margin": {
-  "by_variant": {
-   "belief_wall": {
-    "n_tasks": 5,
-    "n_tasks_with_competitor": 5,
-    "n_competitor_pairs": 5,
-    "margin_lib_min": 1.0216522216796875,
-    "margin_lib_median": 9.43348503112793,
-    "margin_lib_max": 9.43348503112793,
-    "margin_base_median": 1.0216522216796875
-   },
-   "belief_goal": {
-    "n_tasks": 7,
-    "n_tasks_with_competitor": 0,
-    "n_competitor_pairs": 0,
-    "margin_lib_min": null,
-    "margin_lib_median": null,
-    "margin_lib_max": null,
-    "margin_base_median": null
-   },
-   "belief_false_obstacle": {
-    "n_tasks": 1,
-    "n_tasks_with_competitor": 0,
-    "n_competitor_pairs": 0,
-    "margin_lib_min": null,
-    "margin_lib_median": null,
-    "margin_lib_max": null,
-    "margin_base_median": null
-   }
-  },
-  "n_competitor_pairs": 5,
-  "pct_competitors_longer": 100.0,
-  "n_competitors_shorter": 0,
-  "n_excluded_shorter": 8,
-  "n_action_right_scene_wrong": 0,
-  "margin_lib_median": 9.43348503112793,
-  "margin_lib_min": 1.0216522216796875
- },
- "mdl_margin_note": "STALE: mdl_margins.json was priced from a run older than this one; re-run mdl_margin.py to price THIS library",
+ "mdl_margin": null,
+ "mdl_margin_note": "mdl_margins.json is a different phase/mode run \u2014 not echoed",
  "constructor_found": false,
  "constructor_shared": false,
  "belief_uses_ctor": false,
@@ -521,13 +516,13 @@
  "ok": false,
  "provenance": {
   "git": {
-   "commit": "127c8d983d015bbad0de406fee7dc53563b4c950",
-   "commit_short": "127c8d9",
+   "commit": "a6965cde7c05d6ec2628c121d24f442b54642b09",
+   "commit_short": "a6965cd",
    "branch": "master",
    "dirty": true
   },
-  "timestamp": "2026-07-27T17:52:52Z",
-  "host": "eduvpn-uva-stu-145-3-16-66.vpn.uva.nl",
+  "timestamp": "2026-08-03T13:32:18Z",
+  "host": "Gidons-MacBook-Air.local",
   "python": "3.12.7",
   "argv": "phase1.py --smoke",
   "knobs": {
@@ -536,7 +531,7 @@
    "cube": true,
    "t_fn": 15,
    "t_fn_round1": 15,
-   "t_reg": 8,
+   "t_reg": 45,
    "ecd_iters": 2,
    "stitch_iters": 3,
    "dream_on": true,
@@ -577,8 +572,12 @@
    "belief_goal": 23,
    "belief_observers": 27,
    "belief_fob": 25,
-   "relocate": 26
+   "relocate": 26,
+   "wipe": 28,
+   "composite": 29,
+   "drift_reg": 30,
+   "map_update": 31
   },
-  "repro": "commit 127c8d9+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-27T17:52:52Z"
+  "repro": "commit a6965cd+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=45 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-08-03T13:32:18Z"
  }
 }

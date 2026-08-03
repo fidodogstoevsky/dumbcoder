@@ -199,7 +199,7 @@ compound. The identities the phase proves before search:
 ```
 fork(derive, commit)  ≡  pipe_gpg( compose_gp(dup, mapsnd derive), commit )
 sync_to_world(v)      ≡  register( locate v, place v )
-sync_to_model(v)      ≡  via_swap( register( locate v, place v ) )
+sync_to_model(v)      ≡  compose_pg( swap, register( locate v, place v ) )
 ```
 
 After decomposition `av` is shared **three** ways in belief (`optimize` + `locate` +
@@ -221,7 +221,23 @@ After decomposition `av` is shared **three** ways in belief (`optimize` + `locat
 | `locate` | `cellvalue → fn_g_c` | position of value `v` in a grid (or none) |
 | `place` | `cellvalue → fn_gc_g` | move value `v` to a coordinate, clearing its old cell |
 | `register` | `fn_g_c, fn_gc_g → fn_p_g` | `(w,m) ↦ place(w, locate(m))` — read a coord off the model, impose it on the world (the av-free commit; generic image registration) |
-| `via_swap` | `fn_p_g → fn_p_g` | run a commit on the swapped pair — makes channel direction a search choice |
+
+*Pair composition:*
+
+| repr | signature | semantics |
+|---|---|---|
+| `compose_pg` | `fn_p_p, fn_p_g → fn_p_g` | (pair → pair) then (pair → grid) — the third and last composition of the pair category |
+
+`compose_pg` **replaces** the old atomic `via_swap` (`fn_p_g → fn_p_g`, "run a commit
+on the swapped pair"), which was this composition with `swap` frozen into it. Two
+reasons. (1) The direction complement then decomposes all the way, to a general
+composer applied to the symmetry witness — the same move that replaced atomic
+`sync_to_model` with `via_swap` in the first place. (2) A template-rooted program *is*
+an `fn_p_g`, handed a pair it did not build, so without this composer the pair-map axis
+is reachable only behind a `dup`, where both channels start equal and `mapfst` / `swap`
+are inert by construction — which is why four complements had no task of their own
+(§4). Measured: the `fn` search space (where belief lives) is unchanged, ±2% per cost
+band; the `fn_p_g` space grows, and the template families' budget was raised to match.
 
 *Bifunctor / pairing complements* (the wrong-channel / fresh-channel corners belief
 must **avoid**):
@@ -232,6 +248,12 @@ must **avoid**):
 | `mapfst` | `fn → fn_p_p` | map channel 1, carry channel 2 |
 | `bimap` | `fn, fn → fn_p_p` | the full product bifunctor map |
 | `pair_blank` | `fn_g_p` | pair `g` with a *fresh empty* scratch channel (vs `dup`'s copy) |
+
+In a decomposed run `swap` also carries the **direction** axis, since `sync_to_model`
+is now `(compose_pg swap (register …))`. Each of these four has its own minds-free
+family (§4: `wipe`, `composite`, `drift_reg`, `map_update`); before they existed the
+cube census carried a `no_home` exemption listing exactly these reprs, which made
+belief's avoidance of them vacuous on the two axes decomposition adds.
 
 The **scope** complements (`sync_all`, `sync_except`) fold over an unbounded value set
 and have no `locate`/`place` spelling, so they stay **atomic** in Phase 2; the z-order
@@ -533,12 +555,27 @@ additionally emits a second, distinct-seeded batch of plain `belief_wall` tasks
 - **filters** jump ≥ 2 cells (a 1-cell jump is a plain `step 3 d`); `T=3` idempotent
   (kills drift rivals); **per-task** `_step_or_erase_reproduces` (closed set).
 
+#### `wipe` — pairing complement (`pair_blank`)
+- **root** `fn` · **count** `n_corner` · **in BOTH libraries**
+- **program** `pipe_gpg( pair_blank, snd_gg )` — pair the world with a **fresh empty**
+  scratch channel and keep the scratch one: the grid goes blank in one step. The one
+  corpus program with no literal in it.
+- **probes** the `pair_blank` corner of the pairing axis (vs `dup`'s diagonal).
+- **latent** the task's value set (≥3 distinct values over ≥4 cells), held fixed across
+  the `k` scenes — because the atomic library must spell the same task as the **erase
+  chain** `compose(erase a, compose(erase b, erase c))`. Both libraries solve it, at 3
+  nodes against 8: a priced comparison rather than a capability gap (measured in the
+  DL census: ~5.5 nats decomposed vs ~18.4 atomic).
+- **filters** ≥3 values (no single `erase`), ≥4 cells (no `clear_at`); **per-task**
+  `_step_or_erase_reproduces` (closed set).
+
 ### 4.2 `fn_p_g`-rooted families — template (`tasks.py`, root `fn_p_g`)
 
 These run through `unfold_with_template`: each frame is paired with a **given external**
 template, so a program using `sync_to_world` here is doing image **registration**, not
-holding a belief. Each is certified by `_unique_pair_corner` — the intended commit is
-the *unique cheapest* atomic `fn_p_g` corner reproducing the frame.
+holding a belief. Each is certified by `_unique_pair_corner` against `_pair_rivals` —
+the intended commit must be the *unique cheapest* commit **either library** can build
+that reproduces the frame, ties counting as defeats.
 
 | family | commit (program) | probes / corner |
 |---|---|---|
@@ -548,6 +585,35 @@ the *unique cheapest* atomic `fn_p_g` corner reproducing the frame.
 | `registration_except` | `sync_except v` | the **scope** complement — align all but one anchor |
 | `inpainting` | `underlay` | the **z-order** complement — the template only fills holes |
 | `readout` | `snd_gg` | the **projection** complement — return the template channel |
+| `composite` † | `compose_pg( bimap(step u d, erase w), overlay )` | the **bifunctor** complement — two layers, one map each: the working layer scrolls, the reference layer is composited with a value masked out |
+| `drift_reg` † | `compose_pg( mapfst(step u d), register(locate v, place v) )` | the **world-channel** map — register `v` against the template while the working image scrolls (image stabilisation) |
+| `map_update` † | `compose_pg( swap, sync_all )` | the **symmetry witness** — the map adopts the world's layout wholesale (the direction complement of `multi_registration`) |
+
+† **decomposed runs only.** These three are combinator wirings the atomic DSL has no
+node for — nothing maps both channels, nothing maps the world channel of a *given*
+pair, nothing commits wholesale *into* the model — so `run_phase` builds them only when
+`decomposed=True`, and an atomic run's corpus is the six families above (+ `wipe`).
+
+Their necessity arguments are all of one shape: put the value one map needs in the
+channel the *other* map cannot reach. `composite`'s drifter is in the working grid only
+and its masked value in the reference only, so one map cannot do both jobs; `drift_reg`'s
+drifter is working-only, so `mapsnd` leaves it undone, while ≥2 misplaced-but-retained
+shared values kill the scope commits; `map_update` carries a map-only value (so the
+output is not the world) and a world-only one (so it is not `sync_all`'s output either).
+The sweeps are `_cheaper_composite_fits` and `_cheaper_pair_program_fits`, which range
+over the decomposed library's commits — bare corners, either channel mapped, `swap`
+composed on — and reject on a tie.
+
+**Two families were tightened when `compose_pg` entered the library**, because it makes
+the model-direction conjugate of *any* commit cheap. `registration` gained a world-only
+`static` value: with identical value sets in the two channels, "the world with `v`
+adopted from the map" and "the map with everything **but** `v` adopted from the world"
+are the same grid, so `(compose_pg swap (sync_except v))` reproduced the family at 4
+nodes against the register triple's 5 — which would have cost the run its *sync used
+outside belief* claim. `perception` gained ≥2 shared misplaced-but-retained values:
+with `v` the only shared mover, "record `v`" and "record everything" coincide and
+`(compose_pg swap sync_all)` undercuts it 3 nodes to 7. Both leaks were observed, not
+anticipated: the searcher returned the cheaper program.
 
 ### 4.3 Count knobs (`run_phase` in `experiment.py`)
 
@@ -561,7 +627,7 @@ the *unique cheapest* atomic `fn_p_g` corner reproducing the frame.
 | `n_bel` | 1 | 6 | belief (witness/wall) + the extra `belief_wall` batch (`n_bel//2`) | ✓ (×8) |
 | `n_belvar` | 1 | 3 | two-observer, false-obstacle | ✓ (×8) |
 | `n_goal` | 2 | 6 | goal-displacement | ✓ (×8) |
-| `n_corner` | 2 | 4 | flee, deletion, denoise, underlay, and every template corner | flat |
+| `n_corner` | 2 | 4 | flee, deletion, denoise, underlay, wipe, and every template corner (incl. the three decomposed-only ones) | flat |
 | `n_obstacle` | 2 | 6 | obstacle | ✓ (×8) |
 | `n_relocate` | 4 | 16 | relocation | flat |
 
@@ -608,3 +674,8 @@ before the policy tokens exist), `--ecd-iters`, `--no-dream`, `--plain-belief` /
 `--curriculum` (diagnostics that trade the false-belief uniqueness guarantee for a
 shallower first solve). The whole resolved knob dict is embedded in every run artifact
 as provenance, so a figure caption can cite an exact configuration.
+
+The two search budgets are `--t-fn` (per `fn` task) and `t_reg` (**one shared sweep**
+over every still-unsolved template task, so it scales with the corpus rather than the
+task: 30s → 60s full / 8s → 45s smoke when the three ~15-nat pair-plumbing families
+joined the 1–2 node ones; the whole 36-task sweep of a full run measures ~38s).

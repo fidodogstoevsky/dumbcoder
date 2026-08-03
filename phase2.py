@@ -5,7 +5,7 @@ belief must be *rediscovered* as a compound rather than handed over:
 
     fork          ≡ (pipe_gpg (compose_gp dup (mapsnd derive)) commit)
     sync_to_world ≡ (register (locate av) (place av))
-    sync_to_model ≡ (via_swap (register (locate v) (place v)))
+    sync_to_model ≡ (compose_pg swap (register (locate v) (place v)))
 
 (The scope complements sync_all / sync_except fold over an unbounded value set and
 stay atomic — the decomposition reaches exactly as far as the locate/place

@@ -97,7 +97,7 @@ def compute(decomposed, smoke, run_path):
     run's found programs.  A task is solved iff its matrix key is in the run's `sols`."""
     art, run_path = _load_run(decomposed, smoke, run_path)
     solved_keys = set(art['sols'])
-    tasks = build_corpus(smoke)
+    tasks = build_corpus(smoke, decomposed=decomposed)
 
     per = {v: {'total': 0, 'solved': 0} for v in VAR_ORDER}
     for x, m in tasks:

@@ -23,8 +23,9 @@ signature is discovered, not gerrymandered into the primitive set.
                                  over.  Specifically:
         fork          -> (pipe_gpg (compose_gp dup (mapsnd derive)) commit)
         sync_to_world -> (register (locate av) (place av))
-        sync_to_model -> (via_swap (register (locate v) (place v)))    [direction
-                          complement is now a compound too — "decompose complements"]
+        sync_to_model -> (compose_pg swap (register (locate v) (place v)))  [direction
+                          complement is now a compound too — "decompose complements":
+                          the symmetry witness `swap`, composed onto the commit]
       The SCOPE complements (sync_all / sync_except) fold over an unbounded set of
       shared values, so they have no register/locate/place spelling and stay ATOMIC.
       The z-order (overlay/underlay) and projection (fst_gg/snd_gg) commits likewise
@@ -40,8 +41,8 @@ from dsl import (
     compose, step, optimize, neg_distance, wall_at,
     # symmetric complements (the "cube")
     fst_gg, snd_gg, sync_to_model, sync_all, sync_except, underlay,
-    swap, via_swap, mapsnd, mapfst, bimap, dup, pair_blank,
-    compose_gp, pipe_gpg, distance, clear_at, erase,
+    swap, mapsnd, mapfst, bimap, dup, pair_blank,
+    compose_gp, pipe_gpg, compose_pg, distance, clear_at, erase,
     # sync decomposition (register/locate/place)
     register, locate, place,
     # stack calculus (phase 3's arity generalization)
@@ -104,8 +105,8 @@ def make_symmetric_prims(decomposed=False):
 
     decomposed=False (phase 1): atomic fork + sync, every corner a single node.
     decomposed=True  (phase 2): fork and sync spelled out (fork plumbing + register/
-    locate/place); sync_to_model becomes the compound (via_swap (register …)); the
-    scope complements sync_all/sync_except stay atomic.
+    locate/place); sync_to_model becomes the compound (compose_pg swap (register …));
+    the scope complements sync_all/sync_except stay atomic.
     """
     prims = make_core_prims() + [
         # projection: keep the world / keep the model channel, bare.  Listed first
@@ -163,10 +164,16 @@ def make_symmetric_prims(decomposed=False):
         Delta(register,    fn_p_g,  [fn_g_c, fn_gc_g], repr='register'),
         Delta(locate,      fn_g_c,  [cellvalue],       repr='locate'),
         Delta(place,       fn_gc_g, [cellvalue],       repr='place'),
-        # direction complement decomposed too: sync_to_model ≡ (via_swap (register
-        # (locate v) (place v))) — run the commit on the swapped pair.  No atomic
-        # sync_to_model node; the searcher must reach for via_swap.
-        Delta(via_swap,    fn_p_g, [fn_p_g],          repr='via_swap'),
+        # the third and last composition of the pair category: (pair -> pair) then
+        # (pair -> grid).  Two things need it.  (1) The direction complement
+        # decomposes ALL THE WAY — sync_to_model(v) ≡ (compose_pg swap (register
+        # (locate v) (place v))) — where the old `via_swap` was this composition with
+        # `swap` frozen inside it, i.e. one more atomic node bundling a choice.  (2) A
+        # template-rooted program IS an fn_p_g, handed a pair it did not build, so
+        # without this composer the pair-map axis is reachable only behind a `dup`,
+        # where both channels start equal and mapfst/swap are inert by construction.
+        # That is what left four complements without a task of their own.
+        Delta(compose_pg,  fn_p_g, [fn_p_p, fn_p_g],  repr='compose_pg'),
     ]
     return prims
 

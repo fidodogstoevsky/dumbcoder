@@ -98,7 +98,7 @@ def _rebuild_library(decomposed, smoke, run_path):
     either way — the two DSLs are the same machine — but the mental program is displayed
     through the atomic `fork(derive, commit)` abstraction (phase 1) or its decomposed
     plumbing (phase 2)."""
-    tasks = build_corpus(smoke)
+    tasks = build_corpus(smoke, decomposed=decomposed)
     D = Deltas(make_symmetric_prims(decomposed=decomposed))
     verify_ground_truth(D, tasks)
     if decomposed:

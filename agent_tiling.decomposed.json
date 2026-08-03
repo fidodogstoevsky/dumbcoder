@@ -1,0 +1,21 @@
+{
+ "phase": 2,
+ "decomposed": true,
+ "smoke": true,
+ "source": "phase2_run.smoke.json",
+ "library": [
+  "fn_3",
+  "fn_4",
+  "fn_5"
+ ],
+ "agent_ctor": null,
+ "agent_ctor_uses": 0,
+ "n_solved_belief": 0,
+ "tiled": false,
+ "columns": [
+  "fn_3",
+  "fn_4",
+  "fn_5"
+ ],
+ "combos": []
+}

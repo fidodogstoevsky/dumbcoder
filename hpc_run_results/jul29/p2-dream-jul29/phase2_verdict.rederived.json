@@ -1,0 +1,110 @@
+{
+ "run": "hpc_run_results/jul29/p2-dream-jul29/phase2_run.json",
+ "decomposed": true,
+ "overall": {
+  "degenerate": 88,
+  "literal": 13,
+  "multi_mover": 7
+ },
+ "by_variant": {
+  "belief_witness": {
+   "degenerate": 21,
+   "multi_mover": 1,
+   "literal": 4
+  },
+  "belief_goal": {
+   "degenerate": 25
+  },
+  "belief_false_obstacle": {
+   "literal": 9
+  },
+  "belief_wall": {
+   "degenerate": 24
+  },
+  "belief_observers": {
+   "degenerate": 18,
+   "multi_mover": 6
+  }
+ },
+ "detail": [
+  {
+   "variant": "belief_witness",
+   "form": "multi_mover",
+   "sol": "(pipe_gpg (compose_gp dup (mapsnd (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c1) (optimize (neg_dist 6) 2)))) (register (locate 2) (place 2))) (optimize (neg_dist 4) 1)))) sync_all)",
+   "movers": [
+    1,
+    2
+   ],
+   "arity": 2,
+   "order": "desc"
+  },
+  {
+   "variant": "belief_observers",
+   "form": "multi_mover",
+   "sol": "(pipe_gpg (compose_gp dup (mapsnd (compose (pipe_gpg (compose_gp dup (mapsnd (compose (step 5 up) (optimize (neg_dist 5) 4)))) (sync_except 5)) (optimize (neg_dist 5) 1)))) sync_all)",
+   "movers": [
+    1,
+    4
+   ],
+   "arity": 2,
+   "order": "asc"
+  },
+  {
+   "variant": "belief_observers",
+   "form": "multi_mover",
+   "sol": "(pipe_gpg (compose_gp dup (mapsnd (compose (pipe_gpg (compose_gp dup (mapsnd (compose (step 7 up) (optimize (neg_dist 7) 6)))) (sync_except 7)) (optimize (neg_dist 7) 8)))) sync_all)",
+   "movers": [
+    6,
+    8
+   ],
+   "arity": 2,
+   "order": "asc"
+  },
+  {
+   "variant": "belief_observers",
+   "form": "multi_mover",
+   "sol": "(pipe_gpg (compose_gp dup (mapsnd (compose (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c0 c2) (optimize (neg_dist 6) 5)))) sync_all) (optimize (neg_dist 0) 6)) (optimize (neg_dist 6) 2)))) (sync_except 6))",
+   "movers": [
+    2,
+    5
+   ],
+   "arity": 2,
+   "order": "asc"
+  },
+  {
+   "variant": "belief_observers",
+   "form": "multi_mover",
+   "sol": "(pipe_gpg (compose_gp dup (mapsnd (compose (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c0 c2) (optimize (neg_dist 8) 4)))) sync_all) (optimize (neg_dist 5) 8)) (optimize (neg_dist 8) 5)))) (sync_except 8))",
+   "movers": [
+    4,
+    5
+   ],
+   "arity": 2,
+   "order": "asc"
+  },
+  {
+   "variant": "belief_observers",
+   "form": "multi_mover",
+   "sol": "(pipe_gpg (compose_gp dup (mapsnd (compose (pipe_gpg (compose_gp dup (mapsnd (compose (step 1 up) (optimize (neg_dist 1) 7)))) (sync_except 1)) (optimize (neg_dist 1) 8)))) sync_all)",
+   "movers": [
+    7,
+    8
+   ],
+   "arity": 2,
+   "order": "asc"
+  },
+  {
+   "variant": "belief_observers",
+   "form": "multi_mover",
+   "sol": "(pipe_gpg (compose_gp dup (mapsnd (compose (pipe_gpg (compose_gp dup (mapsnd (compose (step 4 up) (optimize (neg_dist 4) 9)))) (sync_except 4)) (optimize (neg_dist 4) 5)))) sync_all)",
+   "movers": [
+    5,
+    9
+   ],
+   "arity": 2,
+   "order": "asc"
+  }
+ ],
+ "note": "belief commit-form census re-derived from the run's stored solutions under the classifier at commit a6965cd, which splits the old 'complement' bucket into multi_mover (a scope commit extensionally equal to the chain of individual attributions) and nonmental (a genuine non-mental rival). The run itself was produced at commit decb58d and is NOT re-searched; only the classification changes.",
+ "classifier_commit": "a6965cd"
+}

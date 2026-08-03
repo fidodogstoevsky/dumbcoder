@@ -1,13 +1,13 @@
 {
  "provenance": {
   "git": {
-   "commit": "127c8d983d015bbad0de406fee7dc53563b4c950",
-   "commit_short": "127c8d9",
+   "commit": "a6965cde7c05d6ec2628c121d24f442b54642b09",
+   "commit_short": "a6965cd",
    "branch": "master",
    "dirty": true
   },
-  "timestamp": "2026-07-27T18:19:15Z",
-  "host": "eduvpn-uva-stu-145-3-16-66.vpn.uva.nl",
+  "timestamp": "2026-08-03T13:28:25Z",
+  "host": "Gidons-MacBook-Air.local",
   "python": "3.12.7",
   "argv": "phase2.py --smoke",
   "knobs": {
@@ -16,7 +16,7 @@
    "cube": true,
    "t_fn": 15,
    "t_fn_round1": 15,
-   "t_reg": 8,
+   "t_reg": 45,
    "ecd_iters": 2,
    "stitch_iters": 3,
    "dream_on": true,
@@ -57,16 +57,20 @@
    "belief_goal": 23,
    "belief_observers": 27,
    "belief_fob": 25,
-   "relocate": 26
+   "relocate": 26,
+   "wipe": 28,
+   "composite": 29,
+   "drift_reg": 30,
+   "map_update": 31
   },
-  "repro": "commit 127c8d9+dirty | phase2 (decomposed, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-27T18:19:15Z"
+  "repro": "commit a6965cd+dirty | phase2 (decomposed, smoke) | t_fn=15 t_fn_round1=15 t_reg=45 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-08-03T13:28:25Z"
  },
  "decomposed": true,
  "smoke": true,
  "stitch_iters": 3,
  "ecd_iters": 2,
- "n_rounds": 1,
- "n_solved": 54,
+ "n_rounds": 2,
+ "n_solved": 65,
  "tasks": {
   "92e2ad7c9d0afedaf260a3bfaa4352a3fb5205df": {
    "sol": "(step 4 up)",
@@ -278,6 +282,16 @@
    "kind": "relocate",
    "round": 1
   },
+  "26853547e8bfb167bbddfbe34c0a88f4f4727084": {
+   "sol": "(pipe_gpg pair_blank snd_gg)",
+   "kind": "wipe",
+   "round": 1
+  },
+  "4a64f36df7b6e19b90c7b07f1745b69aa19eb02e": {
+   "sol": "(pipe_gpg pair_blank snd_gg)",
+   "kind": "wipe",
+   "round": 1
+  },
   "c52bf1b98009a41ee7387efb4120f88b6c9502d8": {
    "sol": "snd_gg",
    "kind": "readout",
@@ -318,25 +332,70 @@
    "kind": "reg_except",
    "round": 1
   },
-  "e6dcbdde625ddd4e73a40820815b44c6697ecd31": {
-   "sol": "(via_swap sync_all)",
-   "kind": "perception",
+  "2a3e399381850ad62e425306b74f4c16228b3b65": {
+   "sol": "(compose_pg swap sync_all)",
+   "kind": "map_update",
    "round": 1
   },
-  "cb237dc8863704e2d43b0da0e581e6735074d3bb": {
-   "sol": "(via_swap sync_all)",
-   "kind": "perception",
+  "afaaeb87e73ff08f4cad1ba7838d2ecfa223b2c5": {
+   "sol": "(compose_pg swap sync_all)",
+   "kind": "map_update",
    "round": 1
   },
-  "22fce858b46da55fa2b3b4180185a2db4443fd7d": {
-   "sol": "(register (locate 4) (place 4))",
+  "8b88a5a9eae22e215c5907ef0967c588cfc4f911": {
+   "sol": "(register (locate 1) (place 1))",
    "kind": "registration",
    "round": 1
   },
-  "c6c36d7f6e0dc27ad37437e39b27555a333b1c52": {
-   "sol": "(register (locate 4) (place 4))",
+  "0984591d5988ea2d03d130cfe5e952b8e8ea68ce": {
+   "sol": "(register (locate 5) (place 5))",
    "kind": "registration",
    "round": 1
+  },
+  "695794c10ae8c7cd73e2e4219fef3baf273db284": {
+   "sol": "(compose_pg swap (register (locate 1) (place 1)))",
+   "kind": "perception",
+   "round": 1
+  },
+  "6aec8f8f7b2dde986cee81413bfe7d8ac479e8fe": {
+   "sol": "(compose_pg swap (register (locate 5) (place 5)))",
+   "kind": "perception",
+   "round": 1
+  },
+  "a817d8cdfc26e92808dce35a097d39d45ab6996b": {
+   "sol": "(compose_pg (mapfst (step 1 left)) (register (locate 4) (place 4)))",
+   "kind": "drift_reg",
+   "round": 1
+  },
+  "9b325faae2ff61efe798b0b83de4cf23a075e4ab": {
+   "sol": "(compose_pg (mapfst (step 4 left)) (register (locate 1) (place 1)))",
+   "kind": "drift_reg",
+   "round": 1
+  },
+  "86d94ddba1bede8e0daf4af60942262b91e281c7": {
+   "sol": "(compose_pg (bimap (step 5 right) (erase 6)) overlay)",
+   "kind": "composite",
+   "round": 1
+  },
+  "921e210bdf5766c72ee8a17e335bcfe69675008f": {
+   "sol": "(compose_pg (bimap (step 6 up) (erase 4)) overlay)",
+   "kind": "composite",
+   "round": 1
+  },
+  "537e4df3dd32f897b7025daa504ac8d591ac9d9c": {
+   "sol": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c2) (optimize (neg_dist 2) 1)))) sync_all)",
+   "kind": "belief",
+   "round": 2
+  },
+  "2a0073b5badeb6bd866e76f7f406a4f986fea0eb": {
+   "sol": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c2) (optimize (neg_dist 5) 4)))) sync_all)",
+   "kind": "belief",
+   "round": 2
+  },
+  "a0e3f7283374ed6082dc66add1f6065a94a30a2e": {
+   "sol": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c2) (optimize (neg_dist 6) 2)))) sync_all)",
+   "kind": "belief",
+   "round": 2
   }
  },
  "timings": [
@@ -345,966 +404,980 @@
    "kind": "physics",
    "round": 1,
    "solved": true,
-   "elapsed": 0.00673400005325675
+   "elapsed": 0.002497708424925804
   },
   {
    "id": "bb58ed7dbd556cd29dc0ca613c1de5f8ca43ad26",
    "kind": "physics",
    "round": 1,
    "solved": true,
-   "elapsed": 0.0071756248362362385
+   "elapsed": 0.0020212498493492603
   },
   {
    "id": "44a71425158b6d1c544051f79dca34400f52f268",
    "kind": "desire",
    "round": 1,
    "solved": true,
-   "elapsed": 0.00907091610133648
+   "elapsed": 0.0048977080732584
   },
   {
    "id": "3f0308c9be806342a97ac7522d2510e02f611e08",
    "kind": "desire",
    "round": 1,
    "solved": true,
-   "elapsed": 0.008778666146099567
+   "elapsed": 0.005798792000859976
   },
   {
    "id": "abfc20713aa2d42ed5167be7d7e5d9d9037d9139",
    "kind": "desire",
    "round": 1,
    "solved": true,
-   "elapsed": 0.009862333070486784
+   "elapsed": 0.0052295830100774765
   },
   {
    "id": "3635fae4af8f65f76cc5b9ffc8f4d6876f9aaaf8",
    "kind": "desire",
    "round": 1,
    "solved": true,
-   "elapsed": 0.010029375087469816
+   "elapsed": 0.0027862917631864548
   },
   {
    "id": "bd536e93b790e61d6b1210e1e34e2fdb116b26b1",
    "kind": "desire",
    "round": 1,
    "solved": true,
-   "elapsed": 0.009401916991919279
+   "elapsed": 0.001556416042149067
   },
   {
    "id": "6c012ebe63f2fde3a0e585ea64c5b459181b677d",
    "kind": "desire",
    "round": 1,
    "solved": true,
-   "elapsed": 0.009110999759286642
+   "elapsed": 0.002195000182837248
   },
   {
    "id": "e2f4ec3db7ffb54593cf51ddea3a1a972525e55e",
    "kind": "desire",
    "round": 1,
    "solved": true,
-   "elapsed": 0.002446333412081003
+   "elapsed": 0.004128709435462952
   },
   {
    "id": "ae510b1c5172023f244add9be002ef5919cd45ab",
    "kind": "desire",
    "round": 1,
    "solved": true,
-   "elapsed": 0.0014104582369327545
+   "elapsed": 0.003975207917392254
   },
   {
    "id": "81450a7341dd3134b38575e761ed0b1a2027e628",
    "kind": "overlay",
    "round": 1,
    "solved": true,
-   "elapsed": 3.0626154583878815
+   "elapsed": 2.641939583234489
   },
   {
    "id": "ae088020dd5f64245630ee6d202768f3570df7b5",
    "kind": "overlay",
    "round": 1,
    "solved": true,
-   "elapsed": 2.7017677081748843
+   "elapsed": 2.5531857078894973
   },
   {
    "id": "567f6e0aece16452553b8b91e107efbc9e508057",
    "kind": "comet",
    "round": 1,
    "solved": true,
-   "elapsed": 9.70316975004971
+   "elapsed": 8.363602624740452
   },
   {
    "id": "b5b19e1247f9cb0bd6a926e55a404ba4af582e9f",
    "kind": "comet",
    "round": 1,
    "solved": true,
-   "elapsed": 10.717069750186056
+   "elapsed": 9.605655000079423
   },
   {
    "id": "70c62035256bdc8418c337ec37f61cbaf29dff70",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.000475041102618
+   "elapsed": 15.000932000111789
   },
   {
    "id": "7ed4f87f6e554e72fde02a2fc5e5c7ccf121b728",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.001626332756132
+   "elapsed": 15.000275291036814
   },
   {
    "id": "81812be494b63f3237ed937a3b3e8ede0207d614",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.006066625006497
+   "elapsed": 15.00122116599232
   },
   {
    "id": "92e2679f5d596636794f9fda5ae601b8b410e9d9",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.005888457875699
+   "elapsed": 15.001623957883567
   },
   {
    "id": "74879752f7d7a1f207183a1507c450c180b12784",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00717829214409
+   "elapsed": 15.003462374676019
   },
   {
    "id": "ea950ff59d5a062d9d9f56a0b652172407bf9358",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00293054105714
+   "elapsed": 15.001248416956514
   },
   {
    "id": "d69f2a58c35ce28d2b44fd8b6f63acda1b6a88f4",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00078700017184
+   "elapsed": 15.00408541597426
   },
   {
    "id": "5f024caae22ce789ce520e3e067343f9c1eda902",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.001485750079155
+   "elapsed": 15.006758332718164
   },
   {
    "id": "798070a00a241861030bb05dd541ec3fc9ca0499",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.000308292452246
+   "elapsed": 15.002483749762177
   },
   {
    "id": "6a7d4847f113da90b6b160ef313ff0818ea10a15",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00573500012979
+   "elapsed": 15.012295374646783
   },
   {
    "id": "4ada1b281bc8e144eb52b8c5d6d0969523e1b4ce",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.003377790562809
+   "elapsed": 15.00394987501204
   },
   {
    "id": "b6191ec17ea9da11714fd09af0f2000f7ad46556",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.002122833859175
+   "elapsed": 15.003733582794666
   },
   {
    "id": "a5021e72a6a6254350acab3a7e15d28fb44d3ea2",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.000266499817371
+   "elapsed": 15.001157708931714
   },
   {
    "id": "9546e3561f7530f5f895b9d6f9bb38c516d972fb",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.002004791982472
+   "elapsed": 15.000388875138015
   },
   {
    "id": "58cf1150b83609c41a241349e8c4f129666eda63",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.000443750061095
+   "elapsed": 15.000404207967222
   },
   {
    "id": "64c2aac9dbe3786b0360a9b810a2b64234ce89fe",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.001202582847327
+   "elapsed": 15.001763625070453
   },
   {
    "id": "b4acd5219db1c1be01e69c4bdd5059564c00e057",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.001924875192344
+   "elapsed": 15.000168167054653
   },
   {
    "id": "7d29e9c355871a8c393ec6155e0f2d029b157959",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00472891703248
+   "elapsed": 15.000968417152762
   },
   {
    "id": "9e7719e546fc9e6e319b0eee6f0d225f78762f3a",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.000119166914374
+   "elapsed": 15.01021191617474
   },
   {
    "id": "c1df4ac3c658cd5d24aa0a78125ed41fb714cef8",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00262925028801
+   "elapsed": 15.000293042045087
   },
   {
    "id": "9aa5437b45752b654875f14373034a1f5670b79b",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.002465290948749
+   "elapsed": 15.000929750036448
   },
   {
    "id": "5ee0f27b4887454e17f6248a348be3cea4b8d543",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00465941708535
+   "elapsed": 15.108870833180845
   },
   {
    "id": "d9f4156c5060968adaef0f88d491d40892f39256",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.002113250084221
+   "elapsed": 15.00233708275482
   },
   {
    "id": "3838e1b3b720f3193627052b0ed079f393afae11",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00071991700679
+   "elapsed": 15.001192208845168
   },
   {
    "id": "715076293dac4c8f8edbd9e24f828fcb5a9cdbce",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.000052792020142
+   "elapsed": 15.000334583222866
   },
   {
    "id": "651ba7382c5cdaf83212073cfc9227d743001e22",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00048437481746
+   "elapsed": 15.000946208834648
   },
   {
    "id": "826ff465ef0496be35d306541478dfaaddc7cf6d",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.001545500010252
+   "elapsed": 15.002929124981165
   },
   {
    "id": "8c663d181d11aa42d402f0e6ef17212b2e001468",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.001273334026337
+   "elapsed": 15.00078587513417
   },
   {
    "id": "2575f37125de3a555989e328ef978eb56171fefc",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.003539707977325
+   "elapsed": 15.000346166081727
   },
   {
    "id": "017b7f3ae1f969a1dbce1f5eadbb484b183df74e",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00088862515986
+   "elapsed": 15.000977416988462
   },
   {
    "id": "a2c2fae3422c9a09032094eb37828a55797d33c2",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.000996500253677
+   "elapsed": 15.000292332842946
   },
   {
    "id": "45594dda93a42ada5f273231843c4ef4394d485e",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.000037542078644
+   "elapsed": 15.007429542019963
   },
   {
    "id": "78d818202e65ab9cbf926e9f3eea3beac2d8845b",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00177783286199
+   "elapsed": 15.00097854109481
   },
   {
    "id": "05aa6d0e9dce461867a8d6b927708346a633d7a7",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.000148291699588
+   "elapsed": 15.003237625118345
   },
   {
    "id": "9b9b49ae70ec616b94943e12d5d97ac661eb4aea",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.000396375078708
+   "elapsed": 15.000351750291884
   },
   {
    "id": "974a28afccad2e882e9294c22053636a2250f825",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.001336500048637
+   "elapsed": 15.003158791922033
   },
   {
    "id": "5046d93e029f38ac5b15910386fb173d5e18a1fa",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.001763333100826
+   "elapsed": 15.000494624953717
   },
   {
    "id": "099d0d3ca25d175a836feebab00c316050926387",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00272929109633
+   "elapsed": 15.001462708692998
   },
   {
    "id": "fe4d87bc32266c0f8eb6d98260994807414b2e9c",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.010477500036359
+   "elapsed": 15.000549958087504
   },
   {
    "id": "e5dcfdaeebf5a282c72d5da3d3ed8cb8e4053255",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.007995415944606
+   "elapsed": 15.001761000137776
   },
   {
    "id": "537e4df3dd32f897b7025daa504ac8d591ac9d9c",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.003359333612025
+   "elapsed": 15.000175875145942
   },
   {
    "id": "2a0073b5badeb6bd866e76f7f406a4f986fea0eb",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00162462471053
+   "elapsed": 15.000180624891073
   },
   {
    "id": "23621d85eea24cb79a8ab14d3801984b9ff9aecb",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.003051541745663
+   "elapsed": 15.001984166912735
   },
   {
    "id": "42573655c2175f0f9441ee59cd8e5657f9f3433f",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.00690612476319
+   "elapsed": 15.001274917274714
   },
   {
    "id": "a0e3f7283374ed6082dc66add1f6065a94a30a2e",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.000338291283697
+   "elapsed": 15.001836458221078
   },
   {
    "id": "b5bbcef5cb5b49ee8543f114c05e444f51e580ca",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.003975958097726
+   "elapsed": 15.00074474979192
   },
   {
    "id": "9be14c39d0faad9972f7cb5eac67e991b0af9eeb",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.000562583096325
+   "elapsed": 15.000248666852713
   },
   {
    "id": "3724ece9c9207d2d755c153e1144aeca7aa4e308",
    "kind": "belief",
    "round": 1,
    "solved": false,
-   "elapsed": 15.000232707709074
+   "elapsed": 15.00077304104343
   },
   {
    "id": "25a600dd65ae4ad35750a535fe8b8edc2c6c2e88",
    "kind": "flee",
    "round": 1,
    "solved": true,
-   "elapsed": 0.006290624849498272
+   "elapsed": 0.010501292068511248
   },
   {
    "id": "cacc247d7636f78203abc2234628a26c3806d670",
    "kind": "flee",
    "round": 1,
    "solved": true,
-   "elapsed": 0.007036333903670311
+   "elapsed": 0.005619083996862173
   },
   {
    "id": "e39d334cf8de3feb2bac1aed92720f9448565142",
    "kind": "deletion",
    "round": 1,
    "solved": true,
-   "elapsed": 0.03375629195943475
+   "elapsed": 0.025560582987964153
   },
   {
    "id": "2c564eba89952f1ed7f3d21d39af21a07d1fa1b8",
    "kind": "deletion",
    "round": 1,
    "solved": true,
-   "elapsed": 0.028764333110302687
+   "elapsed": 0.04016962507739663
   },
   {
    "id": "121f74b3ea696fc2c8e4b727cc0a581eddd8ef59",
    "kind": "denoise",
    "round": 1,
    "solved": true,
-   "elapsed": 0.0007827500812709332
+   "elapsed": 0.00037137512117624283
   },
   {
    "id": "b1b7dcf9002036a9fdd351b63c4a097590712784",
    "kind": "denoise",
    "round": 1,
    "solved": true,
-   "elapsed": 0.00039241695776581764
+   "elapsed": 0.0006633750163018703
   },
   {
    "id": "7b73fd6ca0f0416923acc0ad2a97d6817294336b",
    "kind": "underlay",
    "round": 1,
    "solved": true,
-   "elapsed": 9.141560332849622
+   "elapsed": 7.554712166078389
   },
   {
    "id": "4eb69c3b90eb173dcad211daf6f54b608f43aa19",
    "kind": "underlay",
    "round": 1,
    "solved": true,
-   "elapsed": 9.67092562513426
+   "elapsed": 7.812840958125889
   },
   {
    "id": "d9f5a5e9806c71167eb008a610ce5e08a52f9ade",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.2626897501759231
+   "elapsed": 0.2310482496395707
   },
   {
    "id": "84e13aecf76fdeb9562129eb200c89187083f512",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.2621499579399824
+   "elapsed": 0.21540008299052715
   },
   {
    "id": "e46c1526bbd6d60aa00d8c42e43195972d255572",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.3105463753454387
+   "elapsed": 0.2484658327884972
   },
   {
    "id": "793e747640c55198ce2848d07acb0de1b14bc52a",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.2757827499881387
+   "elapsed": 0.2276786658912897
   },
   {
    "id": "d013379d17adc5b9835fab529692a28d2bb86388",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.20660245791077614
+   "elapsed": 0.15229570912197232
   },
   {
    "id": "81264fc2171598b899ff5bf4ef549ff150de8407",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.16986999986693263
+   "elapsed": 0.14782850025221705
   },
   {
    "id": "d17804526829c485499a038dd1682d43598e2801",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.18136799987405539
+   "elapsed": 0.15652291709557176
   },
   {
    "id": "1fee177967764308831ac258a692179ba31f2cc7",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.17103808419778943
+   "elapsed": 0.12956783268600702
   },
   {
    "id": "ab5403a8416d5c1c99fc988edc405ce3e1a9f933",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.2691270001232624
+   "elapsed": 0.19411133415997028
   },
   {
    "id": "5042f5c3241d05b5d4d752aab33fc2b8e1e3567e",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.35971416672691703
+   "elapsed": 0.25577562488615513
   },
   {
    "id": "a3ed8006b87a4f515fc1eddb9660505406c8ab66",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.2612811252474785
+   "elapsed": 0.21898616710677743
   },
   {
    "id": "7c7c943a9aab450e127e3e72b4369800a44c2356",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.22827320778742433
+   "elapsed": 0.16820233268663287
   },
   {
    "id": "8aaee50c444a73e9a7c4edab17a24208c7de66ad",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.20842137513682246
+   "elapsed": 0.17422320879995823
   },
   {
    "id": "b2452afd28c988e47f3ec235426680f50aaa643a",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.23031487502157688
+   "elapsed": 0.19963858416303992
   },
   {
    "id": "e32ad933643cb50983c014ff0b1975880389e4c4",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.28182912478223443
+   "elapsed": 0.20869508292526007
   },
   {
    "id": "dfba52d0c84381c4fb61769139ea48180ab10532",
    "kind": "obstacle",
    "round": 1,
    "solved": true,
-   "elapsed": 0.24652566574513912
+   "elapsed": 0.18658170802518725
   },
   {
    "id": "e2c43b229033e6f0f44bcf9df12a2b6673f64237",
    "kind": "relocate",
    "round": 1,
    "solved": true,
-   "elapsed": 0.03597195819020271
+   "elapsed": 0.03802704205736518
   },
   {
    "id": "1d5c47d158e5c751547cb123f6da547d7549a35f",
    "kind": "relocate",
    "round": 1,
    "solved": true,
-   "elapsed": 0.007864249870181084
+   "elapsed": 0.014448666013777256
   },
   {
    "id": "a445c7dabeb74cec44f7b532ef8fb20d255a44b0",
    "kind": "relocate",
    "round": 1,
    "solved": true,
-   "elapsed": 0.017384249716997147
+   "elapsed": 0.009209833107888699
   },
   {
    "id": "9df81c84fb60bb980824c427b4d6bfc4856dafd9",
    "kind": "relocate",
    "round": 1,
    "solved": true,
-   "elapsed": 0.033691625110805035
+   "elapsed": 0.017317125108093023
+  },
+  {
+   "id": "26853547e8bfb167bbddfbe34c0a88f4f4727084",
+   "kind": "wipe",
+   "round": 1,
+   "solved": true,
+   "elapsed": 0.03390687517821789
+  },
+  {
+   "id": "4a64f36df7b6e19b90c7b07f1745b69aa19eb02e",
+   "kind": "wipe",
+   "round": 1,
+   "solved": true,
+   "elapsed": 0.03539383318275213
   },
   {
    "id": "70c62035256bdc8418c337ec37f61cbaf29dff70",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 14.999718165956438
+   "elapsed": 15.001678625121713
   },
   {
    "id": "7ed4f87f6e554e72fde02a2fc5e5c7ccf121b728",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.001415709033608
+   "elapsed": 15.002301041036844
   },
   {
    "id": "81812be494b63f3237ed937a3b3e8ede0207d614",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.001313250046223
+   "elapsed": 15.011841916944832
   },
   {
    "id": "92e2679f5d596636794f9fda5ae601b8b410e9d9",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.002298374660313
+   "elapsed": 15.006376582663506
   },
   {
    "id": "74879752f7d7a1f207183a1507c450c180b12784",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.002463958226144
+   "elapsed": 15.001032374799252
   },
   {
    "id": "ea950ff59d5a062d9d9f56a0b652172407bf9358",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.001825749874115
+   "elapsed": 15.001615416258574
   },
   {
    "id": "d69f2a58c35ce28d2b44fd8b6f63acda1b6a88f4",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.006709541659802
+   "elapsed": 15.00028287479654
   },
   {
    "id": "5f024caae22ce789ce520e3e067343f9c1eda902",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.000198125373572
+   "elapsed": 15.00395774981007
   },
   {
    "id": "798070a00a241861030bb05dd541ec3fc9ca0499",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 10.975419375114143
+   "elapsed": 15.002563792280853
   },
   {
    "id": "6a7d4847f113da90b6b160ef313ff0818ea10a15",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 10.912423375062644
+   "elapsed": 15.004406167194247
   },
   {
    "id": "4ada1b281bc8e144eb52b8c5d6d0969523e1b4ce",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 10.957334583159536
+   "elapsed": 15.005975750274956
   },
   {
    "id": "b6191ec17ea9da11714fd09af0f2000f7ad46556",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 10.954444792121649
+   "elapsed": 15.00626066699624
   },
   {
    "id": "a5021e72a6a6254350acab3a7e15d28fb44d3ea2",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 10.941558290738612
+   "elapsed": 15.000641124788672
   },
   {
    "id": "9546e3561f7530f5f895b9d6f9bb38c516d972fb",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 10.929947708267719
+   "elapsed": 15.00160324992612
   },
   {
    "id": "58cf1150b83609c41a241349e8c4f129666eda63",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 10.911198957823217
+   "elapsed": 15.011175790801644
   },
   {
    "id": "64c2aac9dbe3786b0360a9b810a2b64234ce89fe",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 10.935111291706562
+   "elapsed": 15.00609366595745
   },
   {
    "id": "b4acd5219db1c1be01e69c4bdd5059564c00e057",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.021368832793087
+   "elapsed": 15.000120957847685
   },
   {
    "id": "7d29e9c355871a8c393ec6155e0f2d029b157959",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.013310499954969
+   "elapsed": 15.001887375023216
   },
   {
    "id": "9e7719e546fc9e6e319b0eee6f0d225f78762f3a",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.000475165899843
+   "elapsed": 15.00513174990192
   },
   {
    "id": "c1df4ac3c658cd5d24aa0a78125ed41fb714cef8",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.013010999653488
+   "elapsed": 15.000227250158787
   },
   {
    "id": "9aa5437b45752b654875f14373034a1f5670b79b",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.017080792225897
+   "elapsed": 15.004461208358407
   },
   {
    "id": "5ee0f27b4887454e17f6248a348be3cea4b8d543",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.010948832612485
+   "elapsed": 15.00180924963206
   },
   {
    "id": "d9f4156c5060968adaef0f88d491d40892f39256",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.01307454193011
+   "elapsed": 15.000618333928287
   },
   {
    "id": "3838e1b3b720f3193627052b0ed079f393afae11",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.000547499861568
+   "elapsed": 15.000508042052388
   },
   {
    "id": "715076293dac4c8f8edbd9e24f828fcb5a9cdbce",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 8.582521290984005
+   "elapsed": 15.000171666964889
   },
   {
    "id": "651ba7382c5cdaf83212073cfc9227d743001e22",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 8.420936250127852
+   "elapsed": 15.000130959320813
   },
   {
    "id": "826ff465ef0496be35d306541478dfaaddc7cf6d",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 8.350859665777534
+   "elapsed": 15.001738874707371
   },
   {
    "id": "8c663d181d11aa42d402f0e6ef17212b2e001468",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 8.410070000216365
+   "elapsed": 15.00077237514779
   },
   {
    "id": "2575f37125de3a555989e328ef978eb56171fefc",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 8.356009082868695
+   "elapsed": 15.000255125109106
   },
   {
    "id": "017b7f3ae1f969a1dbce1f5eadbb484b183df74e",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 8.30303620826453
+   "elapsed": 15.000235334038734
   },
   {
    "id": "a2c2fae3422c9a09032094eb37828a55797d33c2",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 8.308631167281419
+   "elapsed": 15.001316166948527
   },
   {
    "id": "45594dda93a42ada5f273231843c4ef4394d485e",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 8.266744999680668
+   "elapsed": 15.001695790793747
   },
   {
    "id": "78d818202e65ab9cbf926e9f3eea3beac2d8845b",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.007495124824345
+   "elapsed": 15.003743750043213
   },
   {
    "id": "05aa6d0e9dce461867a8d6b927708346a633d7a7",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.010172792244703
+   "elapsed": 15.00321683427319
   },
   {
    "id": "9b9b49ae70ec616b94943e12d5d97ac661eb4aea",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.009163584094495
+   "elapsed": 15.001209584064782
   },
   {
    "id": "974a28afccad2e882e9294c22053636a2250f825",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.000406582839787
+   "elapsed": 15.000677207950503
   },
   {
    "id": "5046d93e029f38ac5b15910386fb173d5e18a1fa",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.006571374833584
+   "elapsed": 15.00182908307761
   },
   {
    "id": "099d0d3ca25d175a836feebab00c316050926387",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.011730375234038
+   "elapsed": 15.000289082992822
   },
   {
    "id": "fe4d87bc32266c0f8eb6d98260994807414b2e9c",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.00086829205975
+   "elapsed": 15.002327125053853
   },
   {
    "id": "e5dcfdaeebf5a282c72d5da3d3ed8cb8e4053255",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.004387207794935
+   "elapsed": 15.002240957692266
   },
   {
    "id": "537e4df3dd32f897b7025daa504ac8d591ac9d9c",
    "kind": "belief",
    "round": 2,
-   "solved": false,
-   "elapsed": 15.046050542034209
+   "solved": true,
+   "elapsed": 12.911833125166595
   },
   {
    "id": "2a0073b5badeb6bd866e76f7f406a4f986fea0eb",
    "kind": "belief",
    "round": 2,
-   "solved": false,
-   "elapsed": 15.063582916744053
+   "solved": true,
+   "elapsed": 12.899568167049438
   },
   {
    "id": "23621d85eea24cb79a8ab14d3801984b9ff9aecb",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.00562920793891
+   "elapsed": 15.005575625225902
   },
   {
    "id": "42573655c2175f0f9441ee59cd8e5657f9f3433f",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.033249750267714
+   "elapsed": 15.000606125220656
   },
   {
    "id": "a0e3f7283374ed6082dc66add1f6065a94a30a2e",
    "kind": "belief",
    "round": 2,
-   "solved": false,
-   "elapsed": 15.007357500027865
+   "solved": true,
+   "elapsed": 12.7876962502487
   },
   {
    "id": "b5bbcef5cb5b49ee8543f114c05e444f51e580ca",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.01341712474823
+   "elapsed": 15.00301720900461
   },
   {
    "id": "9be14c39d0faad9972f7cb5eac67e991b0af9eeb",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.035960542038083
+   "elapsed": 15.000776458065957
   },
   {
    "id": "3724ece9c9207d2d755c153e1144aeca7aa4e308",
    "kind": "belief",
    "round": 2,
    "solved": false,
-   "elapsed": 15.021615166217089
+   "elapsed": 15.000786291901022
   }
  ]
 }

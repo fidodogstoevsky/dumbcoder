@@ -163,7 +163,7 @@ def _load(decomposed, smoke, run_path):
     # regenerate the corpus to recover per-task metadata (belief variant labels), keyed by
     # the same stable mat_key_id the artifact uses.  Sizes/seeds match run_phase, so the
     # keys line up (the coupling mdl_margin.build_corpus already documents).
-    meta_of = {mat_key_id(x): m for x, m in build_corpus(smoke)}
+    meta_of = {mat_key_id(x): m for x, m in build_corpus(smoke, decomposed=decomposed)}
     return art, D, dict(art['sols']), rewritten, meta_of
 
 

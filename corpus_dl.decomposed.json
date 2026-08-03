@@ -1,0 +1,122 @@
+{
+ "decomposed": true,
+ "phase": 2,
+ "smoke": true,
+ "n_rounds": 1,
+ "n_tasks": 62,
+ "family_counts": {
+  "physics": 2,
+  "desire": 8,
+  "world": 52,
+  "belief": 0
+ },
+ "signature_round": 1,
+ "signature_drop": 0.0,
+ "final_library": [
+  "fn_0",
+  "fn_1",
+  "fn_2"
+ ],
+ "rounds": [
+  {
+   "round": 0,
+   "n_invented": 0,
+   "invented": [],
+   "n_solved": 0,
+   "corpus_dl": 602.6760597229004,
+   "library_cost": 0.0,
+   "total_dl": 602.6760597229004,
+   "by_family": {
+    "physics": 11.26957893371582,
+    "desire": 57.953819274902344,
+    "world": 533.4526615142822,
+    "belief": 0.0
+   }
+  },
+  {
+   "round": 1,
+   "n_invented": 3,
+   "invented": [
+    "fn_0",
+    "fn_1",
+    "fn_2"
+   ],
+   "n_solved": 62,
+   "corpus_dl": 514.0887088775635,
+   "library_cost": 15.262789249420166,
+   "total_dl": 529.3514981269836,
+   "by_family": {
+    "physics": 11.772208213806152,
+    "desire": 59.96433639526367,
+    "world": 442.35216426849365,
+    "belief": 0.0
+   }
+  }
+ ],
+ "provenance": {
+  "git": {
+   "commit": "a6965cde7c05d6ec2628c121d24f442b54642b09",
+   "commit_short": "a6965cd",
+   "branch": "master",
+   "dirty": true
+  },
+  "timestamp": "2026-08-03T12:49:38Z",
+  "host": "Gidons-MacBook-Air.local",
+  "python": "3.12.7",
+  "argv": "phase2.py --smoke",
+  "knobs": {
+   "decomposed": true,
+   "smoke": true,
+   "cube": true,
+   "t_fn": 15,
+   "t_fn_round1": 15,
+   "t_reg": 45,
+   "ecd_iters": 2,
+   "stitch_iters": 3,
+   "dream_on": true,
+   "dream_iters": 120,
+   "plain_belief": false,
+   "curriculum": true,
+   "k": 4,
+   "n_phys": 2,
+   "n_des": 1,
+   "n_ov": 2,
+   "n_comet": 2,
+   "n_reg": 2,
+   "n_bel": 1,
+   "n_belvar": 1,
+   "n_goal": 2,
+   "n_corner": 2,
+   "n_obstacle": 2,
+   "n_relocate": 4
+  },
+  "seeds": {
+   "physics": 0,
+   "desire": 1,
+   "belief": 2,
+   "overlay": 3,
+   "registration": 4,
+   "comet": 5,
+   "flee": 10,
+   "deletion": 11,
+   "denoise": 12,
+   "perception": 13,
+   "multi_reg": 14,
+   "reg_except": 15,
+   "inpaint": 16,
+   "readout": 17,
+   "obstacle": 18,
+   "underlay": 19,
+   "belief_extra": 22,
+   "belief_goal": 23,
+   "belief_observers": 27,
+   "belief_fob": 25,
+   "relocate": 26,
+   "wipe": 28,
+   "composite": 29,
+   "drift_reg": 30,
+   "map_update": 31
+  },
+  "repro": "commit a6965cd+dirty | phase2 (decomposed, smoke) | t_fn=15 t_fn_round1=15 t_reg=45 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-08-03T12:49:38Z"
+ }
+}

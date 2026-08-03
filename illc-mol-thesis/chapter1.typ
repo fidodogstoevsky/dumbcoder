@@ -2,171 +2,111 @@
 
 #mol-chapter("Theory of Mind and its Acquisition")
 
-== The nature and scope of theory of mind
-
-_the problem of other minds, scoping to propositional attitudes_
+== The Nature and Scope of Theory of Mind
 
 The ice cream peddler's scratchy jingle got louder still as he brought his cart to a stop nearby. A child, hitherto engrossed in sandbox amusements, abandoned her playmates abruptly. She darted across the playground, hurtling at full speed towards a gaggle of parents. Absorbing the impact of a 20 kg cruise missile, the target continued his conversation unfazed by the girl now tugging at his jeans. Only when he deigned to look down at the child did he shriek and go pale. But the girl barely had time to react, because just then she heard her name shouted from the other side of the playground. She turned to its source and ran towards a similar-looking man whose outstretched arms held two ice cream cones.
 
-You chuckle at the scene, observing from a nearby park bench. The girl, wanting ice cream, pestered a man she thought was her father. The man, undoubtedly accustomed to his own nagging kids, ignored the girl thinking it was his own child. Descriptions like these, in terms of desires, beliefs, and intentions, seem trivial and obvious. But there's something miraculous about them. How are you able to peer into other peoples' minds? Mental content is unobservable, all you see is a sequence of physical actions. And yet humans, even infants, are experts at inferring mental content rapidly and accurately.
+You chuckle at the scene, observing from a nearby park bench. The girl, wanting ice cream, pestered a man she thought was her father. The man, undoubtedly accustomed to his own nagging kids, ignored the girl thinking it was his own child. Descriptions like these, in terms of desires, beliefs, and intentions, seem trivial and obvious. But there's something miraculous about them. How are you able to peer into other peoples' minds? Mental content is unobservable; all you see is a sequence of physical actions. And yet humans, even infants, are experts at inferring mental content rapidly and accurately.
 
-Humans have the cognitive ability to impute mental states to others, to attribute a belief, desire, or intention to another person. This capacity is known as "theory of mind",  "folk psychology", the ability to "mindread", to "mentalize". It is integral to everything that makes us human: to cooperate with someone you need to understand what they think, what they want. To decode someone's words, you need to begin with what they're trying to (by the Rational Speech Act framework). To understand social roles like "helping" and "hindering", you need to attribute an intention to them. Humans make these inferences so naturally that it seems like not much of an impressive ability at all, and "mindreading" seems too fabulous a term for something so mundane. But the ubiquity of these inferences should make the human capacity for mentalizing even more impressive, not less.
+Humans have the cognitive ability to impute mental states to others: to attribute a belief, a desire, or an intention to another person. This capacity is known as "theory of mind", "commonsense psychology", "naive psychology", "folk psychology", or the ability to "mindread", to "mentalize" @margolis_oxford_2012. Among these we'll primarily use "theory of mind", henceforth ToM @premack_does_1978. We choose this term to emphasize that this capacity is a _theory_ proper in that it enables behavioral prediction by positing states that are not directly observable @gopnik_why_1992. 
 
-In this thesis we study the question: how is this capacity acquired? How do humans, even at a young age, come to acquire this ability? We'll begin by 
+// TODO: intenti0onal stance, Dennet. The capacity for ToM is integral to our humanity: to cooperate with someone you have to understand what they think and what they want, to decode someone's words you have to begin from what they are trying to do with them. Humans make these inferences so naturally that the capacity can look like no achievement at all. We eagerly construe and the disposition does not even wait for a plausible target --- a fact @sec-planner returns to when it takes up Dennett's intentional stance.
 
+The mental states we attribute include perceptual states, bodily feelings, emotional states, and propositional attitudes such as beliefs, desires, hopes and intentions @margolis_oxford_2012. This thesis is concerned with the attribution of propositional attitudes, particularly belief. A propositional attitude relates an agent to some content ("she believes that _x_"), so to attribute a belief to an agent is to attribute a _model_ that may diverge from the world, and to predict behaviour from the model rather than from the world @crane_mechanical_nodate @perner_understanding_1991. In this thesis we study how this capacity to attribute and predict off a divergent world model is acquired. How do humans, even at a young age, come to have it?
 
-#underline[in this section:]
-- *the problem of other minds* framed as a fundamental challenge: minds are unobservable, yet humans (even infants) are experts at inferring their contents rapidly and accurately
-- *function of ToM* its role in social interaction, such as cooperation, communication (pragmatics, RSA), and understanding social roles like "helping" or "hindering"
+== Experimental Evidence: Developmental Milestones <timeline>
 
-"Theory of Mind (ToM) refers to the cognitive capacity to attribute mental states to self or others."
-Other names for the same capacity include:
-- "commonsense psychology"
-- "naive psychology"
-- "folk psychology"
-- "mindreading"
-- "mentalizing"
-@margolis_oxford_2012
+ToM doesn't arrive all at once, but in pieces over roughly four years and in a roughly fixed order @wellman_scaling_2004@coskun_new_2020 @beaudoin_systematic_2020 @wellman_theory_2018 @rakoczy_foundations_2022. Long before children can say anything about minds, they parse motion as goal-directed. Woodward habituated 5- to 9-month-olds to a hand reaching for one of two objects and then swapped the objects' positions. Infants looked longer when the hand reached to the old location for a new object than when it reached to a new location for the old object @woodward_infants_1998. So the infant encodes the goal object, not the trajectory.
 
-mental states include things like
-- perception
-- bodily feelings
-- emotional states
-- propositional attitudes (beliefs, desires, hopes, intentions)
-@margolis_oxford_2012
+Gergely et al. showed that, more than object-directed, the interpretation is even efficiency-sensitive: 12-month-olds expect an agent to take the most efficient means its situation affords, and are surprised when it does not @gergely_taking_1995. Gergely and Csibra call this schema the _teleological stance_ and distinguish it from the intentional stance @gergely_teleological_2003 @csibra_obsessed_2007 So before the first birthday, an infant can read bodies as taking efficient means to ends. This is _not_ ToM. There's no attribution of mental states, it's just an extensional story.
 
-We'll be focusing on the attribution of propositional attitudes.
+In the second year, infants become sensitive to what an agent can (and can't) see, and begin to condition their expectations about an agent's goal based on the agent's perceptual access to the objects involved @luo_toward_2010. This is a perspective-taking ability, but restricted mostly to the epistemic case of perceptual access. ToM similarly requires perspective-taking, but pertaining to more complex mental states. 
 
+//The transition that has organized the field is the one from reality-centred to belief-centred prediction.
 
+The jump to ToM involves a transition from reality-centered to belief-centered prediction. In the original _false-belief_ task, Maxi puts his chocolate in one cupboard and leaves; his mother moves it to another; Maxi returns, and the child is asked where he will look @wimmer_beliefsabout_nodate.#footnote[The task is also commonly known as the Sally--Anne task @baron-cohen_does_1985, with similar setup] Though the observing child knows the chocolate is in the other cupboard, the child must predict Maxi's behavior according to _his_ (false) belief, not according to the _child's_ (true) belief. Children under about 3.5 years consistently fail, and (tellingly) their scores don't improve when the scenario is made more explicit. The age threshold is robust across task variations, countries and manipulations, aggregated over 178 studies @wellman_meta-analysis_2001.#footnote[4 years as the threshold has been challenged by studies seemingly showing _implicit_ false-belief ability around 1.5 years @onishi_15-month-old_2005 @southgate_action_2007 @buttelmann_eighteen-month-old_2009. But the findings have replicated badly @kulke_is_2018 @dorrenberg_how_2018 @barone_infants_2019 and even granting them, they may be accounted for by early automatic tracking abilities @apperly_humans_2009 @butterfill_how_2013. For the purposes of this thesis, we take the ToM scale @wellman_meta-analysis_2001 @wellman_scaling_2004 as our explanandum.]
 
-== Experimental evidence: developmental milestones (ToM scale) <timeline>
+//Perner's account of what changes is that the child comes to understand the mind as a _representational_ device, one whose states can misrepresent @perner_understanding_1991. In later age (4- to 5) children come to embed the "believes" operator in itself, asking not what John believes but what John believes _Mary_ believes @perner_john_1985. So the belief operator can be applied to its own output.
 
-*early roots (0-12 months)*
+== The Explanandum <explanandum>
 
-discuss evidence that infants as young as 6 months old interpret motion as goal-directed and apply a "teleological stance", an intuitive schema relating actions, goals, and environmental constraints (this also helps later to defend `optimize`) as non-intensional
+We first state some of the features of the ToM capacity, which a (good) theory of the acquisition of ToM must account for. Take for example someone trying to learn an intuitive physics by watching a ball's motion. The learner can simply extract regularities from what she sees, because a ball's position and velocity are recoverable from a sequence of images. A learner of intuitive psychology (ToM) doesn't have that luxury. What is available to the observer is a trajectory of bodies through space, but what has to be acquired is a vocabulary of attitudes that appear nowhere in the trajectory @polivy_empiricism_nodate @churchland_eliminative_1981. So an acquisition procedure which works by finding structure in the observable variables can't yield ToM. 
 
-ToM scale: Diverse desires [Repacholi and Gopnik 1997 "Early reasoning about desires: evidence from 14 and 18 month olds"] 18 month olds can identify diverse desires and reason about them
+Another acquisition problem is that attributions are underdetermined by behaviour.#footnote[For example, an agent walking across the room to the cupboard can be explained as wanting the chocolate and believing it is there, or as wanting to check whether it has been moved and believing it is there, or as wanting to be seen approaching the cupboard, and so on without end.] Any behaviour is compatible with indefinitely many belief--desire pairs and no amount of further observation narrows the field to one, similarly to Quine on translation @quine_word_2013.#footnote[This is a special case of the fact that data does not select a hypothesis without a prior @goodman_fact_1983.] Yet humans select a fitting belief--desire explanation quickly, confidently, and on very little data. An acquisition theory should explain what does the selecting. 
 
-Woodward 1998: attribution of object-directed goal in 5-6 month olds. Infants already see agentically
+The underdetermination problem presupposes a learner who already has the concepts and must choose among ascriptions built from them. But a learner who lacks the concept _believes_ cannot make even a wrong attribution. So the acquisition problem isn't just curve-fitting or parameter estimation within a given theory. It requires constructing the theory's terms, positing unobservable entities to explain observable behavior. Fodor argued that no learning process could deliver a concept the learner did not in some sense already have @fodor_concepts_1998 @fodor_theory_1992, and Carey's work on conceptual change tries to answer Fodor's challenge @carey_origin_2011. An account of acquisition must explain how novel conceptual terms can come to exist.
 
-teleological stance [Gerg-ely, G., Nádasdy, Z., Csibra, G., & Biró, S. (1995). Taking the intentional stance at 12 months of age. Cognition, 56, 165–193]
+Because _believes_ takes any proposition as an argument, the set of available attributions is unbounded: one can entertain attributions never encountered in the data, including attributions of beliefs one takes to be false and beliefs about things that do not exist. The operator also embeds in itself, which enables second-order mentalizing @perner_john_1985. And the attributions come in systematic families: anyone who can represent that Sally believes the marble is in the basket can also represent that Anne believes it is in the box @fodor_connectionism_nodate. The terms get their content from their role in a network of inferences rather than from links to observations one at a time. So a good acquisition theory must offer a representational medium in which mental content composes, embeds, and licenses inference.
 
-*epistemic access (12-24 months)*
-
-review findings on infants' sensitivity to perceptual access (e.g. knowing an agent can only have a goal for an object they can see)
-
-ToM scale: Knowledge access
-
-*"Sally-Anne" False belief*
-
-milestone where children transition from reality-centric responses to representing false beliefs around age 4
-
-ToM scale: False beliefs
-
-Description of the false belief task @wimmer_beliefsabout_nodate. Results: 40% of the 4-year olds and 90% of the 6 to 7 year olds correctly predicted Maxi would look at the location where he believes the chocolate is, rather than its actual location. When information access or lack thereof was made explicitly salient, it rose to 50% of 4-year olds. But children under 3.5 had quite low rates of solving, and their performance didn't improve when the scenario was made more explicit. So the conclusion is that around 3 or 4 years old, children achieve the ability to attribute minds. 
-
-*second-order mentalizing*
-
-brief overview of more complex social reasoning that emerges later (e.g. "I think that you think"), where the representations have to be richer, the model has to be higher-dimensional
-
-
-
-== What a good theory of ToM acquisition must explain <explanandum>
-
-Before surveying various accounts of ToM acquisition, we specify some of the salient features of the ToM capacity that a good theory of ToM acquisition should account for. We derive these features from the experimental evidence in the developmental timeline presented in @timeline.
-
-=== Mental content isn't in the data
-
-Since a ball's position and velocity are recoverable from a sequence of images, a learner of intuitive physics can just extract regularities among the things they see. Learning intuitive psychology isn't like this. What is available to the observer is a trajectory of bodies through space, but what has to be acquired is a vocabulary of attitudes that don't appear visually in the trajectory. Mental states are underdetermined to the data. An agent walking across the room to the cupboard can be explained as them wanting the chocolate and believing it's there, or as wanting to confirm it has been moved and beliving it is there, etc. Any behavior is compatible with myriad belief-desire pairs, and no amount of observation will narrow the field. Yet humans select a fitting belief-desire explanation quickly, confidently, and on very little data.
-
-The underdetermination problem presupposes a learner who already has the concepts and must choose among ascriptions. But a learner who lacks the concept _believes_ can't even make an attribution. So ToM acquisition isn't just curve-fitting, parameter estimation within a given theory. Rather it's the construction of the theory's terms, the positing of unobservable entities to explain observable regularities. So an account of acquisition must explain how novel conceptual terms can come about.
-
-=== The ToM capacity is structured and productive
-
-Since "believes" can take any proposition as an argument, the set of available attributions is unbounded, i.e. ToM is a productive capacity. One can entertain attributions never previously encountered in the data, e.g. attributions of beliefs one takes to be false or about things that do not exist. And also the belief-attribution operator embeds naturally (it applies to its own output), which enables second-order mentalizing. 
-
-A good account should explain how it is that ToM is acquired in systematic families rather than independent items, e.g. that anyone who can represent that Sally believes the marble is in the basket must also be able to represent that Anne believes it is in the box @fodor_connectionism_nodate. So ToM is inferentially coherent, in the sense that attributions are connected to one another by principles rather than being connected to observations one at a time. The terms get their content from their role in a network of inferences rather than from links to observations. So an account of acquisition has to produce a representational medium in which content composes, embeds, and licenses inference.
-
-=== ToM capacity arrives in stages
-
-The milestones in @timeline form an ordered sequence. Children reliably pass diverse desires before knowledge access, and knowledge access before false belief, and the ordering holds even for individual children, not just in group averages @wellman_scaling_2004. The timing of the false-belief transition in particular is one of the more robust findings in developmental psychology @wellman_meta-analysis_2001.
-
-An acquisition theory should explain the delay from being able to attribute goals (before 1 year old) to being able to predict false belief (around 3.5-4 years). It shouldn't just explain how the capacity appears, but also why it appears in this particular order, with later stages seemingly built off the backs of earlier ones. A good account should appeal to the cumulative nature of ToM acquisition in explaining it. 
+Finally, we saw in @timeline that goal attribution is in place before the first birthday while explicit false-belief prediction is not reliable until around four. A good account of ToM acquisition should explain this long delay. Also, the later competences look like assemblies of the earlier ones: belief attribution appears to be goal attribution plus subjective perceptual access. So in a good account, this ordering would be a explained by the acquisition mechanism itself. 
 
 == Theoretical perspectives on ToM acquisition <perspectives>
 
-We'll now survey three approaches to ToM acquisition, which are instances of the broader cross-domain cognitive development debate. We'll evaluate each theory based on how well it accounts for the features of ToM outlined in @explanandum. 
+We now survey the standing accounts of how theory of mind is acquired, evaluating them according to the ToM features in @explanandum. Nativism, empiricism, and constructivism are general positions in the debate about cognitive development, but we'll consider them specifically in the ToM context.#footnote[There's also simulationism, which denies that mindreading proceeds by a theory at all. On this account the attributor runs her own decision-making machinery offline on pretend inputs rather than applying general principles connecting states to behaviour @gordon_folk_1986 @goldman_simulating_2006.] 
 
 === Nativism and core knowledge <nativism>
 
-view that ToM is a built-in module, a core system [Leslie]. Discuss the "poverty of stimulus" argument, the data is too sparse for general learning. Which implies innate domain-specific constraints like the "principle of efficiency"
+The nativist holds that ToM is a built-in system that matures over time, so it's not acquired from data in any interesting sense. Nativist positions are mainly motivated by the poverty of stimulus argument (PoS): the data available to the child is too sparse and too degenerate to fix the target by general learning, so the constraints that do fix it must be innate and domain-specific @chomsky_aspects_2014 @chomsky_reflections_1975 @berwick_poverty_2011. 
 
-[Berwick 2011] for poverty of stimulus, and Chomsky 1971
+Leslie argues for a theory of mind module (ToMM): a natively endowed, domain-specific system for interpreting the behaviour of intentional agents, which introduces attitude concepts such as _believes_ and deploys a "proprietary representational system" for ascribing them to agents @leslie_pretense_nodate @leslie_pretending_1994. The dissociation found in autism is held as evidence that ToM is a dedicated system, since it can be selectively impaired @baron-cohen_does_1985 #footnote[TODO though these experiments have also faced replication troubles ADD CITATIONS].
 
-"On one side, a purely nativist response was to deny learning and to focus on characterizing the detailed representations that were already in place" @griffiths_bayesian_2024
+Fodor's nativism argues that the child's theory of mind is not learned, because there is no coherent story on which a concept like belief could be learned @fodor_theory_1992. So concepts are not constructed, and the productivity and systematicity of ToM are properties of a representational format that was there from the start. There's also the "core knowledge" nativist position, which posits a small stock of encapsulated systems that give the child a skeletal domain-specific ontology from which they elaborate to more complex concepts @spelke_core_2007 @spelke_what_2022.
 
-Modularity-nativists argue for the existence of a Theory of Mind Module (ToMM), a natively-endowed domain-specific system for understanding the behavior of intentional agents. In Alan Leslie's characterization the ToMM introduces attitude concepts like _Believes_ and uses a "proprietary representational system" for ascribing attitudes to agents @leslie_pretending_1994. Our goal is to demonstrate that the ability to theorize in mental terms can in principle be _learned_, without the need for a native ToMM.
+The almost three year developmental delay from goal attribition to false-belief prediction is a challenge for nativists, since they must explain why an innate capacity isn't manifested until later in development. A ToMM account can appeal to maturation of the module, or argue that task performance demands mask underlying native competence @leslie_developmental_2005 @scholl_minds_2001. But these concessions accomodate the developmental data by auxiliary hypotheses. What would be better is a theory that itself predicts staggered developmental results. 
 
-// FROM IMPLEMENTATION CHAPTER: We initialize the system with a library of domain-general primitives, none of which posit an agent's intentional state, nor encodes attitude concepts like _believes_. Lacking bespoke ToM capacities, such a system would on Leslie's view not be able to reason about intentional agents, to attribute a belief to an agent, to explain an agent's movement as navigation according to a private intensional representation. We show that the system learns _useful abstractions_ of domain-general functions, abstractions that encode attitude concepts like _Believes_ and attribute an intensional state to an agent.
+Nativism answers the hard requirement --- how a learner comes to have terms for unobservables --- by declining it. 
 
-THE DELAY: Against a strong nativism, the delay wants explaining. Goal attribution is in place well before the first birthday, and false-belief prediction is not reliable until around four. A modular account can appeal to maturation, or to performance demands masking an underlying competence @leslie_developmental_2005 @scholl_minds_2001, and this may well be right. But it means the developmental data is being accommodated by auxiliary hypotheses rather than predicted by the theory, which weakens the position considerably given that the developmental data is the main thing to be explained.
+// the manoeuvre means the developmental data is being accommodated by auxiliary hypotheses rather than predicted by the theory. That weakens the position considerably given that the developmental data is the main thing to be explained.
 
-=== Empiricism and connectionism/associationism <empiricism>
+// and given the implicit false-belief findings of @timeline this may well be right --- those findings are, on any reading, the best evidence the nativist has, and it is no accident that the two-systems response to them concedes an early automatic tracker @apperly_humans_2009. But two things follow. First, the replication record means the concession cannot be leaned on heavily @kulke_is_2018 @barone_infants_2019. Second, and more importantly, 
 
-view that ToM is learned through statistical patterns and bottom-up assocations from experience.
+=== Empiricism, association, and cultural learning <empiricism>
 
-the structure exists, it's just not in the data. So how can a learner infer abstract concepts like "belief" if they aren't in the data?
+The empiricist holds that theory of mind is learned like anything else: through experience, from statistical regularities, by bottom-up association. In a connectionist implementation knowledge is distributed over the weights of a network, concepts are patterns of activation rather than symbols, and structure in behaviour is emergent rather than represented @rumelhart_parallel_1986 @mcclelland_emergence_2010. Connectionist networks have even been shown to account for false belief without using symbolic representation @berthiaume_constructivist_2013.
 
-[McClelland 2010] on emergence
+There's also Heyes' non-connectionist position which takes that ToM is a cognitive gadget, i.e. a culturally inherited skill assembled out of general-purpose learning mechanisms and transmitted through social interaction and talk about the mind (rather than a genetically inherited instinct) @heyes_cultural_2014 @heyes_cognitive_2018. Ruffman argues in a similar spirit that the developmental data can be accounted for without crediting children with belief concepts at all, by low-level and statistical means @ruffman_belief_2014. In the linguistic domain, one empiricist approach derives the capacity to represent a false complement from acquiring the syntax of sentential complementation @de_villiers_can_nodate @milligan_language_2007.
 
-[McClelland & Rumelhart, 1986] and [Rogers & McClelland, 2004] on connectionism
+Empiricist accounts are well-suited to explaining how ToM emerges even though mental content isn't in the data. But these explanations often deny that the structure of ToM is acquired at all, instead they just show how the learner acquires useful associations from data: it learns a mapping. And then the empiricist can't account for systematicity, since there's no representational medium with constituent structure @fodor_connectionism_nodate. 
 
-statistical models of learning defined over large numerical vectors @tenenbaum_how_2011, @griffiths_bayesian_2024
+Against a purely associative empiricism, the observed developmental order (@timeline) is not obviously the order of frequency in experience. Nothing about the input makes goal-directed pursuit a hundredfold more frequent than the conjunction of pursuit with restricted perceptual access. And no empiricist implementation shows how a data frequency difference leads to a three year false belief delay.
 
-"On another side, an empiricist response was to suggest that structured representations were not necessary, that learning (and the inferences that followed) was simply a bottom-up process of learning statistical associations" @griffiths_bayesian_2024
+Furthermore, the later competences appear to presuppose the earlier ones rather than to be acquired independently alongside them as a separate regularity learned from its own statistics. The cultural-learning empiricist could attribute the competency ordering to the ordering of the input @heyes_cultural_2014. But that's a hypothesis about the input rather than a mechanism, and also it predicts that the developmental sequence should vary between children more than it appears to @wellman_scaling_2004.
 
-THE DELAY: Against a purely associative empiricism, the order is not obviously the order of frequency in experience, and later competences appear to *presuppose* earlier ones rather than to be acquired independently alongside them. Belief attribution looks like something assembled out of goal attribution and perceptual access, not like a separate regularity learned from its own statistics.
+Empiricism takes seriously the fact that the content is not in the data, and then concludes that there is no content to acquire.
 
-=== rational constructivism and the theory theory <constructivism>
+=== Rational constructivism and the theory theory <constructivism>
 
-Introduce the "child as scientist" metaphor. children don't just associate, they construct causal models, intuitive/folk theories of the mind that they revise in light of new evidence, similar to scientific progress. 
+The constructivist holds that the child is analogous to a scientist @gopnik_scientific_2012 @downes_can_1999. A child constructs intuitive theories of mind and world which she revises in light of evidence, by something like the process that drives scientific progress @gopnik_why_1992 @gopnik_words_1997 @wellman_childs_1990. So domain-general statistical machinery constructs domain-specific structured knowledge. Infants have been shown to be sensitive to sampling and to statistical evidence in ways that indicate they do inference to hidden structure (including psychological structure) @xu_infants_2013 @wellman_infants_2016 @xu_towards_2019. And in general children's exploratory behaviour is well described as evidence-gathering aimed at resolving uncertainty about which theory is right @schulz_origins_2012.
 
-developmental (Piagetian) account of building up from smaller components
 
-rational constructivism (reconstructing constructivism) adopts the constructivist idea of theory change but seeks a more formal mechanism than classic Piagetian accounts. 
 
-middle way between nativism and empiricism, where domain-general statistical mechanisms construct domain-specific structural knowledge
+Rational constructivists specify that Bayesian inference is the formal mechanism of theory change @gopnik_reconstructing_2012 @newcombe_what_2011 @xu_rational_2012. Structured, abstract knowledge, embedded in a probabilistic framework, can be acquired from sparse and noisy data @gopnik_bayesian_2007 @griffiths_probabilistic_2010 @perfors_variability_2010 @griffiths_bayes_2011 @xu_towards_2019 @ullman_bayesian_nodate. For example, the transition from failure to success in false-belief tasks is analyzed as an evidence-driven shift between two causal Bayesian models. The infant starts with a simpler model, but after encountering evidence inexplainable by that model switches to a more complex one which offers greater explanatory resources @goodman_intuitive_nodate.
 
-"how do our minds get so much from so little?" @griffiths_bayesian_2024
+Theory formation generally has been modeled as probabilistic inference over systems of related concepts @kemp_probabilistic_2010 @goodman_learning_2011, and theory change has been modelled as stochastic search through a space of theories generated by a grammar @ullman_theory_nodate. 
 
-how children's minds grow [Gopnik & Meltzoff, 1997]
+Theories have terms; theory change introduces new ones; and the terms are answerable to evidence without being read off it.
 
-Bayesian cognitive models explain how people learn with abstract structured knowledge [Gopnik & Tenenbaum, 2007; Griffiths, Chater, Kemp, Perfors, & Tenenbaum, 2010; Perfors, Tenenbaum, & Wonnacott, 2010; Griffiths, Sobel, Tenenbaum, & Gopnik, 2011b; Xu, 2019; Spelke, 2022]
 
-unifying the two @griffiths_bayesian_2024, moving beyond dichotomies: 
-- empiricism versus nativism
-- domain-general versus domain-specific
-- logic versus probability
-- symbols versus statistics
 
-"How can domain-general mechanisms of learning and representation build domain-specific systems of knowledge? How can structured symbolic knowledge be acquired through statistical learning?" @tenenbaum_how_2011
+Nativism posits domain-specific logical symbolic mechanisms, whereas empiricism posits domain-general probabilistic statistical mechanisms. Rational constructivism seeks a middle-way between various dichotomies in the field @griffiths_bayesian_2024
 
-Powerful abstractions can be learned surprisingly quickly, together with or prior to learning the more concrete knowledge they constrain. Structured symbolic representations need not be rigid, static, hard-wired, or brittle. Embedded in a probabilistic framework, they can grow dynamically and robustly in response to the sparse, noisy data of experience. @tenenbaum_how_2011
+"Powerful abstractions can be learned surprisingly quickly, together with or prior to learning the more concrete knowledge they constrain. Structured symbolic representations need not be rigid, static, hard-wired, or brittle. Embedded in a probabilistic framework, they can grow dynamically and robustly in response to the sparse, noisy data of experience." @tenenbaum_how_2011
 
-THE DELAY: This second point is the one this thesis takes most seriously, because it says that acquisition is *cumulative*: what is learned early becomes the material out of which what is learned later is composed. That is the bootstrapping picture @carey_origin_2011 @piantadosi_bootstrapping_2012. So the explanandum is not merely that the capacity appears, but that it appears in this order, with the later stages built from the earlier ones. A good account should make the ordering fall out of its mechanism rather than stipulate it.
 
-A prior over hypotheses is a way of selecting among attributions that the data underdetermines; programs are a representational medium that composes, embeds, and executes; and library learning is a mechanism in which abstractions acquired early become the primitives from which later ones are built. Whether that mechanism actually delivers a mental vocabulary, rather than merely being able to express one, is the question the rest of the thesis puts to the test.
+, by asking "how can domain-general mechanisms of learning and representation build domain-specific systems of knowledge? How can structured symbolic knowledge be acquired through statistical learning?" @tenenbaum_how_2011 
 
-== conclusion
 
-The conclusion will be that each position captures one or two, that the theory theory comes closest, and that it does so by describing what happens rather than by naming a mechanism that would make it happen.
 
-The theory theory scores best on the theoretical requirements stated in, but doesn't name a particular mechanism for how this works. Nativism's strength is parasitic on that absence. 
+"How do our minds get so much from so little?" @griffiths_bayesian_2024 poverty of stimulus
 
-I'm gonna end the section by noting that while the theory theory provides a powerful metaphor, it lacks a precise computational backbone to explain how children search through the infinite space of possible theories. Basically that the strength of the nativist argument lies in part in the supposed lack of algorithms for learning those structured representations. then this sets up chapter 2 to introduce bayesian program induction (via DreamCoder) as that formal implementation. 
+On this account the four-year transition is a theory change. The child's earlier answers are systematic and wrong (rather than merely absent) because she has an earlier theory. 
 
-Of the three positions surveyed in @perspectives, constructivism (the theory theory) comes closest to accounting for the features of theory of mind (@explanandum) that a theory of its acquisition ought to account for. But it's a mostly descriptive account: it doesn't specify which process does the theory construction, nor by what standards one theory is preferred to another. Without specifics, the nativist can say that no such constructive process exists, that it only looks like construction but is really just maturation of a native system.
+*The delay.* This is the position that says the most about the ordering, because it says that acquisition is _cumulative_: what is learned early becomes the material out of which what is learned later is composed. That is the bootstrapping picture @carey_origin_2011 @piantadosi_bootstrapping_2012. The explanandum is then not merely that the capacity appears but that it appears in this order, with the later stages built from the earlier ones, and the account has the right shape to explain it. A prior over hypotheses is a way of selecting among attributions that the data underdetermines; a structured representational medium is one in which content composes, embeds, and executes; and a mechanism by which abstractions acquired early become the primitives from which later ones are built is exactly what a cumulative ordering requires. Whether such a mechanism actually delivers a mental vocabulary, rather than merely being able to express one, is the question the rest of this thesis puts to the test.
 
-Without an answer, the nativist can reply that no such process exists, and that what looks like construction is really maturation of something already in place. The strength of that reply is parasitic on the absence of a mechanism, and the business of this chapter is to supply one.
+The theory theory comes closest. It has the right shape for every one of the five requirements: theories have terms, terms are constructed, construction is answerable to evidence, the medium is structured, and construction is cumulative so the order of acquisition is a consequence of what has already been built. But having the right shape is not the same as being a mechanism. The account says that children construct theories; it does not say what process does the constructing, nor by what standard one candidate theory is preferred to another, nor --- and this is the sharp version --- how a learner searches a space of possible theories that is infinite. The metaphor of the child as scientist is powerful, and it describes what happens rather than naming something that would make it happen.
 
-#load-bib(read("chapter1.bib") + read("chapter2.bib"))
+That gap is what keeps the nativist in business. Absent a mechanism, the nativist can say that no constructive process exists, that what looks like construction is really the maturation of something already in place, and that the appearance of theory change is a redescription of a developmental timetable. The strength of that reply is parasitic on the absence of a mechanism. It is not an argument that construction is impossible; it is an argument that nobody has exhibited one.
+
+So the business of the next chapter is to supply one. If the theory theory needs a process that searches a space of structured hypotheses, prefers among those that fit the data on principled grounds, introduces new terms whose content is fixed by their role rather than by observation, and makes what is learnable at each stage depend on what has already been learned, then that is a specification, and it is a specification we can go looking for a formal system to meet. Chapter 2 argues that Bayesian program induction is such a system, and that DreamCoder is a concrete algorithm that implements it.
+
+#load-bib(read("refs.bib"))

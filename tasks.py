@@ -71,6 +71,10 @@ from dsl import (
     unfold, unfold_with_template, tr,
     overlay, underlay, fst_gg, snd_gg, sync_to_model,   # non-mental fork/pair families
     dup, bimap, compose_gp, pipe_gpg,   # decomposed-fork plumbing (world-channel rival sweep)
+    # the pair-plumbing complements and the composer that reaches them — the closed
+    # rival sets and the generators of the "pair-plumbing complements" section at the
+    # end of this file are built out of these
+    pair_blank, mapfst, mapsnd, swap, compose_pg, register, locate, place,
 )
 
 # ── Configuration ────────────────────────────────────────────────────────────
@@ -1571,7 +1575,7 @@ def make_comet_tasks(n, size=SIZE, combos=COMBOS, seed=0, k=K_SCENES):
                     certify=certify)
 
 
-def make_registration_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0, n_distract=2,
+def make_registration_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0, n_distract=2,
                             k=K_SCENES):
     """sync without fork: snap ONE named object onto an external template.
 
@@ -1585,6 +1589,17 @@ def make_registration_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0, n_distract=2,
     single value (defeats `sync_except`).  step/optimize cannot read the template
     at all.  Hence a single `sync_to_world v` is the unique cheapest commit — sync
     is necessary, and the second grid is a spec, not a mind.
+
+    A world-only `static` value breaks the last tie, and it is not decorative.  With
+    identical value sets in the two channels, "the world with v adopted from the map"
+    and "the map with everything BUT v adopted from the world" are the same grid, so
+    the decomposed library's `(compose_pg swap (sync_except v))` — 4 nodes against the
+    register triple's 5 — reproduced every scene of this family and the searcher
+    returned it instead.  That would have cost the run its `sync used outside belief`
+    claim, since the census reads the commit the solution actually used.  The static
+    value is in the world and not the map, so the two directions return different
+    grids and the direct commit is again the only cheapest one.  (Same device, same
+    reason, as the world-only value in the registration-except family.)
     """
     rng = np.random.default_rng(seed)
     n_distract = max(2, n_distract)
@@ -1592,14 +1607,15 @@ def make_registration_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0, n_distract=2,
     def propose(rng, target=None):
         cells = [(r, c) for r in range(size) for c in range(size)]
         rng.shuffle(cells)
-        need = 2 * (1 + n_distract)
-        if len(cells) < need or len(vals) < 1 + n_distract:
+        need = 2 * (1 + n_distract) + 1
+        if len(cells) < need or len(vals) < 2 + n_distract:
             return None
         perm = rng.permutation(vals).tolist()
         if target is not None:                     # pin the registered value
             v = target[0]
             perm = [v] + [u for u in perm if u != v]
         v, distract_vals = perm[0], perm[1:1 + n_distract]
+        static = perm[1 + n_distract]              # world-only: fixes the direction
 
         working  = np.zeros((size, size), dtype=int)
         template = np.zeros((size, size), dtype=int)
@@ -1616,8 +1632,10 @@ def make_registration_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0, n_distract=2,
             template[dtgt] = dv
         if not ok:
             return None
+        working[cells[ci]] = static                # present in world only → stays put
         got = _pair_propose(rng, ('sync_to_world', sync_to_world(v)),
-                            (working, template), {'kind': 'registration', 'val': v})
+                            (working, template), {'kind': 'registration', 'val': v},
+                            want_cost=5)     # (register (locate v) (place v))
         return None if got is None else ((v,), got[0], got[1])
 
     return _collect(propose, n, k, rng, attempts=20000, target_tries=2000)
@@ -1639,10 +1657,13 @@ def make_registration_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0, n_distract=2,
 #                                    (sync_all), registration-except (sync_except),
 #                                    inpainting (underlay), readout (snd_gg)
 #
-# fst_gg (the kept projection corner) and via_swap (a decomposed-only wiring
-# witness, == sync_to_model on a swapped pair) get no standalone task: the former
-# is the trivial "keep the world" already implicit everywhere, the latter is a
-# re-expression of the perception corner, not an independent operation.
+# fst_gg (the kept projection corner) gets no standalone task: it is the trivial
+# "keep the world" already implicit everywhere.  Every other corner does have one —
+# including the four the decomposed library adds, whose families are at the end of
+# this file.  (The atomic `via_swap` used to be the second exception here, on the
+# grounds that it re-expresses the perception corner rather than being an operation
+# of its own.  That was right, and it is why prims.py now builds the perception
+# commit out of `swap` and the general composer instead of carrying a node for it.)
 
 def _reproduces(g, x, f):
     "True if unfold(g, T, f) == x (T = x's frame count); swallows interpreter errors."
@@ -1952,33 +1973,62 @@ _PAIR_INT     = {'sync_to_world': sync_to_world, 'sync_to_model': sync_to_model,
                  'sync_except': sync_except}
 
 
-def _unique_pair_corner(working, template, want, want_out):
-    "True iff `want` is the unique CHEAPEST atomic fn_p_g corner producing want_out."
+def _pair_rivals(vals):
+    """(corner, commit, node count) for every fn_p_g program EITHER library can build
+    at or below the length of the deepest family here.
+
+    Three tiers.  The atomic corners (cost 1 nullary, 2 with a value) are the phase-1
+    DSL.  The decomposed library spells the single-value commit `(register (locate v)
+    (place v))` instead — same corner, 5 nodes — and reaches the model-direction
+    conjugate of ANY commit by composing `swap` onto it, which is what `compose_pg`
+    exists for and what makes this table bigger than it used to be: a family certified
+    only against the atomic corners can be undercut by a composed one it never priced.
+    That is not hypothetical — with two channels and one shared mover, `(compose_pg
+    swap sync_all)` IS `sync_to_model` of that mover, at 3 nodes against 7.
+
+    The composed blends and projections are omitted because they are IDENTITIES on
+    cheaper entries rather than new programs: exchanging the channels turns overlay
+    into underlay and fst_gg into snd_gg, both already in the table at cost 1.
+
+    A corner is named by the OPERATION, not the spelling, so a family's own program is
+    excluded whichever library renders it (`sync_to_world` covers both the atomic node
+    and the register triple).  Costs are node counts: the enumerator's -logp ordering
+    tracks them closely enough for a rejection rule, and a tie counts as a defeat."""
+    out = [(nm, f, 1) for nm, f in _PAIR_NULLARY.items()]
+    out += [(nm, ctor(v), 2) for nm, ctor in _PAIR_INT.items() for v in vals]
+    out += [('sync_to_world', register(locate(v), place(v)), 5) for v in vals]
+    out += [('sync_to_model', compose_pg(swap, register(locate(v), place(v))), 7)
+            for v in vals]
+    out += [('sync_all_to_model', compose_pg(swap, sync_all), 3)]
+    out += [('sync_except_to_model', compose_pg(swap, sync_except(v)), 4)
+            for v in vals]
+    return out
+
+
+def _unique_pair_corner(working, template, want, want_out, want_cost=None):
+    """True iff `want` is the unique cheapest fn_p_g commit producing want_out.
+
+    `want_cost` is the node count of the family's own program in the DECOMPOSED
+    library — the longer of its two spellings — so a scene kept here is certified for
+    both runs: every rival that either library could write more cheaply diverges.
+    Left None it is read off the atomic tables as before (1 nullary, 2 with a value).
+    """
     p = (working.copy(), template.copy())
     vals = sorted(set(_grid_vals(working)) | set(_grid_vals(template)))
-    want_cost = 1 if want in _PAIR_NULLARY else 2
-    for nm, f in _PAIR_NULLARY.items():          # cost 1 — undercuts/ties anything
-        if nm == want:
+    if want_cost is None:
+        want_cost = 1 if want in _PAIR_NULLARY else 2
+    for nm, f, cost in _pair_rivals(vals):
+        if nm == want or cost > want_cost:
             continue
         try:
             if np.array_equal(f(p), want_out):
                 return False
         except Exception:
             pass
-    if want_cost >= 2:                            # cost-2 rivals only matter to cost-2 wants
-        for nm, ctor in _PAIR_INT.items():
-            if nm == want:
-                continue
-            for v in vals:
-                try:
-                    if np.array_equal(ctor(v)(p), want_out):
-                        return False
-                except Exception:
-                    pass
     return True
 
 
-def _pair_propose(rng, want, build, meta):
+def _pair_propose(rng, want, build, meta, want_cost=None, T=2):
     """Shared tail of the fn_p_g corner generators: render one (working, template)
     pair through `unfold_with_template` and keep it only if `want` is the unique
     cheapest atomic commit for it.
@@ -1990,15 +2040,16 @@ def _pair_propose(rng, want, build, meta):
     meta carries its own — the interpreter needs the right one for each.
     """
     working, template = build
-    x = unfold_with_template(working, template, 2, want[1])
+    x = unfold_with_template(working, template, T, want[1])
     if np.array_equal(x[0], x[-1]):
         return None
-    if not _unique_pair_corner(working, template, want[0], x[-1]):
+    if not _unique_pair_corner(working, template, want[0], x[1], want_cost):
         return None
     return x, dict(meta, template=template)
 
 
-def make_perception_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0, k=K_SCENES):
+def make_perception_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0, n_keep=2,
+                          k=K_SCENES):
     """direction complement (sync_to_model): record a world observation into the map.
 
         (sync_to_model v)            applied to (working, template)
@@ -2007,18 +2058,30 @@ def make_perception_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0, k=K_SCENES):
     (template), and returns the MODEL — a sensation recorded into a private map,
     not an action on the world.  Working and template carry *different* distractors
     so the two sync directions are distinguishable; the output keeps the template's
-    frame with v relocated to where the world sees it, which only `sync_to_model`
-    yields.
+    frame with v relocated to where the world sees it.
+
+    The n_keep>=2 further values are shared by both channels, misplaced between them,
+    and must NOT move: exactly the discipline the registration family uses against the
+    scope commits, in the other direction.  Without them v is the only shared mover, so
+    "record v" and "record everything" coincide and `(compose_pg swap sync_all)` — 3
+    nodes against this program's 7 in the decomposed library — reproduces the scene.
+    That is the leak the composer opened, and it is a real one: the searcher returned
+    the wholesale commit for every perception task until these were added.
     """
     rng = np.random.default_rng(seed)
 
     def propose(rng, target=None):
-        perm = rng.permutation(vals).tolist()
-        v = int(perm[0]) if target is None else target[0]
-        others = [u for u in vals if u != v]
-        dw, dm = (int(u) for u in rng.permutation(others)[:2])
+        perm = [int(u) for u in rng.permutation(vals)]
+        v = perm[0] if target is None else target[0]
+        others = [u for u in perm if u != v]
+        if len(others) < 2 + n_keep:
+            return None
+        dw, dm = others[0], others[1]           # channel-private distractors
+        keepers = others[2:2 + n_keep]
         cells = [(r, c) for r in range(size) for c in range(size)]
         rng.shuffle(cells)
+        if len(cells) < 4 + 2 * n_keep:
+            return None
         P, Q, cw, cm = cells[0], cells[1], cells[2], cells[3]
         if P == Q:
             return None
@@ -2028,8 +2091,17 @@ def make_perception_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0, k=K_SCENES):
         template[Q]  = v                 # …the map still has it there (stale)
         working[cw]  = dw                # distractors differ between the channels so
         template[cm] = dm                # keep-world and keep-model are distinguishable
+        ci = 4
+        for u in keepers:                # shared, misplaced, and NOT recorded
+            src, tgt = cells[ci], cells[ci + 1]
+            ci += 2
+            if src == tgt:
+                return None
+            working[src]  = u
+            template[tgt] = u
         got = _pair_propose(rng, ('sync_to_model', sync_to_model(v)),
-                            (working, template), {'kind': 'perception', 'val': v})
+                            (working, template), {'kind': 'perception', 'val': v},
+                            want_cost=7)     # (compose_pg swap (register (locate v) (place v)))
         return None if got is None else ((v,), got[0], got[1])
 
     return _collect(propose, n, k, rng, attempts=20000, target_tries=2000)
@@ -2194,6 +2266,403 @@ def make_readout_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0, k=K_SCENES):
         got = _pair_propose(rng, ('snd_gg', snd_gg), (working, template),
                             {'kind': 'readout'})
         return None if got is None else ((), got[0], got[1])   # `snd_gg` is nullary
+
+    return _collect(propose, n, k, rng, attempts=20000)
+
+
+# ── the pair-plumbing complements (decomposed runs) ───────────────────────────────
+# Decomposing fork and sync adds four more corners, on two axes the atomic library
+# cannot even state:
+#
+#     bifunctor : map the model channel (mapsnd)  vs  the world channel (mapfst)
+#                                                 vs  both, differently (bimap)
+#     pairing   : pair with a copy (dup)          vs  with a fresh blank (pair_blank)
+#     symmetry  : keep the channels               vs  exchange them (swap)
+#
+# and belief picks mapsnd + dup + no swap.  Until these families existed that choice
+# was vacuous: no task in the corpus needed the other corners, and a complement no
+# task needs is trivially avoided.  The cube census said so itself — it carried a
+# `no_home` exemption listing exactly these four.  The families below retire it.
+#
+# Two of them are template-rooted, which is the point of `compose_pg` (prims.py).
+# Behind a `dup` the two channels start EQUAL, so mapping the first is either the
+# same as mapping the second (with the mirrored commit) or an undo of the transform
+# it just applied — the world-channel corner has nothing to do there, and no scene
+# can make it necessary.  Given a pair the program did not build — the (working,
+# template) pair of the registration interpreter — the channels differ, and mapping
+# the world channel before committing is an operation with no other spelling.
+#
+# Three of the four are DECOMPOSED-ONLY: their programs are combinator wirings the
+# atomic DSL has no name for (see each docstring), so the corpus builder appends them
+# only when fork/sync are spelled out.  `wipe` is
+# expressible either way — three erases atomically, three nodes with the blank
+# channel — and stays in both, which is what makes it a priced comparison rather
+# than a capability gap.
+
+def make_wipe_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0, n_vals=3,
+                    k=K_SCENES):
+    """pairing complement (pair_blank): the grid is wiped to nothing in one step.
+
+        (pipe_gpg pair_blank snd_gg)
+
+    Pair the world with a FRESH EMPTY scratch channel — the complement of dup's
+    diagonal, which pairs it with a copy of itself — and keep the scratch channel.
+    Whatever was drawn is gone, and the program names nothing at all: it is the one
+    corpus program with no literal in it.
+
+    Necessity.  Each scene carries `n_vals`>=3 distinct values over >=4 cells, so no
+    single `erase v` (one value) and no `clear_at r c` (one cell) wipes it, and the
+    closed step/erase sweep rejects any scene a background shift happens to clear.
+    The atomic library must spell it as the erase CHAIN over exactly those values —
+    which is why the value set is the task's latent, held fixed across the k scenes:
+    both spellings then solve the same task, and the pairing corner is a 3-node
+    program against an 8-node one rather than a capability the control run lacks.
+    """
+    rng = np.random.default_rng(seed)
+    prog = pipe_gpg(pair_blank, snd_gg)
+
+    def propose(rng, target=None):
+        chosen = ([int(v) for v in rng.permutation(vals)[:n_vals]] if target is None
+                  else list(target))
+        cells = [(r, c) for r in range(size) for c in range(size)]
+        rng.shuffle(cells)
+        n_cells = int(rng.integers(n_vals + 1, min(2 * n_vals + 2, len(cells))))
+        g = np.zeros((size, size), dtype=int)
+        for i, (r, c) in enumerate(cells[:n_cells]):
+            g[r, c] = chosen[i % n_vals]        # every chosen value occurs at least once
+        if sorted(_grid_vals(g)) != sorted(chosen):
+            return None
+        x = unfold(g, 3, prog)
+        if np.array_equal(x[0], x[1]):
+            return None
+        return (tuple(sorted(chosen)), x,
+                {'kind': 'wipe', 'vals': sorted(chosen)})
+
+    def certify(scs, m):
+        return not _step_or_erase_reproduces(scs)
+
+    return _collect(propose, n, k, rng, attempts=20000, target_tries=2000,
+                    certify=certify)
+
+
+def _repro_all_pair(scenes, metas, c):
+    "True if commit `c` reproduces EVERY scene of a template-rooted task."
+    for s, mt in zip(scenes, metas):
+        try:
+            if not np.array_equal(
+                    unfold_with_template(s[0], mt['template'], s.shape[0], c), s):
+                return False
+        except Exception:
+            return False
+    return True
+
+
+def _cheaper_pair_program_fits(scs, metas):
+    """True if any program but the intended one reproduces the whole drifting-
+    registration task at no greater cost.
+
+    The closed set is the commits the DECOMPOSED library can build at or below the
+    intended program's length: a bare corner; a corner behind a pair-map on either
+    channel or behind `swap`; and the register commit on any value.  Ties count as
+    defeats (the enumerator keeps whichever it reaches first), so the same shape with
+    a different drifter or a different registered value is included.
+
+    The set is the decomposed DSL's, not the union of both: this family is generated
+    only for decomposed runs, where `sync_to_world` / `sync_to_model` are not
+    primitives at all — the single-value commit is `register (locate v) (place v)`,
+    which is swept, and its model-direction conjugate is `compose_pg swap` over the
+    same thing, also swept.  Pricing the atomic nodes here would reject every scene
+    for losing to a program the searcher cannot write.
+
+    Pair-maps are swept over every value and direction the scenes show, not just the
+    intended (u, d): a drifter the generator did not name is exactly the kind of
+    coincidence the k-scene format is meant to kill, and here it is cheap to check.
+    """
+    u_want, d_want, v_want = metas[0]['drift'], metas[0]['dir'], metas[0]['val']
+    vals = sorted({u for s in scs for u in _grid_vals(s[0])}
+                  | {u for mt in metas for u in _grid_vals(mt['template'])})
+    commits = ([(nm, f) for nm, f in _PAIR_NULLARY.items()]
+               + [(f'sync_except {w}', sync_except(w)) for w in vals]
+               + [(f'register {w}', register(locate(w), place(w))) for w in vals])
+    endos = [('', None), ('swap', swap)]
+    for u in vals:
+        for dn, d in DIRS.items():
+            endos.append((f'mapfst {u} {dn}', mapfst(step(u, d))))
+            endos.append((f'mapsnd {u} {dn}', mapsnd(step(u, d))))
+    intended = (f'mapfst {u_want} {d_want}', f'register {v_want}')
+    for enm, endo in endos:
+        for cnm, c in commits:
+            if (enm, cnm) == intended:
+                continue
+            full = c if endo is None else compose_pg(endo, c)
+            if _repro_all_pair(scs, metas, full):
+                return True
+    return False
+
+
+def make_drifting_registration_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0,
+                                     n_distract=2, max_T=3, k=K_SCENES):
+    """bifunctor complement (mapfst): register one value while the image DRIFTS.
+
+        (compose_pg (mapfst (step u d)) (register (locate v) (place v)))
+
+    The registration family's task with a moving camera: the working image scrolls
+    (a value u present only in the world drifts one cell per frame) and, on the
+    drifted image, v is snapped to the cell the template says it belongs in.  Two
+    operations on the same pair, one per stage — transform the world channel, then
+    commit against the map — which is what `compose_pg` composes and `mapfst` is the
+    world-channel half of.
+
+    Necessity.  u is in the WORKING grid only, so `mapsnd` (the model-channel map,
+    belief's corner) transforms a channel that does not contain it and leaves the
+    drift undone.  The n_distract>=2 other shared values are misplaced too and must
+    stay put, which kills the wholesale scope commits (`sync_all`, `sync_except`)
+    exactly as in the registration family; `fst_gg` leaves v unregistered and
+    `snd_gg` returns a template with no u in it.  `_cheaper_pair_program_fits`
+    sweeps that whole set, plus the same program registering a different value.
+
+    Nothing mental: the second channel is a given reference image, not a model
+    anybody holds, and the first is the world — image stabilisation, not belief.
+
+    DECOMPOSED-ONLY.  The atomic library's fn_p_g corners consume the pair whole;
+    there is no atomic way to run an `fn` on the working channel before committing
+    (`then_sync` chains COMMITS, not transforms), so the program has no atomic
+    spelling at any length.
+    """
+    rng = np.random.default_rng(seed)
+
+    def propose(rng, target=None):
+        pool = [int(u) for u in rng.permutation(vals)]
+        if target is not None:
+            v, u, dname = target
+            pool = [w for w in pool if w not in (v, u)]
+        else:
+            if len(pool) < 2 + n_distract:
+                return None
+            v, u = pool[0], pool[1]
+            pool = pool[2:]
+            dname = str(rng.choice(list(DIRS)))
+        if len(pool) < n_distract:
+            return None
+        d = DIRS[dname]
+        cells = [(r, c) for r in range(size) for c in range(size)]
+        rng.shuffle(cells)
+        need = 2 + 2 * n_distract + 1
+        if len(cells) < need:
+            return None
+        working  = np.zeros((size, size), dtype=int)
+        template = np.zeros((size, size), dtype=int)
+        working[cells[0]]  = v                    # v is misplaced…
+        template[cells[1]] = v                    # …it belongs here, per the template
+        ci = 2
+        for dv in pool[:n_distract]:              # misplaced AND retained: no scope commit
+            src, tgt = cells[ci], cells[ci + 1]
+            ci += 2
+            if src == tgt:
+                return None
+            working[src]  = dv
+            template[tgt] = dv
+        # the drifter: world-only, and its whole path must stay on-grid and clear of
+        # every other value (a collision overwrites cells and muddies what the commit
+        # is being asked to do).
+        ur, uc = cells[ci]
+        path = [(ur + t * d[0], uc + t * d[1]) for t in range(max_T)]
+        if any(not (0 <= r < size and 0 <= c < size) for r, c in path):
+            return None
+        occupied = {cells[0], cells[1]} | set(cells[2:ci])
+        if any(p in occupied for p in path):
+            return None
+        working[ur, uc] = u
+        commit = compose_pg(mapfst(step(u, d)), register(locate(v), place(v)))
+        x = unfold_with_template(working, template, max_T, commit)
+        if np.array_equal(x[0], x[1]) or np.array_equal(x[1], x[2]):
+            return None
+        return ((v, u, dname), x,
+                {'kind': 'drift_reg', 'val': v, 'drift': u, 'dir': dname,
+                 'template': template})
+
+    def certify(scs, m):
+        return not _cheaper_pair_program_fits(scs, m['per_scene'])
+
+    return _collect(propose, n, k, rng, attempts=20000, target_tries=2000,
+                    certify=certify)
+
+
+def _cheaper_composite_fits(scs, metas):
+    """True if any program but the intended one reproduces the whole layer-composite
+    task at no greater cost — the closed set for `(compose_pg (bimap f g) c)`.
+
+    Same discipline and same decomposed-library rival set as
+    `_cheaper_pair_program_fits`, one tier wider: a bimap program is beaten by any
+    SINGLE-channel map with the same commit (that is the corner claim — one map is
+    not enough), by a bare commit, and by the same shape mapping the wrong values.
+    Both single-channel families are swept over every value and direction the scenes
+    show, so "the composite needed both channels" is checked, not assumed."""
+    u_want, w_want, d_want = metas[0]['drift'], metas[0]['masked'], metas[0]['dir']
+    vals = sorted({u for s in scs for u in _grid_vals(s[0])}
+                  | {u for mt in metas for u in _grid_vals(mt['template'])})
+    commits = ([(nm, f) for nm, f in _PAIR_NULLARY.items()]
+               + [(f'sync_except {w}', sync_except(w)) for w in vals]
+               + [(f'register {w}', register(locate(w), place(w))) for w in vals])
+    endos = [('', None), ('swap', swap)]
+    for u in vals:
+        endos.append((f'erasefst {u}', mapfst(erase(u))))
+        endos.append((f'erasesnd {u}', mapsnd(erase(u))))
+        for dn, d in DIRS.items():
+            endos.append((f'mapfst {u} {dn}', mapfst(step(u, d))))
+            endos.append((f'mapsnd {u} {dn}', mapsnd(step(u, d))))
+            # the intended shape with some OTHER pair of values: same length, so a
+            # tie, so a defeat.
+            for w in vals:
+                if (u, w, dn) == (u_want, w_want, d_want):
+                    continue
+                endos.append((f'bimap {u} {w} {dn}',
+                              bimap(step(u, d), erase(w))))
+    for enm, endo in endos:
+        for cnm, c in commits:
+            full = c if endo is None else compose_pg(endo, c)
+            if _repro_all_pair(scs, metas, full):
+                return True
+    return False
+
+
+def make_layer_composite_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0,
+                               n_ref=2, max_T=3, k=K_SCENES):
+    """bifunctor complement (bimap): composite two layers, each transformed its own way.
+
+        (compose_pg (bimap (step u d) (erase w)) overlay)
+
+    The full product bifunctor — the corner between `mapsnd` (belief's: map the model
+    channel) and `mapfst` (map the world channel) — applied where it means something:
+    a pair of genuinely different grids.  The working layer scrolls; the reference
+    layer is composited with one of its values masked out; the frame is their union.
+    Layer compositing with a mask, which is what a paint program does.
+
+    Necessity is structural, and it is the point of the family.  The drifter `u` is in
+    the WORKING channel only, so no model-channel map moves it; the masked value `w`
+    is in the REFERENCE channel only, so no world-channel map removes it (and the
+    blend re-stamps it every frame if nobody does).  One map cannot do both jobs, and
+    `_cheaper_composite_fits` sweeps every single-channel spelling to show it — along
+    with the bare commits and the same shape on the wrong values.  n_ref>=2 reference
+    values keep a single `register` from passing for the composite.
+
+    Behind a `dup` this corner is unreachable on purpose: there both channels start
+    equal, so mapping both differently is either bimap-as-mapsnd (one map idle) or
+    expressible with the mirrored commit.  A given pair is where the bifunctor has
+    two things to do — which is exactly why `compose_pg` (prims.py) has to exist for
+    this axis to be testable at all.
+
+    DECOMPOSED-ONLY: the atomic fn_p_g corners consume the pair whole.
+    """
+    rng = np.random.default_rng(seed)
+
+    def propose(rng, target=None):
+        pool = [int(x) for x in rng.permutation(vals)]
+        if target is not None:
+            u, w, dname = target
+            pool = [z for z in pool if z not in (u, w)]
+        else:
+            if len(pool) < 2 + n_ref:
+                return None
+            u, w = pool[0], pool[1]
+            pool = pool[2:]
+            dname = str(rng.choice(list(DIRS)))
+        if len(pool) < n_ref:
+            return None
+        d = DIRS[dname]
+        cells = [(r, c) for r in range(size) for c in range(size)]
+        rng.shuffle(cells)
+        if len(cells) < 2 + n_ref:
+            return None
+        working  = np.zeros((size, size), dtype=int)
+        template = np.zeros((size, size), dtype=int)
+        # the scrolling layer: working-only, and its whole path stays on-grid and
+        # clear of the reference cells (a collision would overwrite a layer).
+        ur, uc = cells[0]
+        path = [(ur + t * d[0], uc + t * d[1]) for t in range(max_T)]
+        if any(not (0 <= r < size and 0 <= c < size) for r, c in path):
+            return None
+        ref_cells = cells[1:1 + n_ref + 1]
+        if any(p in set(ref_cells) for p in path):
+            return None
+        working[ur, uc] = u
+        template[ref_cells[0]] = w                 # masked out of the composite
+        for cell, z in zip(ref_cells[1:], pool[:n_ref]):
+            template[cell] = z                     # composited through
+        commit = compose_pg(bimap(step(u, d), erase(w)), overlay)
+        x = unfold_with_template(working, template, max_T, commit)
+        if np.array_equal(x[0], x[1]) or np.array_equal(x[1], x[2]):
+            return None
+        if w in _grid_vals(x[1]):                  # the mask must actually bite
+            return None
+        return ((u, w, dname), x,
+                {'kind': 'composite', 'drift': u, 'masked': w, 'dir': dname,
+                 'template': template})
+
+    def certify(scs, m):
+        return not _cheaper_composite_fits(scs, m['per_scene'])
+
+    return _collect(propose, n, k, rng, attempts=20000, target_tries=2000,
+                    certify=certify)
+
+
+def make_map_update_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0, n_movers=2,
+                          k=K_SCENES):
+    """symmetry witness (swap): the stored map adopts the world's layout, wholesale.
+
+        (compose_pg swap sync_all)
+
+    The direction complement of multi-registration, and the same operation belief
+    refuses: `sync_all` moves every shared value to the position the SECOND channel
+    gives it and returns the FIRST, so on the exchanged pair it rewrites the map from
+    the world instead of the world from the map.  Sensor fusion / map maintenance —
+    the private channel is being written to, not acted on, which is the opposite of
+    an agent committing a belief.
+
+    Necessity.  Each scene carries n_movers>=2 shared values at different cells in
+    the two channels, a `stale` value the template has and the world does not (kept,
+    so the output is not the world), and a `fresh` value the world has and the
+    template does not (dropped, so the output is not `sync_all`'s and not the world's
+    either).  `_unique_pair_corner` then rejects the scene unless every atomic corner
+    — both projections, both blends, all three syncs on every value — diverges, and
+    the composed rivals of the same length are the mirrored blends and projections it
+    already covers (`compose_pg swap overlay` IS `underlay`, and so on).
+
+    DECOMPOSED-ONLY.  Atomically the direction complement is `sync_to_model`, which
+    moves ONE named value; there is no atomic wholesale-into-the-model commit, so an
+    atomic run has no program for this at any length.
+    """
+    rng = np.random.default_rng(seed)
+    commit = compose_pg(swap, sync_all)
+
+    def propose(rng, target=None):
+        chosen = [int(u) for u in rng.permutation(vals)]
+        if len(chosen) < n_movers + 2:
+            return None
+        movers, stale, fresh = chosen[:n_movers], chosen[n_movers], chosen[n_movers + 1]
+        cells = [(r, c) for r in range(size) for c in range(size)]
+        rng.shuffle(cells)
+        if len(cells) < 2 * n_movers + 2:
+            return None
+        working  = np.zeros((size, size), dtype=int)
+        template = np.zeros((size, size), dtype=int)
+        ci = 0
+        for u in movers:
+            src, tgt = cells[ci], cells[ci + 1]
+            ci += 2
+            if src == tgt:
+                return None
+            working[src]  = u
+            template[tgt] = u
+        template[cells[ci]] = stale        # map-only: survives the update
+        working[cells[ci + 1]] = fresh     # world-only: the update does not import it
+        got = _pair_propose(rng, ('sync_all_to_model', commit), (working, template),
+                            {'kind': 'map_update', 'movers': movers,
+                             'stale': stale, 'fresh': fresh},
+                            want_cost=3)
+        # nullary program: it names nothing, so every scene shares one latent and the
+        # values may differ scene to scene.
+        return None if got is None else ((), got[0], got[1])
 
     return _collect(propose, n, k, rng, attempts=20000)
 

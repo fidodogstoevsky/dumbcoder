@@ -2,6 +2,13 @@
 
 #show: mol-thesis
 
+// The illc-mol-thesis template forces `cite(style: "alphanumeric")` and
+// `bibliography(style: "elsevier-vancouver")`, which renders citations as
+// [GCT24]. These two lines override that with author-date. Both must be set:
+// the template's explicit cite style would otherwise win over the bibliography's.
+#set cite(style: "apa")
+#set bibliography(style: "apa")
+
 #mol-titlepage(
   title: "Learning to Theorize in Mental Terms",
   author: "Gidon Kaminer",
@@ -39,4 +46,4 @@
 #include "appendix.typ"
 #pagebreak()
 
-#load-bib(read("chapter1.bib") + read("chapter2.bib"), main: true)
+#load-bib(read("refs.bib"), main: true)

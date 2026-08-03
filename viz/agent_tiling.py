@@ -87,7 +87,7 @@ def compute(decomposed, smoke, run_path):
     rewritten = art.get('rewritten', {})
     library = list(art.get('library', []))
     lib_set = set(library)
-    tasks = build_corpus(smoke)
+    tasks = build_corpus(smoke, decomposed=decomposed)
 
     # combo -> abstraction -> count;  combo -> variant markers;  per-program token record.
     cell = defaultdict(Counter)                 # (gv,av) -> Counter(abstraction -> n tasks)

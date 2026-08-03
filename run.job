@@ -4,7 +4,7 @@
 #SBATCH --job-name=dumbcoder
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
-#SBATCH --time=08:00:00
+#SBATCH --time=16:00:00
 #SBATCH --output=../dumbcoder-runs/slurm_%A.out
 
 # Parameterized single-phase runner.
@@ -18,6 +18,18 @@
 #     sbatch --job-name=p1-dream   run.job p1-dream   phase1.py --t-fn 3600 --ecd-iters 6
 #     sbatch --job-name=p1-nodream run.job p1-nodream phase1.py --t-fn 3600 --ecd-iters 6 --no-dream
 #     sbatch --job-name=phase3 --time=02:00:00 run.job arity phase3_arity.py
+#
+# WHY THE DEFAULT IS 16 HOURS.  Sized for the slowest cell, not the typical one.
+# Phase 1 converges by round 3-4 and finishes in ~5h, but phase 2's decomposed DSL
+# makes every belief task deeper — rounds 2-4 each burn 60-115 CPU-hours of search at
+# --t-fn 3600 — and its cells ran 12:53 and 13:55 on Jul 29.  The default was 08:00:00,
+# which is a phase-1 number: on Jul 30 both phase-2 cells were killed at exactly 8h in
+# round 3 of 6, and a killed cell is SILENT in the artifact dir (the checkpointed
+# phase2_{run,traj}.json are still there; only phase2_verdict.json and the copied-back
+# .log are missing).  Overriding --time per submission is what the phase3 line above
+# does, but relying on it is what cost the Jul-30 phase-2 runs, so the default carries
+# the slow case and short jobs are free to shorten it.  SLURM charges actual use, so a
+# generous ceiling costs a phase-1 cell nothing but queue priority.
 #
 # WHY THE OUTPUT DIR IS OUTSIDE THE CHECKOUT.  The phase artifacts are tracked
 # files, so a run that writes them into the repo root dirties the tree it is

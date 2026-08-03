@@ -1,13 +1,13 @@
 {
  "provenance": {
   "git": {
-   "commit": "127c8d983d015bbad0de406fee7dc53563b4c950",
-   "commit_short": "127c8d9",
+   "commit": "a6965cde7c05d6ec2628c121d24f442b54642b09",
+   "commit_short": "a6965cd",
    "branch": "master",
    "dirty": true
   },
-  "timestamp": "2026-07-27T17:52:52Z",
-  "host": "eduvpn-uva-stu-145-3-16-66.vpn.uva.nl",
+  "timestamp": "2026-08-03T13:32:18Z",
+  "host": "Gidons-MacBook-Air.local",
   "python": "3.12.7",
   "argv": "phase1.py --smoke",
   "knobs": {
@@ -16,7 +16,7 @@
    "cube": true,
    "t_fn": 15,
    "t_fn_round1": 15,
-   "t_reg": 8,
+   "t_reg": 45,
    "ecd_iters": 2,
    "stitch_iters": 3,
    "dream_on": true,
@@ -57,9 +57,13 @@
    "belief_goal": 23,
    "belief_observers": 27,
    "belief_fob": 25,
-   "relocate": 26
+   "relocate": 26,
+   "wipe": 28,
+   "composite": 29,
+   "drift_reg": 30,
+   "map_update": 31
   },
-  "repro": "commit 127c8d9+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=8 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-07-27T17:52:52Z"
+  "repro": "commit a6965cd+dirty | phase1 (atomic, smoke) | t_fn=15 t_fn_round1=15 t_reg=45 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-08-03T13:32:18Z"
  },
  "decomposed": false,
  "smoke": true,
@@ -68,7 +72,7 @@
   "fn_4",
   "fn_5"
  ],
- "n_solved": 54,
+ "n_solved": 56,
  "sols": {
   "92e2ad7c9d0afedaf260a3bfaa4352a3fb5205df": "(step 4 up)",
   "bb58ed7dbd556cd29dc0ca613c1de5f8ca43ad26": "(step 4 right)",
@@ -112,18 +116,20 @@
   "1d5c47d158e5c751547cb123f6da547d7549a35f": "(compose (wall_at c0 c0) (clear_at c0 c2))",
   "a445c7dabeb74cec44f7b532ef8fb20d255a44b0": "(compose (wall_at c0 c0) (clear_at c3 c0))",
   "9df81c84fb60bb980824c427b4d6bfc4856dafd9": "(compose (wall_at c0 c3) (clear_at c2 c0))",
+  "26853547e8bfb167bbddfbe34c0a88f4f4727084": "(compose (compose (erase 1) (erase 4)) (erase 6))",
+  "4a64f36df7b6e19b90c7b07f1745b69aa19eb02e": "(compose (compose (erase 1) (erase 2)) (erase 5))",
   "c52bf1b98009a41ee7387efb4120f88b6c9502d8": "snd_gg",
   "5cbad27b0442f4eb4cd90d19d02f852f0c6592e8": "snd_gg",
   "e1dde4b7d6354a4d9d0623107a2bf61d8e6f2c25": "underlay",
   "a918879418aba1f073a6465a88bc9ec19bb21878": "underlay",
   "d45e8fe510b7f2792d009669c9080662a339507a": "sync_all",
   "2697e6c20536c7858d1de73231acb1757e524f25": "sync_all",
-  "22fce858b46da55fa2b3b4180185a2db4443fd7d": "(sync_to_world 4)",
-  "c6c36d7f6e0dc27ad37437e39b27555a333b1c52": "(sync_to_world 4)",
+  "8b88a5a9eae22e215c5907ef0967c588cfc4f911": "(sync_to_world 1)",
+  "0984591d5988ea2d03d130cfe5e952b8e8ea68ce": "(sync_to_world 5)",
   "819f46515082cdccb9e631eb5d8117396887126d": "(sync_except 1)",
   "95d250fc2d45402d7aaa1f0193e783e79e1cf71c": "(sync_except 1)",
-  "cb237dc8863704e2d43b0da0e581e6735074d3bb": "(sync_to_model 1)",
-  "e6dcbdde625ddd4e73a40820815b44c6697ecd31": "(sync_to_model 4)"
+  "695794c10ae8c7cd73e2e4219fef3baf273db284": "(sync_to_model 1)",
+  "6aec8f8f7b2dde986cee81413bfe7d8ac479e8fe": "(sync_to_model 5)"
  },
  "rewritten": {
   "92e2ad7c9d0afedaf260a3bfaa4352a3fb5205df": "(step 4 up)",
@@ -168,18 +174,20 @@
   "1d5c47d158e5c751547cb123f6da547d7549a35f": "(compose (wall_at c0 c0) (clear_at c0 c2))",
   "a445c7dabeb74cec44f7b532ef8fb20d255a44b0": "(fn_5 c0 c3 c0)",
   "9df81c84fb60bb980824c427b4d6bfc4856dafd9": "(fn_5 c0 c2 c3)",
+  "26853547e8bfb167bbddfbe34c0a88f4f4727084": "(compose (compose (erase 1) (erase 4)) (erase 6))",
+  "4a64f36df7b6e19b90c7b07f1745b69aa19eb02e": "(compose (compose (erase 1) (erase 2)) (erase 5))",
   "c52bf1b98009a41ee7387efb4120f88b6c9502d8": "snd_gg",
   "5cbad27b0442f4eb4cd90d19d02f852f0c6592e8": "snd_gg",
   "e1dde4b7d6354a4d9d0623107a2bf61d8e6f2c25": "underlay",
   "a918879418aba1f073a6465a88bc9ec19bb21878": "underlay",
   "d45e8fe510b7f2792d009669c9080662a339507a": "sync_all",
   "2697e6c20536c7858d1de73231acb1757e524f25": "sync_all",
-  "22fce858b46da55fa2b3b4180185a2db4443fd7d": "(sync_to_world 4)",
-  "c6c36d7f6e0dc27ad37437e39b27555a333b1c52": "(sync_to_world 4)",
+  "8b88a5a9eae22e215c5907ef0967c588cfc4f911": "(sync_to_world 1)",
+  "0984591d5988ea2d03d130cfe5e952b8e8ea68ce": "(sync_to_world 5)",
   "819f46515082cdccb9e631eb5d8117396887126d": "(sync_except 1)",
   "95d250fc2d45402d7aaa1f0193e783e79e1cf71c": "(sync_except 1)",
-  "cb237dc8863704e2d43b0da0e581e6735074d3bb": "(sync_to_model 1)",
-  "e6dcbdde625ddd4e73a40820815b44c6697ecd31": "(sync_to_model 4)"
+  "695794c10ae8c7cd73e2e4219fef3baf273db284": "(sync_to_model 1)",
+  "6aec8f8f7b2dde986cee81413bfe7d8ac479e8fe": "(sync_to_model 5)"
  },
  "kinds": {
   "92e2ad7c9d0afedaf260a3bfaa4352a3fb5205df": "physics",
@@ -224,17 +232,19 @@
   "1d5c47d158e5c751547cb123f6da547d7549a35f": "relocate",
   "a445c7dabeb74cec44f7b532ef8fb20d255a44b0": "relocate",
   "9df81c84fb60bb980824c427b4d6bfc4856dafd9": "relocate",
+  "26853547e8bfb167bbddfbe34c0a88f4f4727084": "wipe",
+  "4a64f36df7b6e19b90c7b07f1745b69aa19eb02e": "wipe",
   "c52bf1b98009a41ee7387efb4120f88b6c9502d8": "readout",
   "5cbad27b0442f4eb4cd90d19d02f852f0c6592e8": "readout",
   "e1dde4b7d6354a4d9d0623107a2bf61d8e6f2c25": "inpaint",
   "a918879418aba1f073a6465a88bc9ec19bb21878": "inpaint",
   "d45e8fe510b7f2792d009669c9080662a339507a": "multi_reg",
   "2697e6c20536c7858d1de73231acb1757e524f25": "multi_reg",
-  "22fce858b46da55fa2b3b4180185a2db4443fd7d": "registration",
-  "c6c36d7f6e0dc27ad37437e39b27555a333b1c52": "registration",
+  "8b88a5a9eae22e215c5907ef0967c588cfc4f911": "registration",
+  "0984591d5988ea2d03d130cfe5e952b8e8ea68ce": "registration",
   "819f46515082cdccb9e631eb5d8117396887126d": "reg_except",
   "95d250fc2d45402d7aaa1f0193e783e79e1cf71c": "reg_except",
-  "cb237dc8863704e2d43b0da0e581e6735074d3bb": "perception",
-  "e6dcbdde625ddd4e73a40820815b44c6697ecd31": "perception"
+  "695794c10ae8c7cd73e2e4219fef3baf273db284": "perception",
+  "6aec8f8f7b2dde986cee81413bfe7d8ac479e8fe": "perception"
  }
 }

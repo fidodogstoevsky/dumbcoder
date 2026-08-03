@@ -3,15 +3,11 @@
 
 #mol-chapter("Further work")
 
-== Comparison to LLMs
-
-I'm doing search in program-dynamics space, not token space. Synthesizing programs is logical and semantic discovery, unlike token prediction.  ECD enumerates typed program trees by probability and runs them on grids; there is no surface-syntax statistics anywhere.
-
 == Polymorphism
 
 We use a simply-typed monomorphic type system. For our purporses, types are really used only to prune enumeration.They constrain which compositions are legal, not what the program must prove. DreamCoder uses polymorphic types, so unification can rule out ill-typed branches early. But since our DSL has only $tilde$30 primitives our bottleneck isn't branching factor, so monomorphic dict lookup is sufficient. 
 
-With monomorphic types, a stitch abstraction discovered at type `grid` can only be reused at `grid`. With polymorphism, an abstraction abstracted over $forall a$ can be reused across instantiations of any type $a$. Phase 3 hand-engineers this with t eh cons/nil stack leaving arity as a free parameter. If we had polymorphism it would just fall out of the type discipline. 
+With monomorphic types, a stitch abstraction discovered at type `grid` can only be reused at `grid`. With polymorphism, an abstraction abstracted over $forall a$ can be reused across instantiations of any type $a$. The grid-stack of @sec-arity would have to hand-engineer this, with a cons/nil constructor and a depth-polymorphic lift written out for each pair operation; if we had polymorphism it would just fall out of the type discipline.
 
 To do something like that, we'd replace bare string types with a small ADT:
 
@@ -20,21 +16,41 @@ To do something like that, we'd replace bare string types with a small ADT:
 - applied `('con', 'pair', [t1, t2])`
 - arrows `(args, ret)`
 
-We'd implement Robinson unification 
+We'd implement Robinson unification
 
-== persistent models and interaction
+== Channel arity as a free parameter <sec-arity>
+
+The product $G times G$ of @types carries a commitment we should not be making on the learner's behalf. It says that a learner holding a private representation holds _exactly one_, and a one-model frame is precisely the kind of thing a theory of mind is supposed to have. If the answer to "why one world and one model, and not three?" is "because the type system says so", then part of the structure at issue has been fixed by the modeller rather than found by the learner. @sec-limits lists this as a limit of the results; this section says what removing it would take.
+
+The design is a further weakening of the endowment of @primitives --- strictly less given, on the same corpus, with the same objective. The fixed pair is replaced by a recursive grid-stack,
+
+```
+gstack ::= () | (grid, *gstack)
+```
+
+with `nil` and `cons` as constructors, and every pair operation is replaced by a depth-polymorphic lift of itself that acts on the top of the stack. The type system of @types gains the arrows $G arrow.r G^*$, $G^* arrow.r G^*$ and $G^* arrow.r G$ to push, transform and project, and loses the arrows into and out of $G times G$ that fixed the arity at two. At depth 1 the lifts reproduce `fork` and `sync_to_world` exactly, so nothing expressible under either endowment of @primitives is lost; but the number of private channels a program opens is now something search selects rather than something the type system fixes.
+
+The same monomorphism is also why the language needs a separate composer at each arrow of @types. The pieces belief is assembled from --- $Delta$, $"id" times f$ and $compose$ --- are defined at any objects, not just at $G$, so the four composers of @primitives are four copies of one operation the type system cannot state once. Nothing in the argument turns on this, but a language with polymorphic plumbing would collapse them into a single symbol, and the wiring belief needs would be that much less of the endowment.
+
+The measurement is then per family: for each solved task, read off the maximum stack depth its program reaches, and compare that against the depth the family's ground-truth program uses. The corpus would need at least one non-mental family whose ground truth genuinely requires depth 2 --- a cross-channel blur, say --- so that arity 2 is known to be both expressible and selectable, and the physics and desire families should sit at arity 0, holding no private channel at all. The prediction the thesis's argument makes is that no family, mental or not, selects more than one private channel except the one whose ground truth demands two; and the quantity that would carry it is not the observation but the margin, the description length of the arity-1 encoding of a belief scene against the arity-2 encoding of the same scene, under base primitives and under the learned library.
+
+If that came out, belief's single-model frame would be a discovery rather than a stipulation, and the last structural commitment in @types would be gone. If it did not --- if compression started stacking channels wherever the grammar allowed it --- what the runs of Chapter 5 found would still be a belief abstraction, but the claim that the learner also found its _frame_ would have to be withdrawn.
+
+== persistent models and interaction <sec-persistent>
 
 currently an attributed grid state, a belief, exists only for that one frame, since we're just working with grid to grid transition functions. so do something where the agent actually has a persistent memory of its modified grid
 
 and something where the agent can actually react to its environment, can write to the private model and read from it, can navigate based on obstacles, etc
 
-== breaking down optimize
+== breaking down optimize <sec-optimize>
 
 this primitive packs in a lot, it's a full bfs search. so try to rediscover that. this requires a persistent model (to keep track of visited cells) and a and interactions with the environemtn, conditionals (if wall, move away)
 
 == probabilistic primitives
 
 an agent that sometimes does this and sometimes that, etc
+
+Go from a LoT to a PLoT
 
 == vs. real world
 
@@ -48,28 +64,10 @@ I'm missing the scale. I'm focusing on a narrow timescale. in real infants this 
 
 == recursive mindreading
 
-=== What is claimed, and what is not
+== POMDP
 
-Fixing the level fixes the scope of the claim, and it is worth being explicit about what falls outside it. We are not studying how a child in fact comes to learn theory of mind. That is the province of developmental and cognitive psychology, and nothing here should be read as a proposal about neural implementation or about the moment-to-moment course of a particular child's development.
-
-Nor is the claim that children run the algorithm presented in @sec-dreamcoder. ECD, the wake-sleep library-learning system described there and implemented in Chapter 4, is offered as an algorithmic-level _realisation_ of the computational-level claim: a demonstration that the problem, so stated, is solvable by a mechanism that begins with no mental vocabulary at all. Its role in the argument is one of sufficiency rather than fidelity. If a learner equipped only with domain-general primitives and a preference for short programs comes to posit belief-like structure, then positing such structure is something a learner _can_ do rather than something it must be given --- and the nativist's inference from "no mechanism has been named" to "no mechanism exists" is blocked. Whether human learners use this mechanism, or some other one that solves the same problem, is a further question that this thesis does not settle.
-
-There is a caveat to the tidy division of levels, and it matters for @sec-hbm. Many early Bayesian models addressed the computational level alone, characterising cognition as approximately optimal statistical inference in a fixed environment without reference to how the computation is carried out. The hierarchical models discussed later sit somewhere between the computational and the algorithmic: they describe cognition as approximately optimal inference in probabilistic models defined over a learner's subjective and dynamically growing mental representations of the world's structure, rather than over some objective and fixed world statistics @tenenbaum_how_2011. Once the hypothesis space is itself something the learner builds and rebuilds, the question of what the learner is doing can no longer be cleanly separated from the question of what it is doing it _with_. That entanglement is not a defect of the account; it is the part of the account that does the developmental work.
-
-// --- source notes for this section, retained ---
-// - identify the computational problem that the mind is trying to solve: the problem is find
-//   the best explanation. we argue that best is determined logically by bayes' rule. so it's
-//   doing bayesian updating. then the algorithmic level is the procedure at which it's
-//   produced, ECD
-// - engineering: building AI, building algorithms that solve computational problems
-// - reverse-engineering: identify the abstract computational problems that the mind must
-//   solve to do what it does. knowing that the mind solves these certain problems, what are
-//   the AI systems we have that can solve problems like that. Then we can model the mind as
-//   that kind of system.
-// - bayesian models focus on the computational level, the logic of the problem, what the
-//   information processing system is doing. [Marr 1982]
-// - rational analysis framework. analyze cognition in terms of adaptive solutions to
-//   environmental problems [Anderson 1990]  <- NOT YET IN chapter2.bib
+observation function
 
 
-#load-bib(read("chapter1.bib") + read("chapter2.bib"))
+
+#load-bib(read("refs.bib"))

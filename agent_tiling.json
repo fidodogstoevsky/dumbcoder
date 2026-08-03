@@ -1,105 +1,186 @@
 {
  "phase": 1,
  "decomposed": false,
- "smoke": true,
- "source": "phase1_run.smoke.json",
+ "smoke": false,
+ "source": "hpc_run_results/jul30/p1-nodream-jul30/phase1_run.json",
  "library": [
-  "fn_3",
-  "fn_4",
-  "fn_5"
+  "fn_6",
+  "fn_7",
+  "fn_8",
+  "fn_9",
+  "fn_10",
+  "fn_11"
  ],
- "agent_ctor": "fn_3",
- "agent_ctor_uses": 7,
- "n_solved_belief": 13,
+ "agent_ctor": "fn_11",
+ "agent_ctor_uses": 52,
+ "n_solved_belief": 155,
  "tiled": false,
  "columns": [
-  "fn_3",
-  "fn_4",
-  "fn_5"
+  "fn_11",
+  "fn_6",
+  "fn_7",
+  "fn_8",
+  "fn_9",
+  "fn_10"
  ],
  "combos": [
   {
    "gv": 1,
    "av": 7,
-   "solved": 3,
+   "solved": 17,
+   "variants": [
+    "belief_goal",
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_11": 4,
+    "fn_6": 3,
+    "fn_7": 0,
+    "fn_8": 3,
+    "fn_9": 2,
+    "fn_10": 5
+   }
+  },
+  {
+   "gv": 2,
+   "av": 1,
+   "solved": 21,
    "variants": [
     "belief_false_obstacle",
     "belief_goal",
-    "belief_wall"
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
    ],
    "counts": {
-    "fn_3": 1,
-    "fn_4": 0,
-    "fn_5": 2
+    "fn_11": 9,
+    "fn_6": 5,
+    "fn_7": 3,
+    "fn_8": 3,
+    "fn_9": 2,
+    "fn_10": 2
    }
   },
   {
    "gv": 4,
    "av": 9,
-   "solved": 2,
+   "solved": 20,
    "variants": [
+    "belief_false_obstacle",
     "belief_goal",
-    "belief_wall"
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
    ],
    "counts": {
-    "fn_3": 1,
-    "fn_4": 1,
-    "fn_5": 0
+    "fn_11": 7,
+    "fn_6": 6,
+    "fn_7": 4,
+    "fn_8": 3,
+    "fn_9": 1,
+    "fn_10": 3
+   }
+  },
+  {
+   "gv": 5,
+   "av": 4,
+   "solved": 21,
+   "variants": [
+    "belief_false_obstacle",
+    "belief_goal",
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_11": 10,
+    "fn_6": 5,
+    "fn_7": 3,
+    "fn_8": 3,
+    "fn_9": 2,
+    "fn_10": 1
    }
   },
   {
    "gv": 6,
    "av": 2,
-   "solved": 2,
+   "solved": 18,
    "variants": [
+    "belief_false_obstacle",
     "belief_goal",
-    "belief_wall"
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
    ],
    "counts": {
-    "fn_3": 1,
-    "fn_4": 1,
-    "fn_5": 0
+    "fn_11": 6,
+    "fn_6": 2,
+    "fn_7": 1,
+    "fn_8": 3,
+    "fn_9": 2,
+    "fn_10": 5
    }
   },
   {
    "gv": 7,
    "av": 6,
-   "solved": 1,
+   "solved": 20,
    "variants": [
-    "belief_goal"
+    "belief_false_obstacle",
+    "belief_goal",
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
    ],
    "counts": {
-    "fn_3": 1,
-    "fn_4": 0,
-    "fn_5": 0
+    "fn_11": 8,
+    "fn_6": 7,
+    "fn_7": 5,
+    "fn_8": 3,
+    "fn_9": 1,
+    "fn_10": 2
    }
   },
   {
    "gv": 8,
    "av": 5,
-   "solved": 2,
+   "solved": 18,
    "variants": [
+    "belief_false_obstacle",
     "belief_goal",
-    "belief_wall"
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
    ],
    "counts": {
-    "fn_3": 1,
-    "fn_4": 0,
-    "fn_5": 1
+    "fn_11": 4,
+    "fn_6": 3,
+    "fn_7": 0,
+    "fn_8": 3,
+    "fn_9": 2,
+    "fn_10": 6
    }
   },
   {
    "gv": 9,
    "av": 8,
-   "solved": 3,
+   "solved": 20,
    "variants": [
+    "belief_false_obstacle",
     "belief_goal",
-    "belief_wall"
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
    ],
    "counts": {
-    "fn_3": 2,
-    "fn_4": 0,
-    "fn_5": 1
+    "fn_11": 4,
+    "fn_6": 6,
+    "fn_7": 2,
+    "fn_8": 3,
+    "fn_9": 2,
+    "fn_10": 5
    }
   }
  ]

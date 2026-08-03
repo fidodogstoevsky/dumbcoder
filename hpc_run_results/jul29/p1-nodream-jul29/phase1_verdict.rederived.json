@@ -1,0 +1,41 @@
+{
+ "run": "hpc_run_results/jul29/p1-nodream-jul29/phase1_run.json",
+ "decomposed": false,
+ "overall": {
+  "literal": 154,
+  "multi_mover": 1
+ },
+ "by_variant": {
+  "belief_goal": {
+   "literal": 43
+  },
+  "belief_observers": {
+   "multi_mover": 1,
+   "literal": 23
+  },
+  "belief_false_obstacle": {
+   "literal": 16
+  },
+  "belief_wall": {
+   "literal": 24
+  },
+  "belief_witness": {
+   "literal": 48
+  }
+ },
+ "detail": [
+  {
+   "variant": "belief_observers",
+   "form": "multi_mover",
+   "sol": "(fork (compose (compose (optimize (neg_dist 4) 5) (optimize (distance 5) 4)) (optimize (neg_dist 4) 9)) (sync_except 4))",
+   "movers": [
+    5,
+    9
+   ],
+   "arity": 2,
+   "order": "asc"
+  }
+ ],
+ "note": "belief commit-form census re-derived from the run's stored solutions under the classifier at commit a6965cd, which splits the old 'complement' bucket into multi_mover (a scope commit extensionally equal to the chain of individual attributions) and nonmental (a genuine non-mental rival). The run itself was produced at commit decb58d and is NOT re-searched; only the classification changes.",
+ "classifier_commit": "a6965cd"
+}

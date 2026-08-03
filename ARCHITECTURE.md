@@ -293,6 +293,7 @@ cube (`make_symmetric_prims`) adds all of them, along independent axes:
 | projection | `fst_gg` (keep world) | `snd_gg` (readout) |
 | bifunctor | `mapsnd`/`on_model` | `mapfst`, `bimap` |
 | pairing | `dup` (diagonal Δ) | `pair_blank` (fresh scratch) |
+| symmetry | keep the channels | `swap` (exchange them) |
 | utility | `neg_distance` (attract) | `distance` (flee) |
 | grid-edit | `wall_at` (add) | `clear_at`, `erase` (remove) |
 
@@ -316,8 +317,14 @@ fork(derive, commit)  ≡  commit ∘ mapsnd(derive) ∘ dup
 ```
 
 The DSL provides these (`dup`, `mapsnd`, and typed composers `compose_gp` /
-`pipe_gpg`, since the monomorphic type system has no generic `compose` across
-grid/pair arrows). Likewise `sync_to_world(v)` factors on the key `v` into
+`pipe_gpg` / `compose_pg`, since the monomorphic type system has no generic `compose`
+across grid/pair arrows). The third composer, `compose_pg : fn_p_p, fn_p_g → fn_p_g`,
+is what lets a program transform a pair it did not itself build — the given
+(working, template) pair of the registration interpreter — and it subsumes the old
+atomic `via_swap`, which was `compose_pg(swap, ·)` with the swap frozen in. So the
+direction complement decomposes all the way: `sync_to_model(v) ≡ (compose_pg swap
+(register (locate v) (place v)))`. Likewise `sync_to_world(v)` factors on the key `v`
+into
 `register(locate v, place v)` — read a coordinate off one channel, impose it on the
 other. **Phase 2** hands the searcher these decomposed parts and *removes* atomic
 `fork`/`sync`, forcing belief to be **rediscovered** as a deeper compound (now with
@@ -393,10 +400,11 @@ budget walk can produce only one arrow.
   `make_belief_tasks` / `make_witness_belief_tasks` /
   `make_false_obstacle_belief_tasks`, all emitted under `kind='belief'` with
   `belief_variant(m)` recovering the fine label), `overlay`, `comet`, `flee`,
-  `deletion`, `denoise`, `underlay`, `obstacle`, `relocation`.
+  `deletion`, `denoise`, `underlay`, `obstacle`, `relocation`, `wipe`.
 - **`fn_p_g`-rooted** (`unfold_with_template`, a `pair→grid` commit against a *given*
   external template): `registration`, `perception`, `multi_registration`,
-  `registration_except`, `inpainting`, `readout`.
+  `registration_except`, `inpainting`, `readout`, and — in a decomposed run only —
+  `composite`, `drift_reg`, `map_update`.
 
 Each family names its own rejection battery (`_physically_explainable`,
 `_wall_explainable`, `_displaced_goal_explainable`, `_witness_rival_explainable`,

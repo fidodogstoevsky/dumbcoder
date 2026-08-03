@@ -68,6 +68,8 @@ from tasks import (
     make_obstacle_tasks, make_relocation_tasks, make_perception_tasks,
     make_multi_registration_tasks,
     make_registration_except_tasks, make_inpainting_tasks, make_readout_tasks,
+    make_wipe_tasks, make_layer_composite_tasks,
+    make_drifting_registration_tasks, make_map_update_tasks,
 )
 from experiment import (gt_program_str, verify_ground_truth, check_decomposition_identities,
                         provenance_line)
@@ -176,7 +178,7 @@ def _reproduces_agents(xr, x, m):
 
 
 # ── corpus (mirrors experiment.run_phase's full-run corpus; kept in step by seeds) ──
-def build_corpus(smoke=False, k=None):
+def build_corpus(smoke=False, k=None, decomposed=False):
     """The full phase-1/2 mixed corpus: physics/desire/overlay/comet/registration +
     the eight symmetric cube corners, plus belief wall/witness/goal-displacement/
     two-observer and a second distinct-seeded batch of plain wall-belief tasks.  Sizes/seeds match
@@ -217,6 +219,15 @@ def build_corpus(smoke=False, k=None):
                    + make_registration_except_tasks(n_corner, seed=15, k=k)
                    + make_inpainting_tasks(n_corner, seed=16, k=k)
                    + make_readout_tasks(n_corner, seed=17, k=k))
+    # the pair-plumbing complements.  `wipe` (pair_blank) is expressible in both
+    # libraries and is always built; the other three are combinator wirings the
+    # atomic DSL cannot spell, so — exactly as in experiment.run_phase — they exist
+    # only in a decomposed corpus.  Keep this branch in step with that one.
+    fn_corner += make_wipe_tasks(n_corner, seed=28, k=k)
+    if decomposed:
+        pair_corner += (make_layer_composite_tasks(n_corner, seed=29, k=k)
+                        + make_drifting_registration_tasks(n_corner, seed=30, k=k)
+                        + make_map_update_tasks(n_corner, seed=31, k=k))
 
     tasks = (phys + des + ov + comet + bel + gdb + obs + fob + belief_extra
              + fn_corner + reg + pair_corner)
@@ -302,7 +313,7 @@ def run(decomposed=False, smoke=False, run_path=None, ground_truth=False):
           f"({'decomposed' if decomposed else 'atomic'} fork/sync){' [smoke]' if smoke else ''}"
           f"\n{'='*72}")
 
-    tasks = build_corpus(smoke)
+    tasks = build_corpus(smoke, decomposed=decomposed)
     D = Deltas(make_symmetric_prims(decomposed=decomposed))
     verify_ground_truth(D, tasks)                 # sanity-checks the reconstructed corpus
     if decomposed:

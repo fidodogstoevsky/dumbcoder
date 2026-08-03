@@ -1,8 +1,6 @@
 #import "@preview/illc-mol-thesis:0.2.0": *
 
-#import "world_tape.typ": world-tape, grid-view, arc-colors
-
-#import "viz.typ": task-figure, all-tasks
+#import "viz.typ": task-figure, scenes-figure, all-tasks
 
 #set heading(numbering: "1.")
 
@@ -54,248 +52,256 @@
   #it
 ]
 
+#show table.cell.where(y: 0): set text(style: "normal", weight: "bold")
+#show table: set par(justify: false)
+#set table(stroke: (_, y) => if y == 1 { (top: 0.9pt) } else if y > 1 { (top: 0.2pt) })
+
 #mol-chapter("The Model")
 
-== The Learning Problem <problem>
+== The learning problem <problem>
 
-In our model the learner is an observer, in a setup analogous to a child in a developmental psychology experiment. In each task the learner is shown a set of _scenes_, visual episodes unfolding oer discrete time steps. For each set of scenes, the learner's task is to recover the underlying process that explains the scenes, by positing canididate hypotheses until it finds the correct one. We model hypotheses as programs, so a hypothesis is correct iff executing the program reproduces the scenes exactly (every frame, not just the final one).
+In our model the learner is an observer. It is shown scenes, which are visual episodes that unfold over discrete time steps on a small grid. For each set of associated scenes the learner must recover the underlying process that generated what it saw, by positing candidate hypotheses until it finds one that works. Hypotheses are programs, so a hypothesis is correct only when executing it reproduces the entire sequence of frames it was given. Concepts are primitives, so a concept is learned when the learner erniches its library of primitives with a new abstraction. We ask whether such a learner, shown scenes whose shortest explanation requires belief attribution, comes to learn the attribution structure as a new abstraction. 
 
-The learner's 
+== The task corpus <corpus>
 
-Scenes come in families that 
+We created a corpus of sets of grid-based tasks. Most tasks are _trajectory tasks_. A trajectory is a sequence of 2d grids over the time dimension, that depicts some dynamic at play (e.g. a body that falls, an agent that approaches something, etc.). A task consists of $k$ trajectories that all depict the same dynamic but vary in setup (where the entities start, how long the scene takes, what else is lying on the grid, etc). Given a task, the learner's goal is to find a transition function that, for any trajectory in the task, returns the next grid for any grid in the sequence. So the transition function should be a generalized explanation of the underlying dynamic. 
 
-each emphasize a particular concept which explains the underlying process. In particular we study mental families, i.e. scenes that cannot easily be explained by extensional programs that just describe the observable surface of the scene. For such scenes the shortest available explanation must instead posit a representation held by an agent that diverging from the world, must attribute an intensional representation to an agent. 
+For example, the task below consists of four scenes that each depict the value 4 moving up. The grids of each timestep are collapsed into one, so each arrow indicates one timestep forward. A solution to the below task is a program that encodes "at each time step value 4 moves one step up". Such a program solves the task because for each scene, given that scene's starting positions, the program reproduces the rest of the trajectory. 
 
-In our model, theorizing about the world is a program synthesis problem while concept learning is a library learning problem. 
+#figure(
+scenes-figure("physics"),
+kind: image,
+caption: [an instance of a directional movement task]
+)
 
-We ask whether a learner equipped with nothing mental to begin with will converge on a mental explanation because it is the most compressive one. 
+The following task is solved by a program that encodes "at each time step, value 1 moves one step closer to value 2".
 
-To learn, in our setting, is to grow one's conceptual vocabulary by enriching it with useful conceptual abstractions. So our claim is that a reusable conceptual abstraction corresponding to belief attribution appears in a library that began without one.
+#figure(
+scenes-figure("desire"),
+kind: image,
+caption: [an instance of a goal-seeking task]
+)
 
-@audit through @primitives fix what the learner is given, what it is shown, what it can express, and where it starts; @inference gives the inference procedure; @criteria states what would count as the claim succeeding or failing.
+Both of these, and most of the corpus, can be solved by programs that describe the scene extensionally via a purely behaviourist visual description. The task families we care about are those that can only be solved by attributing a belief to an agent.
 
-== What is given, and what must be learned <audit>
+Below is an instance of a _goal-displacement_ task, inspired by the false-belief task @wimmer_beliefsabout_nodate. The dark blue value (1) comes to rest on a cell a fixed step away from the green value (2), rather than on it (and the teal 7 is a witness value). A solution to this task is a program that encodes "at each time step value 1 moves one step closer to value 2, given that value 2 is two steps above its actual location". So solving this task requires attributing to an agent a model that deviates from the actual one.
 
-We argue that 
+#figure(
+  scenes-figure("belief_goal"),
+  kind: image,
+  caption: [An instance of a goal displacement task],
+) <fig-belief-goal>
 
-The argument of @problem is only as strong as the audit of the learner's starting point. If any part of the apparatus — the interpreter, the type system, the primitive library — already encodes the world/model distinction, or already carries a notion of agency, then a discovered belief abstraction shows nothing, because belief was present from the start in a thin disguise. This section makes the audit explicit.
+// Another task family that requires attribution to solve are the _false wall_ tasks. The blue value (1) bends around a cell it wrongly believes is blocked, on its way to the goal (green). The believed wall
+//     is nowhere in the picture: it is private to the agent, and no frame ever renders
+//     it --- a real wall would be a dark grey `3`. The cell the agent bends around is
+//     occupied for the whole trajectory by an inert object, for the reason given in
+//     @identifiability.
 
-#block(inset: (left: 1em))[
-  *TODO:* the given/not-given table. Left column, _given_: the minimal interpreter (@interpreter); the domain-general core primitives (@primitives); the monomorphic type system; the MDL objective; the exact-match success criterion. Right column, _not given_: any primitive or type denoting an agent, a goal, a belief, or a mental state; the world/model channel distinction; any commitment in interpreter state to more than one representation of the world; any task-specific bias toward the belief families. Each row should point at the section where the corresponding claim is discharged.
-]
+// #figure(
+//   scenes-figure("belief_wall"),
+//   kind: image,
+//   caption: [An instance of a false wall task],
+// ) <fig-belief-wall>
 
-=== The interpreter <interpreter>
-
-A hypothesis is a transition function, not a scene. A trajectory scene is generated from its first frame by iterated application, so for a candidate transition function $f$ and first frame $x_0$ the generated scene is fixed by the recurrence $x_(i+1) = f(x_i)$. That recurrence lives in the interpreter rather than in program space, and the choice matters for two reasons.
-
-The first is compositionality. "Iteratively apply $f$, starting from $x_0$, for $n$ timesteps" is structure common to every solution in the corpus. Were it part of the program, it would be baked into every abstraction the learner discovers: a corpus of ten falling-object scenes would yield not the reusable $lambda$`0`. `(step down #0)` but an overspecified _apply `(step down #0)` from $x_0$ for `#1` steps_, whose output type is an entire rendered scene. Such an abstraction cannot be combined with another, so it could never serve as a component of the deeper compounds that belief requires, and library learning would be defeated at the first round. Keeping the recurrence out of program space keeps abstractions `fn`-typed and therefore composable.
-
-The second is that the recurrence carries no information the learner could be credited with discovering. Since it is shared by every solution, what search is actually looking for is only $f$; the rest is what is needed to render a scene from $f$ in order to check it against the observation. So we move the rendering machinery out of program space and into the evaluation framework (the interpreter is given in full in [app-interpreter]).
-
-The interpreter is minimal by design, and its minimality is the load-bearing part of the audit. Its state at any step is a _single grid_. It does not encode a (world, model) grid pair, and it holds no registry of agents, goals, or entities: there is nothing in it that distinguishes a cell playing the role of agent from a cell playing the role of obstacle. There is likewise nothing representational about it, since it only ever builds up one sequence of grids. The ability to hold multiple representations of the world, to hold a representation that deviates from the world and to attribute that representation to a particular agent, is nowhere in the interpreter. So assuming the interpreter as innate to the system does not smuggle in a theory of mind. Whether a program opens a second, private channel is a _structural_ property of the synthesized program — a matter of which types its nodes carry (@types) — not a commitment built into interpreter state.
-
-Template tasks (@corpus) are evaluated against a second interpreter, which threads a working grid while pairing each frame with a _constant external_ template and applying a commit policy of type `fn_p_g`. The distinction from the trajectory case is not incidental bookkeeping but a control on what the pair types can be taken to mean: here the second channel is a given input rather than a privately derived model, so a program that consumes the pair with `sync_to_world` is performing registration, not holding a belief. The same primitive vocabulary therefore does mental work in one interpreter and non-mental work in the other, which is what lets the corpus price belief against genuinely non-mental competitors that use the very same combinators.
-
-== Scenes and the task corpus <corpus>
-
-We were inspired by experiments in the developmental psychology literature in which subjects are tasked with explaining a scene or making predictions about it. We created a corpus consisting of various grid-based tasks that depict some dynamic at play. The system is an observer trying to make sense of the depicted scene by finding a program that correctly generates the scene.
-
-Most tasks in the corpus are _trajectory tasks_, a matrix $A$ of dimensions $s times s times n$ that depicts a visual scene occurring over $n$ time steps. Each frame is a _grid_ of width and height $s$ (we denote the $i$th grid as $t_i$). The solver just receives the initial grid $t_0$, the first frame (an $s times s$ grid) of task $A$. Its goal is to find a program that generates the full $A$ matrix, i.e. a program that posits the underlying data generation process. A correct solution is a function $f$ that, given a grid $t_i$ where $i < n$, returns the next grid in the sequence $f(t_i)=t_(i+1)$.
-
-Tasks are classified by task type, by the general concept that explains the task. For example, the below is an instance of a _movement_ task, which depicts a cell value (4) moving up steadily in some direction until it reaches an edge. A solution to the task might be program that encodes "at each timestep, value 4 moves one step up".
-
-#task-figure("physics", caption: none)
-
-Another type of trajectory task is the _desire_ tasks such as the instance seen below which depicts the value 1 getting closer to value 2 with each step. A solution to the instance might be a program that encodes "at each timestep, value 1 moves one step closer to value 2"
-
-#task-figure("desire", caption: none)
-
-The above tasks (and most others in the corpus) can be solved by programs that explain the scene extensionally, a purely behaviorist visual description. But we're interested in studying tasks that depict agent behavior guided by a belief, tasks that can only be efficiently solved by attributing a belief to an agent. The below task is an instance of a _false wall_ task,
-
-#task-figure("belief_wall", caption: none)
-
-Whereas a trajectory task's input is one initial grid $t_0$, a _template task_'s input is a pair of grids: a _world_ grid and a _template_ grid, both of dimensions $s times s$. Given (_working_, _template_), the task is to produce $t_1$, a version of the working grid modified according to the pattern given in the template grid. This format is loosely inspired by the ARC-AGI-1 task corpus [CITE].
+A second, smaller group are _template tasks_. Where a trajectory task's input is a single initial grid, a template task's input is a pair of grids: a _working_ grid and a _template_ grid, both $s times s$. The task is to produce the working grid modified according to the pattern given in the template. This format is loosely inspired by the ARC-AGI-1 corpus [CITE].
 
 #task-figure("registration", caption: none)
 
-=== Tasks as sets of scenes
+// We include the template families because they populate the pair interface (@types) from the non-mental side. A program that consumes a (working, template) pair with `sync_to_world` is performing image registration, not holding a belief, and it is doing so with exactly the primitives that belief uses (@interpreter).
 
-#block(inset: (left: 1em))[
-  *TODO:* the $k$-scene task format. A task is not a single scene but $k$ scenes (currently $k=4$) sharing one latent program, and a candidate solves the task only if it reproduces all $k$. State why this is a model-level commitment rather than an implementation choice: a single scene underdetermines its generating program, so a program can reproduce one belief scene by coincidence — fitting the particular geometry of that scene rather than the dynamic it depicts. Requiring one program across $k$ independently sampled scenes of the same family is what makes the identifiability condition of @identifiability bite, and it is what the rival measurements of @criteria are measured against. Give the measured effect: rival programs that pass on one scene of the goal-displacement family fail on all four.
-]
+We designed our corpus to exercise a variety of domains. See @tab-families in the appendix for the full list of task families in the corpus.
 
-=== The families
+// The first is $k$ itself. The likelihood of @sec-bayes eliminates rather than ranks, so requiring $k$ scenes of one latent program conjoins $k$ eliminations: a rival that fit one scene by luck is removed rather than down-weighted. That is most of the work. Every task in the goal-displacement family admits a spelling in which the agent's bend is explained by a phantom wall rather than a displaced goal --- for _some single scene_ of the task, and for none of them across all four, since a single wall coordinate cannot follow a believed goal that sits somewhere different in each scene.
 
-Our corpus consists of various kinds of tasks. Most tasks can be solved without belief attribution, but some tasks require belief attribution.
+// The second and third are conditions on the scene, which $k$ does not deliver: the falsely believed wall must lie on the route the agent would otherwise take, so that the belief is doing work; and the scene must make a world-level stamp of that wall detectable, so that "believes a wall is there" is distinguishable from "a real wall stood there and was taken down before the frame was rendered". Both are enforced by the generators, and @app-generators states them precisely, together with the handful of rivals that have to be excluded by argument rather than by the scenes because they are extensional identities and no number of scenes separates them.
 
-require belief attribution:
+// Template tasks are evaluated against a second interpreter, which threads a working grid while pairing each frame with a constant external template and applying a commit policy. Here the second channel is a given input rather than a privately derived model, so a program that consumes the pair is aligning two images, not holding a belief. The same vocabulary therefore does mental work in one interpreter and non-mental work in the other, which is what lets the corpus price belief against genuinely non-mental competitors built from the very same parts.
 
-- wall false belief: goal-oriented motion, navigating based on a believed grid which has a wall where one doesn't exist
-- witness false belief: two agents, one has a false belief that a wall is there and navigates to avoid it, the other has a true belief about the world so doesn't avoid the wall
-- goal-displacement false belief: classic sally-anne,
-- false-obstacle belief
-- dual belief
-
-don't require belief attribution:
-
-- simple movement
-- desire: goal-oriented motion (uses `optimize`)
-- overlay: moving object leaves a trail (uses `fork`)
-- comet: goal-oriented motion with moving trail (uses `fork`)
-- flee: like desire but with maximizing distance
-- deletion: grid edit remove one cell
-- denoise: grid edit remove a value
-- underlay: complement to overlay
-- obstacle: goal seeker detours. the grid doesn't have an obstacle there, but the goal seeker detours nonetheless. So the best explanation is `compose( wall_at r c, optimize(neg_dist gv) av )`, that the agent actually is navigating by a real wall that is there, and it's just that I the viewer don't see it
-- relocation: move a wall from one location to another
-- registration: snap one object onto the template
-- perception: registration complement, record a sensation into the private channel
-- multi-registration: snap all objects
-- registration-except:
-
-=== Identifiability of the mental families <identifiability>
-
-The corpus only tests what it claims to test if the belief families are not solvable extensionally. A scene in which an agent detours around a wall that isn't there admits a mental explanation, but it may equally admit a shorter non-mental one, and if it does then a learner that solves it has demonstrated nothing about mentalizing. So membership in a mental family is a condition on the scene, not a label attached to it: the scene must be one that no program describing only its observable surface can reproduce.
-
-The condition can fail in ways that are easy to miss. A wall false belief scene might place the falsely-believed wall at a location nowhere near the agent's path to its goal, in which case the agent navigates to the goal exactly as it would have without the false belief, and positing the belief is neither necessary nor helpful in explaining what is seen. Such a scene is underdetermined and is excluded from the corpus. The generators enforce the condition by rejection, and the checks they apply are given in [app-generators].
-
-== The hypothesis space
+== The hypothesis space <space>
 
 === Programs as typed expression trees
 
-A hypothesis is an expression tree over the library. Each node carries a type, together with the types of the arguments it expects; a node with no arguments is a terminal whose value is itself, like `up :: dir` or the literal `4 :: cellvalue`, and a node with arguments is an operator, like `step :: cellvalue, dir -> fn`, which is applied to its filled-in arguments. The tree is directly executable, and evaluating it bottom-up yields the object its root type names — so `(step 4 up)` evaluates its two leaves to the cell value `4` and the direction `(-1,0)` and applies `step` to obtain a transition function `fn :: grid -> grid`.
+A hypothesis is an expression tree over the library of primitives. Each node carries a type together with the types of the arguments it expects. A node with no arguments is a terminal whose value is itself, like `up` of type $D$ or the literal `4` of type $V$; a node with arguments is an operator, like `step` of type $V times D arrow.r (G arrow.r G)$, applied to its filled-in arguments. The tree is directly executable, and evaluating it bottom-up yields the object its root type names. So `(step 4 up)` evaluates its two leaves to the cell value `4` and the direction `(-1,0)` and applies `step` to obtain a transition function in $G arrow.r G$.
 
-Enumeration is type-directed: an argument slot draws only from symbols whose type matches, so no ill-typed tree is ever built. This is why the type system is a substantive part of the model rather than bookkeeping — it is the type discipline that determines which compounds are even expressible, and therefore what the learner could in principle discover.
+A program's syntactic size is its node count: one for a leaf, one plus its arguments for an operator. An abstraction used as a token adds just one, because the subtree it abbreviates lives inside the body and does not appear in the program that uses it. An abstraction converts many charged nodes into one. (See @app-delta for the representation that implements expression trees). 
 
-An invented abstraction is a node like any other, but it names a body: a tree over lower-level primitives with numbered holes standing in for its parameters, which is substituted in when the node is called. The point of naming is that the name is what gets charged. A program's description length is its node count, one for a leaf and one plus its arguments for an operator, and an abstraction used as a token adds just one, because the subtree it abbreviates lives inside the body and does not appear in the program that uses it. Description length is thus the quantity in which library learning trades: an abstraction converts many charged nodes into one. The representation that implements this is given in [app-delta].
+=== Type system <types>
 
-=== The library
+$G$ is the type of 2d grids of cell values, the frames of a scene. Write $G^*$ for stacks of grids, i.e. a full scene composed of a sequence of grids. So a transition function is then an element of $G arrow.r G$. The cell values are members of the ground set $V = {0, dots, 9}$, where each is an entity on the grid (e.g. the value $4$ moving up each time step). The grid coordinates are $C = {0, dots, s-1}$, a row or column index, from which a _position_ in $C times C$ is built. The remaining sets are $D$, the four movement directions, and $U subset.eq (C times C arrow.r RR)$, the positional utilities that the `optimize` primitive (@primitives) scores.
 
-The library is the learner's language of thought, and it has two parts: the `core` primitives a run begins with, and the `invented` abstractions that compression adds to it as they are discovered. Search always draws from their concatenation, so an abstraction discovered in round $N$ is available as an atom in round $N+1$ on exactly the same footing as a primitive that was given.
+Everything else the language names is an arrow between these. The arrows relevant to our argument are the ones into and out of the product $G times G$, which serves as the (world, model) channel pair:
 
-The library also fixes the prior. Symbols are grouped by return type, and a symbol of type $tau$ is priced at $-ln$ of the number of symbols sharing $tau$ — the type-uniform distribution. So the grouping does double duty: it gives the branching factor at each argument slot and the cost of each choice at that slot (@enumeration). It also means growing the library is not free, which is what makes the compression tradeoff of @compression non-trivial.
+$
+& G arrow.r G times G && quad "build a pair from a grid" \
+& G times G arrow.r G times G && quad "transform a pair" \
+& G times G arrow.r G && quad "collapse a pair back to a grid" \
+& G arrow.r C times C && quad "read a position off a grid" \
+& G times (C times C) arrow.r G && quad "impose a position on a grid" \
+$
 
-=== A monomorphic type system <types>
+So there are four jobs to be done with a pair: building a pair, transforming a pair, collapsing a pair, and reading and writing the positions that give a collapse something to go off of. These operations are performed by the product primitives (@primitives).
 
-Types are plain strings. A 2d array, i.e. one frame of a task, is of type `grid`, so a transition function is `fn :: grid -> grid`. A $z$-stack of grids, i.e. a sequence of frames (a full task), is of type `mat`. Cell values, e.g. a value representing an entity on the grid like a `4` moving up each timestep, are of type `cellvalue`. Grid positions are of type `coord`. These two int terminals are split by type so that diversifying cell values does not inflate the branching at a position slot (@primitives).
+Whether a program opens a private second channel is a matter of which of these arrows its nodes inhabit, so a (world, model) representation is a structural property of the program. The fixed product does carry the commitment that a learner holding a private representation holds exactly one (generalizing this is left as further work, see @sec-arity).
 
-The type system is deliberately monomorphic: there is no polymorphism, so every arrow over a different shape of data needs its own named type and its own typed composer. This is a cost — a single polymorphic `compose : (b -> c) -> (a -> b) -> (a -> c)` would subsume many of the types below — but it is a principled one: keeping the primitives ground (rather than schematic) is what lets belief emerge as a discovered _composition_ of concrete operations rather than being smuggled in as a polymorphic combinator (@decomposed). The types beyond `grid`/`fn` are:
+A program is checked by running it through an interpreter (@app-interpreter). The solution to a trajectory task (@corpus) is a program of type $G arrow G$, a transition function that given the task's initial grid at step $i$ should return the next grid at step $i+1$. So the interpreter iterates the program $G arrow G$ on the task's initial grid $G$, yielding the stack of grids $G^*$ which can be compared to the target scene. So the interpreter's state at any step is just a single grid $G$, not a (world, model) pair $G times G$, and certainly not a registry of agents, goals, or entities. No pair is handed from one step to the next: a program that opens a second channel (a model channel that may diverge from the world) must build it, use it, and collapse it again inside that step. 
 
-- `pair_gg` — a pair of grids `(grid, grid)`, the (world, model) channel pair;
-- `fn_g_p` — a pair producer `grid -> pair_gg` (e.g. `dup`);
-- `fn_p_g` — a pair consumer `pair_gg -> grid` (e.g. `sync_to_world`, `overlay`);
-- `fn_p_p` — a pair endomorphism `pair_gg -> pair_gg` (e.g. `mapsnd`);
-- `fn_g_c` — a coordinate reader `grid -> coord` (e.g. `locate`);
-- `fn_gc_g` — a coordinate placer `(grid, coord) -> grid` (e.g. `place`);
-
-and, for the arity-generalization phase, the recursive grid-stack `gstack` with its lift/endomorphism/render arrows `fn_g_s`, `fn_s_s`, `fn_s_g` (@arity). Because whether a program opens a private second channel is now a matter of which of these types its nodes carry, the presence of a (world, model) representation is a _structural_ property of a synthesized program, not a commitment baked into the interpreter's state.
-
-=== Types and task roots
-
-Which type counts as a solution is fixed by the interpreter the task is enumerated against. A trajectory task's input is a single initial grid, of type `grid`, and its solution is a transition function of type `fn`, since for a grid at timestep $i$ it must return the grid at $i+1$. So only an `fn`-typed program is a valid solution for a trajectory task: the interpreter `unfold` takes the initial grid (`grid`), a transition function (`fn`), and the duration (`int`), and returns a `mat` to compare against the task.
-
-A template task's input is instead a pair `(grid, grid)` — a working grid and a constant external template — and its solution is a _commit policy_ of type `fn_p_g`, answering "what should each frame do with the template?"; these tasks are enumerated against `unfold_with_template`. Enumeration is therefore organized by root type, `fn` and `fn_p_g` being searched as separate cost-ordered streams, while compression pools the solutions of both roots into a single stitch call (@compression) — so an abstraction for belief must earn its place against the whole solved corpus, not just its own root's share of it.
+A template task starts from a pair in $G times G$, a working grid and a constant external template, so its solution is a _commit_ $G times G arrow.r G$ (which is one of the collapsing arrows above). The commit answers what each frame should do with the template. In a template task the pair is given rather than built by the program, which is the one case in which a program is handed a second channel it did not open itself. Since a type-directed enumeration yields programs of one type only, trajectory tasks ($G arrow G$-rooted) and template tasks ($G times G arrow G$-rooted) are searched separately (@enumeration). Though compression pools the solutions of both (@compression).
 
 == The primitive library <primitives>
 
-The library a run begins with is the model's substantive claim about the learner's initial endowment, and the three phases below weaken that endowment in turn. Each phase hands the learner a strictly more elementary starting vocabulary, so that a belief abstraction discovered in a later phase is discovered from less.
+The learner starts with a library of primitive operations, listed in full in @app-primitives.
 
-=== Core primitives
+Some of the primitives are for assembling transition functions, e.g. `step`, of type $V times D arrow.r (G arrow.r G)$, moves every cell of a given value one step in a given direction. `optimize`, of type $U times V arrow.r (G arrow.r G)$, moves a value one step towards or away from a value according to the given utility. There are two utilities to give it, both of type $V arrow.r U$: `neg_dist`, minus the distance to the nearest cell of a target value, and `distance`, plus that distance, so that maximising the first approaches a target and maximising the second flees it. Three primitives edit the grid outright: `wall_at` stamps a wall value (3) at a position, `clear_at` clears a single cell, both are of type $C times C arrow.r (G arrow.r G)$. And `erase` is of type $V arrow.r (G arrow.r G)$, it removes every cell of a value. Finally `compose` runs one transition function then another, so it's of type $(G arrow.r G) arrow.r (G arrow.r G) arrow.r (G arrow.r G)$. The terminals are the four directions, the cell values $0 dots 9$ of type $V$, and the coordinates `c0 … c4` of type $C$, a pair of which names a position.
 
-every run's library starts with core primitives used to construct the transformation functions. `step :: cellvalue, dir -> fn` moves the value one step in a specified direction, chosen among `left :: dir`, `up :: dir`, etc. `optimize :: util, cellvalue -> fn` moves the value one greedy (BFS-optimal) step towards improving its utility, chosen among `distance :: cellvalue -> util` or `neg_dist :: cellvalue -> util`.
+Since we're interested in how transition functions $G arrow.r G$ interact with (world, model) pairs $G times G$, the rest of our primitives are the structure of the product. They are defined for grids $w, m, g in G$, transition functions $f, f' in G arrow.r G$, values $v in V$ and positions $p in C times C$. There are four kinds, one for each arrow of @types: those that build a pair out of a grid, those that transform a pair, those that collapse a pair back to a grid, and those that read and write a position.
 
-#show table.cell.where(y: 0): set text(style: "normal", weight: "bold")
-#set table(stroke: (_, y) => if y == 1 { (top: 0.9pt) } else if y > 1 { (top: 0.2pt) })
+We have two ways of _building_ a pair, both of type $G arrow.r G times G$. The diagonal $Delta(w) = (w,w)$, which the library calls `dup`, copies a grid into both channels. Its complement `pair_blank`, $w mapsto (w, bold(0))$, pairs the grid with an empty one instead, so the second channel starts as scratch rather than as a copy of the world.
 
-#block(inset: (left: 1em))[
-  *TODO:* the full core primitive table (symbol, type, gloss), or a pointer to it in the appendix.
-]
+We have four ways of _transforming_ a pair, all of type $G times G arrow.r G times G$. Three are the functorial actions, which lift transition functions to act on the channels: `mapsnd` acts on the second factor, $(id times f)(w,m) = (w,f(m))$, `mapfst` on the first, $(f times id)(w,m) = (f(w),m)$, and `bimap` on both at once with one function for each, $(f times f')(w,m) = (f(w),f'(m))$. The fourth is the twist $(w,m) mapsto (m,w)$, `swap`, which exchanges the channels, so anything defined on one factor can be conjugated into a version acting on the other.
 
-=== Atomic (phase 1)
+We have several ways of _collapsing_ a pair to a single grid, of type $G times G arrow.r G$. The projections `fst` and `snd` return one channel and discard the other, $(w,m) mapsto w$ and $(w,m) mapsto m$. `overlay` and `underlay` union the two channels, differing only in which one wins where they disagree. `sync_all` moves every value the two channels share to the position it holds in the second, and `sync_except v` does the same for every shared value but $v$.
 
-In our first trial (phase 1) we show that, given the domain-general capacity to represent counterfactual world states, a system can learn a functional abstraction that encodes a notion of belief attribution. The learned function attributes a counterfactual world state to a particular agent, determines what the agent's movement would be based on its own private (non-world) representation, and then renders only the agent's movement as a real-world artifact (so it doesn't render the agent's believed world as the real world). So this use of the capacity for counterfactual representation is discovered in program space.
+Finally we have the accessors on positions. `locate`, of type $V arrow.r (G arrow.r C times C)$, gives $"loc"_v (g)$, the position of $v$ in $g$; `place`, of type $V arrow.r (G times (C times C) arrow.r G)$, gives $"put"_v (g,p)$, the grid $g$ with $v$ moved to $p$. A reader and a writer are joined by `register`, of type $(G arrow.r C times C) times (G times (C times C) arrow.r G) arrow.r (G times G arrow.r G)$, which reads a position off the second channel and imposes it on the first: $"register"("loc", "put")(w,m) = "put"(w, "loc"(m))$. So `register (locate v) (place v)` is the collapse that moves the single value $v$ to wherever the second channel puts it, and it is a collapse the learner has to assemble from three parts rather than one it is handed.
 
-The capacity is given as two primitives:
+Each of these arrows needs its own composer, since `compose` joins two transition functions only, it's of type $(G arrow G) arrow (G arrow G) arrow (G arrow G)$. So `compose_gp`, of type $(G arrow.r G times G) times (G times G arrow.r G times G) arrow.r (G arrow.r G times G)$, extends a builder by a transform. `pipe_gpg`, of type $(G arrow.r G times G) times (G times G arrow.r G) arrow.r (G arrow.r G)$, follows a builder with a collapse, which is the composer that returns to $G arrow.r G$. The interpreter only ever iterates a transition function, so a program that opens a second channel must close it again within the same time step. `compose_pg`, of type $(G times G arrow.r G times G) times (G times G arrow.r G) arrow.r (G times G arrow.r G)$, follows a transform with a collapse, and is the only one that acts on a pair the program did not itself build, which is what a template task's given pair calls for.
 
-- `fork :: fn -> (grid, grid) -> fn`
-- `sync_to_world :: cellvalue -> (grid, grid) -> grid`
+The primitives are just the product structure, so nothing in them distinguishes a world from a model. The pair is symmetric: both factors are grids, every structure map is present in both directions, and no primitive marks either channel as anyone's representation. Which channel is the world and which is a belief is settled only by how a program assembles these pieces together, which is found by search. 
 
-=== Decomposed (phase 2) <decomposed>
+=== The target compound <signature>
 
-In the second trial (phase 2), we show that the system can arrive at an abstracted notion of belief starting from an even more basic language of 2-ary combinators. We decompose the counterfactual representation machinery, initializing the system with a library of product-category combinators that are unambiguously domain-general. We show that enumeration recovers the basic structure of belief attribution even from these atomized primitive operations.
+Chapter 3 formulates belief attribution as running the planner on a model that may diverge from the observer's. The observer runs the same planning computation twice, once against the world as it is and once against the model it attributes to the agent (@sec-false-belief). So in our setting, the observer needs to do three things: first _derive_ a private grid that differs from the world in whatever the agent is wrong about. Then _run_ the agent's movement policy in the private grid, so that its move is optimal with respect to its own belief rather than to the real world. Finally _commit_ the result back to the world, publishing where the agent went and nothing else. The commit is necessary because the interpreter renders one grid per step, so motion on a private grid doesn't affect the rendered grid unless an agent's motion is explicitly committed from it.
 
-The product-category combinator family in our type system is
+Only the _run_ step is done by a primitive, namely `optimize` which builds the agent's movement policy. Nothing in the library opens a private grid, and nothing publishes a single value's position back out of one. Both have to be assembled from the product structure above. So for _derive_ and _commit_, we have two target structures:
 
-`
-dup_g       : grid -> pair_gg
-mapsnd      : fn   -> fn_p_p
-compose_gp  : fn_g_p, fn_p_p -> fn_g_p
-pipe_gpg    : fn_g_p, fn_p_g -> fn
-`
+$
+"fork"("derive", "commit") &= "commit" compose ("id" times "derive") compose Delta \
+"sync"_v &= "put"_v compose ("id" times "loc"_v) \
+$
 
-which are just the pair-grounded instantiation of universal categorical combinators
+$"fork"$ is the derive-and-commit frame, taking a $"derive" in G arrow.r G$ and a $"commit" in G times G arrow.r G$. It copies the world into a pair, applies the derive to the second channel to get the private grid, and hands the pair to the commit, which collapses it back to one grid; the private grid exists only for the duration of that call. $"sync"_v$ is the commit belief needs: it reads where $v$ sits in the private grid and moves the $v$ in the world to that position, so exactly one value's position is published and everything else stands as the world had it.
 
-- `dup     : a -> pair a a` (the diagonal $triangle$)
-- `mapsnd  : (b -> c) -> pair a b -> pair a c` (the bifunctor 'second')
-- `compose : (b -> c) -> (a -> b) -> (a -> c)`
+Belief is the composition of fork and sync, with the derive doing the agent's error and the commit doing the attribution. Taking a phantom wall as the error, it is $"fork"(pi_a compose "wall"_(r,c), "sync"_a)$, which unfolds to the map
 
-The decomposition is polymorphic in principle. Our monomorphic primitives are the ground instances at `a = grid`. So belief _can_ be assembled from standard categorical combinators.
+$
+w mapsto "put"_a (w, "loc"_a (pi_a ("wall"_(r,c) (w))))
+$
 
-so if we had polymorphism we could collapse the above family into one `compose`.
+for an agent value $a$, a seek policy $pi_a$, and a wall stamped at row $r$ and column $c$, the three steps in order are: copy the world and put a wall on that copy, plan based on the copy of the world which has a wall in it, then finally write to the rendered world only where the agent ended up.
 
-=== Arity (phase 3) <arity>
-
-#block(inset: (left: 1em))[
-  *TODO:* the arity-generalization phase. The `pair_gg` type of phases 1 and 2 stipulates that a learner holding a private representation holds _exactly one_, which is a commitment the model should not be making on the learner's behalf — a one-model frame is precisely what a theory of mind is claimed to have. Replacing the pair with the recursive grid-stack `gstack` (`cons`/`nil`, with the lift/endomorphism/render arrows `fn_g_s`, `fn_s_s`, `fn_s_g` of @types) makes channel arity a free parameter, so the number of private channels becomes something search selects rather than something the type system fixes. State the verdict: MDL never selects more than one private channel, so belief's single-model frame is discovered rather than stipulated.
-]
+Note that the agent value $a$ occupies three slots in that term: the movement policy $pi_a$ that plans over the privately walled grid, the read $"loc"_a$ that finds where the agent ended up, and the write $"put"_a$ that publishes it. So to find this compound, the enumerator needs to independently fill the argument slots of the three primitives with the same value placeholder.
 
 == Inference <inference>
 
-ECD is a wake-sleep library-learning loop inspired by the DreamCoder @ellis_dreamcoder_2020. Each round consists of an enumeration phase, a compression phase, and a dreaming phase, and the three correspond to the three moves of the previous chapter: search is Bayesian inference over programs under a prior; compression is revision of the language in which hypotheses are written; dreaming is amortization of the first by a learned recognition model.
+Our procedure runs in alternating wake-sleep rounds, following the DreamCoder @ellis_dreamcoder_2020. The waking phase enumerates programs for the tasks not yet solved, under the current library. The sleep phase revises the library to compress the programs found. We depart from @ellis_dreamcoder_2020 in omitting the recognition model, the dreaming phase (see @no-amortization). Also, in our model the likelihood is evaluated against $k$ observations at once rather than one (@corpus). And the abstraction search is delegated to Stitch rather than run bottom-up (@compression). The two phases divide the inference of Chapter 2 between them: waking performs the per-task inference of @sec-bayes, sleeping the revision of the prior of @sec-hbm. 
 
 === Search <enumeration>
 
-In principle the enumerator doesn't itself set out to synthesize a solution program for each particular task. Rather it generates candidate programs arbitrarily from the grammar in order from most to least probable (from lowest to highest cost), checking candidate programs against the task corpus.
+The waking phase find a hypothesis that correctly explains a scene by enumerating canddiate programs in decreasing order of prior probability and checking if the program produces the scene. A hypothesis is a program (@sec-programs), specifically a typed expression tree over the current library (@space). Since enumeration in decreasing prior probability is enumeration in increasing description length, the search walks outward in expanding bands of cost (expanding $tilde e^ell$, see @sec-search). The first program it finds that reproduces the data is the shortest one that does, which is the maximum a posteriori hypothesis ($h^*$, see @sec-programs). The enumeration runs under a time budget, and a hypothesis whose cost band is not reached before the budget expires is simply not found.
 
-Say the task to solve depicts the value 3 rising in each successive grid, so the target solution is the program `(step 4 up)`. Its head is `step :: cellvalue, direction -> fn` and its leaves are `4 :: cellvalue` and `up :: direction`. A program's cost is given by the sum of the costs of its constituent primitives. Say $Q$ is the initial flat prior, the type-uniform distribution, so each primitive's cost is the negative natural log of the number of symbols in the grammar that share its type. For example, there are $N=4$ symbols of type `direction` so each gets $p = 1/N = 1/4$. By Shannon, we have cost(`up`) $= -ln p = -ln 1/4 = ln 4 approx 1.386$ nats. By the same process, `step`'s cost is $ln 8 approx 2.1$ nats and `4`'s cost is $ln 10 approx 2.3$. By logarithmic additivity, to find the program's total cost we simply sum the costs of its constituent primitives which yields $approx 5.8$ nats for `(step 4 up)`.
+The library fixes the prior. The prior $P(h) prop e^(-"DL"(h))$ (see @sec-programs) is realised as a distribution over the library's symbols, under which a program's cost is the summed $-log p$ of its nodes. Symbols are grouped by return type, and a symbol of type $tau$ is priced at $-ln$ of the number of symbols sharing $tau$, i.e. a type-uniform distribution#footnote[One exemption to that pricing is worth stating. A cell value _visible_ in the task's own first frame costs nothing, since naming what is already on display is not a hypothesis about anything, while a position stays a latent the learner must pay for. The invisible phantom wall is thus something search has to buy, and the agent and goal identifiers, being in plain sight, are not.]. So the types give the branching factor at each argument slot, and the cost of each choice at that slot. Enumeration is type-directed: an argument slot draws only from symbols whose type matches, so no ill-typed tree is ever built.
 
-Search proceeds cheapest-first, so the solution it returns for a task is the shortest program that solves it under the current library — the maximum a posteriori hypothesis, given that the prior prices a program by its description length. A candidate counts as solving a task only if the interpreter, run on the task's own first frame, reproduces the task's every frame exactly. Each still-unsolved task is enumerated as its own cost-ordered stream, which is what allows the prior $Q$ to be conditioned on the individual scene rather than shared across the corpus — a fact we rely on in @dreaming. The mechanics of cost-bounded search are given in [app-enumeration].
+The budget is what makes the double role of the prior, argued for abstractly at the end of @sec-search, into something concrete. There the point was that a long hypothesis is not merely improbable but unreachable; here that is a fact about a clock. The two readings of description length cannot come apart, because in this procedure making a hypothesis more probable and making it cheaper to find are the same operation. And that points at the only remedy available: not to enlarge the budget, but to shorten the target, which is what @compression does.
+
+Two notions of description length are in play, and it is worth keeping them apart. The _cost_ of a program, in nats, is the summed $-log$ probability of its nodes under the current prior; this is what orders enumeration, and it is what @sec-programs identified with $-log P(h)$. The _total_ description length is the two-part quantity of @compression: the length of the library itself plus the summed cost of every solved program written in it. The first prices one hypothesis against a language held fixed, and is what the waking phase minimises; the second prices a language together with everything solved in it, and is what the sleep phase minimises. Both are reported in nats, and Chapter 5 uses both --- the margins between a belief compound and its rivals are costs in the first sense, the round-by-round curves of @sec-compression are totals in the second.
+
+Two details are specific to this setting. First, the success criterion, which is where the indicator likelihood $bb(1)[h "solves" d]$ of @sec-bayes is cashed out as an execution: a candidate solves a task only if the interpreter, started from each scene's own first frame, reproduces that scene's every frame exactly, for all $k$ scenes (@corpus). Second, each still-unsolved task is enumerated as its own cost-ordered stream rather than checked against one stream shared across the corpus, which is what lets the search be parallelized across tasks. The mechanics of cost-bounded search, including the pruning and the tie-break within a cost window, are given in @app-enumeration.
 
 === Library revision <compression>
 
-While Enumeration minimizes the cost of each program under a fixed grammar, Compression lets the system revise the grammar in light of the solutions found by enumeration. It identifies syntactic structure common across found solutions, and abstracts it as a new primitive to add to the library. The goal of compression is to minimize the joint cost of the library plus the programs written in it, given by:
+The sleep phase does the shortening, and it is here that the hierarchical model of @sec-hbm becomes an algorithm. Having solved some tasks, the learner looks for structure recurring across the solutions and gives that structure a name, adding it to the library of primitives from which future programs are built. The library is the overhypothesis of @sec-hbm made concrete: a set of named, reusable abstractions which, by fixing what symbols exist and how the probability mass is divided among them, is the learned prior under which the next round's tasks are inferred. This is $lambda$-abstraction used as @sec-programs advertised it: taking a recurring piece of structure and giving it a name, so that the learner comes to possess a term whose content is fixed entirely by what it does in combination with the others.
+
+The reason this is inference rather than convenience is the objection @sec-hbm raised against itself. If the modeller may adjust the vocabulary whenever the search is going badly, then anything can be made learnable by adding a primitive that does the work, and the model explains nothing. The answer is that the adjustment is made by an objective rather than by a modeller, and the objective is the two-part code of @sec-programs, now applied to the language rather than to a single hypothesis: the joint description length of the library together with the corpus written in it @rissanen_modeling_1978:
 
 $
 min_"library" ("DL"("library") + sum_"tasks" "DL"("program" | "library"))
 $
 
-The choice of whether to abstract a given shared structure is non-trivial. Consider a program tree fragment that recurs across many solutions. Say it gets added to the library as a new primitive `fn_k`, so now each subsequent usage of the fragment collapses from a multi-node subtree to a single leaf, so it costs one token rather than the several that `fn_k` abbreviates. But the library is now larger, and since a symbol's cost is $-ln$ of the number of symbols sharing its type, adding one more `fn_k`-typed symbol raises the cost of every primitive of that type. The abstraction is worthwile only when the fragment is large enough, and recurs often enough, that the tokens saved across the corpus outweigh the price of carrying one more symbol. So accidentally-shared structure is never abstracted, while shared structural motifs do.
+Minimising this is the joint inference across levels of @sec-hbm, in the plainest possible form: the vocabulary and the programs written in it are settled together, against a single criterion, rather than the vocabulary being fixed first and the programs then found within it.
 
-Where DreamCoder @ellis_dreamcoder_2020 searches for abstractions bottom-up, by enumerating refactorings of each found program and intersecting them, we delegate the search to the top-down Stitch @bowers_top-down_2023 library-learning system, which searches the space of abstractions directly and so never has to materialize every rewrite. The search procedure and its utility bound are given in [app-stitch].
+Both terms matter, and the tension between them is what makes the choice non-trivial. Naming a recurring fragment collapses it, at each site where it is used, from a subtree to a single token, which shrinks the second term. But the library is now larger, and since a symbol's probability falls as the number of symbols competing with it rises, every program written in the enlarged library gets a little more expensive, which grows the first. An abstraction is kept only when the tokens it saves across the whole corpus outweigh the price of carrying it. Structure that recurs by accident is not abstracted; structure that recurs because it is genuinely shared is. The constraint doing the work is conservation of probability mass, now operating on the language rather than on the data: a library that could express anything cheaply would be a library in which nothing is cheap.
 
-enumeration is by root types so `fn` and `fn_p_g` are searched separately. but compression is joint over root types, their solutions are pooled into a single stitch call. so an abstraction for belief has to fight over the space of all solved programs, including those from the other root type. so it really is that much more efficient. This preempts the attack that by separating the search to different root types we're biasing abstraction creation towards the belief tasks since they make up a higher percentage of `fn`-rooted tasks rather than `fn_p_g`-rooted. the same objective that could have paid for belief's structure is free to spend its budget on the overlay, registration, and obstacle families instead, but it ends up going to the belief families because those abstractions compress so much structure.
+The objective is indifferent to which tasks the shared structure came from. It sees a pooled corpus of solutions and asks what would compress it, so an abstraction serving one family of problems must win against every abstraction that would serve any other family. Two things about how it is optimised here matter to the argument.
 
-What compression returns is a set of abstractions together with the corpus rewritten to use them. Each abstraction is registered as a new symbol in the library, and the rewritten corpus becomes both the training data for the dreaming phase and the starting point for the next round — in which programs a level deeper, belief compounds too expensive to enumerate from bare primitives, have become reachable because their shared core now costs a single token.
+The first is the search procedure. Where DreamCoder looks for abstractions bottom-up, enumerating refactorings of each found program and intersecting them, we delegate the search to the top-down Stitch @bowers_top-down_2023 library-learning system, which searches the space of abstractions directly and so never has to materialize every rewrite. This is a difference in tractability rather than in objective; the procedure and its utility bound are given in @app-stitch.
 
-=== Amortization <dreaming>
+The second is the scope over which it runs. Search is divided by solution type (roots), but compression is *joint*: it pools the solutions of both types and revises one library over all of them, so an abstraction has to earn its place against the whole solved corpus rather than against its own share of it (@positive-differences).
 
-Enumeration searches under a prior $Q$ that is fixed across the whole corpus: every task is enumerated against the same type-uniform distribution. But the tasks are not interchangeable. A scene in which the agent takes a straight path to its goal and a scene in which it detours around a wall call for very different transition functions, and a prior that cannot see the scene has no way to tell them apart — it must spend the same budget windows on both.
+What compression returns is a set of abstractions together with the corpus rewritten to use them. Each abstraction is registered as a new symbol, on the same footing as a primitive that was given --- what was a subtree found in round $N$ is an atom in round $N+1$ --- and the rewritten corpus becomes the starting point for the next round --- in which programs a level deeper, belief compounds too expensive to enumerate from bare primitives, have become reachable because their shared core now costs a single token. This is the cumulative structure @sec-hbm called bootstrapping: each round changes what the next round can find.
 
-In the dreaming phase we train a recognition model @ellis_dreamcoder_2020, a neural network that reads a task $x$ and emits a task-conditional prior $Q(dot | x)$, biasing the grammar toward the primitives that the scene is likely to need. It is trained by the wake–sleep procedure of a Helmholtz machine on two sources of program–scene pairs: _replays_, the solutions enumeration has actually found, run back through the interpreter on their own task grids; and _fantasies_, programs sampled from the current library prior and executed on freshly generated grids, which supply new pairs at no labelling cost where replays are scarce. The architecture, its training regime, and the rescaling that puts its output on the enumerator's cost scale are given in [app-recognition].
 
-Two of its commitments are part of the audit of @audit rather than matters of engineering. The first is that entity _roles are read off from motion, not from cell values_: the corpus deliberately uses diverse agent and goal identifiers, so the encoder cannot key on "value 1 is the agent", and instead labels a cell occupied in the first frame but vacated by the last a _mover_ and a non-background cell occupied at both ends a stationary _goal_. Roles in fantasies are likewise decided by the sampled program's motion, so a fantasy only ever _lets_ a program drive two movers; it never manufactures a belief scene by hand.
+== The model does not encode a Bayesian theory of mind <no-btom>
 
-The second is that the dreamed prior is gated to families with at least one solved instance. A family with no solves is invisible to the recognition model and could only be mispriced by it: it would flood the early budget windows with the non-belief primitives the model _has_ seen and thereby delay the primitives that family actually needs. Such families stay on the uniform baseline and earn the dreamed prior only once they are solved and can contribute replays of their own. So dreaming accelerates the families the curriculum has already reached, and never the frontier it has not — which matters here, because belief is the frontier: the first belief solve cannot be an artifact of a prior trained to expect belief.
+
+
+The charge to answer is that Chapter 3's stipulations have been re-encoded in a different notation and the learner then congratulated for finding them: if the interpreter, the types, the library, the corpus or the prior already carries the world/model distinction or a notion of agency, a discovered belief abstraction shows nothing. The audit below takes the five in the order of @stipulated, and then two confounds of our own. Each item has the same shape: something is given, and the thing that would turn it into an attribution is withheld, so that the connection between them is left for the search to make.
+
+=== The decomposition into agent, goal and belief <no-decomposition>
+
+BToM hands agent, goal and belief to a planner as separately inferred arguments. Here there is no planner with argument slots to inherit that from, and no type denotes an agent, a goal or an attitude: there are grids, cell values, coordinates and arrows between them. A cell value is an integer between 0 and 9, and the corpus rotates through eight (agent, goal) pairs so that no integer is privileged --- an abstraction specialised to "value 1 is the agent" would fail to recur and would not be kept. Role is positional: the thing we call the agent is whatever value occupies the policy slot and the commit slot at once. That shape, `(fork <derive> <commit>)` with a value shared between a policy inside the derive and the commit outside it, is not a primitive but a compound the searcher assembles and compression decides to keep, so an invented abstraction binding one hole to both is a discovery of the structure rather than of a parameter inside a given one.
+
+=== The separation of the believed world from the actual world <no-separation>
+
+This is the stipulation that makes false belief representable at all, and where the model is most exposed: BToM evaluates the planner against a supplied world model $m'$ and permits $m eq.not m'$. What we give instead is a product type and general combinators that inhabit it. The pair is symmetric and content-free --- `dup` produces $(w, w)$, and nothing in it says the second copy is a _model_ or that anyone _holds_ it. Belief is a matter of wiring: `mapsnd` rather than `mapfst`, the direct commit rather than its conjugate through `swap`, `register (locate av) (place av)` rather than `sync_all`. Each of those choices has its opposite in the library, exercised by some non-mental family in @tab-families; the medium is neutral, and the asymmetry is made in program space by the search.
+
+The interpreter does not supply it either. In BToM the divergent model is an input to a planner the observer runs _inside itself_; ours has one grid of state, no second channel to hand anybody, and no mode distinguishing evaluating a program from evaluating a program-as-an-agent-would. A private grid exists only because a program built it, and the interpreter cannot tell it from any other. Nor are `fork` and `sync_to_world` given as atoms --- that is the control run of @sec-atomic-run --- since the searcher here is handed `dup`, `mapsnd`, `compose_gp`, `pipe_gpg`, `locate`, `place` and `register`, product-category combinators no one would describe as mental.
+
+The regress does not end, and we do not claim otherwise. `dup` could itself be decomposed into reads and writes over a flat memory, so that holding a second world model becomes a discovered pattern of buffer use; but "allocate a buffer" is then the primitive, and no more mental than "form a pair", because intensionality just _is_ the coexistence of a world and a model of it, so any substrate expressive enough to state the structure can hold two things at once. There is no substrate in which theory of mind is discovered from nothing, only substrates whose primitives are, or are not, individually non-mental and general.
+
+=== The space of admissible divergences <no-range>
+
+BToM must also fix which divergences are admissible, and the scenarios that produce them. Here there is no range to fix: the derive slot of a fork accepts _any_ program of arrow $G arrow.r G$, so the belief families differ in what the belief is _about_ rather than in some parameter of a common schema --- a phantom wall is `wall_at r c`, a displaced goal is `step gv d`, being wrong about both at once is a sequence of the two. The goal-displacement family varies its content across four shove shapes, so an abstraction specialised to one of them would not recur and compression must keep the content subtree as a hole: the productivity and systematicity @explanandum demanded.
+
+The concession is that what the learner finds is a divergent world model, not a belief that is _formed_ and could be _revised_. Nothing represents how the agent came to be wrong, and nothing updates when it looks again. In BToM that lack is a stipulation about admissible divergences; here it is a limit on what the corpus depicts and what a single-frame transition function can express, and the most important respect in which the discovered structure is thinner than the thing it is a model of (@sec-persistent).
+
+=== The space of goals <no-goal-space>
+
+BToM's goal space, and the prior on it, are given; Baker et al. compare several goal priors precisely because the choice matters and is the modeller's to make @baker_action_2009. Here a goal is whichever cell value happens to fill the argument of `neg_dist`, drawn from the same ten integer terminals that supply agent identifiers and step magnitudes. There is no goal type and no goal prior --- there is inference over programs, and a program seeks something because a symbol landed in that slot. Even the polarity is a search choice: `distance` sits alongside `neg_dist`, so maximising utility flees a value as readily as it approaches one, and the `flee` family exists to keep that corner inhabited. The only prior over any of it is the type-uniform distribution, which prices a goal value with the rule that prices `up` and `compose`.
+
+=== Rationality, and the one thing we do grant <rationality>
+
+Rationality is the one stipulation of BToM our learner also receives, in the form of the `optimize` primitive, on the grounds Chapter 3 gave: it is the only item on the list with independent developmental support, in place well before the first birthday and some three years before anything recognizable as false-belief attribution (@sec-planner, @timeline) @gergely_taking_1995, and on the best analysis of it not mentalistic, since the teleological stance relates an action, a goal state and the constraints of a situation without attributing any representation to the agent @gergely_teleological_2003.
+
+Its signature makes the point formally. `optimize` has type $U times V arrow.r (G arrow.r G)$: it receives one grid, has no parameter identifying whose grid it is and no access to any other channel, and treats whatever grid it is handed as the layout. It cannot represent a divergence, because it cannot see two things to diverge, and it cannot attribute anything, because it has no argument for an attributee. Belief arises only when something _else_ hands it a grid that is not the world and then publishes only part of the result --- and that something else is the composition, which is what the learner has to find. Nor is the planner reserved for the mental families: `desire` uses it to walk to a goal, `flee` to run from a hazard, `comet` to bend a trail, and `obstacle` to detour around a real wall, on scenes whose rendered trajectories closely resemble the belief ones. Availability is not use.
+
+The residual cost is real and we do not pretend otherwise: `optimize` packs a full breadth-first search into one token, and a more elementary treatment would decompose it into memory, conditionals and interaction with the environment (@sec-optimize). What we claim is only that granting a planner is not granting a theory of mind.
+
+=== Two confounds that are ours rather than BToM's <confounds>
+
+Two further items answer to nobody on Chapter 3's list; they are properties of how the experiment is run, and the two knobs a sceptical reader would reach for first.
+
+*The success criterion admits no partial credit.* A candidate program either reproduces all $k$ scenes of a task cell for cell or it does not solve the task (@corpus, @sec-bayes). A graded likelihood is exactly where a thumb could rest on the scale: under partial credit a mental program that is nearly right could be preferred to an extensional rival that is exactly right, and the comparison of @criteria --- whether the mental program wins on description length _among programs that all reproduce the data_ --- would no longer be the one being made.
+
+*Nothing in the loop is conditioned on what a scene looks like.* We omit DreamCoder's recognition model, for the reason @no-amortization gives at length: a proposal distribution trained on solved tasks has its prior over the library fit to the data, and belief is precisely the structure the corpus is meant to leave unfitted. Enumeration runs under the type-uniform prior over the current library and nothing else, so the only thing that can make a belief compound reachable is that earlier compression made it short --- the mechanism the ordering claim of @criteria depends on. The choice was settled by measurement rather than by design, and @sec-limits reports what the loop gave when it was run both ways.
+
+=== Two structural differences worth naming <positive-differences>
+
+*Inference here is not agent-directed.* BToM's posterior is over $(g, m)$ for an agent and has nowhere else to point; ours is over programs for a scene, and it is the _same_ search, under the same prior and the same success criterion, that solves `denoise` and `relocation`. Compression is undirected in the same way, which is why it is pooled rather than run per solution type (@compression): were it divided, the division would itself bias abstraction toward belief, since the belief families make up a larger share of the trajectory tasks than of the corpus as a whole. Pooled, the budget that could have paid for belief's structure is free to spend itself on the overlay, registration, obstacle and relocation families instead.
+
+*The ordering is a prediction rather than an accommodation.* Because BToM's structure is complete from the start, nothing in the framework makes a goal attribution earlier or cheaper than a belief attribution, and the delay of @timeline has to be explained by something outside the model. Here the delay is the mechanism: a belief compound is a deep composition whose cost under the initial library puts it far outside any feasible budget window, and it becomes reachable only once earlier solutions have been compressed into tokens that shorten it. That is a claim that can fail --- the compounds might never come within budget, or they might come within budget in the wrong order --- and @criteria says what failure would look like.
 
 == What would count as success or failure <criteria>
 
-#block(inset: (left: 1em))[
-  *TODO:* the discovery criteria and the rival criteria — the section that makes the next chapter's measurements tests rather than descriptions. It should fix, in advance:
+The measurements of Chapter 5 are tests rather than descriptions only if what they test is fixed in advance. This section fixes it.
 
-  - *What counts as having discovered belief.* Not "the belief tasks were solved" — a solved belief task with an extensional program is a failure of the corpus, not a success of the learner. The criterion is structural: an abstraction appears in the library whose body opens a private channel, derives a world state that diverges from the actual one, evaluates the agent's action against that divergent state, and commits only the action back to the world. State it as a condition on the term, so it is checkable.
-  - *That it must be a compression win, not merely reachable.* The discovered compound has to be selected by the joint objective of @compression against the non-mental rivals available in the same library — this is what the MDL margin measures, and the margin must be reported against the shortest rival the library can express, including the witness agent.
-  - *That it must generalize behaviourally.* A learned belief term should predict, on a held-out scene, that the agent goes where it believes the goal to be rather than where the goal is. This is the false-belief test proper, and it is the criterion that distinguishes a compressive coincidence from a term that means what we say it means.
-  - *What would refute the hypothesis.* Any of: no belief-structured abstraction enters the library within budget; one enters but loses on description length to an extensional rival; a rival that never opens a private channel reproduces all $k$ scenes of a mental family; the belief term fails the held-out behavioural probe. Say which of these the runs in fact rule out, and which remain open — the unsolved dual-belief family should be named here rather than left to the results chapter.
-]
+*What counts as having discovered belief.* Not that the belief tasks were solved. A solved belief task with an extensional program is a failure of the corpus, not a success of the learner. The criterion is structural, and it is a condition on the invented term: an abstraction must enter the library whose body (i) opens a private channel, (ii) derives from it a world state that diverges from the actual one, (iii) evaluates an agent's policy against that divergent state, and (iv) commits only the resulting action --- not the divergent state --- back to the world, with the agent value shared between the policy and the commit. All four conjuncts are checkable on the term, and the fourth is the one that distinguishes attribution from mere counterfactual computation.
 
-#load-bib(read("chapter1.bib") + read("chapter2.bib"))
+*It must be a compression win, not merely reachable.* Reachability is cheap: given enough budget, many things can be enumerated. The discovered compound has to be _selected_ by the joint objective of @compression over the non-mental rivals the same library can express, and the margin must be reported in nats against the shortest such rival --- including the rivals that survive the $k$-scene filter for structural reasons, such as the transient-wall spelling and the witness-agent construction. A margin at or below zero is a failure even if the mental program was found first.
+
+*It must generalize behaviourally.* A learned belief term should predict, on a scene held out of the run entirely, that the agent goes where it _believes_ the goal to be rather than where the goal is. This is the false-belief test proper @wimmer_beliefsabout_nodate, and it is the criterion that separates a compressive coincidence from a term that means what we say it means. It also has to be run on a family where the two readings come apart behaviourally, which is why the goal-displacement family carries it: in a wall-belief scene the transient-wall rival reproduces the whole trajectory, so only description length separates the readings there, whereas a displaced goal sends the two readings to different cells.
+
+*What would refute the hypothesis.* Any one of the following:
+
++ no belief-structured abstraction, in the four-conjunct sense above, enters the library within budget;
++ one enters, but loses on description length to an extensional rival expressible in the same library;
++ a rival that never opens a private channel reproduces all $k$ scenes of a mental family --- which would mean the family was misclassified and the corpus does not test what it claims to;
++ the discovered term fails the held-out behavioural probe, sending the agent to the true location;
++ the discovered term is not applied selectively --- if the library invents an agent constructor and then applies it to every mover in a scene, including one whose walk is fully explained by the bare world, then what was found is a habit of forking rather than an attribution.
+
+Two things should be said now rather than left to the results chapter, because they bear on how the verdict should be read.
+
+The first is that there is a depth past which the model's expressive claim outruns its search claim. Two agents holding contradictory false beliefs, each detouring around its own phantom wall, is a scene the language states without difficulty, but it names six latent literals across two nested forks, and no amount of budget we could give it brought a single such task within reach. The selective-attribution criterion above is therefore carried by the cheaper two-observer case --- two agents, one goal, one grid, where only one of them is attributed a belief --- and the contradictory-belief case is left as a limit, not a result.
+
+The second is that the criteria are stated per endowment, and a verdict is a verdict about one of them. They are the criteria the library of combinators must meet. The control run of @sec-atomic-run is held to the same list and reported against it, but meeting them there does not discharge them, since the granted `fork`/`sync_to_world` pair is exactly what an unsympathetic reader would call `believe` in two halves.
+
+#load-bib(read("refs.bib"))

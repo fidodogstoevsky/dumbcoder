@@ -11,6 +11,10 @@
   #it
 ]
 
+#show table.cell.where(y: 0): set text(style: "normal", weight: "bold")
+#show table: set par(justify: false)
+#set table(stroke: (_, y) => if y == 1 { (top: 0.9pt) } else if y > 1 { (top: 0.2pt) })
+
 #set heading(numbering: "1.")
 #mol-chapter("Appendix")
 
@@ -19,7 +23,44 @@ This appendix collects the implementation of the model outlined in Chapter 3.
 - full list of tasks
 - full list of primitives
 
+== Full Corpus
+
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    align: (left, left, left),
+    table.header([Family], [Ground-truth program], [What it probes]),
+    [`physics`], [`step v d`], [the bare interpreter, no private model],
+    [`desire`], [`optimize (neg_dist gv) av`], [goal-directed motion without a model],
+    [`obstacle`], [`compose (wall_at r c) (optimize …)`], [a detour round a #emph[real] wall],
+    [`flee`], [`optimize (distance hv) av`], [the repulsion corner of the utility axis],
+    [`deletion` / `denoise`], [`clear_at r c` / `erase v`], [the grid-edit removal corners],
+    [`relocation`], [`compose (clear_at …) (wall_at …)`], [the grid-edit "move" corner],
+    [`overlay` / `underlay`], [`fork (step v d) overlay`], [`fork` with a #emph[non-mental] commit; z-order],
+    [`comet`], [`fork (optimize …) overlay`], [`fork`'s derive slot taking a seek policy],
+    [`wipe`], [`pipe_gpg pair_blank snd`], [the pairing complement: a fresh blank channel, not a copy],
+    [`belief_wall`], [`fork (compose (wall_at r c) (optimize …)) (sync_to_world av)`], [detour round an #emph[invisible] wall],
+    [`belief_witness`], [the above, composed with a second bare seeker], [a witness who crosses the phantom wall],
+    [`belief_goal`], [`fork (seq (step gv d) (optimize …)) (sync_to_world av)`], [Sally-Anne: belief whose #emph[content] varies],
+    [`belief_observers`], [a bare seeker composed with a forked one], [selective attribution: one agent forks, one does not],
+    [`belief_false_obstacle`], [`fork (seq (wall_at Wb) (step gv d) (optimize …)) (sync_to_world av)`], [wrong about obstacle #emph[and] goal, with a real wall present],
+    [`registration` / `perception`], [`sync_to_world v` / `sync_to_model v`], [the sync commits doing #emph[non-mental] alignment],
+    [`multi_registration` / `registration_except`], [`sync_all` / `sync_except v`], [the scope complements],
+    [`inpainting` / `readout`], [`underlay` / `snd`], [the z-order and projection complements],
+    [`composite`], [`compose_pg (bimap (step u d) (erase w)) overlay`], [the full bifunctor: two layers, one map each],
+    [`drift_reg`], [`compose_pg (mapfst (step u d)) (register …)`], [the world-channel map: register while the image scrolls],
+    [`map_update`], [`compose_pg swap sync_all`], [the twist: the model adopts the world wholesale],
+  ),
+  caption: [The task families, by the program behind them. The first block are trajectory tasks, solved by transition functions; the last are template tasks, solved by commits (roots). Programs are written throughout in the abbreviated spelling of @signature: `fork` and `sync_to_world` are not primitives of the learner's library but compounds it must assemble . The last three families exist only under the combinator library: nothing in the atomic control maps both channels, maps the world channel of a #emph[given] pair, or commits wholesale into the model, so they have no program there at any length. `wipe` has one in both, at three nodes against eight.],
+) <tab-families>
+
 == The interpreter <app-interpreter>
+
+
+The first is compositionality. "Iteratively apply $f$, starting from $x_0$, for $n$ time steps" is structure common to every solution in the corpus. Were it part of the program, it would be baked into every abstraction the learner discovers: a corpus of ten falling-object scenes would yield not the reusable $lambda$`0. (step down #0)` but an overspecified _apply `(step down #0)` from $x_0$ for `#1` steps_, whose output type is an entire rendered scene. Such an abstraction cannot be combined with another, so it could never serve as a component of the deeper compounds that belief requires, and library learning would be defeated at the first round. Keeping the recurrence out of program space keeps every abstraction an arrow $G arrow.r G$ and therefore composable.
+
+The second is that the recurrence carries no information the learner could be credited with discovering. Since it is shared by every solution, what search is actually looking for is only $f$; the rest is what is needed to render a scene from $f$ in order to check it against the observation. So we move the rendering machinery out of program space and into the evaluation framework. The interpreter is given in full in @app-interpreter.
+
 
 The interpreter is discussed at the model level in @app-interpreter. What follows is the design argument in the form it was originally worked out, followed by the two interpreters themselves.
 
@@ -60,6 +101,60 @@ def unfold_with_template(g, template, T, c):
     return np.stack(frames)
 ```
 
+== The primitive catalogue <app-primitives>
+
+The primitive sets handed to the searcher are summarised at the model level in @primitives. The exhaustive catalogue — every symbol's repr, type signature and semantics, under each endowment — belongs here.
+
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    align: (left, left, left),
+    table.header([Symbol], [Type], [Semantics]),
+    [`compose`], [$(G arrow.r G)^2 arrow.r (G arrow.r G)$], [run one transition then the other],
+    [`step`], [$V times D arrow.r (G arrow.r G)$], [move every cell of the given value one step in the direction],
+    [`optimize`], [$U times V arrow.r (G arrow.r G)$], [move the given value one greedy (BFS-optimal) step to improve the utility],
+    [`neg_dist`], [$V arrow.r U$], [minus the distance to the nearest cell of the target value (attract)],
+    [`distance`], [$V arrow.r U$], [plus that distance, so maximising it flees the target],
+    [`wall_at`], [$C times C arrow.r (G arrow.r G)$], [stamp a wall at a position],
+    [`clear_at`], [$C times C arrow.r (G arrow.r G)$], [clear one cell],
+    [`erase`], [$V arrow.r (G arrow.r G)$], [remove every cell of a value],
+    [`right left up down`], [$D$], [the four movement directions],
+    [`c0 … c4`], [$C$], [coordinate terminals, a pair naming a position (the invisible latent pool)],
+    [`0 … 9`], [$V$], [cell-value terminals (content-priced when visible)],
+  ),
+  caption: [The grid core: the primitives that move cell values about a single grid, shared by both endowments.],
+) <tab-core>
+
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    align: (left, left, left),
+    table.header([Symbol], [Type], [Semantics]),
+    [`dup`], [$G arrow.r G times G$], [$Delta$: pair a grid with a copy of itself],
+    [`mapsnd`], [$(G arrow.r G) arrow.r (G times G arrow.r G times G)$], [$"id" times f$: act on the second channel],
+    [`compose_gp`], [$(G arrow.r G times G) times (G times G arrow.r G times G) arrow.r (G arrow.r G times G)$], [compose a pair producer with a pair endomorphism],
+    [`pipe_gpg`], [$(G arrow.r G times G) times (G times G arrow.r G) arrow.r (G arrow.r G)$], [produce a pair, then consume it],
+    [`locate`], [$V arrow.r (G arrow.r C times C)$], [$"loc"_v$: where $v$ is in a grid],
+    [`place`], [$V arrow.r (G times (C times C) arrow.r G)$], [$"put"_v$: move $v$ to a position],
+    [`register`], [$(G arrow.r C times C) times (G times (C times C) arrow.r G) arrow.r (G times G arrow.r G)$], [$(w, m) arrow.r.bar "plc"(w, "loc"(m))$: read a position off one channel, impose it on the other],
+    [`overlay`], [$G times G arrow.r G$], [union the channels, model wins ties --- a #emph[non-mental] commit],
+    [`underlay`], [$G times G arrow.r G$], [union the channels, world wins ties],
+    [`sync_all`], [$G times G arrow.r G$], [move #emph[every] shared value to its model position],
+    [`sync_except`], [$V arrow.r (G times G arrow.r G)$], [every shared value but one],
+    [`fst` / `snd`], [$G times G arrow.r G$], [project the world channel / the model channel],
+    [`swap`], [$G times G arrow.r G times G$], [the twist: exchange the channels],
+    [`mapfst`], [$(G arrow.r G) arrow.r (G times G arrow.r G times G)$], [$f times "id"$: act on the #emph[first] channel],
+    [`bimap`], [$(G arrow.r G)^2 arrow.r (G times G arrow.r G times G)$], [$f times g$: act on both],
+    [`pair_blank`], [$G arrow.r G times G$], [pair a grid with a fresh blank rather than a copy],
+    [`compose_pg`], [$(G times G arrow.r G times G) times (G times G arrow.r G) arrow.r (G times G arrow.r G)$], [transform a pair, then consume it --- the third composition, and the only one that acts on a pair the program did not build],
+  ),
+  caption: [The product combinators: the plumbing, the commits that consume a pair, and the symmetric complements. The lower rows are the complements discussed in @primitives.],
+) <tab-combinators>
+
+#block(inset: (left: 1em))[
+  *TODO:* the atomic variant's pair interface, transcribed from `prims.py`.
+]
+
 == Program representation <app-delta>
 
 The hypothesis space is described at the model level in !types. This is the data structure that represents it.
@@ -78,19 +173,19 @@ The library of primitives is a `Deltas` object. It is instantiated with a list o
 
 == Task generators and necessity filters <app-generators>
 
-The identifiability condition on the mental families is stated in !identifiability. It is enforced by the generators as follows.
+The identifiability condition on the mental families is stated in identifiability beyond the $k$ scenes, two conditions on the scene itself and a set of exemptions that no scene can settle. This section states them and says how the generators enforce them. Both conditions are sharpest in the false-wall family , where the agent detours around a wall that is not there.
 
-one of the challenges of creating such a corpus is making tasks that require belief attribution.
+*The falsely believed wall must matter.* Placed nowhere near the agent's route, it leaves the agent navigating to its goal exactly as it would have without any false belief; positing the belief is then neither necessary nor helpful, and the scene shows nothing. So the phantom wall lies on the shortest path the agent would take were its belief true, and costs it extra steps over that path. A merely monotone "detour" is just another shortest path, which plain desire reproduces under different tie-breaking. Scenes failing this are rejected by the generator.
 
-checks in the (belief) task generators to make sure they aren't physically explainable, so they're not underdetermined. For example, in a wall false belief task an agent might have a false belief about a wall being there, but at a location nowhere near the agent's path to its goal. So the agent can still navigate to the goal freely as if it didn't have such a false belief, positing the false belief isn't necessary or helpful to explain the scene. So those scenes are rejected.
+*A world-level stamp must be detectable.* This one is structural. On a bare grid nothing distinguishes a wall the agent _believes_ in from a real wall stamped into the world and taken back down before the frame is rendered: a rival that stamps, acts, then erases reproduces every scene honestly, at every $k$. The scenes must therefore make the stamp visible, and they do so by leaving an inert object sitting on the phantom-wall cell for the whole trajectory --- the cell the agent bends around in  Stamping a wall there overwrites that object, and nothing in the language can put it back, so a world-level stamp shows up in the rendered frame. The witness family makes the same argument with a moving object in place of a static one: an agent who walks across the phantom cell would be clobbered by any real wall stamped there.
 
-we implement a filter that
+*Some rivals are identities, and are exempted by argument.* A last few rivals cannot be excluded by the scenes at all, because what they are is an _identity_ rather than a coincidence, and no number of scenes separates two programs that denote the same function on the scenes in question. On a two-value scene, "move every shared value except the goal to its model position" simply _is_ "move the agent to its model position". These are exempted from the rival census of @sec-rivals by argument, and the full set is:
 
 == Cost-bounded enumeration <app-enumeration>
 
 The search is described at the model level in !enumeration. These are its mechanics.
 
-While a single cost-ordered stream can in principle be checked against every task in the corpus at once, in the experiments each still-unsolved task is instead enumerated as its own cost-ordered stream, parallelized across tasks. This per-task granularity is what lets the prior $Q$ be conditioned on the individual scene rather than shared across the corpus — a fact we rely on in !dreaming, where $Q$ becomes a task-conditional distribution $Q(dot | x)$ emitted by a recognition model.
+While a single cost-ordered stream can in principle be checked against every task in the corpus at once, in the experiments each still-unsolved task is instead enumerated as its own cost-ordered stream, parallelized across tasks. The prior $Q$ each stream runs under is the same one: the type-uniform prior over the current library, with the content-literal boost of !enumeration. Nothing in the loop conditions $Q$ on the individual scene (!no-amortization).
 
 Program search proceeds by budget window to ensure that cheaper programs are enumerated first. For `(step 4 up)`, the first two windows are skipped by pruning. We start enumerating in window $[0,2)$, but since `step`'s cost is 2.1 nats it exceeds the budget, so it cannot be chosen as the root node of the program tree and we proceed to budget window $[2,4)$. After paying 2.1 nats for `step`, only 1.9 nats remain to fill the two holes in the partial program tree. `step`'s tail types (arguments) are `cellvalue` and `step`. But any primitive of type `cellvalue` costs 2.3 nats, so `step`'s first argument can't be placed. So trees with a `step` node are pruned, since they would never complete within the second budget window. Search is cheapest-first, since more complex programs only become affordable once the window is wide enough.
 
@@ -138,20 +233,12 @@ The best syntactic fragment to abstract from round $N$'s solution may carve the 
 
 So we can refactor abstractions that were previously ideal but are no longer ideal
 
-== The recognition model <app-recognition>
+=== No recognition model <no-amortization>
 
-Amortization is described at the model level in !dreaming. This is the network, its training data, and the rescaling that puts it on the enumerator's cost scale.
+DreamCoder's third phase trains a neural recognition model that reads a task and emits a task-conditional prior $Q(dot|x)$, so that enumeration proceeds under a $Q$ biased toward the primitives. We don't implement it. 
 
-In the first enumeration run, primitives are chosen under type-uniform prior distribution $Q$.
+The reason is a difference of scale between DreamCoder's setting and this one. Amortization earns its place when the branching factor is large and the loop is long: DreamCoder works with libraries of hundreds of symbols over dozens of iterations, and there the cost of one forward pass per task is repaid many times over by the cost bands it lets the enumerator skip. Ours is a small language run for a few rounds. The learner starts with 37 primitives under the atomic control and 45 under the combinator library, and ends with 43 and 51 once compression has added its six; and the abstraction the whole argument turns on enters at the first compression step under the one endowment and the second under the other, with the loop converging a round or two later (@sec-order). There is no long tail of iterations across which a learned proposal could amortize anything. What such a proposal would buy is reaching sooner what is already reachable, and reachability, not speed, is the quantity the argument of @sec-search depends on.
 
-The recognition model `MatRecognitionModel` is built around a symbolic grid encoder rather than a generic convolutional one. Its central design commitment is that entity _roles are read off from motion, not from cell values_: because the corpus deliberately uses diverse agent and goal identifiers, the encoder cannot key on "value 1 is the agent." Instead it labels a cell occupied in frame $x_0$ but vacated by the final frame a _mover_, and a non-background cell occupied at both ends a stationary _goal_. It then pools row and column position embeddings into per-entity slots: two mover slots (each carrying both a start-position pool and a trajectory pool), two goal slots, a wall pool, and a path-length embedding of the duration $T$, concatenated into a single matrix embedding $h_"matrix"$. The per-entity layout is what lets the two-mover, two-goal scenes of the witness and dual belief families be represented in separate slots rather than blurred into one mean, and the separate per-mover trajectory pool is the decisive signal for false belief: a detour path and a straight path yield different mean agent positions even when their start, goal, and $T$ coincide, which is exactly the case a belief task presents. A linear head maps $h_"matrix"$ to logits over the whole library $D$.
+Omitting the phase also removes it as a place where the result could be smuggled in. A recognition model trained on solved tasks is a component whose prior over the library is fit to data, and belief is precisely the structure the corpus is meant to leave unfitted. With no such component, no distribution anywhere in the loop is conditioned on what a scene looks like, and the audit of @no-btom has one fewer item to defend.
 
-Crucially the prediction is _flat_: one forward pass per task yields a single distribution over the DSL, computed once and reused for every enumeration decision on that task. We deliberately forgo a tree-context recurrent network that would condition each node's prediction on its partial parent tree. A per-node network is both far more expensive — it turns each of the thousands of enumeration steps into its own forward pass — and prone to failing exactly where it matters: the abstractions belief requires are deep, and a tree-conditioned model trained on shallow solved programs generalizes poorly to the depths it has not yet seen. A flat, matrix-conditioned $Q$ sidesteps both problems.
-
-*Replays and fantasies.* The model is trained by the wake–sleep procedure of a Helmholtz machine, on two sources of program–scene pairs. _Replays_ are the actual solutions enumeration has found so far, run back through the interpreter on their own task grids — supervised examples of "this scene was solved by this program." But replays alone are scarce and biased toward the families already solved, so they are supplemented with _fantasies_: programs sampled directly from the current library prior and executed by `unfold` on freshly generated grids to synthesize new (scene, program) pairs at no labelling cost. Each dreaming iteration draws up to four replays and fills the rest of a batch of eight with fantasies. The fantasy grids are not arbitrary — their size, entity values, and the fraction carrying four or more entities are all read off the corpus's own scene statistics, so the encoder trains on the scene mix it will face at test time (in particular the multi-entity scenes that exercise its second mover and goal slots). Roles remain decided by the sampled program's motion, so a fantasy only ever _lets_ a program drive two movers; it never manufactures a belief scene by hand. For every pair the model encodes the resulting matrix and is trained by cross-entropy to predict each node of the generating program tree, averaged over nodes.
-
-*Putting the model on the enumeration cost scale.* A recognition model trained this way emits a globally-normalized distribution over the library, which is on the wrong scale for the budget-window enumerator and, having been trained only on the families solved so far, could actively suppress the rare primitives an as-yet-unsolved family needs. `dreamed_q` reconciles the two so that dreaming can only ever help. First it re-softmaxes the model's logits _within each type group_, so a program's summed cost is comparable to the uniform and content priors rather than living on the model's global scale — otherwise a ten-node program would land many budget windows too late and time out before it is ever reached. Second it _floors the result at the uniform prior_, $Q = max(Q_"model", Q_"uniform")$: the model may make a primitive cheaper, and so enumerated earlier, but never push one below its uniform reachability, so every program reachable under the baseline stays reachable. Third it preserves the _content-literal boost_ the baseline depends on, forcing any integer literal already visible in frame $x_0$ to cost zero. The model's confident guesses are explored first, while nothing it has not seen is priced out of reach.
-
-*Feeding back into enumeration.* The trained model does not steer every family. Dreamed $Q$ is applied only to families with at least one solved instance — a scene the recognition model was actually trained on as a replay. A zero-replay family, such as belief before its very first solve, is invisible to the model and could only be mispriced by it: it would flood the early budget windows with the non-belief primitives it _has_ seen, each pushed below uniform, and thereby delay that family's own primitives past the timeout. Such families stay on the proven uniform and content baseline and earn the dreamed prior only once they are solved and can contribute replays of their own. In this way the recognition model accelerates the families the curriculum has already reached without ever slowing down the frontier it has not — and its benefit compounds with compression, since each round it is retrained over a library whose new abstractions let it steer toward deeper structure than the round before.
-
-#load-bib(read("chapter1.bib") + read("chapter2.bib"))
+This is a departure from DreamCoder, and it is one we arrived at by measurement rather than by design: the loop was run both ways before it was settled, and @sec-limits reports what each way gave.

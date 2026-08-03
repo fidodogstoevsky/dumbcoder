@@ -1,0 +1,36 @@
+{
+ "phase": 2,
+ "decomposed": true,
+ "smoke": true,
+ "source": "phase2_run.smoke.json",
+ "per_variant": {
+  "belief_goal": {
+   "total": 16,
+   "solved": 0,
+   "rate": 0.0
+  },
+  "belief_observers": {
+   "total": 8,
+   "solved": 0,
+   "rate": 0.0
+  },
+  "belief_wall": {
+   "total": 8,
+   "solved": 0,
+   "rate": 0.0
+  },
+  "belief_witness": {
+   "total": 8,
+   "solved": 0,
+   "rate": 0.0
+  },
+  "belief_false_obstacle": {
+   "total": 8,
+   "solved": 0,
+   "rate": 0.0
+  }
+ },
+ "total": 48,
+ "solved": 0,
+ "rate": 0.0
+}

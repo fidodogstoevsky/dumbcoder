@@ -2,63 +2,74 @@
 
 #mol-chapter("Bayesian Theory of Mind")
 
-== Generative model of an agent
+In this chapter we first claim that Bayesian Theory of Mind (BToM) is the best available computational account of the mature ToM capacity described in Chapter 1. BToM formalises the intentional stance as inverse planning, and its posteriors quantitatively track human judgements. We then claim that BToM gets there by stipulation. The structure that makes belief attribution possible --- an agent decomposed into a goal and a world model, a planner evaluated against a model that may diverge from the world --- is written into the architecture rather than inferred from any scene. @stipulated draws up that inventory, and it is the inventory this thesis asks a learner to construct for itself.
 
-- MDP/POMDP
-- utility
-- principle of rationality
-- intentional stance formalized
+== Agent as planner <sec-planner>
 
-agents as approximately rational actors, inverse planning
+To adopt the intentional stance towards a system is to treat it as a rational agent. First attribute to it the beliefs and desires it ought to have (given its situation and history), then predict its behavior by working out what a rational agent would do @dennett_intentional_2002. People adopt the intentional stance even towards two triangles and a circle moving about a rectangle, seeing them as chasing, hiding, bullying, and escaping each other @heider_experimental_1944. The intentional stance is a strategy that gets used because it regularly yields predictive success (CITE dennet again).
 
-defining the generative model. agents move in an environment (MDP/POMDP) to maximize utility efficiency
+Bayesian Theory of Mind (BToM) gives a computational account of this strategy, modeling the agent as a planner. The agent occupies one of a set of states, has available in each state a set of actions, and the actions move it between states according to a transition function. The planner takes as input a utility function and a model of the environment, both defined over the agent's state space, and returns the actions the agent should perform to maximize utility @lake_building_2016 @baker_action_2009.
 
-Bayesian inverse planning [Baker, Saxe, and Tenenbaum (2009)]
+Research shows even twelve-month-olds encode an action as directed at a goal state, and expect an agent to use the most efficient means available to it. In one experiment, infants were habituated to a small circle jumping over a barrier to reach a large circle. When the barrier was removed and the circle kept jumping anyway rather than taking the newly available straight path, the infants were surprised @gergely_taking_1995. Gergely and Csibra call this the teleological stance, which they distinguish from the intentional stance @gergely_teleological_2003. It relates an action, a goal state, and the constraints of the situation but without attributing any representation to agents. Under the teleological stance, the reality constraints that the observer consults are their own, not the agent's.
 
-“naive utility calculus” [Jara-Ettinger, Gweon, Tenenbaum, and Schulz (2015)]
+We return to this distinction in @rationality, when we defend our choice to hand our model learner a primitive planner `optimize`, which moves a value one step along the best available path toward improving some utility, even though the planner is algorithmically complex. From the developmental literature we know that efficient goal-directed interpretation is in place around a year of age, three years before anything recognizable as false-belief attribution (@timeline). And on Gergely and Csibra's analysis it isn't yet ToM at all, it just says how a body moves given a goal and a layout.
 
-Assume that the observer sees the agent as a rational planner. Then planning computation is solution to markov decision process.
-- input: utility and belief functions defined over agent's state space and state-action transition functions
-- output: series of actions the agent should perfoirm to maximize utility or fiulfill goals @lake_building_2016
+== Inverse planning <sec-inverse>
 
-then the observer can simualte what the agent would do if the agent had certain goals/policies etc, and thus infer those from what actually happens by comparing the simulation to reality. @lake_building_2016 analogy to physics simulations. Say I want to figure out 
+A planning agent computes in the forward direction, from a goal and a model of the environment to the behaviour. An observer needs to compute in the backward direction, from the visible behavior to the imputed goal and model (belief). The observer sees the trajectory (the agent's sequence of states), and needs to compute the goal and belief that produced it. By Bayesian inverse planning, the observer can simulate what the agent would have done had it wanted this and believed that, and can then verify the hypothesis by comparing each simulation against what the agent in fact did. The process is analogous to modeling intuitive physics by running a physics engine forward under different settings and scoring the outcomes @lake_building_2016.
 
-First we have principle of rationality, expetation that agents will plan rationally given their world model. Then we reverseengineer what their mental states are that caused their behavior, based onthat principle. Formalizing Dennet's intentional stance. @baker_action_2009
+The learner compares hypotheses by Bayes' rule (@sec-bayes). Writing $g$ for the agent's goal, $m$ for its model of the environment, and $t$ for the observed trajectory, the posterior is calculated as
 
-Explanation by rationalization, Bayesian theory of mind framework [Baker 2012]
+$
+P(g, m | t) prop P(t | g, m) dot P(g, m)
+$
 
-model causal relation betwene beliefs, goals, actions as rational probabilistic planning in markov decision problem. [baker 2012]
+where the prior $P(g,m)$ encodes what the observer expects agents to want and think before seeing anything, and the likelihood $P(t|g,m)$ encodes the probability that an approximately rational agent with goal $g$ and model $m$ would move as observed (which is supplied by the planner) @baker_action_2009. It's been shown experimentally that people's predictions on behavioral stimuli are close to the model posteriors of this approximately rational inference mechanism @baker_action_2009.
 
-observer uses Bayesian induction to work backward from a trajectory to the most likely goals and beliefs
+What matters below is the second member of the pair, the agent's model $m$, and the fact that the planner receives it as an input.#footnote[The inversion generalizes beyond $(g,m)$: assuming agents act to maximize reward, an observer can run it in whichever direction the situation leaves open, recovering an agent's utilities or the costs its actions carried as readily as its goals @jara-ettinger_naive_2016 @jara-ettinger_theory_2019. That extension is not the one this thesis follows up.]
 
-humans can easily observe agents' actions and then infer the beliefs desires and intentions that led to those actions, assuming that the agent is approximately rational and goal directed
+== Belief as an input <sec-false-belief>
 
-[Baker, Saxe, and Tenenbaum (2009)], [Lucas, Griffiths, et al. (2014)], [Jern, Lucas, and Kemp (2017)], [Jara-Ettinger, Gweon, Schulz, and Tenenbaum (2016)]
-[Baker, Jara-Ettinger, Saxe, and Tenenbaum (2017)]
-[Ullman et al. (2009)]
+The posterior is joint over $(g,m)$, the agent's goal $g$ and its model of the environment $m$. But $m$ doesn't have to be an accurate model of the actual state of affairs (the observer's world), it could be any world modeling. The observer can supply a model $m'$ that diverges from the actual state of affairs, and then run the same posterior computation to see how the agent would behave if it were navigating in the counterfactual world $m'$. Then the same computation that yields sensible behavior from an accurate model would yield mistaken behavior from the inaccurate one.
 
-Forward-planning/rational decisionmaking: given an agent's intentions etc, predict their future actions
+This is belief attribution in essence, attributing a counterfactual world to an agent such that it acts according to the counterfactual model as its own private world. So we can ask: given an (irrational) trajectory, which model of the environment would've made those actions rational? Take the false-belief task (@timeline):  Sally puts her marble in the basket and leaves, in her absence it's moved to the box, and when she returns she searches the basket @wimmer_beliefsabout_nodate. Evaluated against the actual (observer's) world $m$, Sally's search is irrational. But evaluated against her private model she had when she left $m'$, her behavior is optimal. An observer that can represent the divergence of worlds can predict that Sally will look in the wrong location, and even which wrong location she'll look in @goodman_intuitive_nodate. 
 
-inverse planning: given an agent's actions, what were their intentions/beliefs/world mdoel?
+To handle divergent models, the observer needs to run the planning computation inside itself: once against its own model $m$, to know what is actually the case, and once against the model $m'$ it attributes, to work out what the agent will do. This kind of nested computation is another reason that representing hypotheses as programs (@sec-programs) is especially fitting for the ToM domain @stuhlmuller_reasoning_2014. Regardless of whether a program takes $m$ or $m'$ as input, it's executed and evaluated in the same way. To attribute a mental state is to say something about the process by which an agent selects its actions, and a program is the natural way to write down that procedure.
 
-use Bayes rule to produce posterior over possibel mental states
+== What is stipulated in BToM <stipulated>
 
-Baker et al 2017
+BToM is a model of the ToM capacity of a mature adult @baker_action_2009 @baker_rational_2017. In this thesis we're interested in how that capacity is acquired, specifically whether a system without a hardcoded BToM can develop something akin to it. So when we introduce our model we'll need to show that our learner doesn't have a built-in BToM. To argue that, we first have to be precise about which features aren't given by the data but are stipulated by the framework. There are five, and @no-btom answers them in this order.
 
-== Inverse planning and the naive utility calculus
+*The decomposition into agent, goal and belief.*
+A scene depicting entities moving around doesn't inherently encode them as agents and goals, and it doesn't inherently encode their behavior as generated by two attitudes rather than one or five. But BToM decomposes the scene into an agent that has a goal and a belief, which the planner takes as separate arguments that vary and can be inferred independently of each other. The decomposition is in the architecture, not in the scene.
 
-- Baker 2009/2012/2017
-- Jara-Ettinger
-- inverse RL
+*The separation of the believed world from the actual world.*
+The planner is evaluated against a world model $m'$ supplied as one of its inputs, and that input is permitted to diverge from the state of affairs the observer takes to obtain, $m eq.not m'$. This is the stipulation that makes false belief representable at all, and it too is made in the architecture rather than inferred from any scene.
 
-== belief attribution and false belief in BToM
+*The space of admissible divergences.*
+Given that $m$ and $m'$ may diverge, something has to specify which divergences are admissible. What's inferred under BToM is which particular world model $m'$ the agent holds, but the range it's drawn from is fixed in advance, along with the scenarios that produce it --- an occlusion, an absence while the world was rearranged. That a belief could be false, and how it came to be, is never itself in question.
 
-== What these models don't do
+*The space of goals.*
+Likewise on the other input. The posterior over goals is inferred, but the space it ranges over is given, and so is the prior on it. Baker et al. compare several goal priors precisely because the choice matters and is the modeller's to make @baker_action_2009. What inference does is locate a point inside a space someone else drew.
 
-Bayesian Theory of Mind _is_ a theory of mind, which is handed to the model. The agent/goal/belief structure, including the separation of believed world from actual world, is stipulated by the modeler. So BToM explains mature performance, not acquisition. A nativist can read it as evidence _for_ innateness. 
+*Rationality.*
+That the agent plans approximately optimally toward its goal given its model. This is the one item on the list with independent developmental support, since the teleological stance is in place well before the first birthday (@sec-planner, @timeline), and it is correspondingly the one item this thesis also grants its learner.
 
-== In this thesis
+The consequence is that inference in these models is parameter estimation within a fixed theory rather than construction of the theory's terms. That is exactly the distinction drawn in @explanandum: the underdetermination problem, to which Bayesian inversion is the answer, presupposes a learner who already possesses the concept _believes_ and has only to choose among ascriptions. A learner who lacks the concept cannot make an ascription at all, and no amount of inverting a planner will supply it, because the planner's shape is what encodes it.
 
-we run the bayesian engine detailed in chapter 2 on ToM tasks, and ask whether the structure ch3 stipulates is instead discoverable by compression. 
+The same fixity leaves the developmental ordering of @timeline outside the model's reach. Since the structure is complete from the start, every one of its parameters is available for inference on day one. There is nothing in the framework that makes a goal attribution cheaper, or earlier, or prior to a belief attribution, so there is nothing in it that predicts why the first is reliable before the first birthday and the second not until around four. The delay has to be explained by something the model doesn't contain — maturation, or performance demands masking an underlying competence — which is the same appeal to auxiliary hypotheses that @nativism was charged with in @perspectives, and it's available here for the same reason: the structure that would have to develop is assumed rather than derived.
 
-#load-bib(read("chapter1.bib") + read("chapter2.bib"))
+Written out as a list, in fact, the stipulations are close to an inventory of what the modularity-nativist claims is innate. Attitude concepts introduced as such, a proprietary format in which they are ascribed to agents, and inferential machinery that operates on agents in particular @leslie_pretending_1994 — the difference is that BToM says it in probability theory and says it precisely. So the nativist can read the framework's success as evidence _for_ the position of @nativism rather than against it: here is the endowment, written down, and here is how closely a system so endowed matches human judgement. The reading isn't perverse, and it's what the models license, given that they make no claim at all about where the endowment comes from. What they establish is that a learner who ends up with this structure would attribute mental states as people do. Where such a learner could get the structure is a question they leave open, and it's the question of the next section.
+
+== What this thesis asks
+
+The five items of @stipulated have a shape we already have a name for. They are not hypotheses about any particular scene; they are hypotheses about what the hypotheses about scenes are like --- that behaviour is generated by an agent, that the agent has a goal and a model, that the model may diverge from the world, that the divergence is drawn from such-and-such a range. That is an overhypothesis in the sense of @sec-hbm, sitting one level above the attributions it structures. BToM installs it and infers underneath it. The question of this thesis is whether it can be inferred rather than installed: whether the upper-level variable, given to the framework by its modeller, is the kind of thing a learner could arrive at by the same inference it runs on everything else.
+
+Putting it that way fixes what the model of the next chapter has to do. It cannot be handed any of the five. Its learner begins with grids, a planner, and domain-general combinators for building and consuming pairs --- no agent, no goal, no attitude, no channel that is anybody's --- and it has to assemble the structure out of them, in program space, under a description-length objective that knows nothing about which tasks are mental. This raises the bar past expressiveness. A language in which belief is merely _statable_ proves nothing, since the stipulated architecture is statable in any language rich enough to write it down. What has to be shown is that the structure is _selected_: that among the programs which reproduce the scenes, the one carrying the agency signature is the one compression keeps, and that it beats the non-mental rivals the very same library can express. @criteria states that test in advance and @no-btom takes the five stipulations in the order given here.
+
+Two things are worth conceding before the model is on the table. The first is that one item of the five is granted rather than earned. Rationality comes in as the `optimize` primitive, on the grounds @sec-planner gave: the teleological stance is in place before the first birthday, three years before the capacity whose acquisition is being modelled, and on the best analysis of it it attributes no representation to anybody. @rationality defends the choice at length and does not pretend it is free.
+
+The second concession is about what is being asked for. BToM's $m'$ is a belief in the full sense: a state the agent came to be in, that could have been otherwise, and that would be revised if the agent looked again. What the learner here is asked to find is thinner --- a divergent world model, attributed to an agent and acted on by that agent's policy, but with no account of how the agent came to hold it and no machinery for updating it. Nothing in a single-frame transition function represents perceptual access, or a record of what was witnessed, or an update on being shown the truth. That is a real gap between the discovered structure and the thing it models, and it is the most important one; @sec-persistent takes it up as further work.
+
+
+#load-bib(read("refs.bib"))

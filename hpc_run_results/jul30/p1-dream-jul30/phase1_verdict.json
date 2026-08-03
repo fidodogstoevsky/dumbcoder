@@ -1,0 +1,683 @@
+{
+ "decomposed": false,
+ "smoke": false,
+ "n_solved": 291,
+ "n_total": 300,
+ "stitch_iters": 6,
+ "ecd_iters": 6,
+ "t_fn": 3600.0,
+ "t_fn_round1": 1200.0,
+ "constructor_round": 1,
+ "first_solve_round_by_kind": {
+  "physics": 1,
+  "desire": 1,
+  "overlay": 1,
+  "comet": 1,
+  "belief": 1,
+  "flee": 1,
+  "deletion": 1,
+  "denoise": 1,
+  "underlay": 1,
+  "obstacle": 1,
+  "relocate": 1,
+  "readout": 1,
+  "inpaint": 1,
+  "multi_reg": 1,
+  "registration": 1,
+  "reg_except": 1,
+  "perception": 1
+ },
+ "first_solve_round_by_variant": {
+  "physics": 1,
+  "desire": 1,
+  "overlay": 1,
+  "comet": 1,
+  "belief_goal": 1,
+  "belief_false_obstacle": 1,
+  "belief_wall": 1,
+  "flee": 1,
+  "deletion": 1,
+  "denoise": 1,
+  "underlay": 1,
+  "obstacle": 1,
+  "relocate": 1,
+  "readout": 1,
+  "inpaint": 1,
+  "multi_reg": 1,
+  "registration": 1,
+  "reg_except": 1,
+  "perception": 1,
+  "belief_witness": 2,
+  "belief_observers": 2
+ },
+ "solved_by_kind": {
+  "physics": 4,
+  "desire": 16,
+  "overlay": 4,
+  "comet": 4,
+  "belief": 159,
+  "flee": 4,
+  "deletion": 4,
+  "denoise": 4,
+  "underlay": 4,
+  "obstacle": 48,
+  "relocate": 16,
+  "registration": 4,
+  "perception": 4,
+  "multi_reg": 4,
+  "reg_except": 4,
+  "inpaint": 4,
+  "readout": 4
+ },
+ "total_by_kind": {
+  "physics": 4,
+  "desire": 16,
+  "overlay": 4,
+  "comet": 4,
+  "belief": 168,
+  "flee": 4,
+  "deletion": 4,
+  "denoise": 4,
+  "underlay": 4,
+  "obstacle": 48,
+  "relocate": 16,
+  "registration": 4,
+  "perception": 4,
+  "multi_reg": 4,
+  "reg_except": 4,
+  "inpaint": 4,
+  "readout": 4
+ },
+ "uses_by_kind": {
+  "physics": [
+   "step"
+  ],
+  "desire": [
+   "neg_dist",
+   "optimize"
+  ],
+  "overlay": [
+   "fork",
+   "overlay",
+   "step"
+  ],
+  "comet": [
+   "fork",
+   "neg_dist",
+   "optimize",
+   "overlay"
+  ],
+  "belief": [
+   "compose",
+   "fork",
+   "neg_dist",
+   "optimize",
+   "step",
+   "sync_to_world",
+   "wall_at"
+  ],
+  "flee": [
+   "optimize"
+  ],
+  "deletion": [],
+  "denoise": [],
+  "underlay": [
+   "fork",
+   "step"
+  ],
+  "obstacle": [
+   "compose",
+   "neg_dist",
+   "optimize",
+   "wall_at"
+  ],
+  "relocate": [
+   "compose",
+   "wall_at"
+  ],
+  "registration": [
+   "sync_to_world"
+  ],
+  "perception": [],
+  "multi_reg": [],
+  "reg_except": [],
+  "inpaint": [],
+  "readout": []
+ },
+ "belief_commit": {
+  "literal": 159,
+  "degenerate": 0,
+  "multi_mover": 0,
+  "nonmental": 0
+ },
+ "belief_multi_mover": [],
+ "belief_variants": {
+  "belief_witness": {
+   "solved": 48,
+   "total": 48,
+   "literal": 48,
+   "degenerate": 0,
+   "multi_mover": 0,
+   "nonmental": 0
+  },
+  "belief_goal": {
+   "solved": 46,
+   "total": 48,
+   "literal": 46,
+   "degenerate": 0,
+   "multi_mover": 0,
+   "nonmental": 0
+  },
+  "belief_observers": {
+   "solved": 24,
+   "total": 24,
+   "literal": 24,
+   "degenerate": 0,
+   "multi_mover": 0,
+   "nonmental": 0
+  },
+  "belief_false_obstacle": {
+   "solved": 17,
+   "total": 24,
+   "literal": 17,
+   "degenerate": 0,
+   "multi_mover": 0,
+   "nonmental": 0
+  },
+  "belief_wall": {
+   "solved": 24,
+   "total": 24,
+   "literal": 24,
+   "degenerate": 0,
+   "multi_mover": 0,
+   "nonmental": 0
+  }
+ },
+ "selective_attribution": {
+  "n": 24,
+  "solved": 24,
+  "believer_only": 23,
+  "observer_committed": 1,
+  "wholesale": 0
+ },
+ "false_obstacle": {
+  "n": 24,
+  "literal": 17,
+  "degenerate": 0,
+  "multi_mover": 0,
+  "nonmental": 0
+ },
+ "A": {
+  "fork_general": true,
+  "sync_general": true,
+  "wall_general": true,
+  "belief_uses_both": true,
+  "agency_unique": true,
+  "obstacle_belief_misrepresents_obstacle": false,
+  "no_nonmental_rival": true
+ },
+ "cube": {
+  "enabled": true,
+  "cube_ok": true,
+  "corners_by_kind": {
+   "physics": {},
+   "desire": {
+    "neg_dist": 16
+   },
+   "overlay": {
+    "overlay": 4
+   },
+   "comet": {
+    "neg_dist": 4,
+    "overlay": 4
+   },
+   "belief": {
+    "neg_dist": 89,
+    "wall_at": 86,
+    "sync_to_world": 89
+   },
+   "flee": {
+    "distance": 4
+   },
+   "deletion": {
+    "clear_at": 4
+   },
+   "denoise": {
+    "erase": 4
+   },
+   "underlay": {
+    "underlay": 4
+   },
+   "obstacle": {
+    "wall_at": 48,
+    "neg_dist": 48
+   },
+   "relocate": {
+    "clear_at": 16,
+    "wall_at": 16
+   },
+   "registration": {
+    "sync_to_world": 4
+   },
+   "perception": {
+    "sync_to_model": 4
+   },
+   "multi_reg": {
+    "sync_all": 4
+   },
+   "reg_except": {
+    "sync_except": 4
+   },
+   "inpaint": {
+    "underlay": 4
+   },
+   "readout": {
+    "snd_gg": 4
+   }
+  },
+  "belief_keeps_corner": true,
+  "belief_avoids_complements": true,
+  "any_complement_used": true,
+  "used_complements": [
+   "clear_at",
+   "distance",
+   "erase",
+   "snd_gg",
+   "sync_all",
+   "sync_except",
+   "sync_to_model",
+   "underlay"
+  ],
+  "unused_complements": []
+ },
+ "invented": [
+  {
+   "repr": "fn_6",
+   "type": "fn",
+   "tailtypes": [
+    "cellvalue",
+    "cellvalue",
+    "fn"
+   ],
+   "body": "(fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world $0))",
+   "shared_holes": {
+    "$0": 2
+   },
+   "role": "agent_constructor_wallfree"
+  },
+  {
+   "repr": "fn_7",
+   "type": "fn",
+   "tailtypes": [
+    "cellvalue",
+    "cellvalue",
+    "fn"
+   ],
+   "body": "(compose $2 (optimize (neg_dist $1) $0))",
+   "shared_holes": {},
+   "role": "desire_fragment"
+  },
+  {
+   "repr": "fn_8",
+   "type": "fn",
+   "tailtypes": [
+    "dir",
+    "cellvalue",
+    "cellvalue"
+   ],
+   "body": "(fork (compose (step $1 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2))",
+   "shared_holes": {
+    "$1": 2,
+    "$2": 2
+   },
+   "role": "agent_constructor_wallfree"
+  },
+  {
+   "repr": "fn_9",
+   "type": "fn",
+   "tailtypes": [
+    "coord",
+    "cellvalue",
+    "cellvalue",
+    "cellvalue",
+    "cellvalue"
+   ],
+   "body": "(compose (fork (compose (wall_at c2 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2)) (optimize (neg_dist $3) $4))",
+   "shared_holes": {
+    "$2": 2
+   },
+   "role": "agent_constructor"
+  },
+  {
+   "repr": "fn_10",
+   "type": "fn",
+   "tailtypes": [
+    "cellvalue",
+    "cellvalue",
+    "dir",
+    "cellvalue"
+   ],
+   "body": "(compose (optimize (neg_dist $1) $3) (fork (compose (step $1 $2) (optimize (neg_dist $1) $0)) (sync_to_world $0)))",
+   "shared_holes": {
+    "$1": 3,
+    "$0": 2
+   },
+   "role": "agent_constructor_wallfree"
+  },
+  {
+   "repr": "fn_11",
+   "type": "fn",
+   "tailtypes": [
+    "cellvalue",
+    "cellvalue",
+    "dir",
+    "None",
+    "fn"
+   ],
+   "body": "(fork (compose (compose ($4 $1 $3) (fork (compose (step $1 $2) (optimize (neg_dist $1) $0)) (sync_to_world $0))) (optimize (neg_dist $0) $0)) (sync_to_world $0))",
+   "shared_holes": {
+    "$1": 3,
+    "$0": 5
+   },
+   "role": "agent_constructor_wallfree"
+  }
+ ],
+ "agent_constructor": "fn_6",
+ "agent_constructor_shared_holes": {
+  "$0": 2
+ },
+ "agent_constructor_n_shared_holes": 1,
+ "agent_constructor_max_hole_uses": 2,
+ "agent_constructor_belief_uses": 74,
+ "belief_uses_by_abstraction": {
+  "fn_6": 74,
+  "fn_9": 30,
+  "fn_7": 28,
+  "fn_11": 11,
+  "fn_8": 37,
+  "fn_10": 16
+ },
+ "abstraction_usage_by_kind": {
+  "physics": {
+   "(bare prims)": 4
+  },
+  "desire": {
+   "(bare prims)": 16
+  },
+  "overlay": {
+   "(bare prims)": 4
+  },
+  "comet": {
+   "(bare prims)": 4
+  },
+  "belief": {
+   "fn_6": 74,
+   "fn_9": 30,
+   "fn_7": 28,
+   "fn_11": 11,
+   "fn_8": 37,
+   "fn_10": 16
+  },
+  "flee": {
+   "(bare prims)": 4
+  },
+  "deletion": {
+   "(bare prims)": 4
+  },
+  "denoise": {
+   "(bare prims)": 4
+  },
+  "underlay": {
+   "(bare prims)": 4
+  },
+  "obstacle": {
+   "fn_7": 47,
+   "(bare prims)": 1
+  },
+  "relocate": {
+   "(bare prims)": 16
+  },
+  "registration": {
+   "(bare prims)": 4
+  },
+  "perception": {
+   "(bare prims)": 4
+  },
+  "multi_reg": {
+   "(bare prims)": 4
+  },
+  "reg_except": {
+   "(bare prims)": 4
+  },
+  "inpaint": {
+   "(bare prims)": 4
+  },
+  "readout": {
+   "(bare prims)": 4
+  }
+ },
+ "dl": {
+  "by_kind": {
+   "desire": {
+    "n": 16,
+    "dl_base_median": 7.863266944885254,
+    "dl_lib_median": 7.863266944885254,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "comet": {
+    "n": 4,
+    "dl_base_median": 12.62544059753418,
+    "dl_lib_median": 12.62544059753418,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "belief": {
+    "n": 77,
+    "dl_base_median": 33.70501708984375,
+    "dl_lib_median": 13.384727478027344,
+    "saved_median": 10.322856903076172,
+    "saved_mean": 14.21482076273336,
+    "saved_total": 1094.5411987304688
+   },
+   "flee": {
+    "n": 4,
+    "dl_base_median": 7.863266944885254,
+    "dl_lib_median": 7.863266944885254,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "deletion": {
+    "n": 4,
+    "dl_base_median": 5.783824920654297,
+    "dl_lib_median": 5.783824920654297,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "denoise": {
+    "n": 4,
+    "dl_base_median": 4.867534637451172,
+    "dl_lib_median": 4.867534637451172,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "obstacle": {
+    "n": 48,
+    "dl_base_median": 16.2120418548584,
+    "dl_lib_median": 12.953944206237793,
+    "saved_median": 3.2580976486206055,
+    "saved_mean": 3.190220614274343,
+    "saved_total": 153.13058948516846
+   },
+   "relocate": {
+    "n": 16,
+    "dl_base_median": 14.132598876953125,
+    "dl_lib_median": 14.132598876953125,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "registration": {
+    "n": 4,
+    "dl_base_median": 4.499809741973877,
+    "dl_lib_median": 4.499809741973877,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "perception": {
+    "n": 4,
+    "dl_base_median": 4.499809741973877,
+    "dl_lib_median": 4.499809741973877,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "multi_reg": {
+    "n": 4,
+    "dl_base_median": 2.1972246170043945,
+    "dl_lib_median": 2.1972246170043945,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "reg_except": {
+    "n": 4,
+    "dl_base_median": 4.499809741973877,
+    "dl_lib_median": 4.499809741973877,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "inpaint": {
+    "n": 4,
+    "dl_base_median": 2.1972246170043945,
+    "dl_lib_median": 2.1972246170043945,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "readout": {
+    "n": 4,
+    "dl_base_median": 2.1972246170043945,
+    "dl_lib_median": 2.1972246170043945,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   }
+  },
+  "belief_by_variant": {
+   "belief_witness": {
+    "n": 41,
+    "dl_base_median": 33.70501708984375,
+    "dl_lib_median": 13.384727478027344,
+    "saved_median": 20.320289611816406,
+    "saved_mean": 17.63215581382193,
+    "saved_total": 722.9183883666992
+   },
+   "belief_goal": {
+    "n": 3,
+    "dl_base_median": 25.35624122619629,
+    "dl_lib_median": 15.03338623046875,
+    "saved_median": 10.322854995727539,
+    "saved_mean": 10.322854995727539,
+    "saved_total": 30.968564987182617
+   },
+   "belief_false_obstacle": {
+    "n": 9,
+    "dl_base_median": 23.27680015563965,
+    "dl_lib_median": 12.953944206237793,
+    "saved_median": 10.322855949401855,
+    "saved_mean": 10.322855843438042,
+    "saved_total": 92.90570259094238
+   },
+   "belief_wall": {
+    "n": 24,
+    "dl_base_median": 23.27680015563965,
+    "dl_lib_median": 12.953944206237793,
+    "saved_median": 10.322855949401855,
+    "saved_mean": 10.322855949401855,
+    "saved_total": 247.74854278564453
+   }
+  },
+  "nonmental_saved_median": 0.0,
+  "n_belief_using_ctor": 53
+ },
+ "mdl_margin": null,
+ "mdl_margin_note": "no mdl_margins.json yet \u2014 run `python mdl_margin.py` to price belief against its rivals",
+ "constructor_found": true,
+ "constructor_shared": true,
+ "belief_uses_ctor": true,
+ "nonmental_free_of_ctor": true,
+ "failures": [
+  "obstacle_belief_misrepresents_obstacle"
+ ],
+ "ok": false,
+ "provenance": {
+  "git": {
+   "commit": "a6965cde7c05d6ec2628c121d24f442b54642b09",
+   "commit_short": "a6965cd",
+   "branch": "master",
+   "dirty": false
+  },
+  "timestamp": "2026-07-29T21:55:43Z",
+  "host": "tcn725.local.snellius.surf.nl",
+  "python": "3.12.13",
+  "argv": "/home/gkaminer/dumbcoder/phase1.py --t-fn 3600 --ecd-iters 6",
+  "knobs": {
+   "decomposed": false,
+   "smoke": false,
+   "cube": true,
+   "t_fn": 3600.0,
+   "t_fn_round1": 1200.0,
+   "t_reg": 30,
+   "ecd_iters": 6,
+   "stitch_iters": 6,
+   "dream_on": true,
+   "dream_iters": 600,
+   "plain_belief": false,
+   "curriculum": true,
+   "k": 4,
+   "n_phys": 4,
+   "n_des": 2,
+   "n_ov": 4,
+   "n_comet": 4,
+   "n_reg": 4,
+   "n_bel": 6,
+   "n_belvar": 3,
+   "n_goal": 6,
+   "n_corner": 4,
+   "n_obstacle": 6,
+   "n_relocate": 16
+  },
+  "seeds": {
+   "physics": 0,
+   "desire": 1,
+   "belief": 2,
+   "overlay": 3,
+   "registration": 4,
+   "comet": 5,
+   "flee": 10,
+   "deletion": 11,
+   "denoise": 12,
+   "perception": 13,
+   "multi_reg": 14,
+   "reg_except": 15,
+   "inpaint": 16,
+   "readout": 17,
+   "obstacle": 18,
+   "underlay": 19,
+   "belief_extra": 22,
+   "belief_goal": 23,
+   "belief_observers": 27,
+   "belief_fob": 25,
+   "relocate": 26
+  },
+  "repro": "commit a6965cd | phase1 (atomic) | t_fn=3600 t_fn_round1=1200 t_reg=30 ecd_iters=6 stitch_iters=6 dream=on curriculum=on | n_bel=6 n_goal=6 n_obstacle=6 n_relocate=16 | 2026-07-29T21:55:43Z"
+ }
+}

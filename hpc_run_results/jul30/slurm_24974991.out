@@ -1,0 +1,885 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+ENV /home/gkaminer/.conda/envs/dumbcoder/bin/python | PY 3.12.13 | numpy 2.5.1 | torch 2.13.0+cpu | stitch_core /home/gkaminer/.conda/envs/dumbcoder/lib/python3.12/site-packages/stitch_core/__init__.py
+SOURCE /home/gkaminer/dumbcoder @ 8427024 (clean)
+CELL p1-dream-jul28 | writing artifacts to /home/gkaminer/dumbcoder-runs/p1-dream-jul28
+========================================================================
+PROVENANCE — quote this line in any caption reporting these numbers
+========================================================================
+  commit 8427024 | phase1 (atomic) | t_fn=3600 t_fn_round1=1200 t_reg=30 ecd_iters=6 stitch_iters=6 dream=on curriculum=on | n_bel=6 n_goal=6 n_obstacle=6 n_relocate=16 | 2026-07-27T21:55:45Z
+  host tcn716.local.snellius.surf.nl | python 3.12.13 | argv: /home/gkaminer/dumbcoder/phase1.py --t-fn 3600 --ecd-iters 6
+
+Generating corpus…
+  belief variants: +48 goal-displacement, +24 two-observer, +24 false-obstacle (all kind=belief; false-obstacle forbids the scope-complement commit)
+  [curriculum] +24 extra plain wall-belief tasks (kind=belief) to seed the fork(policy, sync) abstraction.
+  4 physics, 16 desire, 4 overlay, 4 comet, 4 registration, 168 belief — 300 total
+  corner families: 4 flee, 4 deletion, 4 denoise, 48 obstacle, 16 relocate, 4 underlay, 4 perception, 4 multi_reg, 4 reg_except, 4 inpaint, 4 readout
+
+DSL: 37 primitives — CUBE run (core + symmetric complements)
+  added corners: ['bimap', 'clear_at', 'distance', 'dup', 'erase', 'locate', 'mapfst', 'mapsnd', 'pair_blank', 'place', 'register', 'snd_gg', 'swap', 'sync_all', 'sync_except', 'sync_to_model', 'underlay', 'via_swap']
+  ground-truth check: 300 tasks / 1200 scenes verified via Delta trees
+
+========================================================================
+WAKE-SLEEP — up to 6 ECD rounds (enumerate ↦ joint stitch), 32 workers
+  fn Q: dreamed recognition model (replays + fantasies); registration Q: uniform
+========================================================================
+
+--- round 1/6: 276 fn + 24 fn_p_g unsolved; |D|=37 (0 invented); fn Q=uniform/content; t_fn=1200s (round-1 cap) ---
+    [instr] agency constructor in D: ABSENT; belief solved (replay-eligible): 0/168
+[     2] caught (step 4 right)
+[     5] caught (step 4 down)
+[     2] caught (step 4 right)
+[     4] caught (step 4 up)
+      + solved [physics] in 0.0s: (step 4 up)
+      + solved [physics] in 0.0s: (step 4 right)
+      + solved [physics] in 0.0s: (step 4 down)
+      + solved [physics] in 0.0s: (step 4 right)
+[    13] caught (optimize (neg_dist 2) 1)
+      + solved [desire] in 0.0s: (optimize (neg_dist 2) 1)
+[    13] caught (optimize (neg_dist 2) 1)
+      + solved [desire] in 0.0s: (optimize (neg_dist 2) 1)
+[    13] caught (optimize (neg_dist 5) 4)
+      + solved [desire] in 0.0s: (optimize (neg_dist 5) 4)
+[    13] caught (optimize (neg_dist 5) 4)
+[    13] caught (optimize (neg_dist 7) 6)
+      + solved [desire] in 0.0s: (optimize (neg_dist 5) 4)
+      + solved [desire] in 0.0s: (optimize (neg_dist 7) 6)
+[    13] caught (optimize (neg_dist 7) 6)
+      + solved [desire] in 0.0s: (optimize (neg_dist 7) 6)
+[    13] caught (optimize (neg_dist 9) 8)
+[    13] caught (optimize (neg_dist 9) 8)
+      + solved [desire] in 0.0s: (optimize (neg_dist 9) 8)
+      + solved [desire] in 0.0s: (optimize (neg_dist 9) 8)
+[    13] caught (optimize (neg_dist 6) 2)
+      + solved [desire] in 0.0s: (optimize (neg_dist 6) 2)
+[    13] caught (optimize (neg_dist 6) 2)
+      + solved [desire] in 0.0s: (optimize (neg_dist 6) 2)
+[    13] caught (optimize (neg_dist 8) 5)
+[    13] caught (optimize (neg_dist 8) 5)
+[    12] caught (optimize (neg_dist 1) 7)
+      + solved [desire] in 0.0s: (optimize (neg_dist 8) 5)
+      + solved [desire] in 0.0s: (optimize (neg_dist 8) 5)
+      + solved [desire] in 0.0s: (optimize (neg_dist 1) 7)
+[    12] caught (optimize (neg_dist 1) 7)
+[    12] caught (optimize (neg_dist 4) 9)
+      + solved [desire] in 0.0s: (optimize (neg_dist 1) 7)
+      + solved [desire] in 0.0s: (optimize (neg_dist 4) 9)
+[    12] caught (optimize (neg_dist 4) 9)
+      + solved [desire] in 0.0s: (optimize (neg_dist 4) 9)
+[   141] caught (fork (step 4 right) overlay)
+[   141] caught (fork (step 1 right) overlay)
+[   149] caught (fork (step 1 left) overlay)
+      + solved [overlay] in 0.0s: (fork (step 1 left) overlay)
+[   165] caught (fork (step 4 down) overlay)
+      + solved [overlay] in 0.0s: (fork (step 4 down) overlay)
+      + solved [overlay] in 0.0s: (fork (step 4 right) overlay)
+      + solved [overlay] in 0.0s: (fork (step 1 right) overlay)
+[   289] caught (fork (optimize (neg_dist 8) 5) overlay)
+      + solved [comet] in 0.1s: (fork (optimize (neg_dist 8) 5) overlay)
+[   289] caught (fork (optimize (neg_dist 7) 6) overlay)
+[   278] caught (fork (optimize (neg_dist 1) 7) overlay)
+[   289] caught (fork (optimize (neg_dist 2) 1) overlay)
+      + solved [comet] in 0.1s: (fork (optimize (neg_dist 2) 1) overlay)
+      + solved [comet] in 0.1s: (fork (optimize (neg_dist 7) 6) overlay)
+      + solved [comet] in 0.1s: (fork (optimize (neg_dist 1) 7) overlay)
+[ 23823] caught (fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[ 25056] caught (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[ 25056] caught (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[ 23823] caught (fork (compose (optimize (distance 2) 2) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[ 24705] caught (fork (compose (optimize (distance 9) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[ 23823] caught (fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[ 25056] caught (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[ 21528] caught (fork (compose (optimize (neg_dist 8) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[ 25056] caught (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[204347] caught (fork (compose (step 5 down) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[203843] caught (fork (compose (step 2 down) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[ 25041] caught (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[ 22059] caught (fork (compose (optimize (neg_dist 7) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_goal] in 141.8s: (fork (compose (step 2 down) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_goal] in 16.5s: (fork (compose (optimize (distance 2) 2) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_goal] in 13.8s: (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_goal] in 139.1s: (fork (compose (step 5 down) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_goal] in 13.8s: (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_goal] in 12.3s: (fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_goal] in 17.2s: (fork (compose (optimize (distance 9) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_goal] in 16.3s: (fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[ 23823] caught (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_goal] in 17.1s: (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[ 22635] caught (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[ 22635] caught (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[ 22635] caught (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_goal] in 10.7s: (fork (compose (optimize (neg_dist 8) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_goal] in 13.9s: (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[204209] caught (fork (compose (step 4 down) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_goal] in 15.7s: (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_goal] in 11.0s: (fork (compose (optimize (neg_dist 7) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[207568] caught (fork (compose (step 8 down) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[200988] caught (fork (compose (step 1 down) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[204209] caught (fork (compose (step 4 down) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[201003] caught (fork (compose (step 1 down) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_goal] in 12.4s: (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_goal] in 141.7s: (fork (compose (step 8 down) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_goal] in 156.4s: (fork (compose (step 1 down) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_goal] in 15.8s: (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_goal] in 186.5s: (fork (compose (step 1 down) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_goal] in 16.6s: (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_goal] in 158.1s: (fork (compose (step 4 down) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_goal] in 14.3s: (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_goal] in 127.1s: (fork (compose (step 4 down) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[397692] caught (fork (compose (optimize (neg_dist 2) 3) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[350796] caught (fork (compose (wall_at c3 c3) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[494691] caught (fork (compose (wall_at c0 c1) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[495040] caught (fork (compose (wall_at c0 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[495097] caught (fork (compose (wall_at c0 c2) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[494634] caught (fork (compose (wall_at c0 c1) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[498528] caught (fork (compose (wall_at c1 c0) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[300870] caught (fork (compose (wall_at c3 c4) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[297636] caught (fork (compose (wall_at c1 c3) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[299106] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[295872] caught (fork (compose (wall_at c0 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[297342] caught (fork (compose (wall_at c1 c2) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[501977] caught (fork (compose (wall_at c0 c1) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[497966] caught (fork (compose (wall_at c0 c4) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+[300282] caught (fork (compose (wall_at c3 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+[298518] caught (fork (compose (wall_at c2 c1) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[298869] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[300282] caught (fork (compose (wall_at c3 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[297693] caught (fork (compose (wall_at c1 c3) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[    17] caught (optimize (distance 4) 1)
+[    17] caught (optimize (distance 4) 1)
+[    16] caught (optimize (distance 1) 4)
+[    17] caught (optimize (distance 4) 1)
+[   188] caught (clear_at c1 c3)
+[   196] caught (clear_at c3 c1)
+[   186] caught (clear_at c1 c1)
+[   192] caught (clear_at c2 c2)
+[     3] caught (erase 4)
+[     2] caught (erase 2)
+[     3] caught (erase 4)
+[     1] caught (erase 1)
+[   193] caught (fork (step 1 left) underlay)
+[   193] caught (fork (step 1 left) underlay)
+[   193] caught (fork (step 1 left) underlay)
+[   226] caught (fork (step 4 right) underlay)
+[  1255] caught (compose (wall_at c1 c2) (optimize (neg_dist 2) 1))
+[  1355] caught (compose (wall_at c3 c2) (optimize (neg_dist 2) 1))
+[299457] caught (fork (compose (wall_at c2 c4) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[  1295] caught (compose (wall_at c2 c4) (optimize (neg_dist 2) 1))
+[  1315] caught (compose (wall_at c2 c0) (optimize (neg_dist 2) 1))
+[   867] caught (compose (wall_at c2 c2) (optimize (neg_dist 2) 1))
+[   875] caught (compose (wall_at c3 c3) (optimize (neg_dist 2) 1))
+[   859] caught (compose (wall_at c1 c1) (optimize (neg_dist 5) 4))
+[   859] caught (compose (wall_at c1 c1) (optimize (neg_dist 5) 4))
+[  1255] caught (compose (wall_at c1 c2) (optimize (neg_dist 5) 4))
+[  1355] caught (compose (wall_at c3 c2) (optimize (neg_dist 5) 4))
+[  1295] caught (compose (wall_at c1 c0) (optimize (neg_dist 5) 4))
+[  1355] caught (compose (wall_at c3 c2) (optimize (neg_dist 5) 4))
+[   875] caught (compose (wall_at c3 c3) (optimize (neg_dist 7) 6))
+[  1295] caught (compose (wall_at c2 c4) (optimize (neg_dist 7) 6))
+[  1345] caught (compose (wall_at c3 c1) (optimize (neg_dist 7) 6))
+[  1255] caught (compose (wall_at c1 c2) (optimize (neg_dist 7) 6))
+[  1295] caught (compose (wall_at c2 c4) (optimize (neg_dist 7) 6))
+[  1295] caught (compose (wall_at c2 c4) (optimize (neg_dist 7) 6))
+[  1365] caught (compose (wall_at c4 c1) (optimize (neg_dist 9) 8))
+[  1285] caught (compose (wall_at c2 c3) (optimize (neg_dist 9) 8))
+[  1385] caught (compose (wall_at c4 c3) (optimize (neg_dist 9) 8))
+[  1315] caught (compose (wall_at c2 c0) (optimize (neg_dist 9) 8))
+[   867] caught (compose (wall_at c2 c2) (optimize (neg_dist 9) 8))
+[   859] caught (compose (wall_at c1 c1) (optimize (neg_dist 9) 8))
+[  1355] caught (compose (wall_at c3 c2) (optimize (neg_dist 6) 2))
+[  1355] caught (compose (wall_at c3 c2) (optimize (neg_dist 6) 2))
+[   867] caught (compose (wall_at c2 c2) (optimize (neg_dist 6) 2))
+[  1255] caught (compose (wall_at c1 c2) (optimize (neg_dist 6) 2))
+[   875] caught (compose (wall_at c3 c3) (optimize (neg_dist 6) 2))
+[   875] caught (compose (wall_at c3 c3) (optimize (neg_dist 6) 2))
+[  1255] caught (compose (wall_at c1 c2) (optimize (neg_dist 8) 5))
+[  1265] caught (compose (wall_at c1 c3) (optimize (neg_dist 8) 5))
+[  1275] caught (compose (wall_at c1 c4) (optimize (neg_dist 8) 5))
+[  1355] caught (compose (wall_at c4 c0) (optimize (neg_dist 8) 5))
+[  1365] caught (compose (wall_at c4 c1) (optimize (neg_dist 8) 5))
+[   866] caught (compose (wall_at c2 c2) (optimize (neg_dist 1) 7))
+[  1375] caught (compose (wall_at c4 c2) (optimize (neg_dist 8) 5))
+[  1324] caught (compose (wall_at c2 c1) (optimize (neg_dist 1) 7))
+[  1364] caught (compose (wall_at c4 c1) (optimize (neg_dist 1) 7))
+[   874] caught (compose (wall_at c3 c3) (optimize (neg_dist 1) 7))
+[  1334] caught (compose (wall_at c3 c0) (optimize (neg_dist 1) 7))
+[  1011] caught (compose (optimize (neg_dist 1) 7) (wall_at c2 c1))
+[  1254] caught (compose (wall_at c1 c2) (optimize (neg_dist 4) 9))
+[  1254] caught (compose (wall_at c1 c2) (optimize (neg_dist 4) 9))
+[  1254] caught (compose (wall_at c1 c2) (optimize (neg_dist 4) 9))
+[  1344] caught (compose (wall_at c3 c1) (optimize (neg_dist 4) 9))
+[   866] caught (compose (wall_at c2 c2) (optimize (neg_dist 4) 9))
+[   216] caught (compose (wall_at c4 c0) (clear_at c2 c4))
+[    71] caught (compose (wall_at c0 c0) (clear_at c0 c2))
+[    72] caught (compose (wall_at c0 c0) (clear_at c3 c0))
+[   130] caught (compose (wall_at c0 c3) (clear_at c2 c0))
+[   254] caught (compose (wall_at c3 c3) (clear_at c1 c2))
+[    93] caught (compose (wall_at c4 c0) (clear_at c0 c4))
+[   196] caught (compose (wall_at c2 c3) (clear_at c3 c0))
+[    67] caught (compose (wall_at c3 c4) (clear_at c4 c3))
+[  1354] caught (compose (wall_at c4 c0) (optimize (neg_dist 4) 9))
+[   351] caught (compose (wall_at c1 c4) (clear_at c2 c0))
+[   190] caught (compose (wall_at c2 c4) (clear_at c1 c1))
+[   392] caught (compose (wall_at c3 c2) (clear_at c1 c4))
+[   181] caught (compose (wall_at c0 c3) (clear_at c4 c2))
+[   249] caught (compose (wall_at c1 c0) (clear_at c2 c3))
+[   351] caught (compose (wall_at c1 c4) (clear_at c3 c0))
+[   214] caught (compose (wall_at c4 c1) (clear_at c2 c1))
+[    73] caught (compose (wall_at c2 c2) (clear_at c4 c4))
+[299148] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[298869] caught (fork (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+[299988] caught (fork (compose (wall_at c3 c1) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[297399] caught (fork (compose (wall_at c1 c2) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[300282] caught (fork (compose (wall_at c3 c2) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[297105] caught (fork (compose (wall_at c1 c1) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+[300858] caught (fork (compose (wall_at c3 c4) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[299961] caught (fork (compose (wall_at c3 c1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[299163] caught (fork (compose (wall_at c2 c3) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+[300564] caught (fork (compose (wall_at c3 c3) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+[300270] caught (fork (compose (wall_at c3 c2) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[297078] caught (fork (compose (wall_at c1 c1) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[298506] caught (fork (compose (wall_at c2 c1) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+[1687554] caught (fork (compose (compose (optimize (neg_dist 4) 5) (optimize (distance 4) 4)) (optimize (neg_dist 4) 9)) (sync_except 4))
+      + solved [belief_observers] in 1159.7s: (fork (compose (compose (optimize (neg_dist 4) 5) (optimize (distance 4) 4)) (optimize (neg_dist 4) 9)) (sync_except 4))
+      + solved [belief_false_obstacle] in 375.1s: (fork (compose (wall_at c0 c1) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_false_obstacle] in 436.3s: (fork (compose (wall_at c0 c4) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_false_obstacle] in 352.1s: (fork (compose (wall_at c0 c1) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_false_obstacle] in 357.8s: (fork (compose (wall_at c0 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_false_obstacle] in 265.3s: (fork (compose (optimize (neg_dist 2) 3) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_false_obstacle] in 295.8s: (fork (compose (wall_at c3 c3) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_false_obstacle] in 406.6s: (fork (compose (wall_at c0 c1) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_false_obstacle] in 352.8s: (fork (compose (wall_at c0 c2) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_false_obstacle] in 351.2s: (fork (compose (wall_at c1 c0) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_wall] in 266.2s: (fork (compose (wall_at c1 c2) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_wall] in 257.6s: (fork (compose (wall_at c3 c4) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_wall] in 244.1s: (fork (compose (wall_at c2 c3) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_wall] in 241.9s: (fork (compose (wall_at c1 c3) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_wall] in 232.8s: (fork (compose (wall_at c0 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_wall] in 251.5s: (fork (compose (wall_at c3 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_wall] in 278.0s: (fork (compose (wall_at c2 c1) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_wall] in 249.7s: (fork (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_wall] in 243.9s: (fork (compose (wall_at c3 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_wall] in 272.5s: (fork (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_wall] in 242.3s: (fork (compose (wall_at c1 c3) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_wall] in 233.6s: (fork (compose (wall_at c2 c4) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_wall] in 244.2s: (fork (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_wall] in 259.8s: (fork (compose (wall_at c1 c1) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_wall] in 239.8s: (fork (compose (wall_at c3 c1) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_wall] in 274.9s: (fork (compose (wall_at c2 c3) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_wall] in 257.6s: (fork (compose (wall_at c3 c2) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_wall] in 241.1s: (fork (compose (wall_at c1 c2) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_wall] in 270.2s: (fork (compose (wall_at c3 c3) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_wall] in 236.9s: (fork (compose (wall_at c3 c1) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_wall] in 231.5s: (fork (compose (wall_at c3 c4) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_wall] in 247.9s: (fork (compose (wall_at c3 c2) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_wall] in 261.8s: (fork (compose (wall_at c1 c1) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_wall] in 232.1s: (fork (compose (wall_at c2 c1) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [flee] in 0.0s: (optimize (distance 4) 1)
+      + solved [flee] in 0.0s: (optimize (distance 4) 1)
+      + solved [flee] in 0.0s: (optimize (distance 1) 4)
+      + solved [flee] in 0.0s: (optimize (distance 4) 1)
+      + solved [deletion] in 0.0s: (clear_at c1 c3)
+      + solved [deletion] in 0.0s: (clear_at c3 c1)
+      + solved [deletion] in 0.0s: (clear_at c1 c1)
+      + solved [deletion] in 0.0s: (clear_at c2 c2)
+      + solved [denoise] in 0.0s: (erase 4)
+      + solved [denoise] in 0.0s: (erase 2)
+      + solved [denoise] in 0.0s: (erase 4)
+      + solved [denoise] in 0.0s: (erase 1)
+      + solved [underlay] in 0.0s: (fork (step 1 left) underlay)
+      + solved [underlay] in 0.0s: (fork (step 1 left) underlay)
+      + solved [underlay] in 0.0s: (fork (step 1 left) underlay)
+      + solved [underlay] in 0.1s: (fork (step 4 right) underlay)
+      + solved [obstacle] in 0.4s: (compose (wall_at c1 c2) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.4s: (compose (wall_at c3 c2) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.5s: (compose (wall_at c2 c4) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.4s: (compose (wall_at c2 c0) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c2) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c3) (optimize (neg_dist 2) 1))
+      + solved [obstacle] in 0.3s: (compose (wall_at c1 c1) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.3s: (compose (wall_at c1 c1) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.4s: (compose (wall_at c1 c2) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.5s: (compose (wall_at c3 c2) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.4s: (compose (wall_at c1 c0) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c2) (optimize (neg_dist 5) 4))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c3) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.4s: (compose (wall_at c2 c4) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.4s: (compose (wall_at c3 c1) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.4s: (compose (wall_at c1 c2) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c4) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.4s: (compose (wall_at c2 c4) (optimize (neg_dist 7) 6))
+      + solved [obstacle] in 0.4s: (compose (wall_at c4 c1) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c3) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.4s: (compose (wall_at c4 c3) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.4s: (compose (wall_at c2 c0) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c2) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.3s: (compose (wall_at c1 c1) (optimize (neg_dist 9) 8))
+      + solved [obstacle] in 0.4s: (compose (wall_at c3 c2) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.4s: (compose (wall_at c3 c2) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c2) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.3s: (compose (wall_at c1 c2) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c3) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c3) (optimize (neg_dist 6) 2))
+      + solved [obstacle] in 0.4s: (compose (wall_at c1 c2) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.4s: (compose (wall_at c1 c3) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.3s: (compose (wall_at c1 c4) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.4s: (compose (wall_at c4 c0) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.4s: (compose (wall_at c4 c1) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.4s: (compose (wall_at c4 c2) (optimize (neg_dist 8) 5))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c2) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.4s: (compose (wall_at c2 c1) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.3s: (compose (wall_at c4 c1) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.3s: (compose (wall_at c3 c3) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.4s: (compose (wall_at c3 c0) (optimize (neg_dist 1) 7))
+      + solved [obstacle] in 0.3s: (compose (optimize (neg_dist 1) 7) (wall_at c2 c1))
+      + solved [obstacle] in 0.3s: (compose (wall_at c1 c2) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.4s: (compose (wall_at c1 c2) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.4s: (compose (wall_at c1 c2) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.4s: (compose (wall_at c3 c1) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.3s: (compose (wall_at c2 c2) (optimize (neg_dist 4) 9))
+      + solved [obstacle] in 0.4s: (compose (wall_at c4 c0) (optimize (neg_dist 4) 9))
+      + solved [relocate] in 0.0s: (compose (wall_at c4 c0) (clear_at c2 c4))
+      + solved [relocate] in 0.0s: (compose (wall_at c0 c0) (clear_at c0 c2))
+      + solved [relocate] in 0.0s: (compose (wall_at c0 c0) (clear_at c3 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c0 c3) (clear_at c2 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c3 c3) (clear_at c1 c2))
+      + solved [relocate] in 0.0s: (compose (wall_at c4 c0) (clear_at c0 c4))
+      + solved [relocate] in 0.0s: (compose (wall_at c2 c3) (clear_at c3 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c3 c4) (clear_at c4 c3))
+      + solved [relocate] in 0.1s: (compose (wall_at c1 c4) (clear_at c2 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c2 c4) (clear_at c1 c1))
+      + solved [relocate] in 0.1s: (compose (wall_at c3 c2) (clear_at c1 c4))
+      + solved [relocate] in 0.0s: (compose (wall_at c0 c3) (clear_at c4 c2))
+      + solved [relocate] in 0.1s: (compose (wall_at c1 c0) (clear_at c2 c3))
+      + solved [relocate] in 0.1s: (compose (wall_at c1 c4) (clear_at c3 c0))
+      + solved [relocate] in 0.0s: (compose (wall_at c4 c1) (clear_at c2 c1))
+      + solved [relocate] in 0.0s: (compose (wall_at c2 c2) (clear_at c4 c4))
+    per-task time (s): 164 solved [slowest solve 1159.7]
+    (misses burned up to 1200.0s each; the uniform --t-fn can drop toward slowest-solve=1159.7s to cut wasted early-round time without losing a solve)
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     3] caught snd_gg
+[     4] caught underlay
+[     4] caught underlay
+[     4] caught underlay
+[     4] caught underlay
+[     5] caught sync_all
+[     5] caught sync_all
+[     5] caught sync_all
+[     5] caught sync_all
+[     7] caught (sync_to_world 1)
+[     8] caught (sync_to_world 2)
+[    10] caught (sync_to_world 4)
+[    10] caught (sync_to_world 4)
+[    17] caught (sync_except 1)
+[    17] caught (sync_except 1)
+[    18] caught (sync_except 2)
+[    20] caught (sync_except 4)
+[    27] caught (sync_to_model 1)
+[    27] caught (sync_to_model 1)
+[    28] caught (sync_to_model 2)
+[    30] caught (sync_to_model 4)
+      + solved [reg_except]: (sync_except 2)
+      + solved [reg_except]: (sync_except 4)
+      + solved [registration]: (sync_to_world 1)
+      + solved [inpaint]: underlay
+      + solved [registration]: (sync_to_world 2)
+      + solved [inpaint]: underlay
+      + solved [inpaint]: underlay
+      + solved [multi_reg]: sync_all
+      + solved [registration]: (sync_to_world 4)
+      + solved [multi_reg]: sync_all
+      + solved [registration]: (sync_to_world 4)
+      + solved [reg_except]: (sync_except 1)
+      + solved [reg_except]: (sync_except 1)
+      + solved [readout]: snd_gg
+      + solved [multi_reg]: sync_all
+      + solved [inpaint]: underlay
+      + solved [readout]: snd_gg
+      + solved [perception]: (sync_to_model 1)
+      + solved [perception]: (sync_to_model 4)
+      + solved [readout]: snd_gg
+      + solved [perception]: (sync_to_model 1)
+      + solved [readout]: snd_gg
+      + solved [perception]: (sync_to_model 2)
+      + solved [multi_reg]: sync_all
+    solved 188/300 (+188 this round)
+running stitch_core.compress on 188 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_0: (fork (compose #2 (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_1: (compose (wall_at #3 #2) (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, coord, coord] -> fn
+added abstraction fn_2: (fn_0 #1 #0 (optimize (distance #0) #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_3: (fn_0 #3 #2 (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_4: (compose (wall_at #3 #2) (clear_at #1 #0))  [coord, coord, coord, coord] -> fn
+added abstraction fn_5: (optimize (neg_dist #0))  [cellvalue, cellvalue] -> fn
+    dreaming: training recognition Q on 164 replays + fantasies (600 steps)…
+0.02M params
+  0%|          | 0/600 [00:00<?, ?it/s]loss=3.94 nodes=39:   0%|          | 0/600 [00:00<?, ?it/s]loss=3.94 nodes=39:   0%|          | 1/600 [00:00<01:58,  5.07it/s]loss=3.99 nodes=37:   0%|          | 1/600 [00:00<01:58,  5.07it/s]loss=3.94 nodes=34:   0%|          | 1/600 [00:00<01:58,  5.07it/s]loss=3.88 nodes=34:   0%|          | 1/600 [00:00<01:58,  5.07it/s]loss=3.74 nodes=31:   0%|          | 1/600 [00:00<01:58,  5.07it/s]loss=3.59 nodes=30:   0%|          | 1/600 [00:00<01:58,  5.07it/s]loss=3.78 nodes=45:   0%|          | 1/600 [00:00<01:58,  5.07it/s]loss=3.72 nodes=31:   0%|          | 1/600 [00:00<01:58,  5.07it/s]loss=3.61 nodes=43:   0%|          | 1/600 [00:00<01:58,  5.07it/s]loss=3.63 nodes=42:   0%|          | 1/600 [00:00<01:58,  5.07it/s]loss=3.63 nodes=42:   2%|▏         | 10/600 [00:00<00:15, 38.53it/s]loss=3.50 nodes=31:   2%|▏         | 10/600 [00:00<00:15, 38.53it/s]loss=3.50 nodes=39:   2%|▏         | 10/600 [00:00<00:15, 38.53it/s]loss=3.39 nodes=31:   2%|▏         | 10/600 [00:00<00:15, 38.53it/s]loss=3.75 nodes=40:   2%|▏         | 10/600 [00:00<00:15, 38.53it/s]loss=3.37 nodes=34:   2%|▏         | 10/600 [00:00<00:15, 38.53it/s]loss=3.56 nodes=37:   2%|▏         | 10/600 [00:00<00:15, 38.53it/s]loss=3.46 nodes=41:   2%|▏         | 10/600 [00:00<00:15, 38.53it/s]loss=3.38 nodes=40:   2%|▏         | 10/600 [00:00<00:15, 38.53it/s]loss=3.38 nodes=40:   3%|▎         | 18/600 [00:00<00:10, 53.39it/s]loss=3.26 nodes=33:   3%|▎         | 18/600 [00:00<00:10, 53.39it/s]loss=3.85 nodes=39:   3%|▎         | 18/600 [00:00<00:10, 53.39it/s]loss=3.44 nodes=36:   3%|▎         | 18/600 [00:00<00:10, 53.39it/s]loss=3.27 nodes=39:   3%|▎         | 18/600 [00:00<00:10, 53.39it/s]loss=3.60 nodes=38:   3%|▎         | 18/600 [00:00<00:10, 53.39it/s]loss=3.60 nodes=29:   3%|▎         | 18/600 [00:00<00:10, 53.39it/s]loss=3.87 nodes=40:   3%|▎         | 18/600 [00:00<00:10, 53.39it/s]loss=3.87 nodes=40:   4%|▍         | 25/600 [00:00<00:10, 54.67it/s]loss=3.32 nodes=37:   4%|▍         | 25/600 [00:00<00:10, 54.67it/s]loss=3.24 nodes=33:   4%|▍         | 25/600 [00:00<00:10, 54.67it/s]loss=3.51 nodes=38:   4%|▍         | 25/600 [00:00<00:10, 54.67it/s]loss=3.19 nodes=34:   4%|▍         | 25/600 [00:00<00:10, 54.67it/s]loss=3.46 nodes=41:   4%|▍         | 25/600 [00:00<00:10, 54.67it/s]loss=3.17 nodes=33:   4%|▍         | 25/600 [00:00<00:10, 54.67it/s]loss=3.68 nodes=36:   4%|▍         | 25/600 [00:00<00:10, 54.67it/s]loss=3.68 nodes=36:   5%|▌         | 32/600 [00:00<00:11, 48.19it/s]loss=3.36 nodes=43:   5%|▌         | 32/600 [00:00<00:11, 48.19it/s]loss=3.46 nodes=34:   5%|▌         | 32/600 [00:00<00:11, 48.19it/s]loss=3.48 nodes=38:   5%|▌         | 32/600 [00:00<00:11, 48.19it/s]loss=3.24 nodes=39:   5%|▌         | 32/600 [00:00<00:11, 48.19it/s]loss=3.62 nodes=31:   5%|▌         | 32/600 [00:00<00:11, 48.19it/s]loss=3.10 nodes=32:   5%|▌         | 32/600 [00:00<00:11, 48.19it/s]loss=3.10 nodes=32:   6%|▋         | 38/600 [00:00<00:12, 45.21it/s]loss=3.21 nodes=39:   6%|▋         | 38/600 [00:00<00:12, 45.21it/s]loss=3.53 nodes=39:   6%|▋         | 38/600 [00:00<00:12, 45.21it/s]loss=3.24 nodes=39:   6%|▋         | 38/600 [00:00<00:12, 45.21it/s]loss=3.43 nodes=34:   6%|▋         | 38/600 [00:01<00:12, 45.21it/s]loss=3.31 nodes=36:   6%|▋         | 38/600 [00:01<00:12, 45.21it/s]loss=3.31 nodes=36:   7%|▋         | 43/600 [00:01<00:14, 38.71it/s]loss=3.52 nodes=41:   7%|▋         | 43/600 [00:01<00:14, 38.71it/s]loss=2.99 nodes=34:   7%|▋         | 43/600 [00:01<00:14, 38.71it/s]loss=3.17 nodes=36:   7%|▋         | 43/600 [00:01<00:14, 38.71it/s]loss=3.31 nodes=42:   7%|▋         | 43/600 [00:01<00:14, 38.71it/s]loss=2.92 nodes=32:   7%|▋         | 43/600 [00:01<00:14, 38.71it/s]loss=2.92 nodes=32:   8%|▊         | 48/600 [00:01<00:15, 35.36it/s]loss=2.91 nodes=32:   8%|▊         | 48/600 [00:01<00:15, 35.36it/s]loss=3.26 nodes=29:   8%|▊         | 48/600 [00:01<00:15, 35.36it/s]loss=3.01 nodes=35:   8%|▊         | 48/600 [00:01<00:15, 35.36it/s]loss=3.36 nodes=31:   8%|▊         | 48/600 [00:01<00:15, 35.36it/s]loss=3.36 nodes=31:   9%|▊         | 52/600 [00:01<00:16, 33.52it/s]loss=3.46 nodes=41:   9%|▊         | 52/600 [00:01<00:16, 33.52it/s]loss=3.58 nodes=42:   9%|▊         | 52/600 [00:01<00:16, 33.52it/s]loss=3.29 nodes=46:   9%|▊         | 52/600 [00:01<00:16, 33.52it/s]loss=3.29 nodes=41:   9%|▊         | 52/600 [00:01<00:16, 33.52it/s]loss=3.29 nodes=41:   9%|▉         | 56/600 [00:01<00:17, 30.58it/s]loss=3.24 nodes=33:   9%|▉         | 56/600 [00:01<00:17, 30.58it/s]loss=3.37 nodes=47:   9%|▉         | 56/600 [00:01<00:17, 30.58it/s]loss=3.63 nodes=57:   9%|▉         | 56/600 [00:01<00:17, 30.58it/s]loss=3.42 nodes=49:   9%|▉         | 56/600 [00:01<00:17, 30.58it/s]loss=3.42 nodes=49:  10%|█         | 60/600 [00:01<00:17, 30.68it/s]loss=3.15 nodes=34:  10%|█         | 60/600 [00:01<00:17, 30.68it/s]loss=3.14 nodes=37:  10%|█         | 60/600 [00:01<00:17, 30.68it/s]loss=3.55 nodes=36:  10%|█         | 60/600 [00:01<00:17, 30.68it/s]loss=3.12 nodes=41:  10%|█         | 60/600 [00:01<00:17, 30.68it/s]loss=3.27 nodes=49:  10%|█         | 60/600 [00:01<00:17, 30.68it/s]loss=2.95 nodes=38:  10%|█         | 60/600 [00:01<00:17, 30.68it/s]loss=2.95 nodes=38:  11%|█         | 66/600 [00:01<00:15, 35.31it/s]loss=3.19 nodes=46:  11%|█         | 66/600 [00:01<00:15, 35.31it/s]loss=3.17 nodes=40:  11%|█         | 66/600 [00:01<00:15, 35.31it/s]loss=3.47 nodes=34:  11%|█         | 66/600 [00:01<00:15, 35.31it/s]loss=3.38 nodes=46:  11%|█         | 66/600 [00:01<00:15, 35.31it/s]loss=3.38 nodes=46:  12%|█▏        | 70/600 [00:01<00:14, 35.99it/s]loss=3.36 nodes=42:  12%|█▏        | 70/600 [00:01<00:14, 35.99it/s]loss=3.78 nodes=31:  12%|█▏        | 70/600 [00:01<00:14, 35.99it/s]loss=3.40 nodes=35:  12%|█▏        | 70/600 [00:01<00:14, 35.99it/s]loss=3.27 nodes=42:  12%|█▏        | 70/600 [00:01<00:14, 35.99it/s]loss=3.19 nodes=30:  12%|█▏        | 70/600 [00:01<00:14, 35.99it/s]loss=3.19 nodes=30:  12%|█▎        | 75/600 [00:01<00:13, 38.35it/s]loss=3.07 nodes=42:  12%|█▎        | 75/600 [00:02<00:13, 38.35it/s]loss=3.65 nodes=32:  12%|█▎        | 75/600 [00:02<00:13, 38.35it/s]loss=3.48 nodes=43:  12%|█▎        | 75/600 [00:02<00:13, 38.35it/s]loss=2.88 nodes=35:  12%|█▎        | 75/600 [00:02<00:13, 38.35it/s]loss=3.27 nodes=39:  12%|█▎        | 75/600 [00:02<00:13, 38.35it/s]loss=3.27 nodes=39:  13%|█▎        | 80/600 [00:02<00:13, 39.76it/s]loss=3.25 nodes=41:  13%|█▎        | 80/600 [00:02<00:13, 39.76it/s]loss=3.42 nodes=43:  13%|█▎        | 80/600 [00:02<00:13, 39.76it/s]loss=3.68 nodes=34:  13%|█▎        | 80/600 [00:02<00:13, 39.76it/s]loss=3.33 nodes=38:  13%|█▎        | 80/600 [00:02<00:13, 39.76it/s]loss=3.48 nodes=41:  13%|█▎        | 80/600 [00:02<00:13, 39.76it/s]loss=3.48 nodes=41:  14%|█▍        | 85/600 [00:02<00:12, 41.43it/s]loss=3.60 nodes=32:  14%|█▍        | 85/600 [00:02<00:12, 41.43it/s]loss=3.14 nodes=41:  14%|█▍        | 85/600 [00:02<00:12, 41.43it/s]loss=3.53 nodes=37:  14%|█▍        | 85/600 [00:02<00:12, 41.43it/s]loss=3.15 nodes=35:  14%|█▍        | 85/600 [00:02<00:12, 41.43it/s]loss=3.34 nodes=48:  14%|█▍        | 85/600 [00:02<00:12, 41.43it/s]loss=3.00 nodes=31:  14%|█▍        | 85/600 [00:02<00:12, 41.43it/s]loss=3.00 nodes=31:  15%|█▌        | 91/600 [00:02<00:11, 44.25it/s]loss=3.14 nodes=37:  15%|█▌        | 91/600 [00:02<00:11, 44.25it/s]loss=3.63 nodes=38:  15%|█▌        | 91/600 [00:02<00:11, 44.25it/s]loss=3.39 nodes=39:  15%|█▌        | 91/600 [00:02<00:11, 44.25it/s]loss=3.33 nodes=29:  15%|█▌        | 91/600 [00:02<00:11, 44.25it/s]loss=3.41 nodes=34:  15%|█▌        | 91/600 [00:02<00:11, 44.25it/s]loss=3.41 nodes=34:  16%|█▌        | 96/600 [00:02<00:11, 42.74it/s]loss=3.21 nodes=34:  16%|█▌        | 96/600 [00:02<00:11, 42.74it/s]loss=3.55 nodes=34:  16%|█▌        | 96/600 [00:02<00:11, 42.74it/s]loss=3.20 nodes=38:  16%|█▌        | 96/600 [00:02<00:11, 42.74it/s]loss=4.13 nodes=36:  16%|█▌        | 96/600 [00:02<00:11, 42.74it/s]loss=2.82 nodes=33:  16%|█▌        | 96/600 [00:02<00:11, 42.74it/s]loss=2.82 nodes=33:  17%|█▋        | 101/600 [00:02<00:11, 42.16it/s]loss=3.44 nodes=35:  17%|█▋        | 101/600 [00:02<00:11, 42.16it/s]loss=3.17 nodes=31:  17%|█▋        | 101/600 [00:02<00:11, 42.16it/s]loss=4.11 nodes=48:  17%|█▋        | 101/600 [00:02<00:11, 42.16it/s]loss=3.00 nodes=34:  17%|█▋        | 101/600 [00:02<00:11, 42.16it/s]loss=3.37 nodes=37:  17%|█▋        | 101/600 [00:02<00:11, 42.16it/s]loss=3.37 nodes=37:  18%|█▊        | 106/600 [00:02<00:11, 42.27it/s]loss=3.49 nodes=61:  18%|█▊        | 106/600 [00:02<00:11, 42.27it/s]loss=3.18 nodes=45:  18%|█▊        | 106/600 [00:02<00:11, 42.27it/s]loss=3.28 nodes=47:  18%|█▊        | 106/600 [00:02<00:11, 42.27it/s]loss=3.18 nodes=47:  18%|█▊        | 106/600 [00:02<00:11, 42.27it/s]loss=3.16 nodes=39:  18%|█▊        | 106/600 [00:02<00:11, 42.27it/s]loss=3.16 nodes=39:  18%|█▊        | 111/600 [00:02<00:12, 38.02it/s]loss=3.12 nodes=36:  18%|█▊        | 111/600 [00:02<00:12, 38.02it/s]loss=3.21 nodes=42:  18%|█▊        | 111/600 [00:02<00:12, 38.02it/s]loss=3.35 nodes=41:  18%|█▊        | 111/600 [00:02<00:12, 38.02it/s]loss=3.15 nodes=36:  18%|█▊        | 111/600 [00:02<00:12, 38.02it/s]loss=3.15 nodes=36:  19%|█▉        | 115/600 [00:02<00:12, 38.41it/s]loss=3.48 nodes=37:  19%|█▉        | 115/600 [00:02<00:12, 38.41it/s]loss=3.49 nodes=33:  19%|█▉        | 115/600 [00:03<00:12, 38.41it/s]loss=3.44 nodes=34:  19%|█▉        | 115/600 [00:03<00:12, 38.41it/s]loss=3.35 nodes=35:  19%|█▉        | 115/600 [00:03<00:12, 38.41it/s]loss=3.69 nodes=34:  19%|█▉        | 115/600 [00:03<00:12, 38.41it/s]loss=3.69 nodes=34:  20%|██        | 120/600 [00:03<00:12, 39.02it/s]loss=3.19 nodes=36:  20%|██        | 120/600 [00:03<00:12, 39.02it/s]loss=3.11 nodes=38:  20%|██        | 120/600 [00:03<00:12, 39.02it/s]loss=3.05 nodes=41:  20%|██        | 120/600 [00:03<00:12, 39.02it/s]loss=3.21 nodes=29:  20%|██        | 120/600 [00:03<00:12, 39.02it/s]loss=2.91 nodes=33:  20%|██        | 120/600 [00:03<00:12, 39.02it/s]loss=2.91 nodes=33:  21%|██        | 125/600 [00:03<00:11, 40.44it/s]loss=3.51 nodes=42:  21%|██        | 125/600 [00:03<00:11, 40.44it/s]loss=3.29 nodes=39:  21%|██        | 125/600 [00:03<00:11, 40.44it/s]loss=2.90 nodes=37:  21%|██        | 125/600 [00:03<00:11, 40.44it/s]loss=3.52 nodes=47:  21%|██        | 125/600 [00:03<00:11, 40.44it/s]loss=3.18 nodes=39:  21%|██        | 125/600 [00:03<00:11, 40.44it/s]loss=3.18 nodes=39:  22%|██▏       | 130/600 [00:03<00:11, 41.52it/s]loss=3.36 nodes=36:  22%|██▏       | 130/600 [00:03<00:11, 41.52it/s]loss=3.15 nodes=31:  22%|██▏       | 130/600 [00:03<00:11, 41.52it/s]loss=3.04 nodes=31:  22%|██▏       | 130/600 [00:03<00:11, 41.52it/s]loss=3.25 nodes=27:  22%|██▏       | 130/600 [00:03<00:11, 41.52it/s]loss=3.59 nodes=38:  22%|██▏       | 130/600 [00:03<00:11, 41.52it/s]loss=3.59 nodes=38:  22%|██▎       | 135/600 [00:03<00:10, 42.73it/s]loss=3.30 nodes=36:  22%|██▎       | 135/600 [00:03<00:10, 42.73it/s]loss=3.40 nodes=34:  22%|██▎       | 135/600 [00:03<00:10, 42.73it/s]loss=2.77 nodes=36:  22%|██▎       | 135/600 [00:03<00:10, 42.73it/s]loss=3.32 nodes=34:  22%|██▎       | 135/600 [00:03<00:10, 42.73it/s]loss=3.39 nodes=32:  22%|██▎       | 135/600 [00:03<00:10, 42.73it/s]loss=3.39 nodes=32:  23%|██▎       | 140/600 [00:03<00:10, 43.34it/s]loss=3.27 nodes=40:  23%|██▎       | 140/600 [00:03<00:10, 43.34it/s]loss=3.21 nodes=33:  23%|██▎       | 140/600 [00:03<00:10, 43.34it/s]loss=3.34 nodes=44:  23%|██▎       | 140/600 [00:03<00:10, 43.34it/s]loss=3.06 nodes=33:  23%|██▎       | 140/600 [00:03<00:10, 43.34it/s]loss=3.09 nodes=40:  23%|██▎       | 140/600 [00:03<00:10, 43.34it/s]loss=3.09 nodes=40:  24%|██▍       | 145/600 [00:03<00:10, 42.99it/s]loss=3.12 nodes=43:  24%|██▍       | 145/600 [00:03<00:10, 42.99it/s]loss=3.05 nodes=35:  24%|██▍       | 145/600 [00:03<00:10, 42.99it/s]loss=3.09 nodes=30:  24%|██▍       | 145/600 [00:03<00:10, 42.99it/s]loss=3.01 nodes=32:  24%|██▍       | 145/600 [00:03<00:10, 42.99it/s]loss=2.86 nodes=39:  24%|██▍       | 145/600 [00:03<00:10, 42.99it/s]loss=2.86 nodes=39:  25%|██▌       | 150/600 [00:03<00:10, 44.29it/s]loss=3.05 nodes=33:  25%|██▌       | 150/600 [00:03<00:10, 44.29it/s]loss=3.16 nodes=34:  25%|██▌       | 150/600 [00:03<00:10, 44.29it/s]loss=3.58 nodes=42:  25%|██▌       | 150/600 [00:03<00:10, 44.29it/s]loss=3.25 nodes=30:  25%|██▌       | 150/600 [00:03<00:10, 44.29it/s]loss=3.16 nodes=46:  25%|██▌       | 150/600 [00:03<00:10, 44.29it/s]loss=3.16 nodes=46:  26%|██▌       | 155/600 [00:03<00:09, 44.57it/s]loss=3.27 nodes=37:  26%|██▌       | 155/600 [00:03<00:09, 44.57it/s]loss=3.50 nodes=49:  26%|██▌       | 155/600 [00:03<00:09, 44.57it/s]loss=3.49 nodes=56:  26%|██▌       | 155/600 [00:03<00:09, 44.57it/s]loss=3.10 nodes=36:  26%|██▌       | 155/600 [00:03<00:09, 44.57it/s]loss=3.15 nodes=41:  26%|██▌       | 155/600 [00:04<00:09, 44.57it/s]loss=3.15 nodes=41:  27%|██▋       | 160/600 [00:04<00:10, 42.13it/s]loss=3.15 nodes=31:  27%|██▋       | 160/600 [00:04<00:10, 42.13it/s]loss=3.16 nodes=38:  27%|██▋       | 160/600 [00:04<00:10, 42.13it/s]loss=3.09 nodes=36:  27%|██▋       | 160/600 [00:04<00:10, 42.13it/s]loss=3.34 nodes=36:  27%|██▋       | 160/600 [00:04<00:10, 42.13it/s]loss=3.27 nodes=40:  27%|██▋       | 160/600 [00:04<00:10, 42.13it/s]loss=3.27 nodes=40:  28%|██▊       | 165/600 [00:04<00:10, 41.89it/s]loss=3.38 nodes=50:  28%|██▊       | 165/600 [00:04<00:10, 41.89it/s]loss=3.55 nodes=43:  28%|██▊       | 165/600 [00:04<00:10, 41.89it/s]loss=3.31 nodes=36:  28%|██▊       | 165/600 [00:04<00:10, 41.89it/s]loss=3.55 nodes=31:  28%|██▊       | 165/600 [00:04<00:10, 41.89it/s]loss=3.22 nodes=33:  28%|██▊       | 165/600 [00:04<00:10, 41.89it/s]loss=3.22 nodes=33:  28%|██▊       | 170/600 [00:04<00:10, 40.31it/s]loss=3.27 nodes=37:  28%|██▊       | 170/600 [00:04<00:10, 40.31it/s]loss=3.30 nodes=34:  28%|██▊       | 170/600 [00:04<00:10, 40.31it/s]loss=2.82 nodes=34:  28%|██▊       | 170/600 [00:04<00:10, 40.31it/s]loss=3.04 nodes=38:  28%|██▊       | 170/600 [00:04<00:10, 40.31it/s]loss=2.80 nodes=36:  28%|██▊       | 170/600 [00:04<00:10, 40.31it/s]loss=2.80 nodes=36:  29%|██▉       | 175/600 [00:04<00:10, 40.79it/s]loss=3.28 nodes=38:  29%|██▉       | 175/600 [00:04<00:10, 40.79it/s]loss=2.95 nodes=35:  29%|██▉       | 175/600 [00:04<00:10, 40.79it/s]loss=2.92 nodes=38:  29%|██▉       | 175/600 [00:04<00:10, 40.79it/s]loss=3.29 nodes=41:  29%|██▉       | 175/600 [00:04<00:10, 40.79it/s]loss=3.32 nodes=29:  29%|██▉       | 175/600 [00:04<00:10, 40.79it/s]loss=3.32 nodes=29:  30%|███       | 180/600 [00:04<00:10, 41.97it/s]loss=3.08 nodes=30:  30%|███       | 180/600 [00:04<00:10, 41.97it/s]loss=3.61 nodes=42:  30%|███       | 180/600 [00:04<00:10, 41.97it/s]loss=2.56 nodes=35:  30%|███       | 180/600 [00:04<00:10, 41.97it/s]loss=3.47 nodes=37:  30%|███       | 180/600 [00:04<00:10, 41.97it/s]loss=3.19 nodes=34:  30%|███       | 180/600 [00:04<00:10, 41.97it/s]loss=3.19 nodes=34:  31%|███       | 185/600 [00:04<00:09, 41.86it/s]loss=3.20 nodes=34:  31%|███       | 185/600 [00:04<00:09, 41.86it/s]loss=3.41 nodes=33:  31%|███       | 185/600 [00:04<00:09, 41.86it/s]loss=3.16 nodes=35:  31%|███       | 185/600 [00:04<00:09, 41.86it/s]loss=3.21 nodes=39:  31%|███       | 185/600 [00:04<00:09, 41.86it/s]loss=3.21 nodes=49:  31%|███       | 185/600 [00:04<00:09, 41.86it/s]loss=3.21 nodes=49:  32%|███▏      | 190/600 [00:04<00:09, 41.53it/s]loss=3.44 nodes=33:  32%|███▏      | 190/600 [00:04<00:09, 41.53it/s]loss=3.43 nodes=38:  32%|███▏      | 190/600 [00:04<00:09, 41.53it/s]loss=2.96 nodes=30:  32%|███▏      | 190/600 [00:04<00:09, 41.53it/s]loss=3.45 nodes=38:  32%|███▏      | 190/600 [00:04<00:09, 41.53it/s]loss=3.47 nodes=38:  32%|███▏      | 190/600 [00:04<00:09, 41.53it/s]loss=3.47 nodes=38:  32%|███▎      | 195/600 [00:04<00:09, 42.14it/s]loss=3.65 nodes=54:  32%|███▎      | 195/600 [00:04<00:09, 42.14it/s]loss=2.98 nodes=38:  32%|███▎      | 195/600 [00:04<00:09, 42.14it/s]loss=3.30 nodes=33:  32%|███▎      | 195/600 [00:04<00:09, 42.14it/s]loss=3.75 nodes=38:  32%|███▎      | 195/600 [00:04<00:09, 42.14it/s]loss=3.51 nodes=39:  32%|███▎      | 195/600 [00:04<00:09, 42.14it/s]loss=3.51 nodes=39:  33%|███▎      | 200/600 [00:04<00:09, 40.96it/s]loss=3.13 nodes=31:  33%|███▎      | 200/600 [00:04<00:09, 40.96it/s]loss=3.33 nodes=32:  33%|███▎      | 200/600 [00:05<00:09, 40.96it/s]loss=3.04 nodes=42:  33%|███▎      | 200/600 [00:05<00:09, 40.96it/s]loss=3.68 nodes=38:  33%|███▎      | 200/600 [00:05<00:09, 40.96it/s]loss=3.11 nodes=35:  33%|███▎      | 200/600 [00:05<00:09, 40.96it/s]loss=3.11 nodes=35:  34%|███▍      | 205/600 [00:05<00:09, 42.19it/s]loss=3.27 nodes=31:  34%|███▍      | 205/600 [00:05<00:09, 42.19it/s]loss=3.19 nodes=38:  34%|███▍      | 205/600 [00:05<00:09, 42.19it/s]loss=3.31 nodes=44:  34%|███▍      | 205/600 [00:05<00:09, 42.19it/s]loss=3.28 nodes=28:  34%|███▍      | 205/600 [00:05<00:09, 42.19it/s]loss=3.08 nodes=40:  34%|███▍      | 205/600 [00:05<00:09, 42.19it/s]loss=3.08 nodes=40:  35%|███▌      | 210/600 [00:05<00:09, 41.68it/s]loss=3.29 nodes=32:  35%|███▌      | 210/600 [00:05<00:09, 41.68it/s]loss=3.31 nodes=42:  35%|███▌      | 210/600 [00:05<00:09, 41.68it/s]loss=3.39 nodes=40:  35%|███▌      | 210/600 [00:05<00:09, 41.68it/s]loss=3.32 nodes=39:  35%|███▌      | 210/600 [00:05<00:09, 41.68it/s]loss=3.30 nodes=36:  35%|███▌      | 210/600 [00:05<00:09, 41.68it/s]loss=3.30 nodes=36:  36%|███▌      | 215/600 [00:05<00:09, 41.83it/s]loss=3.30 nodes=37:  36%|███▌      | 215/600 [00:05<00:09, 41.83it/s]loss=3.56 nodes=38:  36%|███▌      | 215/600 [00:05<00:09, 41.83it/s]loss=3.54 nodes=46:  36%|███▌      | 215/600 [00:05<00:09, 41.83it/s]loss=3.04 nodes=35:  36%|███▌      | 215/600 [00:05<00:09, 41.83it/s]loss=2.42 nodes=38:  36%|███▌      | 215/600 [00:05<00:09, 41.83it/s]loss=2.42 nodes=38:  37%|███▋      | 220/600 [00:05<00:09, 41.68it/s]loss=3.40 nodes=35:  37%|███▋      | 220/600 [00:05<00:09, 41.68it/s]loss=3.24 nodes=35:  37%|███▋      | 220/600 [00:05<00:09, 41.68it/s]loss=3.39 nodes=37:  37%|███▋      | 220/600 [00:05<00:09, 41.68it/s]loss=3.58 nodes=46:  37%|███▋      | 220/600 [00:05<00:09, 41.68it/s]loss=3.29 nodes=30:  37%|███▋      | 220/600 [00:05<00:09, 41.68it/s]loss=3.29 nodes=30:  38%|███▊      | 225/600 [00:05<00:09, 41.55it/s]loss=3.11 nodes=35:  38%|███▊      | 225/600 [00:05<00:09, 41.55it/s]loss=3.40 nodes=39:  38%|███▊      | 225/600 [00:05<00:09, 41.55it/s]loss=3.32 nodes=32:  38%|███▊      | 225/600 [00:05<00:09, 41.55it/s]loss=2.64 nodes=34:  38%|███▊      | 225/600 [00:05<00:09, 41.55it/s]loss=2.92 nodes=34:  38%|███▊      | 225/600 [00:05<00:09, 41.55it/s]loss=2.92 nodes=34:  38%|███▊      | 230/600 [00:05<00:08, 42.04it/s]loss=3.31 nodes=32:  38%|███▊      | 230/600 [00:05<00:08, 42.04it/s]loss=3.54 nodes=34:  38%|███▊      | 230/600 [00:05<00:08, 42.04it/s]loss=3.00 nodes=30:  38%|███▊      | 230/600 [00:05<00:08, 42.04it/s]loss=3.19 nodes=29:  38%|███▊      | 230/600 [00:05<00:08, 42.04it/s]loss=3.00 nodes=32:  38%|███▊      | 230/600 [00:05<00:08, 42.04it/s]loss=3.00 nodes=32:  39%|███▉      | 235/600 [00:05<00:08, 43.86it/s]loss=3.28 nodes=33:  39%|███▉      | 235/600 [00:05<00:08, 43.86it/s]loss=2.75 nodes=38:  39%|███▉      | 235/600 [00:05<00:08, 43.86it/s]loss=3.15 nodes=38:  39%|███▉      | 235/600 [00:05<00:08, 43.86it/s]loss=3.28 nodes=45:  39%|███▉      | 235/600 [00:05<00:08, 43.86it/s]loss=2.90 nodes=28:  39%|███▉      | 235/600 [00:05<00:08, 43.86it/s]loss=2.90 nodes=28:  40%|████      | 240/600 [00:05<00:08, 44.26it/s]loss=3.46 nodes=43:  40%|████      | 240/600 [00:05<00:08, 44.26it/s]loss=3.05 nodes=31:  40%|████      | 240/600 [00:05<00:08, 44.26it/s]loss=3.17 nodes=38:  40%|████      | 240/600 [00:05<00:08, 44.26it/s]loss=3.41 nodes=31:  40%|████      | 240/600 [00:05<00:08, 44.26it/s]loss=3.38 nodes=37:  40%|████      | 240/600 [00:06<00:08, 44.26it/s]loss=3.38 nodes=37:  41%|████      | 245/600 [00:06<00:08, 43.37it/s]loss=3.27 nodes=34:  41%|████      | 245/600 [00:06<00:08, 43.37it/s]loss=2.98 nodes=30:  41%|████      | 245/600 [00:06<00:08, 43.37it/s]loss=3.22 nodes=37:  41%|████      | 245/600 [00:06<00:08, 43.37it/s]loss=3.39 nodes=37:  41%|████      | 245/600 [00:06<00:08, 43.37it/s]loss=3.62 nodes=47:  41%|████      | 245/600 [00:06<00:08, 43.37it/s]loss=3.62 nodes=47:  42%|████▏     | 250/600 [00:06<00:08, 42.78it/s]loss=3.58 nodes=30:  42%|████▏     | 250/600 [00:06<00:08, 42.78it/s]loss=3.66 nodes=37:  42%|████▏     | 250/600 [00:06<00:08, 42.78it/s]loss=3.25 nodes=37:  42%|████▏     | 250/600 [00:06<00:08, 42.78it/s]loss=3.36 nodes=33:  42%|████▏     | 250/600 [00:06<00:08, 42.78it/s]loss=3.38 nodes=35:  42%|████▏     | 250/600 [00:06<00:08, 42.78it/s]loss=3.38 nodes=35:  42%|████▎     | 255/600 [00:06<00:08, 42.52it/s]loss=3.61 nodes=51:  42%|████▎     | 255/600 [00:06<00:08, 42.52it/s]loss=3.66 nodes=38:  42%|████▎     | 255/600 [00:06<00:08, 42.52it/s]loss=2.49 nodes=33:  42%|████▎     | 255/600 [00:06<00:08, 42.52it/s]loss=3.30 nodes=35:  42%|████▎     | 255/600 [00:06<00:08, 42.52it/s]loss=3.20 nodes=35:  42%|████▎     | 255/600 [00:06<00:08, 42.52it/s]loss=3.20 nodes=35:  43%|████▎     | 260/600 [00:06<00:07, 42.75it/s]loss=3.56 nodes=43:  43%|████▎     | 260/600 [00:06<00:07, 42.75it/s]loss=3.90 nodes=43:  43%|████▎     | 260/600 [00:06<00:07, 42.75it/s]loss=2.86 nodes=31:  43%|████▎     | 260/600 [00:06<00:07, 42.75it/s]loss=3.36 nodes=36:  43%|████▎     | 260/600 [00:06<00:07, 42.75it/s]loss=3.29 nodes=36:  43%|████▎     | 260/600 [00:06<00:07, 42.75it/s]loss=3.29 nodes=36:  44%|████▍     | 265/600 [00:06<00:07, 42.86it/s]loss=3.34 nodes=38:  44%|████▍     | 265/600 [00:06<00:07, 42.86it/s]loss=3.36 nodes=33:  44%|████▍     | 265/600 [00:06<00:07, 42.86it/s]loss=3.15 nodes=41:  44%|████▍     | 265/600 [00:06<00:07, 42.86it/s]loss=3.01 nodes=30:  44%|████▍     | 265/600 [00:06<00:07, 42.86it/s]loss=3.04 nodes=36:  44%|████▍     | 265/600 [00:06<00:07, 42.86it/s]loss=3.04 nodes=36:  45%|████▌     | 270/600 [00:06<00:07, 42.45it/s]loss=3.16 nodes=40:  45%|████▌     | 270/600 [00:06<00:07, 42.45it/s]loss=2.63 nodes=35:  45%|████▌     | 270/600 [00:06<00:07, 42.45it/s]loss=3.01 nodes=33:  45%|████▌     | 270/600 [00:06<00:07, 42.45it/s]loss=2.68 nodes=34:  45%|████▌     | 270/600 [00:06<00:07, 42.45it/s]loss=2.95 nodes=33:  45%|████▌     | 270/600 [00:06<00:07, 42.45it/s]loss=2.95 nodes=33:  46%|████▌     | 275/600 [00:06<00:07, 42.23it/s]loss=3.40 nodes=53:  46%|████▌     | 275/600 [00:06<00:07, 42.23it/s]loss=2.99 nodes=37:  46%|████▌     | 275/600 [00:06<00:07, 42.23it/s]loss=3.26 nodes=36:  46%|████▌     | 275/600 [00:06<00:07, 42.23it/s]loss=2.71 nodes=30:  46%|████▌     | 275/600 [00:06<00:07, 42.23it/s]loss=2.97 nodes=34:  46%|████▌     | 275/600 [00:06<00:07, 42.23it/s]loss=2.97 nodes=34:  47%|████▋     | 280/600 [00:06<00:07, 42.86it/s]loss=2.93 nodes=37:  47%|████▋     | 280/600 [00:06<00:07, 42.86it/s]loss=3.55 nodes=47:  47%|████▋     | 280/600 [00:06<00:07, 42.86it/s]loss=3.32 nodes=41:  47%|████▋     | 280/600 [00:06<00:07, 42.86it/s]loss=2.82 nodes=33:  47%|████▋     | 280/600 [00:06<00:07, 42.86it/s]loss=2.99 nodes=31:  47%|████▋     | 280/600 [00:06<00:07, 42.86it/s]loss=2.99 nodes=31:  48%|████▊     | 285/600 [00:06<00:07, 43.08it/s]loss=3.68 nodes=53:  48%|████▊     | 285/600 [00:06<00:07, 43.08it/s]loss=2.82 nodes=30:  48%|████▊     | 285/600 [00:07<00:07, 43.08it/s]loss=3.12 nodes=37:  48%|████▊     | 285/600 [00:07<00:07, 43.08it/s]loss=3.21 nodes=47:  48%|████▊     | 285/600 [00:07<00:07, 43.08it/s]loss=3.17 nodes=30:  48%|████▊     | 285/600 [00:07<00:07, 43.08it/s]loss=3.17 nodes=30:  48%|████▊     | 290/600 [00:07<00:07, 42.83it/s]loss=3.55 nodes=60:  48%|████▊     | 290/600 [00:07<00:07, 42.83it/s]loss=3.10 nodes=35:  48%|████▊     | 290/600 [00:07<00:07, 42.83it/s]loss=2.81 nodes=38:  48%|████▊     | 290/600 [00:07<00:07, 42.83it/s]loss=2.82 nodes=33:  48%|████▊     | 290/600 [00:07<00:07, 42.83it/s]loss=2.94 nodes=37:  48%|████▊     | 290/600 [00:07<00:07, 42.83it/s]loss=2.94 nodes=37:  49%|████▉     | 295/600 [00:07<00:07, 41.73it/s]loss=3.09 nodes=39:  49%|████▉     | 295/600 [00:07<00:07, 41.73it/s]loss=3.09 nodes=34:  49%|████▉     | 295/600 [00:07<00:07, 41.73it/s]loss=3.38 nodes=45:  49%|████▉     | 295/600 [00:07<00:07, 41.73it/s]loss=2.75 nodes=35:  49%|████▉     | 295/600 [00:07<00:07, 41.73it/s]loss=3.19 nodes=48:  49%|████▉     | 295/600 [00:07<00:07, 41.73it/s]loss=3.19 nodes=48:  50%|█████     | 300/600 [00:07<00:07, 40.79it/s]loss=3.04 nodes=47:  50%|█████     | 300/600 [00:07<00:07, 40.79it/s]loss=3.24 nodes=27:  50%|█████     | 300/600 [00:07<00:07, 40.79it/s]loss=3.23 nodes=30:  50%|█████     | 300/600 [00:07<00:07, 40.79it/s]loss=3.40 nodes=51:  50%|█████     | 300/600 [00:07<00:07, 40.79it/s]loss=3.31 nodes=36:  50%|█████     | 300/600 [00:07<00:07, 40.79it/s]loss=3.31 nodes=36:  51%|█████     | 305/600 [00:07<00:07, 41.09it/s]loss=3.03 nodes=34:  51%|█████     | 305/600 [00:07<00:07, 41.09it/s]loss=3.03 nodes=30:  51%|█████     | 305/600 [00:07<00:07, 41.09it/s]loss=2.95 nodes=39:  51%|█████     | 305/600 [00:07<00:07, 41.09it/s]loss=3.21 nodes=35:  51%|█████     | 305/600 [00:07<00:07, 41.09it/s]loss=3.56 nodes=42:  51%|█████     | 305/600 [00:07<00:07, 41.09it/s]loss=3.56 nodes=42:  52%|█████▏    | 310/600 [00:07<00:07, 41.07it/s]loss=3.00 nodes=30:  52%|█████▏    | 310/600 [00:07<00:07, 41.07it/s]loss=2.82 nodes=38:  52%|█████▏    | 310/600 [00:07<00:07, 41.07it/s]loss=3.33 nodes=44:  52%|█████▏    | 310/600 [00:07<00:07, 41.07it/s]loss=3.12 nodes=27:  52%|█████▏    | 310/600 [00:07<00:07, 41.07it/s]loss=2.92 nodes=33:  52%|█████▏    | 310/600 [00:07<00:07, 41.07it/s]loss=2.92 nodes=33:  52%|█████▎    | 315/600 [00:07<00:06, 42.04it/s]loss=3.65 nodes=28:  52%|█████▎    | 315/600 [00:07<00:06, 42.04it/s]loss=3.23 nodes=48:  52%|█████▎    | 315/600 [00:07<00:06, 42.04it/s]loss=3.19 nodes=46:  52%|█████▎    | 315/600 [00:07<00:06, 42.04it/s]loss=2.65 nodes=30:  52%|█████▎    | 315/600 [00:07<00:06, 42.04it/s]loss=3.56 nodes=39:  52%|█████▎    | 315/600 [00:07<00:06, 42.04it/s]loss=3.56 nodes=39:  53%|█████▎    | 320/600 [00:07<00:06, 41.90it/s]loss=2.90 nodes=37:  53%|█████▎    | 320/600 [00:07<00:06, 41.90it/s]loss=3.11 nodes=33:  53%|█████▎    | 320/600 [00:07<00:06, 41.90it/s]loss=2.87 nodes=31:  53%|█████▎    | 320/600 [00:07<00:06, 41.90it/s]loss=3.43 nodes=30:  53%|█████▎    | 320/600 [00:07<00:06, 41.90it/s]loss=2.84 nodes=31:  53%|█████▎    | 320/600 [00:07<00:06, 41.90it/s]loss=2.84 nodes=31:  54%|█████▍    | 325/600 [00:07<00:06, 42.44it/s]loss=3.34 nodes=46:  54%|█████▍    | 325/600 [00:07<00:06, 42.44it/s]loss=3.47 nodes=48:  54%|█████▍    | 325/600 [00:07<00:06, 42.44it/s]loss=3.23 nodes=33:  54%|█████▍    | 325/600 [00:07<00:06, 42.44it/s]loss=3.26 nodes=33:  54%|█████▍    | 325/600 [00:08<00:06, 42.44it/s]loss=3.55 nodes=28:  54%|█████▍    | 325/600 [00:08<00:06, 42.44it/s]loss=3.55 nodes=28:  55%|█████▌    | 330/600 [00:08<00:06, 42.22it/s]loss=3.34 nodes=38:  55%|█████▌    | 330/600 [00:08<00:06, 42.22it/s]loss=3.38 nodes=36:  55%|█████▌    | 330/600 [00:08<00:06, 42.22it/s]loss=3.16 nodes=35:  55%|█████▌    | 330/600 [00:08<00:06, 42.22it/s]loss=2.98 nodes=41:  55%|█████▌    | 330/600 [00:08<00:06, 42.22it/s]loss=2.77 nodes=38:  55%|█████▌    | 330/600 [00:08<00:06, 42.22it/s]loss=2.77 nodes=38:  56%|█████▌    | 335/600 [00:08<00:06, 41.63it/s]loss=2.85 nodes=36:  56%|█████▌    | 335/600 [00:08<00:06, 41.63it/s]loss=3.34 nodes=40:  56%|█████▌    | 335/600 [00:08<00:06, 41.63it/s]loss=2.85 nodes=30:  56%|█████▌    | 335/600 [00:08<00:06, 41.63it/s]loss=2.98 nodes=34:  56%|█████▌    | 335/600 [00:08<00:06, 41.63it/s]loss=2.94 nodes=30:  56%|█████▌    | 335/600 [00:08<00:06, 41.63it/s]loss=2.94 nodes=30:  57%|█████▋    | 340/600 [00:08<00:06, 42.44it/s]loss=2.63 nodes=45:  57%|█████▋    | 340/600 [00:08<00:06, 42.44it/s]loss=2.97 nodes=40:  57%|█████▋    | 340/600 [00:08<00:06, 42.44it/s]loss=3.24 nodes=30:  57%|█████▋    | 340/600 [00:08<00:06, 42.44it/s]loss=3.46 nodes=38:  57%|█████▋    | 340/600 [00:08<00:06, 42.44it/s]loss=2.85 nodes=35:  57%|█████▋    | 340/600 [00:08<00:06, 42.44it/s]loss=2.85 nodes=35:  57%|█████▊    | 345/600 [00:08<00:06, 42.41it/s]loss=3.00 nodes=34:  57%|█████▊    | 345/600 [00:08<00:06, 42.41it/s]loss=3.37 nodes=38:  57%|█████▊    | 345/600 [00:08<00:06, 42.41it/s]loss=3.28 nodes=47:  57%|█████▊    | 345/600 [00:08<00:06, 42.41it/s]loss=2.96 nodes=39:  57%|█████▊    | 345/600 [00:08<00:06, 42.41it/s]loss=3.42 nodes=30:  57%|█████▊    | 345/600 [00:08<00:06, 42.41it/s]loss=3.42 nodes=30:  58%|█████▊    | 350/600 [00:08<00:05, 43.25it/s]loss=3.41 nodes=43:  58%|█████▊    | 350/600 [00:08<00:05, 43.25it/s]loss=3.10 nodes=35:  58%|█████▊    | 350/600 [00:08<00:05, 43.25it/s]loss=3.24 nodes=47:  58%|█████▊    | 350/600 [00:08<00:05, 43.25it/s]loss=2.93 nodes=37:  58%|█████▊    | 350/600 [00:08<00:05, 43.25it/s]loss=2.96 nodes=39:  58%|█████▊    | 350/600 [00:08<00:05, 43.25it/s]loss=2.96 nodes=39:  59%|█████▉    | 355/600 [00:08<00:05, 41.60it/s]loss=3.22 nodes=33:  59%|█████▉    | 355/600 [00:08<00:05, 41.60it/s]loss=3.20 nodes=39:  59%|█████▉    | 355/600 [00:08<00:05, 41.60it/s]loss=2.72 nodes=39:  59%|█████▉    | 355/600 [00:08<00:05, 41.60it/s]loss=3.01 nodes=43:  59%|█████▉    | 355/600 [00:08<00:05, 41.60it/s]loss=3.45 nodes=46:  59%|█████▉    | 355/600 [00:08<00:05, 41.60it/s]loss=3.45 nodes=46:  60%|██████    | 360/600 [00:08<00:05, 41.14it/s]loss=3.75 nodes=51:  60%|██████    | 360/600 [00:08<00:05, 41.14it/s]loss=3.20 nodes=41:  60%|██████    | 360/600 [00:08<00:05, 41.14it/s]loss=3.36 nodes=43:  60%|██████    | 360/600 [00:08<00:05, 41.14it/s]loss=3.20 nodes=37:  60%|██████    | 360/600 [00:08<00:05, 41.14it/s]loss=2.96 nodes=37:  60%|██████    | 360/600 [00:08<00:05, 41.14it/s]loss=3.10 nodes=39:  60%|██████    | 360/600 [00:08<00:05, 41.14it/s]loss=3.32 nodes=38:  60%|██████    | 360/600 [00:08<00:05, 41.14it/s]loss=3.03 nodes=31:  60%|██████    | 360/600 [00:08<00:05, 41.14it/s]loss=3.03 nodes=31:  61%|██████▏   | 368/600 [00:08<00:04, 50.33it/s]loss=2.89 nodes=35:  61%|██████▏   | 368/600 [00:08<00:04, 50.33it/s]loss=3.14 nodes=34:  61%|██████▏   | 368/600 [00:08<00:04, 50.33it/s]loss=3.38 nodes=37:  61%|██████▏   | 368/600 [00:08<00:04, 50.33it/s]loss=3.44 nodes=56:  61%|██████▏   | 368/600 [00:08<00:04, 50.33it/s]loss=3.02 nodes=35:  61%|██████▏   | 368/600 [00:08<00:04, 50.33it/s]loss=3.07 nodes=48:  61%|██████▏   | 368/600 [00:08<00:04, 50.33it/s]loss=2.96 nodes=53:  61%|██████▏   | 368/600 [00:08<00:04, 50.33it/s]loss=2.65 nodes=38:  61%|██████▏   | 368/600 [00:08<00:04, 50.33it/s]loss=2.65 nodes=38:  63%|██████▎   | 376/600 [00:08<00:03, 58.08it/s]loss=3.20 nodes=42:  63%|██████▎   | 376/600 [00:08<00:03, 58.08it/s]loss=3.44 nodes=37:  63%|██████▎   | 376/600 [00:08<00:03, 58.08it/s]loss=3.09 nodes=36:  63%|██████▎   | 376/600 [00:09<00:03, 58.08it/s]loss=3.05 nodes=37:  63%|██████▎   | 376/600 [00:09<00:03, 58.08it/s]loss=3.03 nodes=39:  63%|██████▎   | 376/600 [00:09<00:03, 58.08it/s]loss=3.14 nodes=38:  63%|██████▎   | 376/600 [00:09<00:03, 58.08it/s]loss=2.92 nodes=43:  63%|██████▎   | 376/600 [00:09<00:03, 58.08it/s]loss=2.92 nodes=30:  63%|██████▎   | 376/600 [00:09<00:03, 58.08it/s]loss=3.39 nodes=45:  63%|██████▎   | 376/600 [00:09<00:03, 58.08it/s]loss=3.39 nodes=45:  64%|██████▍   | 385/600 [00:09<00:03, 64.82it/s]loss=3.61 nodes=29:  64%|██████▍   | 385/600 [00:09<00:03, 64.82it/s]loss=3.34 nodes=35:  64%|██████▍   | 385/600 [00:09<00:03, 64.82it/s]loss=3.57 nodes=38:  64%|██████▍   | 385/600 [00:09<00:03, 64.82it/s]loss=3.19 nodes=27:  64%|██████▍   | 385/600 [00:09<00:03, 64.82it/s]loss=3.29 nodes=42:  64%|██████▍   | 385/600 [00:09<00:03, 64.82it/s]loss=2.82 nodes=36:  64%|██████▍   | 385/600 [00:09<00:03, 64.82it/s]loss=3.48 nodes=46:  64%|██████▍   | 385/600 [00:09<00:03, 64.82it/s]loss=3.48 nodes=46:  65%|██████▌   | 392/600 [00:09<00:03, 64.56it/s]loss=3.09 nodes=31:  65%|██████▌   | 392/600 [00:09<00:03, 64.56it/s]loss=2.75 nodes=36:  65%|██████▌   | 392/600 [00:09<00:03, 64.56it/s]loss=3.43 nodes=37:  65%|██████▌   | 392/600 [00:09<00:03, 64.56it/s]loss=3.69 nodes=32:  65%|██████▌   | 392/600 [00:09<00:03, 64.56it/s]loss=2.68 nodes=29:  65%|██████▌   | 392/600 [00:09<00:03, 64.56it/s]loss=3.22 nodes=31:  65%|██████▌   | 392/600 [00:09<00:03, 64.56it/s]loss=2.60 nodes=38:  65%|██████▌   | 392/600 [00:09<00:03, 64.56it/s]loss=2.60 nodes=38:  66%|██████▋   | 399/600 [00:09<00:03, 64.08it/s]loss=3.39 nodes=32:  66%|██████▋   | 399/600 [00:09<00:03, 64.08it/s]loss=3.27 nodes=37:  66%|██████▋   | 399/600 [00:09<00:03, 64.08it/s]loss=3.24 nodes=31:  66%|██████▋   | 399/600 [00:09<00:03, 64.08it/s]loss=3.29 nodes=31:  66%|██████▋   | 399/600 [00:09<00:03, 64.08it/s]loss=3.18 nodes=44:  66%|██████▋   | 399/600 [00:09<00:03, 64.08it/s]loss=2.96 nodes=37:  66%|██████▋   | 399/600 [00:09<00:03, 64.08it/s]loss=3.51 nodes=29:  66%|██████▋   | 399/600 [00:09<00:03, 64.08it/s]loss=3.11 nodes=39:  66%|██████▋   | 399/600 [00:09<00:03, 64.08it/s]loss=3.09 nodes=32:  66%|██████▋   | 399/600 [00:09<00:03, 64.08it/s]loss=3.09 nodes=32:  68%|██████▊   | 408/600 [00:09<00:02, 70.92it/s]loss=3.22 nodes=40:  68%|██████▊   | 408/600 [00:09<00:02, 70.92it/s]loss=3.21 nodes=36:  68%|██████▊   | 408/600 [00:09<00:02, 70.92it/s]loss=3.02 nodes=42:  68%|██████▊   | 408/600 [00:09<00:02, 70.92it/s]loss=3.29 nodes=31:  68%|██████▊   | 408/600 [00:09<00:02, 70.92it/s]loss=3.08 nodes=35:  68%|██████▊   | 408/600 [00:09<00:02, 70.92it/s]loss=2.89 nodes=37:  68%|██████▊   | 408/600 [00:09<00:02, 70.92it/s]loss=2.87 nodes=29:  68%|██████▊   | 408/600 [00:09<00:02, 70.92it/s]loss=3.14 nodes=38:  68%|██████▊   | 408/600 [00:09<00:02, 70.92it/s]loss=3.47 nodes=40:  68%|██████▊   | 408/600 [00:09<00:02, 70.92it/s]loss=3.47 nodes=40:  70%|██████▉   | 417/600 [00:09<00:02, 75.15it/s]loss=2.77 nodes=37:  70%|██████▉   | 417/600 [00:09<00:02, 75.15it/s]loss=3.11 nodes=42:  70%|██████▉   | 417/600 [00:09<00:02, 75.15it/s]loss=2.88 nodes=45:  70%|██████▉   | 417/600 [00:09<00:02, 75.15it/s]loss=3.18 nodes=41:  70%|██████▉   | 417/600 [00:09<00:02, 75.15it/s]loss=2.65 nodes=29:  70%|██████▉   | 417/600 [00:09<00:02, 75.15it/s]loss=3.37 nodes=30:  70%|██████▉   | 417/600 [00:09<00:02, 75.15it/s]loss=3.43 nodes=41:  70%|██████▉   | 417/600 [00:09<00:02, 75.15it/s]loss=2.79 nodes=43:  70%|██████▉   | 417/600 [00:09<00:02, 75.15it/s]loss=2.63 nodes=38:  70%|██████▉   | 417/600 [00:09<00:02, 75.15it/s]loss=2.63 nodes=38:  71%|███████   | 426/600 [00:09<00:02, 79.09it/s]loss=3.53 nodes=33:  71%|███████   | 426/600 [00:09<00:02, 79.09it/s]loss=2.96 nodes=32:  71%|███████   | 426/600 [00:09<00:02, 79.09it/s]loss=3.18 nodes=43:  71%|███████   | 426/600 [00:09<00:02, 79.09it/s]loss=3.22 nodes=38:  71%|███████   | 426/600 [00:09<00:02, 79.09it/s]loss=3.37 nodes=34:  71%|███████   | 426/600 [00:09<00:02, 79.09it/s]loss=3.59 nodes=36:  71%|███████   | 426/600 [00:09<00:02, 79.09it/s]loss=3.10 nodes=38:  71%|███████   | 426/600 [00:09<00:02, 79.09it/s]loss=3.30 nodes=29:  71%|███████   | 426/600 [00:09<00:02, 79.09it/s]loss=3.52 nodes=37:  71%|███████   | 426/600 [00:09<00:02, 79.09it/s]loss=3.52 nodes=37:  72%|███████▎  | 435/600 [00:09<00:02, 80.96it/s]loss=3.16 nodes=32:  72%|███████▎  | 435/600 [00:09<00:02, 80.96it/s]loss=3.24 nodes=36:  72%|███████▎  | 435/600 [00:09<00:02, 80.96it/s]loss=3.08 nodes=37:  72%|███████▎  | 435/600 [00:09<00:02, 80.96it/s]loss=3.30 nodes=39:  72%|███████▎  | 435/600 [00:09<00:02, 80.96it/s]loss=3.23 nodes=35:  72%|███████▎  | 435/600 [00:09<00:02, 80.96it/s]loss=3.30 nodes=36:  72%|███████▎  | 435/600 [00:09<00:02, 80.96it/s]loss=3.00 nodes=38:  72%|███████▎  | 435/600 [00:09<00:02, 80.96it/s]loss=3.40 nodes=43:  72%|███████▎  | 435/600 [00:09<00:02, 80.96it/s]loss=3.06 nodes=29:  72%|███████▎  | 435/600 [00:09<00:02, 80.96it/s]loss=3.06 nodes=29:  74%|███████▍  | 444/600 [00:09<00:02, 72.47it/s]loss=3.35 nodes=28:  74%|███████▍  | 444/600 [00:09<00:02, 72.47it/s]loss=2.92 nodes=50:  74%|███████▍  | 444/600 [00:09<00:02, 72.47it/s]loss=3.39 nodes=47:  74%|███████▍  | 444/600 [00:09<00:02, 72.47it/s]loss=3.07 nodes=31:  74%|███████▍  | 444/600 [00:09<00:02, 72.47it/s]loss=2.77 nodes=37:  74%|███████▍  | 444/600 [00:09<00:02, 72.47it/s]loss=3.31 nodes=30:  74%|███████▍  | 444/600 [00:09<00:02, 72.47it/s]loss=3.17 nodes=40:  74%|███████▍  | 444/600 [00:09<00:02, 72.47it/s]loss=3.31 nodes=31:  74%|███████▍  | 444/600 [00:09<00:02, 72.47it/s]loss=3.31 nodes=31:  75%|███████▌  | 452/600 [00:09<00:02, 72.95it/s]loss=3.64 nodes=46:  75%|███████▌  | 452/600 [00:09<00:02, 72.95it/s]loss=3.17 nodes=31:  75%|███████▌  | 452/600 [00:09<00:02, 72.95it/s]loss=3.53 nodes=40:  75%|███████▌  | 452/600 [00:10<00:02, 72.95it/s]loss=3.51 nodes=39:  75%|███████▌  | 452/600 [00:10<00:02, 72.95it/s]loss=3.35 nodes=34:  75%|███████▌  | 452/600 [00:10<00:02, 72.95it/s]loss=3.00 nodes=43:  75%|███████▌  | 452/600 [00:10<00:02, 72.95it/s]loss=2.80 nodes=36:  75%|███████▌  | 452/600 [00:10<00:02, 72.95it/s]loss=3.06 nodes=42:  75%|███████▌  | 452/600 [00:10<00:02, 72.95it/s]loss=3.06 nodes=42:  77%|███████▋  | 460/600 [00:10<00:01, 74.51it/s]loss=3.31 nodes=36:  77%|███████▋  | 460/600 [00:10<00:01, 74.51it/s]loss=3.17 nodes=52:  77%|███████▋  | 460/600 [00:10<00:01, 74.51it/s]loss=3.03 nodes=45:  77%|███████▋  | 460/600 [00:10<00:01, 74.51it/s]loss=3.03 nodes=34:  77%|███████▋  | 460/600 [00:10<00:01, 74.51it/s]loss=3.22 nodes=36:  77%|███████▋  | 460/600 [00:10<00:01, 74.51it/s]loss=3.27 nodes=35:  77%|███████▋  | 460/600 [00:10<00:01, 74.51it/s]loss=3.48 nodes=59:  77%|███████▋  | 460/600 [00:10<00:01, 74.51it/s]loss=3.19 nodes=29:  77%|███████▋  | 460/600 [00:10<00:01, 74.51it/s]loss=2.93 nodes=37:  77%|███████▋  | 460/600 [00:10<00:01, 74.51it/s]loss=2.93 nodes=37:  78%|███████▊  | 469/600 [00:10<00:01, 76.27it/s]loss=3.02 nodes=38:  78%|███████▊  | 469/600 [00:10<00:01, 76.27it/s]loss=3.18 nodes=39:  78%|███████▊  | 469/600 [00:10<00:01, 76.27it/s]loss=3.41 nodes=44:  78%|███████▊  | 469/600 [00:10<00:01, 76.27it/s]loss=2.77 nodes=34:  78%|███████▊  | 469/600 [00:10<00:01, 76.27it/s]loss=3.64 nodes=30:  78%|███████▊  | 469/600 [00:10<00:01, 76.27it/s]loss=3.17 nodes=37:  78%|███████▊  | 469/600 [00:10<00:01, 76.27it/s]loss=2.81 nodes=35:  78%|███████▊  | 469/600 [00:10<00:01, 76.27it/s]loss=3.24 nodes=32:  78%|███████▊  | 469/600 [00:10<00:01, 76.27it/s]loss=2.86 nodes=35:  78%|███████▊  | 469/600 [00:10<00:01, 76.27it/s]loss=2.86 nodes=35:  80%|███████▉  | 478/600 [00:10<00:01, 79.09it/s]loss=3.92 nodes=33:  80%|███████▉  | 478/600 [00:10<00:01, 79.09it/s]loss=2.63 nodes=37:  80%|███████▉  | 478/600 [00:10<00:01, 79.09it/s]loss=2.98 nodes=34:  80%|███████▉  | 478/600 [00:10<00:01, 79.09it/s]loss=3.44 nodes=34:  80%|███████▉  | 478/600 [00:10<00:01, 79.09it/s]loss=3.20 nodes=38:  80%|███████▉  | 478/600 [00:10<00:01, 79.09it/s]loss=2.88 nodes=36:  80%|███████▉  | 478/600 [00:10<00:01, 79.09it/s]loss=2.95 nodes=33:  80%|███████▉  | 478/600 [00:10<00:01, 79.09it/s]loss=3.30 nodes=38:  80%|███████▉  | 478/600 [00:10<00:01, 79.09it/s]loss=3.50 nodes=38:  80%|███████▉  | 478/600 [00:10<00:01, 79.09it/s]loss=3.50 nodes=38:  81%|████████  | 487/600 [00:10<00:01, 81.96it/s]loss=3.37 nodes=36:  81%|████████  | 487/600 [00:10<00:01, 81.96it/s]loss=3.00 nodes=35:  81%|████████  | 487/600 [00:10<00:01, 81.96it/s]loss=2.82 nodes=36:  81%|████████  | 487/600 [00:10<00:01, 81.96it/s]loss=2.91 nodes=30:  81%|████████  | 487/600 [00:10<00:01, 81.96it/s]loss=3.11 nodes=36:  81%|████████  | 487/600 [00:10<00:01, 81.96it/s]loss=3.26 nodes=32:  81%|████████  | 487/600 [00:10<00:01, 81.96it/s]loss=3.03 nodes=39:  81%|████████  | 487/600 [00:10<00:01, 81.96it/s]loss=3.00 nodes=27:  81%|████████  | 487/600 [00:10<00:01, 81.96it/s]loss=3.43 nodes=29:  81%|████████  | 487/600 [00:10<00:01, 81.96it/s]loss=3.43 nodes=29:  83%|████████▎ | 496/600 [00:10<00:01, 71.63it/s]loss=3.40 nodes=35:  83%|████████▎ | 496/600 [00:10<00:01, 71.63it/s]loss=3.50 nodes=36:  83%|████████▎ | 496/600 [00:10<00:01, 71.63it/s]loss=3.31 nodes=39:  83%|████████▎ | 496/600 [00:10<00:01, 71.63it/s]loss=3.25 nodes=34:  83%|████████▎ | 496/600 [00:10<00:01, 71.63it/s]loss=3.09 nodes=37:  83%|████████▎ | 496/600 [00:10<00:01, 71.63it/s]loss=3.37 nodes=35:  83%|████████▎ | 496/600 [00:10<00:01, 71.63it/s]loss=3.93 nodes=48:  83%|████████▎ | 496/600 [00:10<00:01, 71.63it/s]loss=3.04 nodes=32:  83%|████████▎ | 496/600 [00:10<00:01, 71.63it/s]loss=3.01 nodes=38:  83%|████████▎ | 496/600 [00:10<00:01, 71.63it/s]loss=3.01 nodes=38:  84%|████████▍ | 505/600 [00:10<00:01, 75.81it/s]loss=3.27 nodes=46:  84%|████████▍ | 505/600 [00:10<00:01, 75.81it/s]loss=3.27 nodes=37:  84%|████████▍ | 505/600 [00:10<00:01, 75.81it/s]loss=3.08 nodes=28:  84%|████████▍ | 505/600 [00:10<00:01, 75.81it/s]loss=3.18 nodes=65:  84%|████████▍ | 505/600 [00:10<00:01, 75.81it/s]loss=3.50 nodes=41:  84%|████████▍ | 505/600 [00:10<00:01, 75.81it/s]loss=3.08 nodes=29:  84%|████████▍ | 505/600 [00:10<00:01, 75.81it/s]loss=3.01 nodes=34:  84%|████████▍ | 505/600 [00:10<00:01, 75.81it/s]loss=2.89 nodes=42:  84%|████████▍ | 505/600 [00:10<00:01, 75.81it/s]loss=2.88 nodes=33:  84%|████████▍ | 505/600 [00:10<00:01, 75.81it/s]loss=2.88 nodes=33:  86%|████████▌ | 514/600 [00:10<00:01, 78.49it/s]loss=2.92 nodes=31:  86%|████████▌ | 514/600 [00:10<00:01, 78.49it/s]loss=3.67 nodes=38:  86%|████████▌ | 514/600 [00:10<00:01, 78.49it/s]loss=2.96 nodes=41:  86%|████████▌ | 514/600 [00:10<00:01, 78.49it/s]loss=3.27 nodes=44:  86%|████████▌ | 514/600 [00:10<00:01, 78.49it/s]loss=3.18 nodes=41:  86%|████████▌ | 514/600 [00:10<00:01, 78.49it/s]loss=3.32 nodes=31:  86%|████████▌ | 514/600 [00:10<00:01, 78.49it/s]loss=3.43 nodes=30:  86%|████████▌ | 514/600 [00:10<00:01, 78.49it/s]loss=3.29 nodes=33:  86%|████████▌ | 514/600 [00:10<00:01, 78.49it/s]loss=3.14 nodes=36:  86%|████████▌ | 514/600 [00:10<00:01, 78.49it/s]loss=3.14 nodes=36:  87%|████████▋ | 523/600 [00:10<00:00, 81.40it/s]loss=3.19 nodes=33:  87%|████████▋ | 523/600 [00:10<00:00, 81.40it/s]loss=3.21 nodes=35:  87%|████████▋ | 523/600 [00:10<00:00, 81.40it/s]loss=3.16 nodes=39:  87%|████████▋ | 523/600 [00:10<00:00, 81.40it/s]loss=3.33 nodes=43:  87%|████████▋ | 523/600 [00:10<00:00, 81.40it/s]loss=2.66 nodes=36:  87%|████████▋ | 523/600 [00:10<00:00, 81.40it/s]loss=3.22 nodes=34:  87%|████████▋ | 523/600 [00:10<00:00, 81.40it/s]loss=2.97 nodes=34:  87%|████████▋ | 523/600 [00:10<00:00, 81.40it/s]loss=3.19 nodes=48:  87%|████████▋ | 523/600 [00:10<00:00, 81.40it/s]loss=2.99 nodes=28:  87%|████████▋ | 523/600 [00:10<00:00, 81.40it/s]loss=2.99 nodes=28:  89%|████████▊ | 532/600 [00:10<00:00, 83.23it/s]loss=2.89 nodes=32:  89%|████████▊ | 532/600 [00:10<00:00, 83.23it/s]loss=2.80 nodes=48:  89%|████████▊ | 532/600 [00:10<00:00, 83.23it/s]loss=3.13 nodes=36:  89%|████████▊ | 532/600 [00:11<00:00, 83.23it/s]loss=3.28 nodes=28:  89%|████████▊ | 532/600 [00:11<00:00, 83.23it/s]loss=2.72 nodes=36:  89%|████████▊ | 532/600 [00:11<00:00, 83.23it/s]loss=3.41 nodes=41:  89%|████████▊ | 532/600 [00:11<00:00, 83.23it/s]loss=2.72 nodes=36:  89%|████████▊ | 532/600 [00:11<00:00, 83.23it/s]loss=3.16 nodes=36:  89%|████████▊ | 532/600 [00:11<00:00, 83.23it/s]loss=3.26 nodes=37:  89%|████████▊ | 532/600 [00:11<00:00, 83.23it/s]loss=3.26 nodes=37:  90%|█████████ | 541/600 [00:11<00:00, 80.46it/s]loss=3.54 nodes=35:  90%|█████████ | 541/600 [00:11<00:00, 80.46it/s]loss=3.18 nodes=31:  90%|█████████ | 541/600 [00:11<00:00, 80.46it/s]loss=3.36 nodes=40:  90%|█████████ | 541/600 [00:11<00:00, 80.46it/s]loss=3.48 nodes=40:  90%|█████████ | 541/600 [00:11<00:00, 80.46it/s]loss=3.11 nodes=37:  90%|█████████ | 541/600 [00:11<00:00, 80.46it/s]loss=3.34 nodes=44:  90%|█████████ | 541/600 [00:11<00:00, 80.46it/s]loss=3.07 nodes=46:  90%|█████████ | 541/600 [00:11<00:00, 80.46it/s]loss=2.76 nodes=35:  90%|█████████ | 541/600 [00:11<00:00, 80.46it/s]loss=3.44 nodes=32:  90%|█████████ | 541/600 [00:11<00:00, 80.46it/s]loss=3.44 nodes=32:  92%|█████████▏| 550/600 [00:11<00:00, 62.94it/s]loss=3.10 nodes=27:  92%|█████████▏| 550/600 [00:11<00:00, 62.94it/s]loss=3.21 nodes=45:  92%|█████████▏| 550/600 [00:11<00:00, 62.94it/s]loss=3.26 nodes=30:  92%|█████████▏| 550/600 [00:11<00:00, 62.94it/s]loss=2.67 nodes=41:  92%|█████████▏| 550/600 [00:11<00:00, 62.94it/s]loss=3.34 nodes=43:  92%|█████████▏| 550/600 [00:11<00:00, 62.94it/s]loss=3.29 nodes=39:  92%|█████████▏| 550/600 [00:11<00:00, 62.94it/s]loss=3.25 nodes=35:  92%|█████████▏| 550/600 [00:11<00:00, 62.94it/s]loss=3.06 nodes=36:  92%|█████████▏| 550/600 [00:11<00:00, 62.94it/s]loss=3.10 nodes=30:  92%|█████████▏| 550/600 [00:11<00:00, 62.94it/s]loss=3.10 nodes=30:  93%|█████████▎| 559/600 [00:11<00:00, 68.43it/s]loss=3.37 nodes=41:  93%|█████████▎| 559/600 [00:11<00:00, 68.43it/s]loss=2.93 nodes=33:  93%|█████████▎| 559/600 [00:11<00:00, 68.43it/s]loss=3.28 nodes=30:  93%|█████████▎| 559/600 [00:11<00:00, 68.43it/s]loss=3.06 nodes=39:  93%|█████████▎| 559/600 [00:11<00:00, 68.43it/s]loss=3.58 nodes=40:  93%|█████████▎| 559/600 [00:11<00:00, 68.43it/s]loss=3.60 nodes=34:  93%|█████████▎| 559/600 [00:11<00:00, 68.43it/s]loss=2.92 nodes=36:  93%|█████████▎| 559/600 [00:11<00:00, 68.43it/s]loss=2.96 nodes=38:  93%|█████████▎| 559/600 [00:11<00:00, 68.43it/s]loss=3.14 nodes=37:  93%|█████████▎| 559/600 [00:11<00:00, 68.43it/s]loss=3.14 nodes=37:  95%|█████████▍| 568/600 [00:11<00:00, 72.43it/s]loss=3.29 nodes=33:  95%|█████████▍| 568/600 [00:11<00:00, 72.43it/s]loss=3.20 nodes=34:  95%|█████████▍| 568/600 [00:11<00:00, 72.43it/s]loss=3.01 nodes=37:  95%|█████████▍| 568/600 [00:11<00:00, 72.43it/s]loss=3.01 nodes=45:  95%|█████████▍| 568/600 [00:11<00:00, 72.43it/s]loss=3.21 nodes=33:  95%|█████████▍| 568/600 [00:11<00:00, 72.43it/s]loss=3.05 nodes=42:  95%|█████████▍| 568/600 [00:11<00:00, 72.43it/s]loss=3.00 nodes=33:  95%|█████████▍| 568/600 [00:11<00:00, 72.43it/s]loss=2.86 nodes=38:  95%|█████████▍| 568/600 [00:11<00:00, 72.43it/s]loss=3.28 nodes=41:  95%|█████████▍| 568/600 [00:11<00:00, 72.43it/s]loss=3.28 nodes=41:  96%|█████████▌| 577/600 [00:11<00:00, 76.10it/s]loss=3.63 nodes=25:  96%|█████████▌| 577/600 [00:11<00:00, 76.10it/s]loss=3.33 nodes=41:  96%|█████████▌| 577/600 [00:11<00:00, 76.10it/s]loss=3.47 nodes=41:  96%|█████████▌| 577/600 [00:11<00:00, 76.10it/s]loss=3.42 nodes=47:  96%|█████████▌| 577/600 [00:11<00:00, 76.10it/s]loss=3.44 nodes=39:  96%|█████████▌| 577/600 [00:11<00:00, 76.10it/s]loss=3.04 nodes=30:  96%|█████████▌| 577/600 [00:11<00:00, 76.10it/s]loss=3.46 nodes=27:  96%|█████████▌| 577/600 [00:11<00:00, 76.10it/s]loss=3.00 nodes=30:  96%|█████████▌| 577/600 [00:11<00:00, 76.10it/s]loss=3.00 nodes=30:  98%|█████████▊| 585/600 [00:11<00:00, 73.99it/s]loss=3.23 nodes=39:  98%|█████████▊| 585/600 [00:11<00:00, 73.99it/s]loss=3.36 nodes=47:  98%|█████████▊| 585/600 [00:11<00:00, 73.99it/s]loss=3.19 nodes=38:  98%|█████████▊| 585/600 [00:11<00:00, 73.99it/s]loss=3.26 nodes=36:  98%|█████████▊| 585/600 [00:11<00:00, 73.99it/s]loss=2.88 nodes=32:  98%|█████████▊| 585/600 [00:11<00:00, 73.99it/s]loss=3.10 nodes=44:  98%|█████████▊| 585/600 [00:11<00:00, 73.99it/s]loss=3.30 nodes=41:  98%|█████████▊| 585/600 [00:11<00:00, 73.99it/s]loss=3.29 nodes=43:  98%|█████████▊| 585/600 [00:11<00:00, 73.99it/s]loss=3.29 nodes=43:  99%|█████████▉| 593/600 [00:11<00:00, 68.26it/s]loss=2.72 nodes=36:  99%|█████████▉| 593/600 [00:11<00:00, 68.26it/s]loss=3.26 nodes=35:  99%|█████████▉| 593/600 [00:11<00:00, 68.26it/s]loss=3.19 nodes=35:  99%|█████████▉| 593/600 [00:11<00:00, 68.26it/s]loss=3.26 nodes=34:  99%|█████████▉| 593/600 [00:11<00:00, 68.26it/s]loss=3.20 nodes=32:  99%|█████████▉| 593/600 [00:11<00:00, 68.26it/s]loss=3.33 nodes=51:  99%|█████████▉| 593/600 [00:11<00:00, 68.26it/s]loss=3.53 nodes=36:  99%|█████████▉| 593/600 [00:11<00:00, 68.26it/s]loss=3.53 nodes=36: 100%|██████████| 600/600 [00:11<00:00, 50.18it/s]
+
+--- round 2/6: 112 fn + 0 fn_p_g unsolved; |D|=43 (6 invented); fn Q=dreamed (replay families only); t_fn=3600s ---
+    [instr] agency constructor in D: fn_0 (wall-free); belief solved (replay-eligible): 56/168
+[ 33254] caught (compose (fn_3 c3 c2 2 1) (optimize (neg_dist 4) 5))
+[ 60260] caught (compose (fn_3 c3 c1 2 1) (optimize (neg_dist 4) 5))
+[ 57703] caught (compose (fn_3 c2 c2 5 4) (fn_5 1 2))
+[ 52338] caught (compose (fn_3 c3 c2 6 2) (fn_5 1 4))
+[ 69330] caught (compose (fn_3 c2 c2 9 8) (fn_5 4 5))
+[ 62886] caught (compose (fn_3 c1 c2 5 4) (fn_5 2 1))
+[ 61035] caught (compose (fn_3 c2 c3 5 4) (fn_5 2 1))
+[ 64385] caught (compose (fn_3 c3 c2 6 2) (fn_5 4 5))
+[ 81781] caught (compose (fn_3 c2 c1 2 1) (fn_5 5 4))
+[ 83028] caught (compose (fn_3 c2 c1 7 6) (fn_5 1 5))
+[ 61796] caught (compose (fn_3 c3 c3 5 4) (fn_5 2 1))
+[ 66487] caught (compose (fn_3 c2 c2 7 6) (fn_5 2 5))
+[ 68218] caught (compose (fn_3 c1 c3 9 8) (fn_5 5 1))
+[ 48833] caught (compose (fn_3 c1 c2 8 5) (fn_5 4 1))
+[ 69268] caught (compose (fn_3 c2 c2 5 4) (fn_5 2 1))
+[ 81942] caught (compose (fn_3 c2 c2 6 2) (fn_5 5 4))
+[ 84497] caught (compose (fn_3 c1 c2 2 1) (fn_5 5 4))
+[ 93125] caught (compose (fn_3 c2 c2 8 5) (fn_5 1 4))
+[ 28142] caught (compose (fn_3 c3 c2 4 9) (fn_5 2 1))
+[ 64400] caught (compose (fn_3 c1 c2 8 5) (fn_5 1 4))
+[106668] caught (compose (fn_3 c3 c1 7 6) (fn_5 2 4))
+[100316] caught (compose (fn_3 c3 c2 6 2) (fn_5 1 4))
+[123187] caught (compose (fn_3 c2 c2 9 8) (fn_5 5 2))
+[  2949] caught (fn_0 4 5 (fn_0 5 9 (step 5 down)))
+[ 61203] caught (compose (fn_3 c3 c2 8 5) (fn_5 2 4))
+[ 48722] caught (compose (fn_3 c1 c2 1 7) (fn_5 2 4))
+[105086] caught (compose (fn_3 c3 c1 2 1) (fn_5 5 4))
+      + solved [belief_witness] in 325.9s: (compose (fork (compose (wall_at c1 c3) (optimize (neg_dist 2) 1)) (sync_to_world 1)) (optimize (neg_dist 5) 4))
+      + solved [belief_witness] in 231.4s: (compose (fork (compose (wall_at c2 c1) (optimize (neg_dist 2) 1)) (sync_to_world 1)) (optimize (neg_dist 5) 4))
+      + solved [belief_witness] in 74.8s: (compose (fork (compose (wall_at c2 c3) (optimize (neg_dist 2) 1)) (sync_to_world 1)) (optimize (neg_dist 4) 5))
+      + solved [belief_witness] in 114.0s: (compose (fork (compose (wall_at c1 c3) (optimize (neg_dist 2) 1)) (sync_to_world 1)) (optimize (neg_dist 4) 5))
+      + solved [belief_witness] in 192.5s: (compose (fork (compose (wall_at c1 c2) (optimize (neg_dist 2) 1)) (sync_to_world 1)) (optimize (neg_dist 5) 4))
+[ 62163] caught (compose (fn_3 c2 c2 4 9) (fn_5 1 2))
+[123291] caught (compose (fn_3 c2 c2 9 8) (fn_5 2 1))
+[ 27366] caught (fn_0 1 1 (compose (fn_2 1 2) (fn_2 2 1)))
+[ 57490] caught (compose (fn_3 c2 c3 4 9) (fn_5 1 5))
+[ 25370] caught (fn_0 4 4 (compose (fn_2 4 5) (fn_2 5 4)))
+[ 63018] caught (compose (fn_3 c1 c2 1 7) (fn_5 2 5))
+[  4342] caught (fn_0 8 9 (fn_0 9 7 (fn_2 7 9)))
+[ 84024] caught (compose (fn_3 c2 c2 8 5) (fn_5 4 1))
+[ 62455] caught (compose (fn_3 c3 c2 1 7) (fn_5 2 4))
+[ 15756] caught (fn_0 2 2 (compose (fn_2 2 6) (fn_2 6 2)))
+[ 63106] caught (compose (fn_3 c2 c2 4 9) (fn_5 5 1))
+[ 72071] caught (compose (fn_3 c4 c2 1 7) (fn_5 4 5))
+[ 24652] caught (fn_0 2 2 (compose (fn_2 2 6) (fn_2 6 2)))
+[ 33948] caught (fn_0 8 8 (compose (fn_2 5 9) (fn_2 9 8)))
+[207477] caught (compose (optimize (neg_dist 4) 5) (fn_3 c1 c3 2 1))
+      + solved [belief_witness] in 422.6s: (compose (optimize (neg_dist 4) 5) (fork (compose (wall_at c3 c1) (optimize (neg_dist 2) 1)) (sync_to_world 1)))
+[ 52002] caught (fn_0 9 4 (fn_0 4 0 (fn_5 9 4)))
+[  1393] caught (compose (fn_2 2 1) (fn_5 2 6))
+[132309] caught (fn_0 1 2 (compose (fn_5 1 2) (step 2 down)))
+[   996] caught (compose (optimize (neg_dist 2) 8) (fn_2 2 1))
+[  1367] caught (compose (optimize (neg_dist 5) 2) (fn_2 5 4))
+[172468] caught (fn_0 1 1 (compose (optimize (distance 2) 2) (fn_2 2 1)))
+[  1566] caught (compose (optimize (neg_dist 5) 1) (fn_2 5 4))
+[  1137] caught (compose (fn_2 7 6) (fn_5 7 1))
+[167338] caught (fn_0 5 5 (compose (step 8 up) (fn_2 8 5)))
+[  1561] caught (compose (optimize (neg_dist 7) 8) (fn_2 7 6))
+[  2544] caught (compose (fn_2 9 8) (fn_5 9 1))
+[187976] caught (fn_0 4 4 (compose (optimize (distance 5) 5) (fn_2 5 4)))
+[  1165] caught (compose (optimize (neg_dist 9) 7) (fn_2 9 8))
+[   185] caught (compose (fn_2 6 2) (fn_5 6 5))
+[351026] caught (compose (fn_3 c1 c1 6 2) (optimize (neg_dist 4) 1))
+[  1662] caught (compose (fn_2 6 2) (fn_5 6 5))
+[  1588] caught (compose (fn_2 8 5) (fn_5 8 4))
+[ 13524] caught (compose (fn_0 2 6 (fn_5 2 6)) (fn_2 2 1))
+[  1380] caught (compose (fn_2 8 5) (fn_5 8 7))
+[  1222] caught (compose (optimize (neg_dist 1) 8) (fn_2 1 7))
+[195029] caught (fn_0 6 4 (compose (fn_5 6 7) (fn_2 7 6)))
+[  1158] caught (compose (optimize (neg_dist 1) 6) (fn_2 1 7))
+[  1181] caught (compose (optimize (neg_dist 4) 1) (fn_2 4 9))
+[321394] caught (compose (optimize (neg_dist 2) 1) (fn_3 c1 c2 5 4))
+      + solved [belief_witness] in 812.6s: (compose (optimize (neg_dist 2) 1) (fork (compose (wall_at c2 c1) (optimize (neg_dist 5) 4)) (sync_to_world 4)))
+      + solved [belief_witness] in 169.4s: (compose (fork (compose (wall_at c2 c1) (optimize (neg_dist 5) 4)) (sync_to_world 4)) (optimize (neg_dist 2) 1))
+      + solved [belief_witness] in 213.4s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4)) (optimize (neg_dist 2) 1))
+      + solved [belief_witness] in 197.3s: (compose (fork (compose (wall_at c3 c3) (optimize (neg_dist 5) 4)) (sync_to_world 4)) (optimize (neg_dist 2) 1))
+      + solved [belief_witness] in 133.3s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4)) (optimize (neg_dist 1) 2))
+      + solved [belief_witness] in 186.6s: (compose (fork (compose (wall_at c3 c2) (optimize (neg_dist 5) 4)) (sync_to_world 4)) (optimize (neg_dist 2) 1))
+[193382] caught (fn_0 2 6 (compose (step 6 down) (step 6 down)))
+[275432] caught (compose (fn_3 c3 c2 8 5) (fn_5 4 1))
+[116057] caught (compose (optimize (neg_dist 2) 8) (fn_0 1 2 (step 2 down)))
+[201345] caught (fn_0 5 8 (compose (optimize (distance 9) 8) (optimize (distance 9) 8)))
+[ 74383] caught (compose (fn_0 9 4 (step 4 down)) (fn_2 9 2))
+[195643] caught (compose (fn_0 4 5 (step 5 down)) (fn_2 4 2))
+[256063] caught (fn_0 8 8 (compose (step 9 up) (fn_2 9 8)))
+[110574] caught (compose (fn_0 7 1 (step 1 down)) (fn_5 1 2))
+[318011] caught (compose (fn_3 c3 c3 4 9) (fn_5 1 2))
+[251412] caught (fn_0 7 1 (compose (step 1 up) (fn_2 1 1)))
+[292409] caught (fn_0 1 2 (compose (fn_5 6 2) (step 2 down)))
+[251864] caught (fn_0 7 1 (compose (optimize (distance 1) 1) (fn_2 1 1)))
+[282024] caught (compose (fn_0 6 7 (step 7 down)) (fn_5 7 9))
+[109012] caught (fn_0 6 7 (fn_1 7 0 c1 c2))
+[154429] caught (compose (fn_0 5 8 (step 8 down)) (fn_2 5 9))
+[357408] caught (fn_0 6 7 (compose (step 7 down) (step 7 down)))
+[243076] caught (compose (fn_0 8 9 (step 9 down)) (fn_2 8 5))
+[332982] caught (fn_0 5 5 (compose (optimize (distance 8) 8) (fn_2 8 5)))
+[188386] caught (fn_0 9 4 (fn_0 4 7 (optimize (distance 9) 9)))
+[360608] caught (fn_0 6 7 (fn_0 7 8 (optimize (distance 6) 6)))
+[347195] caught (fn_0 4 5 (fn_1 5 0 c3 c1))
+[796232] caught (compose (fn_3 c1 c1 7 6) (optimize (neg_dist 5) 4))
+      + solved [belief_witness] in 1677.6s: (compose (fork (compose (wall_at c1 c1) (optimize (neg_dist 7) 6)) (sync_to_world 6)) (optimize (neg_dist 5) 4))
+[329336] caught (fn_0 9 4 (fn_1 4 0 c3 c1))
+[577505] caught (fn_0 6 7 (compose (fn_5 2 7) (step 7 down)))
+[700177] caught (compose (fn_3 c2 c2 1 7) (optimize (neg_dist 2) 5))
+[692981] caught (compose (fn_3 c2 c2 7 6) (optimize (neg_dist 5) 2))
+[590168] caught (fn_0 7 1 (compose (step 1 down) (step 1 down)))
+[605359] caught (fn_0 1 2 (fn_1 2 0 c1 c1))
+[741942] caught (compose (fn_3 c1 c1 4 9) (optimize (neg_dist 1) 2))
+      + solved [belief_witness] in 2025.6s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6)) (optimize (neg_dist 5) 2))
+      + solved [belief_witness] in 196.5s: (compose (fork (compose (wall_at c1 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6)) (optimize (neg_dist 1) 5))
+      + solved [belief_witness] in 281.1s: (compose (fork (compose (wall_at c1 c3) (optimize (neg_dist 7) 6)) (sync_to_world 6)) (optimize (neg_dist 2) 4))
+      + solved [belief_witness] in 202.2s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)) (sync_to_world 6)) (optimize (neg_dist 2) 5))
+      + solved [belief_witness] in 305.2s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)) (sync_to_world 8)) (optimize (neg_dist 5) 2))
+      + solved [belief_witness] in 205.2s: (compose (fork (compose (wall_at c3 c1) (optimize (neg_dist 9) 8)) (sync_to_world 8)) (optimize (neg_dist 5) 1))
+      + solved [belief_witness] in 345.8s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)) (sync_to_world 8)) (optimize (neg_dist 2) 1))
+      + solved [belief_witness] in 167.9s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)) (sync_to_world 8)) (optimize (neg_dist 4) 5))
+      + solved [belief_witness] in 775.3s: (compose (fork (compose (wall_at c1 c1) (optimize (neg_dist 6) 2)) (sync_to_world 2)) (optimize (neg_dist 4) 1))
+      + solved [belief_witness] in 213.9s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 6) 2)) (sync_to_world 2)) (optimize (neg_dist 5) 4))
+      + solved [belief_witness] in 302.2s: (compose (fork (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)) (sync_to_world 2)) (optimize (neg_dist 1) 4))
+      + solved [belief_witness] in 189.7s: (compose (fork (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)) (sync_to_world 2)) (optimize (neg_dist 4) 5))
+      + solved [belief_witness] in 133.9s: (compose (fork (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)) (sync_to_world 2)) (optimize (neg_dist 1) 4))
+      + solved [belief_witness] in 258.4s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 8) 5)) (sync_to_world 5)) (optimize (neg_dist 1) 4))
+      + solved [belief_witness] in 818.0s: (compose (fork (compose (wall_at c2 c3) (optimize (neg_dist 8) 5)) (sync_to_world 5)) (optimize (neg_dist 4) 1))
+      + solved [belief_witness] in 132.0s: (compose (fork (compose (wall_at c2 c1) (optimize (neg_dist 8) 5)) (sync_to_world 5)) (optimize (neg_dist 4) 1))
+      + solved [belief_witness] in 163.6s: (compose (fork (compose (wall_at c2 c1) (optimize (neg_dist 8) 5)) (sync_to_world 5)) (optimize (neg_dist 1) 4))
+      + solved [belief_witness] in 229.1s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 8) 5)) (sync_to_world 5)) (optimize (neg_dist 4) 1))
+      + solved [belief_witness] in 184.4s: (compose (fork (compose (wall_at c2 c3) (optimize (neg_dist 8) 5)) (sync_to_world 5)) (optimize (neg_dist 2) 4))
+      + solved [belief_witness] in 186.3s: (compose (fork (compose (wall_at c2 c1) (optimize (neg_dist 1) 7)) (sync_to_world 7)) (optimize (neg_dist 2) 5))
+      + solved [belief_witness] in 1822.1s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 1) 7)) (sync_to_world 7)) (optimize (neg_dist 2) 5))
+[1144470] caught (compose (fn_3 c2 c2 1 7) (optimize (neg_dist 4) 2))
+      + solved [belief_witness] in 3593.8s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 1) 7)) (sync_to_world 7)) (optimize (neg_dist 4) 2))
+      + solved [belief_witness] in 222.3s: (compose (fork (compose (wall_at c2 c4) (optimize (neg_dist 1) 7)) (sync_to_world 7)) (optimize (neg_dist 4) 5))
+      + solved [belief_witness] in 128.6s: (compose (fork (compose (wall_at c2 c1) (optimize (neg_dist 1) 7)) (sync_to_world 7)) (optimize (neg_dist 2) 4))
+      + solved [belief_witness] in 173.2s: (compose (fork (compose (wall_at c2 c3) (optimize (neg_dist 1) 7)) (sync_to_world 7)) (optimize (neg_dist 2) 4))
+      + solved [belief_witness] in 148.4s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 4) 9)) (sync_to_world 9)) (optimize (neg_dist 1) 2))
+      + solved [belief_witness] in 147.4s: (compose (fork (compose (wall_at c3 c2) (optimize (neg_dist 4) 9)) (sync_to_world 9)) (optimize (neg_dist 1) 5))
+      + solved [belief_witness] in 56.0s: (compose (fork (compose (wall_at c2 c3) (optimize (neg_dist 4) 9)) (sync_to_world 9)) (optimize (neg_dist 2) 1))
+      + solved [belief_witness] in 190.6s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 4) 9)) (sync_to_world 9)) (optimize (neg_dist 5) 1))
+      + solved [belief_witness] in 2141.9s: (compose (fork (compose (wall_at c1 c1) (optimize (neg_dist 4) 9)) (sync_to_world 9)) (optimize (neg_dist 1) 2))
+      + solved [belief_witness] in 828.0s: (compose (fork (compose (wall_at c3 c3) (optimize (neg_dist 4) 9)) (sync_to_world 9)) (optimize (neg_dist 1) 2))
+      + solved [belief_goal] in 369.5s: (fork (compose (compose (optimize (distance 2) 2) (fork (compose (optimize (distance 2) 2) (optimize (neg_dist 2) 1)) (sync_to_world 1))) (optimize (neg_dist 1) 1)) (sync_to_world 1))
+      + solved [belief_goal] in 814.5s: (fork (compose (compose (optimize (neg_dist 6) 2) (step 2 down)) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_goal] in 88.1s: (fork (compose (compose (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 2)) (sync_to_world 2)) (fork (compose (optimize (distance 2) 2) (optimize (neg_dist 2) 1)) (sync_to_world 1))) (optimize (neg_dist 1) 1)) (sync_to_world 1))
+      + solved [belief_goal] in 283.8s: (fork (compose (compose (optimize (neg_dist 1) 2) (step 2 down)) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_goal] in 70.5s: (fork (compose (compose (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 5)) (sync_to_world 5)) (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))) (optimize (neg_dist 4) 4)) (sync_to_world 4))
+      + solved [belief_goal] in 5.6s: (fork (compose (fork (compose (step 5 down) (optimize (neg_dist 9) 5)) (sync_to_world 5)) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_goal] in 454.4s: (fork (compose (compose (optimize (distance 5) 5) (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4))) (optimize (neg_dist 4) 4)) (sync_to_world 4))
+      + solved [belief_goal] in 1661.1s: (fork (compose (compose (optimize (neg_dist 2) 7) (step 7 down)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_goal] in 473.7s: (fork (compose (compose (optimize (neg_dist 6) 7) (fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6))) (optimize (neg_dist 4) 6)) (sync_to_world 6))
+      + solved [belief_goal] in 956.3s: (fork (compose (compose (step 7 down) (step 7 down)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_goal] in 95.5s: (fork (compose (compose (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 9)) (sync_to_world 9)) (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))) (optimize (neg_dist 8) 8)) (sync_to_world 8))
+      + solved [belief_goal] in 9.3s: (fork (compose (fork (compose (fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 9)) (sync_to_world 9)) (optimize (neg_dist 7) 9)) (sync_to_world 9)) (optimize (neg_dist 9) 8)) (sync_to_world 8))
+      + solved [belief_goal] in 616.7s: (fork (compose (compose (step 9 up) (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8))) (optimize (neg_dist 8) 8)) (sync_to_world 8))
+      + solved [belief_goal] in 468.2s: (fork (compose (compose (step 6 down) (step 6 down)) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+      + solved [belief_goal] in 33.8s: (fork (compose (compose (fork (compose (optimize (distance 2) 2) (optimize (neg_dist 2) 6)) (sync_to_world 6)) (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))) (optimize (neg_dist 2) 2)) (sync_to_world 2))
+      + solved [belief_goal] in 61.9s: (fork (compose (compose (fork (compose (optimize (distance 2) 2) (optimize (neg_dist 2) 6)) (sync_to_world 6)) (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2))) (optimize (neg_dist 2) 2)) (sync_to_world 2))
+      + solved [belief_goal] in 367.8s: (fork (compose (compose (step 8 up) (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))) (optimize (neg_dist 5) 5)) (sync_to_world 5))
+      + solved [belief_goal] in 954.3s: (fork (compose (compose (optimize (distance 8) 8) (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5))) (optimize (neg_dist 5) 5)) (sync_to_world 5))
+      + solved [belief_goal] in 512.6s: (fork (compose (compose (optimize (distance 9) 8) (optimize (distance 9) 8)) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_goal] in 687.9s: (fork (compose (compose (optimize (distance 1) 1) (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 1)) (sync_to_world 1))) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_goal] in 1669.8s: (fork (compose (compose (step 1 down) (step 1 down)) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_goal] in 639.4s: (fork (compose (compose (step 1 up) (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 1)) (sync_to_world 1))) (optimize (neg_dist 1) 7)) (sync_to_world 7))
+      + solved [belief_goal] in 131.4s: (fork (compose (fork (compose (optimize (neg_dist 9) 4) (optimize (neg_dist 0) 4)) (sync_to_world 4)) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_observers] in 2.5s: (compose (fork (compose (optimize (distance 2) 2) (optimize (neg_dist 2) 1)) (sync_to_world 1)) (optimize (neg_dist 2) 6))
+      + solved [belief_observers] in 264.1s: (compose (optimize (neg_dist 2) 8) (fork (compose (step 2 down) (optimize (neg_dist 2) 1)) (sync_to_world 1)))
+      + solved [belief_observers] in 1.3s: (compose (optimize (neg_dist 2) 8) (fork (compose (optimize (distance 2) 2) (optimize (neg_dist 2) 1)) (sync_to_world 1)))
+      + solved [belief_observers] in 2.4s: (compose (optimize (neg_dist 5) 2) (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4)))
+      + solved [belief_observers] in 388.9s: (compose (fork (compose (step 5 down) (optimize (neg_dist 5) 4)) (sync_to_world 4)) (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 2)) (sync_to_world 2)))
+      + solved [belief_observers] in 1.6s: (compose (optimize (neg_dist 5) 1) (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 4)) (sync_to_world 4)))
+      + solved [belief_observers] in 1.2s: (compose (fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6)) (optimize (neg_dist 7) 1))
+      + solved [belief_observers] in 493.4s: (compose (fork (compose (step 7 down) (optimize (neg_dist 7) 6)) (sync_to_world 6)) (optimize (neg_dist 7) 9))
+      + solved [belief_observers] in 1.4s: (compose (optimize (neg_dist 7) 8) (fork (compose (optimize (distance 7) 7) (optimize (neg_dist 7) 6)) (sync_to_world 6)))
+      + solved [belief_observers] in 4.2s: (compose (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8)) (optimize (neg_dist 9) 1))
+      + solved [belief_observers] in 564.4s: (compose (fork (compose (step 9 down) (optimize (neg_dist 9) 8)) (sync_to_world 8)) (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5)))
+      + solved [belief_observers] in 1.3s: (compose (optimize (neg_dist 9) 7) (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 8)) (sync_to_world 8)))
+      + solved [belief_observers] in 0.4s: (compose (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2)) (optimize (neg_dist 6) 5))
+      + solved [belief_observers] in 24.3s: (compose (fork (compose (optimize (neg_dist 2) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2)) (fork (compose (optimize (distance 2) 2) (optimize (neg_dist 2) 1)) (sync_to_world 1)))
+      + solved [belief_observers] in 1.9s: (compose (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 6) 2)) (sync_to_world 2)) (optimize (neg_dist 6) 5))
+      + solved [belief_observers] in 1.8s: (compose (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5)) (optimize (neg_dist 8) 4))
+      + solved [belief_observers] in 383.0s: (compose (fork (compose (step 8 down) (optimize (neg_dist 8) 5)) (sync_to_world 5)) (fork (compose (optimize (distance 5) 5) (optimize (neg_dist 5) 9)) (sync_to_world 9)))
+      + solved [belief_observers] in 1.9s: (compose (fork (compose (optimize (distance 8) 8) (optimize (neg_dist 8) 5)) (sync_to_world 5)) (optimize (neg_dist 8) 7))
+      + solved [belief_observers] in 1.2s: (compose (optimize (neg_dist 1) 8) (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7)))
+      + solved [belief_observers] in 234.4s: (compose (fork (compose (step 1 down) (optimize (neg_dist 1) 7)) (sync_to_world 7)) (optimize (neg_dist 1) 2))
+      + solved [belief_observers] in 1.3s: (compose (optimize (neg_dist 1) 6) (fork (compose (optimize (distance 1) 1) (optimize (neg_dist 1) 7)) (sync_to_world 7)))
+      + solved [belief_observers] in 1.3s: (compose (optimize (neg_dist 4) 1) (fork (compose (optimize (distance 4) 4) (optimize (neg_dist 4) 9)) (sync_to_world 9)))
+      + solved [belief_observers] in 147.9s: (compose (fork (compose (step 4 down) (optimize (neg_dist 4) 9)) (sync_to_world 9)) (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 9) 2)) (sync_to_world 2)))
+      + solved [belief_false_obstacle] in 1434.1s: (fork (compose (compose (wall_at c1 c1) (optimize (neg_dist 0) 2)) (optimize (neg_dist 2) 1)) (sync_to_world 1))
+      + solved [belief_false_obstacle] in 713.5s: (fork (compose (compose (wall_at c1 c3) (optimize (neg_dist 0) 5)) (optimize (neg_dist 5) 4)) (sync_to_world 4))
+      + solved [belief_false_obstacle] in 280.8s: (fork (compose (compose (wall_at c2 c1) (optimize (neg_dist 0) 7)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+      + solved [belief_false_obstacle] in 655.8s: (fork (compose (fork (compose (optimize (distance 6) 6) (optimize (neg_dist 8) 7)) (sync_to_world 7)) (optimize (neg_dist 7) 6)) (sync_to_world 6))
+[1254273] caught (fn_0 5 8 (fn_1 8 3 c2 c2))
+      + solved [belief_false_obstacle] in 3342.2s: (fork (compose (compose (wall_at c2 c2) (optimize (neg_dist 3) 8)) (optimize (neg_dist 8) 5)) (sync_to_world 5))
+      + solved [belief_false_obstacle] in 698.8s: (fork (compose (compose (wall_at c1 c3) (optimize (neg_dist 0) 4)) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+      + solved [belief_false_obstacle] in 335.1s: (fork (compose (fork (compose (optimize (distance 9) 9) (optimize (neg_dist 7) 4)) (sync_to_world 4)) (optimize (neg_dist 4) 9)) (sync_to_world 9))
+    per-task time (s): 97 solved [slowest solve 3593.8]
+    (misses burned up to 3600.0s each; the uniform --t-fn can drop toward slowest-solve=3593.8s to cut wasted early-round time without losing a solve)
+    solved 285/300 (+97 this round)
+running stitch_core.compress on 285 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (fork (compose #2 (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_7: (compose #2 (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_8: (fn_0 #1 #0 (optimize (distance #0) #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_9: (fn_1 #4 #3 (fn_0 #2 #1 (wall_at c2 #0)))  [coord, cellvalue, cellvalue, cellvalue, cellvalue] -> fn
+added abstraction fn_10: (fn_1 #3 #2 (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_11: (fn_0 #3 #2 (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+    dreaming: training recognition Q on 261 replays + fantasies (600 steps)…
+0.02M params
+  0%|          | 0/600 [00:00<?, ?it/s]loss=3.74 nodes=49:   0%|          | 0/600 [00:00<?, ?it/s]loss=3.70 nodes=37:   0%|          | 0/600 [00:00<?, ?it/s]loss=3.80 nodes=42:   0%|          | 0/600 [00:00<?, ?it/s]loss=3.70 nodes=45:   0%|          | 0/600 [00:00<?, ?it/s]loss=3.85 nodes=45:   0%|          | 0/600 [00:00<?, ?it/s]loss=3.70 nodes=49:   0%|          | 0/600 [00:00<?, ?it/s]loss=3.62 nodes=48:   0%|          | 0/600 [00:00<?, ?it/s]loss=3.62 nodes=48:   1%|          | 7/600 [00:00<00:08, 67.07it/s]loss=3.62 nodes=36:   1%|          | 7/600 [00:00<00:08, 67.07it/s]loss=3.78 nodes=42:   1%|          | 7/600 [00:00<00:08, 67.07it/s]loss=3.63 nodes=41:   1%|          | 7/600 [00:00<00:08, 67.07it/s]loss=3.75 nodes=62:   1%|          | 7/600 [00:00<00:08, 67.07it/s]loss=3.54 nodes=54:   1%|          | 7/600 [00:00<00:08, 67.07it/s]loss=3.60 nodes=55:   1%|          | 7/600 [00:00<00:08, 67.07it/s]loss=3.72 nodes=43:   1%|          | 7/600 [00:00<00:08, 67.07it/s]loss=3.72 nodes=43:   2%|▏         | 14/600 [00:00<00:08, 66.81it/s]loss=3.82 nodes=37:   2%|▏         | 14/600 [00:00<00:08, 66.81it/s]loss=3.73 nodes=54:   2%|▏         | 14/600 [00:00<00:08, 66.81it/s]loss=3.50 nodes=51:   2%|▏         | 14/600 [00:00<00:08, 66.81it/s]loss=3.73 nodes=43:   2%|▏         | 14/600 [00:00<00:08, 66.81it/s]loss=3.79 nodes=44:   2%|▏         | 14/600 [00:00<00:08, 66.81it/s]loss=3.42 nodes=41:   2%|▏         | 14/600 [00:00<00:08, 66.81it/s]loss=3.61 nodes=39:   2%|▏         | 14/600 [00:00<00:08, 66.81it/s]loss=3.76 nodes=52:   2%|▏         | 14/600 [00:00<00:08, 66.81it/s]loss=3.76 nodes=52:   4%|▎         | 22/600 [00:00<00:08, 68.31it/s]loss=3.78 nodes=54:   4%|▎         | 22/600 [00:00<00:08, 68.31it/s]loss=3.48 nodes=42:   4%|▎         | 22/600 [00:00<00:08, 68.31it/s]loss=3.57 nodes=43:   4%|▎         | 22/600 [00:00<00:08, 68.31it/s]loss=3.47 nodes=33:   4%|▎         | 22/600 [00:00<00:08, 68.31it/s]loss=3.40 nodes=34:   4%|▎         | 22/600 [00:00<00:08, 68.31it/s]loss=3.65 nodes=52:   4%|▎         | 22/600 [00:00<00:08, 68.31it/s]loss=3.60 nodes=39:   4%|▎         | 22/600 [00:00<00:08, 68.31it/s]loss=3.60 nodes=39:   5%|▍         | 29/600 [00:00<00:08, 68.90it/s]loss=3.56 nodes=61:   5%|▍         | 29/600 [00:00<00:08, 68.90it/s]loss=3.60 nodes=56:   5%|▍         | 29/600 [00:00<00:08, 68.90it/s]loss=3.53 nodes=59:   5%|▍         | 29/600 [00:00<00:08, 68.90it/s]loss=3.35 nodes=42:   5%|▍         | 29/600 [00:00<00:08, 68.90it/s]loss=3.48 nodes=45:   5%|▍         | 29/600 [00:00<00:08, 68.90it/s]loss=3.53 nodes=36:   5%|▍         | 29/600 [00:00<00:08, 68.90it/s]loss=3.31 nodes=35:   5%|▍         | 29/600 [00:00<00:08, 68.90it/s]loss=3.53 nodes=33:   5%|▍         | 29/600 [00:00<00:08, 68.90it/s]loss=3.53 nodes=33:   6%|▌         | 37/600 [00:00<00:08, 69.82it/s]loss=3.45 nodes=46:   6%|▌         | 37/600 [00:00<00:08, 69.82it/s]loss=3.25 nodes=41:   6%|▌         | 37/600 [00:00<00:08, 69.82it/s]loss=3.52 nodes=45:   6%|▌         | 37/600 [00:00<00:08, 69.82it/s]loss=3.64 nodes=55:   6%|▌         | 37/600 [00:00<00:08, 69.82it/s]loss=3.35 nodes=51:   6%|▌         | 37/600 [00:00<00:08, 69.82it/s]loss=3.55 nodes=50:   6%|▌         | 37/600 [00:00<00:08, 69.82it/s]loss=3.41 nodes=45:   6%|▌         | 37/600 [00:00<00:08, 69.82it/s]loss=3.41 nodes=45:   7%|▋         | 44/600 [00:00<00:08, 67.75it/s]loss=3.36 nodes=41:   7%|▋         | 44/600 [00:00<00:08, 67.75it/s]loss=3.67 nodes=51:   7%|▋         | 44/600 [00:00<00:08, 67.75it/s]loss=3.58 nodes=32:   7%|▋         | 44/600 [00:00<00:08, 67.75it/s]loss=3.48 nodes=56:   7%|▋         | 44/600 [00:00<00:08, 67.75it/s]loss=3.35 nodes=36:   7%|▋         | 44/600 [00:00<00:08, 67.75it/s]loss=3.59 nodes=83:   7%|▋         | 44/600 [00:00<00:08, 67.75it/s]loss=3.51 nodes=44:   7%|▋         | 44/600 [00:00<00:08, 67.75it/s]loss=3.51 nodes=44:   8%|▊         | 51/600 [00:00<00:08, 66.68it/s]loss=3.56 nodes=57:   8%|▊         | 51/600 [00:00<00:08, 66.68it/s]loss=3.28 nodes=33:   8%|▊         | 51/600 [00:00<00:08, 66.68it/s]loss=3.45 nodes=41:   8%|▊         | 51/600 [00:00<00:08, 66.68it/s]loss=3.34 nodes=49:   8%|▊         | 51/600 [00:00<00:08, 66.68it/s]loss=3.25 nodes=49:   8%|▊         | 51/600 [00:00<00:08, 66.68it/s]loss=3.46 nodes=48:   8%|▊         | 51/600 [00:00<00:08, 66.68it/s]loss=3.59 nodes=47:   8%|▊         | 51/600 [00:00<00:08, 66.68it/s]loss=3.59 nodes=47:  10%|▉         | 58/600 [00:00<00:08, 66.14it/s]loss=3.29 nodes=44:  10%|▉         | 58/600 [00:00<00:08, 66.14it/s]loss=3.28 nodes=41:  10%|▉         | 58/600 [00:00<00:08, 66.14it/s]loss=3.48 nodes=45:  10%|▉         | 58/600 [00:00<00:08, 66.14it/s]loss=3.13 nodes=40:  10%|▉         | 58/600 [00:00<00:08, 66.14it/s]loss=3.33 nodes=38:  10%|▉         | 58/600 [00:00<00:08, 66.14it/s]loss=3.58 nodes=59:  10%|▉         | 58/600 [00:00<00:08, 66.14it/s]loss=3.50 nodes=45:  10%|▉         | 58/600 [00:00<00:08, 66.14it/s]loss=3.50 nodes=45:  11%|█         | 65/600 [00:00<00:08, 66.14it/s]loss=3.32 nodes=47:  11%|█         | 65/600 [00:00<00:08, 66.14it/s]loss=3.56 nodes=44:  11%|█         | 65/600 [00:00<00:08, 66.14it/s]loss=3.39 nodes=37:  11%|█         | 65/600 [00:01<00:08, 66.14it/s]loss=3.62 nodes=49:  11%|█         | 65/600 [00:01<00:08, 66.14it/s]loss=3.44 nodes=45:  11%|█         | 65/600 [00:01<00:08, 66.14it/s]loss=3.28 nodes=46:  11%|█         | 65/600 [00:01<00:08, 66.14it/s]loss=3.38 nodes=43:  11%|█         | 65/600 [00:01<00:08, 66.14it/s]loss=3.13 nodes=38:  11%|█         | 65/600 [00:01<00:08, 66.14it/s]loss=3.13 nodes=38:  12%|█▏        | 73/600 [00:01<00:07, 68.35it/s]loss=3.62 nodes=43:  12%|█▏        | 73/600 [00:01<00:07, 68.35it/s]loss=3.30 nodes=37:  12%|█▏        | 73/600 [00:01<00:07, 68.35it/s]loss=3.19 nodes=45:  12%|█▏        | 73/600 [00:01<00:07, 68.35it/s]loss=3.59 nodes=58:  12%|█▏        | 73/600 [00:01<00:07, 68.35it/s]loss=3.34 nodes=45:  12%|█▏        | 73/600 [00:01<00:07, 68.35it/s]loss=3.35 nodes=42:  12%|█▏        | 73/600 [00:01<00:07, 68.35it/s]loss=3.38 nodes=51:  12%|█▏        | 73/600 [00:01<00:07, 68.35it/s]loss=3.59 nodes=49:  12%|█▏        | 73/600 [00:01<00:07, 68.35it/s]loss=3.59 nodes=49:  14%|█▎        | 81/600 [00:01<00:07, 69.65it/s]loss=3.08 nodes=39:  14%|█▎        | 81/600 [00:01<00:07, 69.65it/s]loss=3.28 nodes=56:  14%|█▎        | 81/600 [00:01<00:07, 69.65it/s]loss=3.45 nodes=54:  14%|█▎        | 81/600 [00:01<00:07, 69.65it/s]loss=3.10 nodes=41:  14%|█▎        | 81/600 [00:01<00:07, 69.65it/s]loss=3.46 nodes=49:  14%|█▎        | 81/600 [00:01<00:07, 69.65it/s]loss=3.28 nodes=47:  14%|█▎        | 81/600 [00:01<00:07, 69.65it/s]loss=3.19 nodes=39:  14%|█▎        | 81/600 [00:01<00:07, 69.65it/s]loss=3.19 nodes=39:  15%|█▍        | 88/600 [00:01<00:07, 68.60it/s]loss=3.43 nodes=57:  15%|█▍        | 88/600 [00:01<00:07, 68.60it/s]loss=3.39 nodes=42:  15%|█▍        | 88/600 [00:01<00:07, 68.60it/s]loss=3.24 nodes=31:  15%|█▍        | 88/600 [00:01<00:07, 68.60it/s]loss=3.61 nodes=47:  15%|█▍        | 88/600 [00:01<00:07, 68.60it/s]loss=3.74 nodes=59:  15%|█▍        | 88/600 [00:01<00:07, 68.60it/s]loss=3.25 nodes=47:  15%|█▍        | 88/600 [00:01<00:07, 68.60it/s]loss=3.35 nodes=55:  15%|█▍        | 88/600 [00:01<00:07, 68.60it/s]loss=3.35 nodes=55:  16%|█▌        | 95/600 [00:01<00:07, 67.68it/s]loss=3.33 nodes=36:  16%|█▌        | 95/600 [00:01<00:07, 67.68it/s]loss=3.47 nodes=55:  16%|█▌        | 95/600 [00:01<00:07, 67.68it/s]loss=3.44 nodes=56:  16%|█▌        | 95/600 [00:01<00:07, 67.68it/s]loss=3.28 nodes=41:  16%|█▌        | 95/600 [00:01<00:07, 67.68it/s]loss=3.45 nodes=49:  16%|█▌        | 95/600 [00:01<00:07, 67.68it/s]loss=3.49 nodes=46:  16%|█▌        | 95/600 [00:01<00:07, 67.68it/s]loss=3.34 nodes=44:  16%|█▌        | 95/600 [00:01<00:07, 67.68it/s]loss=3.34 nodes=44:  17%|█▋        | 102/600 [00:01<00:07, 66.51it/s]loss=3.47 nodes=39:  17%|█▋        | 102/600 [00:01<00:07, 66.51it/s]loss=3.49 nodes=51:  17%|█▋        | 102/600 [00:01<00:07, 66.51it/s]loss=3.34 nodes=42:  17%|█▋        | 102/600 [00:01<00:07, 66.51it/s]loss=3.44 nodes=33:  17%|█▋        | 102/600 [00:01<00:07, 66.51it/s]loss=3.21 nodes=41:  17%|█▋        | 102/600 [00:01<00:07, 66.51it/s]loss=3.44 nodes=49:  17%|█▋        | 102/600 [00:01<00:07, 66.51it/s]loss=3.67 nodes=46:  17%|█▋        | 102/600 [00:01<00:07, 66.51it/s]loss=3.86 nodes=55:  17%|█▋        | 102/600 [00:01<00:07, 66.51it/s]loss=3.86 nodes=55:  18%|█▊        | 110/600 [00:01<00:07, 67.43it/s]loss=3.44 nodes=37:  18%|█▊        | 110/600 [00:01<00:07, 67.43it/s]loss=3.62 nodes=63:  18%|█▊        | 110/600 [00:01<00:07, 67.43it/s]loss=3.38 nodes=49:  18%|█▊        | 110/600 [00:01<00:07, 67.43it/s]loss=3.87 nodes=46:  18%|█▊        | 110/600 [00:01<00:07, 67.43it/s]loss=3.35 nodes=55:  18%|█▊        | 110/600 [00:01<00:07, 67.43it/s]loss=3.50 nodes=45:  18%|█▊        | 110/600 [00:01<00:07, 67.43it/s]loss=3.03 nodes=41:  18%|█▊        | 110/600 [00:01<00:07, 67.43it/s]loss=3.03 nodes=41:  20%|█▉        | 117/600 [00:01<00:07, 67.79it/s]loss=3.47 nodes=64:  20%|█▉        | 117/600 [00:01<00:07, 67.79it/s]loss=3.41 nodes=54:  20%|█▉        | 117/600 [00:01<00:07, 67.79it/s]loss=3.47 nodes=43:  20%|█▉        | 117/600 [00:01<00:07, 67.79it/s]loss=3.05 nodes=39:  20%|█▉        | 117/600 [00:01<00:07, 67.79it/s]loss=3.46 nodes=47:  20%|█▉        | 117/600 [00:01<00:07, 67.79it/s]loss=3.47 nodes=62:  20%|█▉        | 117/600 [00:01<00:07, 67.79it/s]loss=3.07 nodes=38:  20%|█▉        | 117/600 [00:01<00:07, 67.79it/s]loss=3.07 nodes=38:  21%|██        | 124/600 [00:01<00:07, 67.08it/s]loss=3.45 nodes=37:  21%|██        | 124/600 [00:01<00:07, 67.08it/s]loss=3.59 nodes=46:  21%|██        | 124/600 [00:01<00:07, 67.08it/s]loss=3.25 nodes=48:  21%|██        | 124/600 [00:01<00:07, 67.08it/s]loss=3.35 nodes=36:  21%|██        | 124/600 [00:01<00:07, 67.08it/s]loss=3.58 nodes=50:  21%|██        | 124/600 [00:01<00:07, 67.08it/s]loss=3.47 nodes=65:  21%|██        | 124/600 [00:01<00:07, 67.08it/s]loss=3.22 nodes=46:  21%|██        | 124/600 [00:01<00:07, 67.08it/s]loss=3.22 nodes=46:  22%|██▏       | 131/600 [00:01<00:07, 66.20it/s]loss=3.35 nodes=39:  22%|██▏       | 131/600 [00:01<00:07, 66.20it/s]loss=3.45 nodes=47:  22%|██▏       | 131/600 [00:01<00:07, 66.20it/s]loss=3.90 nodes=67:  22%|██▏       | 131/600 [00:01<00:07, 66.20it/s]loss=3.29 nodes=44:  22%|██▏       | 131/600 [00:02<00:07, 66.20it/s]loss=3.35 nodes=40:  22%|██▏       | 131/600 [00:02<00:07, 66.20it/s]loss=3.55 nodes=47:  22%|██▏       | 131/600 [00:02<00:07, 66.20it/s]loss=3.36 nodes=39:  22%|██▏       | 131/600 [00:02<00:07, 66.20it/s]loss=3.33 nodes=49:  22%|██▏       | 131/600 [00:02<00:07, 66.20it/s]loss=3.33 nodes=49:  23%|██▎       | 139/600 [00:02<00:06, 67.81it/s]loss=3.36 nodes=64:  23%|██▎       | 139/600 [00:02<00:06, 67.81it/s]loss=2.86 nodes=37:  23%|██▎       | 139/600 [00:02<00:06, 67.81it/s]loss=3.34 nodes=54:  23%|██▎       | 139/600 [00:02<00:06, 67.81it/s]loss=3.50 nodes=40:  23%|██▎       | 139/600 [00:02<00:06, 67.81it/s]loss=3.43 nodes=52:  23%|██▎       | 139/600 [00:02<00:06, 67.81it/s]loss=3.38 nodes=42:  23%|██▎       | 139/600 [00:02<00:06, 67.81it/s]loss=3.38 nodes=36:  23%|██▎       | 139/600 [00:02<00:06, 67.81it/s]loss=3.38 nodes=36:  24%|██▍       | 146/600 [00:02<00:07, 64.65it/s]loss=3.21 nodes=46:  24%|██▍       | 146/600 [00:02<00:07, 64.65it/s]loss=3.48 nodes=52:  24%|██▍       | 146/600 [00:02<00:07, 64.65it/s]loss=3.59 nodes=45:  24%|██▍       | 146/600 [00:02<00:07, 64.65it/s]loss=3.15 nodes=35:  24%|██▍       | 146/600 [00:02<00:07, 64.65it/s]loss=3.42 nodes=33:  24%|██▍       | 146/600 [00:02<00:07, 64.65it/s]loss=3.49 nodes=56:  24%|██▍       | 146/600 [00:02<00:07, 64.65it/s]loss=3.35 nodes=50:  24%|██▍       | 146/600 [00:02<00:07, 64.65it/s]loss=3.35 nodes=50:  26%|██▌       | 153/600 [00:02<00:06, 65.93it/s]loss=3.29 nodes=46:  26%|██▌       | 153/600 [00:02<00:06, 65.93it/s]loss=3.75 nodes=57:  26%|██▌       | 153/600 [00:02<00:06, 65.93it/s]loss=3.65 nodes=64:  26%|██▌       | 153/600 [00:02<00:06, 65.93it/s]loss=3.58 nodes=45:  26%|██▌       | 153/600 [00:02<00:06, 65.93it/s]loss=3.28 nodes=50:  26%|██▌       | 153/600 [00:02<00:06, 65.93it/s]loss=3.35 nodes=47:  26%|██▌       | 153/600 [00:02<00:06, 65.93it/s]loss=3.32 nodes=55:  26%|██▌       | 153/600 [00:02<00:06, 65.93it/s]loss=3.32 nodes=55:  27%|██▋       | 160/600 [00:02<00:06, 64.07it/s]loss=3.21 nodes=41:  27%|██▋       | 160/600 [00:02<00:06, 64.07it/s]loss=3.34 nodes=40:  27%|██▋       | 160/600 [00:02<00:06, 64.07it/s]loss=3.24 nodes=34:  27%|██▋       | 160/600 [00:02<00:06, 64.07it/s]loss=3.25 nodes=44:  27%|██▋       | 160/600 [00:02<00:06, 64.07it/s]loss=3.22 nodes=44:  27%|██▋       | 160/600 [00:02<00:06, 64.07it/s]loss=3.42 nodes=54:  27%|██▋       | 160/600 [00:02<00:06, 64.07it/s]loss=3.58 nodes=47:  27%|██▋       | 160/600 [00:02<00:06, 64.07it/s]loss=3.11 nodes=51:  27%|██▋       | 160/600 [00:02<00:06, 64.07it/s]loss=3.11 nodes=51:  28%|██▊       | 168/600 [00:02<00:06, 67.35it/s]loss=3.28 nodes=37:  28%|██▊       | 168/600 [00:02<00:06, 67.35it/s]loss=3.12 nodes=34:  28%|██▊       | 168/600 [00:02<00:06, 67.35it/s]loss=3.23 nodes=32:  28%|██▊       | 168/600 [00:02<00:06, 67.35it/s]loss=3.37 nodes=55:  28%|██▊       | 168/600 [00:02<00:06, 67.35it/s]loss=3.26 nodes=45:  28%|██▊       | 168/600 [00:02<00:06, 67.35it/s]loss=3.27 nodes=34:  28%|██▊       | 168/600 [00:02<00:06, 67.35it/s]loss=3.52 nodes=60:  28%|██▊       | 168/600 [00:02<00:06, 67.35it/s]loss=3.52 nodes=60:  29%|██▉       | 175/600 [00:02<00:06, 67.98it/s]loss=3.25 nodes=44:  29%|██▉       | 175/600 [00:02<00:06, 67.98it/s]loss=3.60 nodes=61:  29%|██▉       | 175/600 [00:02<00:06, 67.98it/s]loss=3.45 nodes=48:  29%|██▉       | 175/600 [00:02<00:06, 67.98it/s]loss=3.62 nodes=45:  29%|██▉       | 175/600 [00:02<00:06, 67.98it/s]loss=3.33 nodes=40:  29%|██▉       | 175/600 [00:02<00:06, 67.98it/s]loss=3.34 nodes=43:  29%|██▉       | 175/600 [00:02<00:06, 67.98it/s]loss=3.33 nodes=55:  29%|██▉       | 175/600 [00:02<00:06, 67.98it/s]loss=3.33 nodes=55:  30%|███       | 182/600 [00:02<00:06, 67.21it/s]loss=3.56 nodes=79:  30%|███       | 182/600 [00:02<00:06, 67.21it/s]loss=3.34 nodes=56:  30%|███       | 182/600 [00:02<00:06, 67.21it/s]loss=3.18 nodes=39:  30%|███       | 182/600 [00:02<00:06, 67.21it/s]loss=3.53 nodes=63:  30%|███       | 182/600 [00:02<00:06, 67.21it/s]loss=3.21 nodes=43:  30%|███       | 182/600 [00:02<00:06, 67.21it/s]loss=3.05 nodes=30:  30%|███       | 182/600 [00:02<00:06, 67.21it/s]loss=3.27 nodes=45:  30%|███       | 182/600 [00:02<00:06, 67.21it/s]loss=3.27 nodes=45:  32%|███▏      | 189/600 [00:02<00:06, 66.33it/s]loss=3.16 nodes=40:  32%|███▏      | 189/600 [00:02<00:06, 66.33it/s]loss=3.30 nodes=41:  32%|███▏      | 189/600 [00:02<00:06, 66.33it/s]loss=3.35 nodes=38:  32%|███▏      | 189/600 [00:02<00:06, 66.33it/s]loss=3.47 nodes=49:  32%|███▏      | 189/600 [00:02<00:06, 66.33it/s]loss=3.55 nodes=55:  32%|███▏      | 189/600 [00:02<00:06, 66.33it/s]loss=3.57 nodes=67:  32%|███▏      | 189/600 [00:02<00:06, 66.33it/s]loss=3.64 nodes=39:  32%|███▏      | 189/600 [00:02<00:06, 66.33it/s]loss=3.64 nodes=39:  33%|███▎      | 196/600 [00:02<00:06, 67.04it/s]loss=3.52 nodes=49:  33%|███▎      | 196/600 [00:02<00:06, 67.04it/s]loss=3.64 nodes=44:  33%|███▎      | 196/600 [00:02<00:06, 67.04it/s]loss=3.19 nodes=44:  33%|███▎      | 196/600 [00:02<00:06, 67.04it/s]loss=3.11 nodes=40:  33%|███▎      | 196/600 [00:02<00:06, 67.04it/s]loss=3.14 nodes=39:  33%|███▎      | 196/600 [00:02<00:06, 67.04it/s]loss=3.20 nodes=42:  33%|███▎      | 196/600 [00:03<00:06, 67.04it/s]loss=3.54 nodes=43:  33%|███▎      | 196/600 [00:03<00:06, 67.04it/s]loss=3.12 nodes=35:  33%|███▎      | 196/600 [00:03<00:06, 67.04it/s]loss=3.12 nodes=35:  34%|███▍      | 204/600 [00:03<00:05, 68.66it/s]loss=3.37 nodes=55:  34%|███▍      | 204/600 [00:03<00:05, 68.66it/s]loss=2.98 nodes=37:  34%|███▍      | 204/600 [00:03<00:05, 68.66it/s]loss=3.29 nodes=40:  34%|███▍      | 204/600 [00:03<00:05, 68.66it/s]loss=3.41 nodes=45:  34%|███▍      | 204/600 [00:03<00:05, 68.66it/s]loss=3.33 nodes=37:  34%|███▍      | 204/600 [00:03<00:05, 68.66it/s]loss=3.42 nodes=60:  34%|███▍      | 204/600 [00:03<00:05, 68.66it/s]loss=3.11 nodes=46:  34%|███▍      | 204/600 [00:03<00:05, 68.66it/s]loss=3.11 nodes=46:  35%|███▌      | 211/600 [00:03<00:05, 68.27it/s]loss=3.69 nodes=48:  35%|███▌      | 211/600 [00:03<00:05, 68.27it/s]loss=3.19 nodes=46:  35%|███▌      | 211/600 [00:03<00:05, 68.27it/s]loss=3.12 nodes=41:  35%|███▌      | 211/600 [00:03<00:05, 68.27it/s]loss=3.50 nodes=46:  35%|███▌      | 211/600 [00:03<00:05, 68.27it/s]loss=3.28 nodes=37:  35%|███▌      | 211/600 [00:03<00:05, 68.27it/s]loss=3.30 nodes=54:  35%|███▌      | 211/600 [00:03<00:05, 68.27it/s]loss=3.04 nodes=39:  35%|███▌      | 211/600 [00:03<00:05, 68.27it/s]loss=3.04 nodes=39:  36%|███▋      | 218/600 [00:03<00:05, 67.50it/s]loss=3.29 nodes=49:  36%|███▋      | 218/600 [00:03<00:05, 67.50it/s]loss=3.35 nodes=45:  36%|███▋      | 218/600 [00:03<00:05, 67.50it/s]loss=3.21 nodes=57:  36%|███▋      | 218/600 [00:03<00:05, 67.50it/s]loss=3.44 nodes=33:  36%|███▋      | 218/600 [00:03<00:05, 67.50it/s]loss=3.18 nodes=50:  36%|███▋      | 218/600 [00:03<00:05, 67.50it/s]loss=3.68 nodes=59:  36%|███▋      | 218/600 [00:03<00:05, 67.50it/s]loss=3.20 nodes=45:  36%|███▋      | 218/600 [00:03<00:05, 67.50it/s]loss=3.20 nodes=45:  38%|███▊      | 225/600 [00:03<00:05, 66.53it/s]loss=3.21 nodes=42:  38%|███▊      | 225/600 [00:03<00:05, 66.53it/s]loss=3.39 nodes=47:  38%|███▊      | 225/600 [00:03<00:05, 66.53it/s]loss=3.33 nodes=52:  38%|███▊      | 225/600 [00:03<00:05, 66.53it/s]loss=3.42 nodes=64:  38%|███▊      | 225/600 [00:03<00:05, 66.53it/s]loss=3.23 nodes=53:  38%|███▊      | 225/600 [00:03<00:05, 66.53it/s]loss=3.43 nodes=52:  38%|███▊      | 225/600 [00:03<00:05, 66.53it/s]loss=3.97 nodes=61:  38%|███▊      | 225/600 [00:03<00:05, 66.53it/s]loss=3.97 nodes=61:  39%|███▊      | 232/600 [00:03<00:05, 64.54it/s]loss=3.36 nodes=51:  39%|███▊      | 232/600 [00:03<00:05, 64.54it/s]loss=3.21 nodes=52:  39%|███▊      | 232/600 [00:03<00:05, 64.54it/s]loss=3.16 nodes=43:  39%|███▊      | 232/600 [00:03<00:05, 64.54it/s]loss=3.45 nodes=41:  39%|███▊      | 232/600 [00:03<00:05, 64.54it/s]loss=3.72 nodes=39:  39%|███▊      | 232/600 [00:03<00:05, 64.54it/s]loss=3.35 nodes=48:  39%|███▊      | 232/600 [00:03<00:05, 64.54it/s]loss=3.46 nodes=52:  39%|███▊      | 232/600 [00:03<00:05, 64.54it/s]loss=3.22 nodes=41:  39%|███▊      | 232/600 [00:03<00:05, 64.54it/s]loss=3.22 nodes=41:  40%|████      | 240/600 [00:03<00:05, 67.61it/s]loss=3.56 nodes=41:  40%|████      | 240/600 [00:03<00:05, 67.61it/s]loss=3.59 nodes=41:  40%|████      | 240/600 [00:03<00:05, 67.61it/s]loss=3.41 nodes=37:  40%|████      | 240/600 [00:03<00:05, 67.61it/s]loss=3.34 nodes=45:  40%|████      | 240/600 [00:03<00:05, 67.61it/s]loss=3.11 nodes=42:  40%|████      | 240/600 [00:03<00:05, 67.61it/s]loss=3.25 nodes=40:  40%|████      | 240/600 [00:03<00:05, 67.61it/s]loss=3.37 nodes=54:  40%|████      | 240/600 [00:03<00:05, 67.61it/s]loss=3.33 nodes=56:  40%|████      | 240/600 [00:03<00:05, 67.61it/s]loss=3.33 nodes=56:  41%|████▏     | 248/600 [00:03<00:05, 68.37it/s]loss=3.29 nodes=47:  41%|████▏     | 248/600 [00:03<00:05, 68.37it/s]loss=3.66 nodes=52:  41%|████▏     | 248/600 [00:03<00:05, 68.37it/s]loss=3.40 nodes=48:  41%|████▏     | 248/600 [00:03<00:05, 68.37it/s]loss=3.46 nodes=48:  41%|████▏     | 248/600 [00:03<00:05, 68.37it/s]loss=3.54 nodes=38:  41%|████▏     | 248/600 [00:03<00:05, 68.37it/s]loss=3.68 nodes=46:  41%|████▏     | 248/600 [00:03<00:05, 68.37it/s]loss=3.29 nodes=41:  41%|████▏     | 248/600 [00:03<00:05, 68.37it/s]loss=3.23 nodes=47:  41%|████▏     | 248/600 [00:03<00:05, 68.37it/s]loss=3.23 nodes=47:  43%|████▎     | 256/600 [00:03<00:04, 69.23it/s]loss=3.26 nodes=39:  43%|████▎     | 256/600 [00:03<00:04, 69.23it/s]loss=3.40 nodes=38:  43%|████▎     | 256/600 [00:03<00:04, 69.23it/s]loss=3.58 nodes=57:  43%|████▎     | 256/600 [00:03<00:04, 69.23it/s]loss=3.45 nodes=47:  43%|████▎     | 256/600 [00:03<00:04, 69.23it/s]loss=3.33 nodes=45:  43%|████▎     | 256/600 [00:03<00:04, 69.23it/s]loss=2.98 nodes=45:  43%|████▎     | 256/600 [00:03<00:04, 69.23it/s]loss=3.58 nodes=57:  43%|████▎     | 256/600 [00:03<00:04, 69.23it/s]loss=3.58 nodes=57:  44%|████▍     | 263/600 [00:03<00:04, 68.46it/s]loss=3.20 nodes=35:  44%|████▍     | 263/600 [00:03<00:04, 68.46it/s]loss=3.13 nodes=61:  44%|████▍     | 263/600 [00:03<00:04, 68.46it/s]loss=3.45 nodes=42:  44%|████▍     | 263/600 [00:03<00:04, 68.46it/s]loss=3.38 nodes=44:  44%|████▍     | 263/600 [00:03<00:04, 68.46it/s]loss=3.25 nodes=52:  44%|████▍     | 263/600 [00:03<00:04, 68.46it/s]loss=3.30 nodes=40:  44%|████▍     | 263/600 [00:03<00:04, 68.46it/s]loss=3.30 nodes=50:  44%|████▍     | 263/600 [00:04<00:04, 68.46it/s]loss=3.30 nodes=50:  45%|████▌     | 270/600 [00:04<00:04, 68.27it/s]loss=3.46 nodes=51:  45%|████▌     | 270/600 [00:04<00:04, 68.27it/s]loss=3.09 nodes=38:  45%|████▌     | 270/600 [00:04<00:04, 68.27it/s]loss=3.24 nodes=42:  45%|████▌     | 270/600 [00:04<00:04, 68.27it/s]loss=3.21 nodes=43:  45%|████▌     | 270/600 [00:04<00:04, 68.27it/s]loss=3.53 nodes=43:  45%|████▌     | 270/600 [00:04<00:04, 68.27it/s]loss=3.23 nodes=31:  45%|████▌     | 270/600 [00:04<00:04, 68.27it/s]loss=3.34 nodes=41:  45%|████▌     | 270/600 [00:04<00:04, 68.27it/s]loss=3.30 nodes=37:  45%|████▌     | 270/600 [00:04<00:04, 68.27it/s]loss=3.30 nodes=37:  46%|████▋     | 278/600 [00:04<00:04, 69.80it/s]loss=3.01 nodes=42:  46%|████▋     | 278/600 [00:04<00:04, 69.80it/s]loss=3.29 nodes=42:  46%|████▋     | 278/600 [00:04<00:04, 69.80it/s]loss=3.54 nodes=50:  46%|████▋     | 278/600 [00:04<00:04, 69.80it/s]loss=3.18 nodes=45:  46%|████▋     | 278/600 [00:04<00:04, 69.80it/s]loss=3.18 nodes=47:  46%|████▋     | 278/600 [00:04<00:04, 69.80it/s]loss=3.12 nodes=33:  46%|████▋     | 278/600 [00:04<00:04, 69.80it/s]loss=3.10 nodes=53:  46%|████▋     | 278/600 [00:04<00:04, 69.80it/s]loss=3.10 nodes=53:  48%|████▊     | 285/600 [00:04<00:04, 69.23it/s]loss=3.20 nodes=46:  48%|████▊     | 285/600 [00:04<00:04, 69.23it/s]loss=3.21 nodes=76:  48%|████▊     | 285/600 [00:04<00:04, 69.23it/s]loss=3.44 nodes=43:  48%|████▊     | 285/600 [00:04<00:04, 69.23it/s]loss=3.58 nodes=45:  48%|████▊     | 285/600 [00:04<00:04, 69.23it/s]loss=3.24 nodes=35:  48%|████▊     | 285/600 [00:04<00:04, 69.23it/s]loss=3.36 nodes=44:  48%|████▊     | 285/600 [00:04<00:04, 69.23it/s]loss=3.01 nodes=45:  48%|████▊     | 285/600 [00:04<00:04, 69.23it/s]loss=3.01 nodes=45:  49%|████▊     | 292/600 [00:04<00:04, 67.75it/s]loss=3.34 nodes=43:  49%|████▊     | 292/600 [00:04<00:04, 67.75it/s]loss=2.88 nodes=31:  49%|████▊     | 292/600 [00:04<00:04, 67.75it/s]loss=3.52 nodes=57:  49%|████▊     | 292/600 [00:04<00:04, 67.75it/s]loss=3.37 nodes=56:  49%|████▊     | 292/600 [00:04<00:04, 67.75it/s]loss=3.24 nodes=41:  49%|████▊     | 292/600 [00:04<00:04, 67.75it/s]loss=3.31 nodes=55:  49%|████▊     | 292/600 [00:04<00:04, 67.75it/s]loss=3.45 nodes=47:  49%|████▊     | 292/600 [00:04<00:04, 67.75it/s]loss=3.45 nodes=47:  50%|████▉     | 299/600 [00:04<00:04, 67.74it/s]loss=2.93 nodes=42:  50%|████▉     | 299/600 [00:04<00:04, 67.74it/s]loss=3.32 nodes=81:  50%|████▉     | 299/600 [00:04<00:04, 67.74it/s]loss=3.39 nodes=64:  50%|████▉     | 299/600 [00:04<00:04, 67.74it/s]loss=3.38 nodes=43:  50%|████▉     | 299/600 [00:04<00:04, 67.74it/s]loss=3.23 nodes=48:  50%|████▉     | 299/600 [00:04<00:04, 67.74it/s]loss=2.94 nodes=32:  50%|████▉     | 299/600 [00:04<00:04, 67.74it/s]loss=3.48 nodes=59:  50%|████▉     | 299/600 [00:04<00:04, 67.74it/s]loss=3.48 nodes=59:  51%|█████     | 306/600 [00:04<00:04, 64.77it/s]loss=3.43 nodes=45:  51%|█████     | 306/600 [00:04<00:04, 64.77it/s]loss=3.42 nodes=46:  51%|█████     | 306/600 [00:04<00:04, 64.77it/s]loss=3.79 nodes=58:  51%|█████     | 306/600 [00:04<00:04, 64.77it/s]loss=3.26 nodes=35:  51%|█████     | 306/600 [00:04<00:04, 64.77it/s]loss=3.53 nodes=63:  51%|█████     | 306/600 [00:04<00:04, 64.77it/s]loss=3.27 nodes=39:  51%|█████     | 306/600 [00:04<00:04, 64.77it/s]loss=3.33 nodes=36:  51%|█████     | 306/600 [00:04<00:04, 64.77it/s]loss=3.11 nodes=42:  51%|█████     | 306/600 [00:04<00:04, 64.77it/s]loss=3.11 nodes=42:  52%|█████▏    | 314/600 [00:04<00:04, 67.63it/s]loss=3.04 nodes=40:  52%|█████▏    | 314/600 [00:04<00:04, 67.63it/s]loss=3.58 nodes=43:  52%|█████▏    | 314/600 [00:04<00:04, 67.63it/s]loss=3.76 nodes=39:  52%|█████▏    | 314/600 [00:04<00:04, 67.63it/s]loss=3.22 nodes=51:  52%|█████▏    | 314/600 [00:04<00:04, 67.63it/s]loss=3.06 nodes=49:  52%|█████▏    | 314/600 [00:04<00:04, 67.63it/s]loss=3.42 nodes=50:  52%|█████▏    | 314/600 [00:04<00:04, 67.63it/s]loss=3.51 nodes=44:  52%|█████▏    | 314/600 [00:04<00:04, 67.63it/s]loss=3.51 nodes=44:  54%|█████▎    | 321/600 [00:04<00:04, 67.41it/s]loss=3.31 nodes=47:  54%|█████▎    | 321/600 [00:04<00:04, 67.41it/s]loss=3.05 nodes=39:  54%|█████▎    | 321/600 [00:04<00:04, 67.41it/s]loss=3.22 nodes=39:  54%|█████▎    | 321/600 [00:04<00:04, 67.41it/s]loss=3.01 nodes=37:  54%|█████▎    | 321/600 [00:04<00:04, 67.41it/s]loss=3.25 nodes=51:  54%|█████▎    | 321/600 [00:04<00:04, 67.41it/s]loss=3.35 nodes=54:  54%|█████▎    | 321/600 [00:04<00:04, 67.41it/s]loss=3.26 nodes=43:  54%|█████▎    | 321/600 [00:04<00:04, 67.41it/s]loss=3.26 nodes=43:  55%|█████▍    | 328/600 [00:04<00:04, 67.16it/s]loss=3.25 nodes=48:  55%|█████▍    | 328/600 [00:04<00:04, 67.16it/s]loss=3.14 nodes=40:  55%|█████▍    | 328/600 [00:04<00:04, 67.16it/s]loss=3.51 nodes=59:  55%|█████▍    | 328/600 [00:04<00:04, 67.16it/s]loss=3.58 nodes=60:  55%|█████▍    | 328/600 [00:04<00:04, 67.16it/s]loss=3.31 nodes=33:  55%|█████▍    | 328/600 [00:04<00:04, 67.16it/s]loss=3.38 nodes=40:  55%|█████▍    | 328/600 [00:04<00:04, 67.16it/s]loss=3.06 nodes=47:  55%|█████▍    | 328/600 [00:04<00:04, 67.16it/s]loss=3.06 nodes=47:  56%|█████▌    | 335/600 [00:04<00:03, 66.83it/s]loss=3.44 nodes=43:  56%|█████▌    | 335/600 [00:04<00:03, 66.83it/s]loss=3.30 nodes=45:  56%|█████▌    | 335/600 [00:05<00:03, 66.83it/s]loss=3.52 nodes=55:  56%|█████▌    | 335/600 [00:05<00:03, 66.83it/s]loss=3.30 nodes=51:  56%|█████▌    | 335/600 [00:05<00:03, 66.83it/s]loss=3.29 nodes=43:  56%|█████▌    | 335/600 [00:05<00:03, 66.83it/s]loss=3.39 nodes=58:  56%|█████▌    | 335/600 [00:05<00:03, 66.83it/s]loss=3.14 nodes=39:  56%|█████▌    | 335/600 [00:05<00:03, 66.83it/s]loss=3.14 nodes=39:  57%|█████▋    | 342/600 [00:05<00:03, 66.19it/s]loss=3.75 nodes=45:  57%|█████▋    | 342/600 [00:05<00:03, 66.19it/s]loss=3.29 nodes=55:  57%|█████▋    | 342/600 [00:05<00:03, 66.19it/s]loss=3.38 nodes=42:  57%|█████▋    | 342/600 [00:05<00:03, 66.19it/s]loss=3.23 nodes=37:  57%|█████▋    | 342/600 [00:05<00:03, 66.19it/s]loss=3.59 nodes=64:  57%|█████▋    | 342/600 [00:05<00:03, 66.19it/s]loss=2.93 nodes=36:  57%|█████▋    | 342/600 [00:05<00:03, 66.19it/s]loss=3.45 nodes=45:  57%|█████▋    | 342/600 [00:05<00:03, 66.19it/s]loss=3.45 nodes=45:  58%|█████▊    | 349/600 [00:05<00:03, 64.73it/s]loss=3.59 nodes=46:  58%|█████▊    | 349/600 [00:05<00:03, 64.73it/s]loss=3.34 nodes=42:  58%|█████▊    | 349/600 [00:05<00:03, 64.73it/s]loss=3.42 nodes=52:  58%|█████▊    | 349/600 [00:05<00:03, 64.73it/s]loss=3.05 nodes=39:  58%|█████▊    | 349/600 [00:05<00:03, 64.73it/s]loss=3.28 nodes=52:  58%|█████▊    | 349/600 [00:05<00:03, 64.73it/s]loss=3.35 nodes=44:  58%|█████▊    | 349/600 [00:05<00:03, 64.73it/s]loss=3.12 nodes=39:  58%|█████▊    | 349/600 [00:05<00:03, 64.73it/s]loss=3.12 nodes=39:  59%|█████▉    | 356/600 [00:05<00:03, 64.62it/s]loss=3.47 nodes=53:  59%|█████▉    | 356/600 [00:05<00:03, 64.62it/s]loss=3.61 nodes=44:  59%|█████▉    | 356/600 [00:05<00:03, 64.62it/s]loss=3.48 nodes=59:  59%|█████▉    | 356/600 [00:05<00:03, 64.62it/s]loss=3.27 nodes=38:  59%|█████▉    | 356/600 [00:05<00:03, 64.62it/s]loss=3.23 nodes=43:  59%|█████▉    | 356/600 [00:05<00:03, 64.62it/s]loss=3.20 nodes=46:  59%|█████▉    | 356/600 [00:05<00:03, 64.62it/s]loss=3.33 nodes=59:  59%|█████▉    | 356/600 [00:05<00:03, 64.62it/s]loss=3.33 nodes=59:  60%|██████    | 363/600 [00:05<00:03, 63.13it/s]loss=3.65 nodes=54:  60%|██████    | 363/600 [00:05<00:03, 63.13it/s]loss=3.41 nodes=45:  60%|██████    | 363/600 [00:05<00:03, 63.13it/s]loss=3.11 nodes=50:  60%|██████    | 363/600 [00:05<00:03, 63.13it/s]loss=3.51 nodes=50:  60%|██████    | 363/600 [00:05<00:03, 63.13it/s]loss=3.26 nodes=49:  60%|██████    | 363/600 [00:05<00:03, 63.13it/s]loss=3.36 nodes=34:  60%|██████    | 363/600 [00:05<00:03, 63.13it/s]loss=3.36 nodes=46:  60%|██████    | 363/600 [00:05<00:03, 63.13it/s]loss=3.12 nodes=43:  60%|██████    | 363/600 [00:05<00:03, 63.13it/s]loss=3.12 nodes=43:  62%|██████▏   | 371/600 [00:05<00:03, 65.86it/s]loss=3.56 nodes=52:  62%|██████▏   | 371/600 [00:05<00:03, 65.86it/s]loss=3.34 nodes=46:  62%|██████▏   | 371/600 [00:05<00:03, 65.86it/s]loss=3.21 nodes=37:  62%|██████▏   | 371/600 [00:05<00:03, 65.86it/s]loss=3.49 nodes=65:  62%|██████▏   | 371/600 [00:05<00:03, 65.86it/s]loss=3.33 nodes=68:  62%|██████▏   | 371/600 [00:05<00:03, 65.86it/s]loss=3.28 nodes=41:  62%|██████▏   | 371/600 [00:05<00:03, 65.86it/s]loss=3.11 nodes=44:  62%|██████▏   | 371/600 [00:05<00:03, 65.86it/s]loss=3.11 nodes=44:  63%|██████▎   | 378/600 [00:05<00:03, 65.99it/s]loss=3.25 nodes=42:  63%|██████▎   | 378/600 [00:05<00:03, 65.99it/s]loss=3.60 nodes=53:  63%|██████▎   | 378/600 [00:05<00:03, 65.99it/s]loss=3.33 nodes=51:  63%|██████▎   | 378/600 [00:05<00:03, 65.99it/s]loss=3.52 nodes=46:  63%|██████▎   | 378/600 [00:05<00:03, 65.99it/s]loss=3.28 nodes=47:  63%|██████▎   | 378/600 [00:05<00:03, 65.99it/s]loss=3.07 nodes=52:  63%|██████▎   | 378/600 [00:05<00:03, 65.99it/s]loss=3.25 nodes=52:  63%|██████▎   | 378/600 [00:05<00:03, 65.99it/s]loss=3.25 nodes=52:  64%|██████▍   | 385/600 [00:05<00:03, 66.40it/s]loss=3.28 nodes=46:  64%|██████▍   | 385/600 [00:05<00:03, 66.40it/s]loss=3.14 nodes=52:  64%|██████▍   | 385/600 [00:05<00:03, 66.40it/s]loss=3.35 nodes=43:  64%|██████▍   | 385/600 [00:05<00:03, 66.40it/s]loss=3.47 nodes=45:  64%|██████▍   | 385/600 [00:05<00:03, 66.40it/s]loss=3.34 nodes=40:  64%|██████▍   | 385/600 [00:05<00:03, 66.40it/s]loss=3.38 nodes=62:  64%|██████▍   | 385/600 [00:05<00:03, 66.40it/s]loss=3.68 nodes=74:  64%|██████▍   | 385/600 [00:05<00:03, 66.40it/s]loss=3.68 nodes=74:  65%|██████▌   | 392/600 [00:05<00:03, 66.05it/s]loss=3.20 nodes=39:  65%|██████▌   | 392/600 [00:05<00:03, 66.05it/s]loss=3.16 nodes=50:  65%|██████▌   | 392/600 [00:05<00:03, 66.05it/s]loss=3.32 nodes=44:  65%|██████▌   | 392/600 [00:05<00:03, 66.05it/s]loss=3.47 nodes=61:  65%|██████▌   | 392/600 [00:05<00:03, 66.05it/s]loss=3.33 nodes=61:  65%|██████▌   | 392/600 [00:05<00:03, 66.05it/s]loss=3.49 nodes=46:  65%|██████▌   | 392/600 [00:05<00:03, 66.05it/s]loss=3.54 nodes=43:  65%|██████▌   | 392/600 [00:05<00:03, 66.05it/s]loss=3.54 nodes=43:  66%|██████▋   | 399/600 [00:05<00:03, 65.14it/s]loss=3.35 nodes=43:  66%|██████▋   | 399/600 [00:05<00:03, 65.14it/s]loss=3.16 nodes=43:  66%|██████▋   | 399/600 [00:05<00:03, 65.14it/s]loss=3.21 nodes=39:  66%|██████▋   | 399/600 [00:05<00:03, 65.14it/s]loss=3.13 nodes=46:  66%|██████▋   | 399/600 [00:06<00:03, 65.14it/s]loss=3.36 nodes=42:  66%|██████▋   | 399/600 [00:06<00:03, 65.14it/s]loss=3.25 nodes=47:  66%|██████▋   | 399/600 [00:06<00:03, 65.14it/s]loss=3.32 nodes=72:  66%|██████▋   | 399/600 [00:06<00:03, 65.14it/s]loss=3.32 nodes=72:  68%|██████▊   | 406/600 [00:06<00:02, 65.17it/s]loss=3.29 nodes=36:  68%|██████▊   | 406/600 [00:06<00:02, 65.17it/s]loss=3.38 nodes=47:  68%|██████▊   | 406/600 [00:06<00:02, 65.17it/s]loss=3.53 nodes=79:  68%|██████▊   | 406/600 [00:06<00:02, 65.17it/s]loss=3.42 nodes=55:  68%|██████▊   | 406/600 [00:06<00:02, 65.17it/s]loss=3.09 nodes=41:  68%|██████▊   | 406/600 [00:06<00:02, 65.17it/s]loss=3.50 nodes=46:  68%|██████▊   | 406/600 [00:06<00:02, 65.17it/s]loss=3.30 nodes=44:  68%|██████▊   | 406/600 [00:06<00:02, 65.17it/s]loss=3.30 nodes=44:  69%|██████▉   | 413/600 [00:06<00:02, 64.38it/s]loss=3.48 nodes=63:  69%|██████▉   | 413/600 [00:06<00:02, 64.38it/s]loss=3.33 nodes=42:  69%|██████▉   | 413/600 [00:06<00:02, 64.38it/s]loss=3.20 nodes=39:  69%|██████▉   | 413/600 [00:06<00:02, 64.38it/s]loss=3.30 nodes=51:  69%|██████▉   | 413/600 [00:06<00:02, 64.38it/s]loss=3.00 nodes=35:  69%|██████▉   | 413/600 [00:06<00:02, 64.38it/s]loss=3.59 nodes=31:  69%|██████▉   | 413/600 [00:06<00:02, 64.38it/s]loss=3.16 nodes=42:  69%|██████▉   | 413/600 [00:06<00:02, 64.38it/s]loss=3.06 nodes=42:  69%|██████▉   | 413/600 [00:06<00:02, 64.38it/s]loss=3.06 nodes=42:  70%|███████   | 421/600 [00:06<00:02, 66.77it/s]loss=3.68 nodes=52:  70%|███████   | 421/600 [00:06<00:02, 66.77it/s]loss=3.51 nodes=38:  70%|███████   | 421/600 [00:06<00:02, 66.77it/s]loss=3.39 nodes=42:  70%|███████   | 421/600 [00:06<00:02, 66.77it/s]loss=3.10 nodes=35:  70%|███████   | 421/600 [00:06<00:02, 66.77it/s]loss=2.91 nodes=43:  70%|███████   | 421/600 [00:06<00:02, 66.77it/s]loss=3.11 nodes=54:  70%|███████   | 421/600 [00:06<00:02, 66.77it/s]loss=3.64 nodes=44:  70%|███████   | 421/600 [00:06<00:02, 66.77it/s]loss=3.24 nodes=37:  70%|███████   | 421/600 [00:06<00:02, 66.77it/s]loss=3.24 nodes=37:  72%|███████▏  | 429/600 [00:06<00:02, 67.97it/s]loss=3.29 nodes=62:  72%|███████▏  | 429/600 [00:06<00:02, 67.97it/s]loss=3.40 nodes=40:  72%|███████▏  | 429/600 [00:06<00:02, 67.97it/s]loss=3.39 nodes=39:  72%|███████▏  | 429/600 [00:06<00:02, 67.97it/s]loss=3.05 nodes=32:  72%|███████▏  | 429/600 [00:06<00:02, 67.97it/s]loss=3.15 nodes=44:  72%|███████▏  | 429/600 [00:06<00:02, 67.97it/s]loss=3.42 nodes=57:  72%|███████▏  | 429/600 [00:06<00:02, 67.97it/s]loss=3.09 nodes=40:  72%|███████▏  | 429/600 [00:06<00:02, 67.97it/s]loss=3.09 nodes=40:  73%|███████▎  | 436/600 [00:06<00:02, 68.28it/s]loss=3.08 nodes=34:  73%|███████▎  | 436/600 [00:06<00:02, 68.28it/s]loss=3.35 nodes=51:  73%|███████▎  | 436/600 [00:06<00:02, 68.28it/s]loss=3.75 nodes=52:  73%|███████▎  | 436/600 [00:06<00:02, 68.28it/s]loss=3.39 nodes=49:  73%|███████▎  | 436/600 [00:06<00:02, 68.28it/s]loss=3.22 nodes=48:  73%|███████▎  | 436/600 [00:06<00:02, 68.28it/s]loss=3.60 nodes=46:  73%|███████▎  | 436/600 [00:06<00:02, 68.28it/s]loss=3.56 nodes=38:  73%|███████▎  | 436/600 [00:06<00:02, 68.28it/s]loss=3.25 nodes=40:  73%|███████▎  | 436/600 [00:06<00:02, 68.28it/s]loss=3.25 nodes=40:  74%|███████▍  | 444/600 [00:06<00:02, 69.24it/s]loss=3.47 nodes=43:  74%|███████▍  | 444/600 [00:06<00:02, 69.24it/s]loss=3.28 nodes=39:  74%|███████▍  | 444/600 [00:06<00:02, 69.24it/s]loss=3.32 nodes=37:  74%|███████▍  | 444/600 [00:06<00:02, 69.24it/s]loss=3.07 nodes=43:  74%|███████▍  | 444/600 [00:06<00:02, 69.24it/s]loss=3.37 nodes=45:  74%|███████▍  | 444/600 [00:06<00:02, 69.24it/s]loss=3.19 nodes=43:  74%|███████▍  | 444/600 [00:06<00:02, 69.24it/s]loss=3.68 nodes=29:  74%|███████▍  | 444/600 [00:06<00:02, 69.24it/s]loss=3.82 nodes=36:  74%|███████▍  | 444/600 [00:06<00:02, 69.24it/s]loss=3.82 nodes=36:  75%|███████▌  | 452/600 [00:06<00:02, 71.05it/s]loss=3.38 nodes=31:  75%|███████▌  | 452/600 [00:06<00:02, 71.05it/s]loss=3.08 nodes=49:  75%|███████▌  | 452/600 [00:06<00:02, 71.05it/s]loss=3.05 nodes=44:  75%|███████▌  | 452/600 [00:06<00:02, 71.05it/s]loss=3.58 nodes=41:  75%|███████▌  | 452/600 [00:06<00:02, 71.05it/s]loss=3.14 nodes=47:  75%|███████▌  | 452/600 [00:06<00:02, 71.05it/s]loss=3.23 nodes=41:  75%|███████▌  | 452/600 [00:06<00:02, 71.05it/s]loss=3.35 nodes=47:  75%|███████▌  | 452/600 [00:06<00:02, 71.05it/s]loss=3.09 nodes=49:  75%|███████▌  | 452/600 [00:06<00:02, 71.05it/s]loss=3.09 nodes=49:  77%|███████▋  | 460/600 [00:06<00:02, 69.99it/s]loss=3.38 nodes=47:  77%|███████▋  | 460/600 [00:06<00:02, 69.99it/s]loss=3.17 nodes=50:  77%|███████▋  | 460/600 [00:06<00:02, 69.99it/s]loss=3.40 nodes=47:  77%|███████▋  | 460/600 [00:06<00:02, 69.99it/s]loss=3.38 nodes=37:  77%|███████▋  | 460/600 [00:06<00:02, 69.99it/s]loss=3.29 nodes=47:  77%|███████▋  | 460/600 [00:06<00:02, 69.99it/s]loss=3.56 nodes=38:  77%|███████▋  | 460/600 [00:06<00:02, 69.99it/s]loss=3.53 nodes=44:  77%|███████▋  | 460/600 [00:06<00:02, 69.99it/s]loss=3.25 nodes=57:  77%|███████▋  | 460/600 [00:06<00:02, 69.99it/s]loss=3.25 nodes=57:  78%|███████▊  | 468/600 [00:06<00:01, 68.26it/s]loss=3.42 nodes=40:  78%|███████▊  | 468/600 [00:06<00:01, 68.26it/s]loss=3.73 nodes=37:  78%|███████▊  | 468/600 [00:06<00:01, 68.26it/s]loss=3.24 nodes=52:  78%|███████▊  | 468/600 [00:07<00:01, 68.26it/s]loss=3.35 nodes=44:  78%|███████▊  | 468/600 [00:07<00:01, 68.26it/s]loss=3.56 nodes=48:  78%|███████▊  | 468/600 [00:07<00:01, 68.26it/s]loss=3.38 nodes=39:  78%|███████▊  | 468/600 [00:07<00:01, 68.26it/s]loss=3.17 nodes=40:  78%|███████▊  | 468/600 [00:07<00:01, 68.26it/s]loss=3.45 nodes=40:  78%|███████▊  | 468/600 [00:07<00:01, 68.26it/s]loss=3.45 nodes=40:  79%|███████▉  | 476/600 [00:07<00:01, 69.64it/s]loss=3.47 nodes=53:  79%|███████▉  | 476/600 [00:07<00:01, 69.64it/s]loss=3.01 nodes=36:  79%|███████▉  | 476/600 [00:07<00:01, 69.64it/s]loss=3.36 nodes=59:  79%|███████▉  | 476/600 [00:07<00:01, 69.64it/s]loss=3.20 nodes=43:  79%|███████▉  | 476/600 [00:07<00:01, 69.64it/s]loss=3.46 nodes=43:  79%|███████▉  | 476/600 [00:07<00:01, 69.64it/s]loss=3.16 nodes=36:  79%|███████▉  | 476/600 [00:07<00:01, 69.64it/s]loss=3.36 nodes=53:  79%|███████▉  | 476/600 [00:07<00:01, 69.64it/s]loss=2.92 nodes=40:  79%|███████▉  | 476/600 [00:07<00:01, 69.64it/s]loss=2.92 nodes=40:  81%|████████  | 484/600 [00:07<00:01, 69.64it/s]loss=3.20 nodes=43:  81%|████████  | 484/600 [00:07<00:01, 69.64it/s]loss=3.46 nodes=58:  81%|████████  | 484/600 [00:07<00:01, 69.64it/s]loss=3.15 nodes=45:  81%|████████  | 484/600 [00:07<00:01, 69.64it/s]loss=3.47 nodes=80:  81%|████████  | 484/600 [00:07<00:01, 69.64it/s]loss=3.29 nodes=42:  81%|████████  | 484/600 [00:07<00:01, 69.64it/s]loss=3.19 nodes=41:  81%|████████  | 484/600 [00:07<00:01, 69.64it/s]loss=3.30 nodes=34:  81%|████████  | 484/600 [00:07<00:01, 69.64it/s]loss=3.30 nodes=34:  82%|████████▏ | 491/600 [00:07<00:01, 68.38it/s]loss=3.11 nodes=43:  82%|████████▏ | 491/600 [00:07<00:01, 68.38it/s]loss=3.19 nodes=42:  82%|████████▏ | 491/600 [00:07<00:01, 68.38it/s]loss=3.13 nodes=45:  82%|████████▏ | 491/600 [00:07<00:01, 68.38it/s]loss=2.95 nodes=36:  82%|████████▏ | 491/600 [00:07<00:01, 68.38it/s]loss=3.13 nodes=44:  82%|████████▏ | 491/600 [00:07<00:01, 68.38it/s]loss=3.13 nodes=44:  82%|████████▏ | 491/600 [00:07<00:01, 68.38it/s]loss=3.68 nodes=63:  82%|████████▏ | 491/600 [00:07<00:01, 68.38it/s]loss=3.68 nodes=63:  83%|████████▎ | 498/600 [00:07<00:01, 67.30it/s]loss=3.32 nodes=48:  83%|████████▎ | 498/600 [00:07<00:01, 67.30it/s]loss=3.70 nodes=40:  83%|████████▎ | 498/600 [00:07<00:01, 67.30it/s]loss=3.11 nodes=47:  83%|████████▎ | 498/600 [00:07<00:01, 67.30it/s]loss=3.21 nodes=48:  83%|████████▎ | 498/600 [00:07<00:01, 67.30it/s]loss=3.40 nodes=47:  83%|████████▎ | 498/600 [00:07<00:01, 67.30it/s]loss=3.44 nodes=39:  83%|████████▎ | 498/600 [00:07<00:01, 67.30it/s]loss=3.42 nodes=46:  83%|████████▎ | 498/600 [00:07<00:01, 67.30it/s]loss=3.42 nodes=46:  84%|████████▍ | 505/600 [00:07<00:01, 67.49it/s]loss=3.52 nodes=72:  84%|████████▍ | 505/600 [00:07<00:01, 67.49it/s]loss=3.15 nodes=41:  84%|████████▍ | 505/600 [00:07<00:01, 67.49it/s]loss=3.36 nodes=38:  84%|████████▍ | 505/600 [00:07<00:01, 67.49it/s]loss=3.28 nodes=44:  84%|████████▍ | 505/600 [00:07<00:01, 67.49it/s]loss=3.26 nodes=56:  84%|████████▍ | 505/600 [00:07<00:01, 67.49it/s]loss=3.37 nodes=43:  84%|████████▍ | 505/600 [00:07<00:01, 67.49it/s]loss=2.79 nodes=37:  84%|████████▍ | 505/600 [00:07<00:01, 67.49it/s]loss=2.79 nodes=37:  85%|████████▌ | 512/600 [00:07<00:01, 67.84it/s]loss=3.20 nodes=48:  85%|████████▌ | 512/600 [00:07<00:01, 67.84it/s]loss=2.85 nodes=39:  85%|████████▌ | 512/600 [00:07<00:01, 67.84it/s]loss=3.12 nodes=40:  85%|████████▌ | 512/600 [00:07<00:01, 67.84it/s]loss=3.26 nodes=54:  85%|████████▌ | 512/600 [00:07<00:01, 67.84it/s]loss=3.19 nodes=37:  85%|████████▌ | 512/600 [00:07<00:01, 67.84it/s]loss=3.38 nodes=51:  85%|████████▌ | 512/600 [00:07<00:01, 67.84it/s]loss=3.24 nodes=48:  85%|████████▌ | 512/600 [00:07<00:01, 67.84it/s]loss=3.24 nodes=48:  86%|████████▋ | 519/600 [00:07<00:01, 67.05it/s]loss=3.51 nodes=56:  86%|████████▋ | 519/600 [00:07<00:01, 67.05it/s]loss=3.76 nodes=59:  86%|████████▋ | 519/600 [00:07<00:01, 67.05it/s]loss=3.20 nodes=43:  86%|████████▋ | 519/600 [00:07<00:01, 67.05it/s]loss=3.14 nodes=44:  86%|████████▋ | 519/600 [00:07<00:01, 67.05it/s]loss=3.22 nodes=46:  86%|████████▋ | 519/600 [00:07<00:01, 67.05it/s]loss=3.56 nodes=52:  86%|████████▋ | 519/600 [00:07<00:01, 67.05it/s]loss=3.47 nodes=44:  86%|████████▋ | 519/600 [00:07<00:01, 67.05it/s]loss=3.47 nodes=44:  88%|████████▊ | 526/600 [00:07<00:01, 66.01it/s]loss=3.24 nodes=43:  88%|████████▊ | 526/600 [00:07<00:01, 66.01it/s]loss=3.04 nodes=41:  88%|████████▊ | 526/600 [00:07<00:01, 66.01it/s]loss=3.41 nodes=45:  88%|████████▊ | 526/600 [00:07<00:01, 66.01it/s]loss=3.11 nodes=40:  88%|████████▊ | 526/600 [00:07<00:01, 66.01it/s]loss=3.36 nodes=55:  88%|████████▊ | 526/600 [00:07<00:01, 66.01it/s]loss=3.57 nodes=47:  88%|████████▊ | 526/600 [00:07<00:01, 66.01it/s]loss=3.24 nodes=47:  88%|████████▊ | 526/600 [00:07<00:01, 66.01it/s]loss=3.24 nodes=47:  89%|████████▉ | 533/600 [00:07<00:00, 67.06it/s]loss=3.58 nodes=32:  89%|████████▉ | 533/600 [00:07<00:00, 67.06it/s]loss=2.92 nodes=37:  89%|████████▉ | 533/600 [00:07<00:00, 67.06it/s]loss=3.36 nodes=35:  89%|████████▉ | 533/600 [00:07<00:00, 67.06it/s]loss=3.42 nodes=37:  89%|████████▉ | 533/600 [00:07<00:00, 67.06it/s]loss=3.32 nodes=50:  89%|████████▉ | 533/600 [00:07<00:00, 67.06it/s]loss=3.54 nodes=49:  89%|████████▉ | 533/600 [00:08<00:00, 67.06it/s]loss=3.66 nodes=55:  89%|████████▉ | 533/600 [00:08<00:00, 67.06it/s]loss=3.31 nodes=34:  89%|████████▉ | 533/600 [00:08<00:00, 67.06it/s]loss=3.31 nodes=34:  90%|█████████ | 541/600 [00:08<00:00, 69.64it/s]loss=3.07 nodes=52:  90%|█████████ | 541/600 [00:08<00:00, 69.64it/s]loss=3.25 nodes=38:  90%|█████████ | 541/600 [00:08<00:00, 69.64it/s]loss=3.41 nodes=32:  90%|█████████ | 541/600 [00:08<00:00, 69.64it/s]loss=2.71 nodes=40:  90%|█████████ | 541/600 [00:08<00:00, 69.64it/s]loss=3.27 nodes=33:  90%|█████████ | 541/600 [00:08<00:00, 69.64it/s]loss=3.59 nodes=38:  90%|█████████ | 541/600 [00:08<00:00, 69.64it/s]loss=3.28 nodes=39:  90%|█████████ | 541/600 [00:08<00:00, 69.64it/s]loss=3.45 nodes=33:  90%|█████████ | 541/600 [00:08<00:00, 69.64it/s]loss=3.45 nodes=33:  92%|█████████▏| 549/600 [00:08<00:00, 72.38it/s]loss=3.31 nodes=58:  92%|█████████▏| 549/600 [00:08<00:00, 72.38it/s]loss=3.73 nodes=49:  92%|█████████▏| 549/600 [00:08<00:00, 72.38it/s]loss=3.20 nodes=33:  92%|█████████▏| 549/600 [00:08<00:00, 72.38it/s]loss=3.37 nodes=40:  92%|█████████▏| 549/600 [00:08<00:00, 72.38it/s]loss=3.35 nodes=40:  92%|█████████▏| 549/600 [00:08<00:00, 72.38it/s]loss=2.95 nodes=45:  92%|█████████▏| 549/600 [00:08<00:00, 72.38it/s]loss=3.37 nodes=43:  92%|█████████▏| 549/600 [00:08<00:00, 72.38it/s]loss=3.44 nodes=42:  92%|█████████▏| 549/600 [00:08<00:00, 72.38it/s]loss=3.44 nodes=42:  93%|█████████▎| 557/600 [00:08<00:00, 71.85it/s]loss=3.16 nodes=42:  93%|█████████▎| 557/600 [00:08<00:00, 71.85it/s]loss=3.28 nodes=49:  93%|█████████▎| 557/600 [00:08<00:00, 71.85it/s]loss=3.43 nodes=45:  93%|█████████▎| 557/600 [00:08<00:00, 71.85it/s]loss=3.33 nodes=41:  93%|█████████▎| 557/600 [00:08<00:00, 71.85it/s]loss=3.24 nodes=47:  93%|█████████▎| 557/600 [00:08<00:00, 71.85it/s]loss=3.10 nodes=37:  93%|█████████▎| 557/600 [00:08<00:00, 71.85it/s]loss=3.12 nodes=46:  93%|█████████▎| 557/600 [00:08<00:00, 71.85it/s]loss=3.37 nodes=46:  93%|█████████▎| 557/600 [00:08<00:00, 71.85it/s]loss=3.37 nodes=46:  94%|█████████▍| 565/600 [00:08<00:00, 71.60it/s]loss=3.25 nodes=56:  94%|█████████▍| 565/600 [00:08<00:00, 71.60it/s]loss=3.15 nodes=32:  94%|█████████▍| 565/600 [00:08<00:00, 71.60it/s]loss=3.44 nodes=62:  94%|█████████▍| 565/600 [00:08<00:00, 71.60it/s]loss=2.94 nodes=42:  94%|█████████▍| 565/600 [00:08<00:00, 71.60it/s]loss=3.10 nodes=39:  94%|█████████▍| 565/600 [00:08<00:00, 71.60it/s]loss=3.19 nodes=38:  94%|█████████▍| 565/600 [00:08<00:00, 71.60it/s]loss=3.25 nodes=48:  94%|█████████▍| 565/600 [00:08<00:00, 71.60it/s]loss=3.30 nodes=51:  94%|█████████▍| 565/600 [00:08<00:00, 71.60it/s]loss=3.30 nodes=51:  96%|█████████▌| 573/600 [00:08<00:00, 70.36it/s]loss=3.47 nodes=60:  96%|█████████▌| 573/600 [00:08<00:00, 70.36it/s]loss=3.21 nodes=46:  96%|█████████▌| 573/600 [00:08<00:00, 70.36it/s]loss=3.16 nodes=43:  96%|█████████▌| 573/600 [00:08<00:00, 70.36it/s]loss=3.16 nodes=44:  96%|█████████▌| 573/600 [00:08<00:00, 70.36it/s]loss=3.01 nodes=39:  96%|█████████▌| 573/600 [00:08<00:00, 70.36it/s]loss=3.31 nodes=42:  96%|█████████▌| 573/600 [00:08<00:00, 70.36it/s]loss=3.19 nodes=47:  96%|█████████▌| 573/600 [00:08<00:00, 70.36it/s]loss=3.29 nodes=43:  96%|█████████▌| 573/600 [00:08<00:00, 70.36it/s]loss=3.29 nodes=43:  97%|█████████▋| 581/600 [00:08<00:00, 70.45it/s]loss=3.27 nodes=58:  97%|█████████▋| 581/600 [00:08<00:00, 70.45it/s]loss=3.17 nodes=43:  97%|█████████▋| 581/600 [00:08<00:00, 70.45it/s]loss=3.27 nodes=54:  97%|█████████▋| 581/600 [00:08<00:00, 70.45it/s]loss=3.39 nodes=45:  97%|█████████▋| 581/600 [00:08<00:00, 70.45it/s]loss=3.25 nodes=49:  97%|█████████▋| 581/600 [00:08<00:00, 70.45it/s]loss=3.31 nodes=36:  97%|█████████▋| 581/600 [00:08<00:00, 70.45it/s]loss=3.55 nodes=56:  97%|█████████▋| 581/600 [00:08<00:00, 70.45it/s]loss=3.57 nodes=48:  97%|█████████▋| 581/600 [00:08<00:00, 70.45it/s]loss=3.57 nodes=48:  98%|█████████▊| 589/600 [00:08<00:00, 69.38it/s]loss=3.05 nodes=40:  98%|█████████▊| 589/600 [00:08<00:00, 69.38it/s]loss=3.40 nodes=58:  98%|█████████▊| 589/600 [00:08<00:00, 69.38it/s]loss=3.38 nodes=47:  98%|█████████▊| 589/600 [00:08<00:00, 69.38it/s]loss=3.13 nodes=45:  98%|█████████▊| 589/600 [00:08<00:00, 69.38it/s]loss=3.53 nodes=42:  98%|█████████▊| 589/600 [00:08<00:00, 69.38it/s]loss=3.07 nodes=44:  98%|█████████▊| 589/600 [00:08<00:00, 69.38it/s]loss=3.21 nodes=42:  98%|█████████▊| 589/600 [00:08<00:00, 69.38it/s]loss=3.20 nodes=43:  98%|█████████▊| 589/600 [00:08<00:00, 69.38it/s]loss=3.20 nodes=43: 100%|█████████▉| 597/600 [00:08<00:00, 69.61it/s]loss=3.30 nodes=52: 100%|█████████▉| 597/600 [00:08<00:00, 69.61it/s]loss=3.27 nodes=45: 100%|█████████▉| 597/600 [00:08<00:00, 69.61it/s]loss=3.12 nodes=60: 100%|█████████▉| 597/600 [00:08<00:00, 69.61it/s]loss=3.12 nodes=60: 100%|██████████| 600/600 [00:08<00:00, 67.59it/s]
+
+--- round 3/6: 15 fn + 0 fn_p_g unsolved; |D|=43 (6 invented); fn Q=dreamed (replay families only); t_fn=3600s ---
+    [instr] agency constructor in D: fn_6 (wall-free); belief solved (replay-eligible): 153/168
+[   271] caught (fn_9 c2 6 2 1 4)
+[  1321] caught (fn_9 c4 9 8 2 1)
+[ 12526] caught (fn_9 c4 9 8 5 2)
+[143361] caught (fn_6 2 6 (fn_6 6 2 (fn_7 6 2 (optimize (distance 6) 2))))
+      + solved [belief_witness] in 2.4s: (compose (fork (compose (wall_at c2 c4) (optimize (neg_dist 9) 8)) (sync_to_world 8)) (optimize (neg_dist 2) 1))
+      + solved [belief_witness] in 43.0s: (compose (fork (compose (wall_at c2 c4) (optimize (neg_dist 9) 8)) (sync_to_world 8)) (optimize (neg_dist 5) 2))
+      + solved [belief_witness] in 0.4s: (compose (fork (compose (wall_at c2 c2) (optimize (neg_dist 6) 2)) (sync_to_world 2)) (optimize (neg_dist 1) 4))
+      + solved [belief_goal] in 525.0s: (fork (compose (fork (compose (compose (optimize (distance 6) 2) (optimize (neg_dist 2) 6)) (optimize (neg_dist 2) 6)) (sync_to_world 6)) (optimize (neg_dist 6) 2)) (sync_to_world 2))
+    per-task time (s): 4 solved [slowest solve 525.0]
+    (misses burned up to 3600.0s each; the uniform --t-fn can drop toward slowest-solve=525.0s to cut wasted early-round time without losing a solve)
+    solved 289/300 (+4 this round)
+running stitch_core.compress on 289 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (fork (compose #2 (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_7: (compose #2 (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_8: (fn_0 #1 #0 (optimize (distance #0) #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_9: (fn_1 #4 #3 (fn_0 #2 #1 (wall_at c2 #0)))  [coord, cellvalue, cellvalue, cellvalue, cellvalue] -> fn
+added abstraction fn_10: (fn_1 #3 #2 (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_11: (fn_0 #3 #2 (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+
+--- round 4/6: 11 fn + 0 fn_p_g unsolved; |D|=43 (6 invented); fn Q=uniform/content; t_fn=3600s ---
+    [instr] agency constructor in D: fn_6 (wall-free); belief solved (replay-eligible): 157/168
+    per-task time (s): 0 solved
+    solved 289/300 (+0 this round)
+running stitch_core.compress on 289 programs (iterations=6, max_arity=5)
+stitch returned 6 abstractions
+added abstraction fn_6: (fork (compose #2 (optimize (neg_dist #1) #0)) (sync_to_world #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_7: (compose #2 (optimize (neg_dist #1) #0))  [cellvalue, cellvalue, fn] -> fn
+added abstraction fn_8: (fn_0 #1 #0 (optimize (distance #0) #0))  [cellvalue, cellvalue] -> fn
+added abstraction fn_9: (fn_1 #4 #3 (fn_0 #2 #1 (wall_at c2 #0)))  [coord, cellvalue, cellvalue, cellvalue, cellvalue] -> fn
+added abstraction fn_10: (fn_1 #3 #2 (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+added abstraction fn_11: (fn_0 #3 #2 (wall_at #1 #0))  [coord, coord, cellvalue, cellvalue] -> fn
+    no new tasks solved this round (uniform/content Q) — wake-sleep stalled (raise t_fn / ecd_iters, or the abstraction belief needs hasn't formed).
+  wrote run artifact (289 solved programs) to phase1_run.json
+  wrote trajectory artifact (289 solved programs, 3 rounds) to phase1_traj.json
+
+========================================================================
+(A) USAGE CENSUS — which core parts each family reaches for (pre-stitch)
+========================================================================
+  physics       4/4 solved   uses: ['step']
+  desire        16/16 solved   uses: ['neg_dist', 'optimize']
+  overlay       4/4 solved   uses: ['fork', 'overlay', 'step']
+  comet         4/4 solved   uses: ['fork', 'neg_dist', 'optimize', 'overlay']
+  registration  4/4 solved   uses: ['sync_to_world']
+  belief        157/168 solved   uses: ['compose', 'fork', 'neg_dist', 'optimize', 'step', 'sync_to_world', 'wall_at']
+  flee          4/4 solved   uses: ['optimize']
+  deletion      4/4 solved   uses: []
+  denoise       4/4 solved   uses: []
+  obstacle      48/48 solved   uses: ['compose', 'neg_dist', 'optimize', 'wall_at']
+  relocate      16/16 solved   uses: ['compose', 'wall_at']
+  underlay      4/4 solved   uses: ['fork', 'step']
+  perception    4/4 solved   uses: []
+  multi_reg     4/4 solved   uses: []
+  reg_except    4/4 solved   uses: []
+  inpaint       4/4 solved   uses: []
+  readout       4/4 solved   uses: []
+
+  belief variants (pooled as kind='belief' above; agency commit form):
+    belief_goal            46/48 solved   commit: 46 literal, 0 degenerate
+    belief_observers       24/24 solved   commit: 23 literal, 0 degenerate, 1 complement
+    belief_wall            24/24 solved   commit: 24 literal, 0 degenerate
+    belief_witness         47/48 solved   commit: 47 literal, 0 degenerate
+    belief_false_obstacle  16/24 solved   commit: 16 literal, 0 degenerate
+
+  two observers, one world — SELECTIVE attribution:
+  18/24 solved scenes commit for the believer and NOT for the observer
+  (5 attribute a private model to the bystander, whose walk is plain desire)
+  (degenerate scope commits are canonicalised to the agency commit first — see (A))
+
+  fork used outside belief (overlay/comet)   : True
+  sync used outside belief (registration)    : True
+  wall_at used outside belief (obstacle)     : True
+  belief reuses BOTH fork and sync           : True
+  fork∧sync agency is unique to belief       : True
+  wall-belief solutions are wall-based       : False   (plain/false-obstacle only; goal/observers are displaced-goal, not wall)
+
+  FORCED LITERAL COMMIT — false-obstacle family (degeneracy excluded by construction)
+  16/24 false-obstacle tasks solved; commit forms: 16 literal, 0 degenerate, 0 complement.
+  Every solved one commits via the literal sync_to_world(av): no scope complement
+  reproduces these scenes when paired with the derive this family certifies
+  (real wall and goal stay put), so the agency commit is FORCED and found —
+  not merely argued extensionally equal to a cheaper complement.
+
+========================================================================
+(A′) CUBE CENSUS — which symmetric corner each family selected
+     (commit-axis corners judged AT the world-level commit; the other
+      axes — grid-edit / utility / bifunctor / pairing — over the program)
+========================================================================
+  physics       (none)
+  desire        neg_dist×16
+  overlay       overlay×4
+  comet         neg_dist×4, overlay×4
+  registration  sync_to_world×4
+  belief        neg_dist×87, sync_to_world×87, wall_at×84, distance×2
+  flee          distance×4
+  deletion      clear_at×4
+  denoise       erase×4
+  obstacle      neg_dist×48, wall_at×48
+  relocate      clear_at×16, wall_at×16
+  underlay      underlay×4
+  perception    sync_to_model×4
+  multi_reg     sync_all×4
+  reg_except    sync_except×4
+  inpaint       underlay×4
+  readout       snd_gg×4
+
+  belief keeps the agency corner (sync_to_world + wall_at) : True
+  belief avoids every symmetric complement                 : True
+  some complement is used elsewhere (field is live)        : True
+  complements claimed by another family                    : ['clear_at', 'distance', 'erase', 'snd_gg', 'sync_all', 'sync_except', 'sync_to_model', 'underlay']
+  => over the full symmetric field, MDL still selects the one asymmetric
+     corner for belief — the agency signature is discovered, not gerrymandered.
+
+========================================================================
+(B) JOINT COMPRESSION — final library over all 289 solutions (last stitch: iterations=6)
+========================================================================
+
+  invented abstractions:
+    fn_6 «agent_constructor_wallfree»  [cellvalue, cellvalue, fn] -> fn
+      body: (fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world $0))
+      *** AGENT TYPE CONSTRUCTOR (belief) ***
+          shared holes: $0 (x2)  — actor AND committer
+    fn_7 «desire_fragment»  [cellvalue, cellvalue, fn] -> fn
+      body: (compose $2 (optimize (neg_dist $1) $0))
+      (desire fragment)
+    fn_8 «agent_constructor_wallfree»  [cellvalue, cellvalue] -> fn
+      body: (fork (compose (optimize (distance $0) $0) (optimize (neg_dist $0) $1)) (sync_to_world $1))
+      *** AGENT TYPE CONSTRUCTOR (belief) ***
+          shared holes: $0 (x3), $1 (x2)  — actor AND committer
+    fn_9 «agent_constructor»  [coord, cellvalue, cellvalue, cellvalue, cellvalue] -> fn
+      body: (compose (fork (compose (wall_at c2 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2)) (optimize (neg_dist $3) $4))
+      *** AGENT TYPE CONSTRUCTOR (belief) ***
+          shared holes: $2 (x2)  — actor AND committer
+    fn_10 «wall_policy»  [coord, coord, cellvalue, cellvalue] -> fn
+      body: (compose (wall_at $1 $0) (optimize (neg_dist $2) $3))
+      (obstacle/belief policy: stamp wall ▸ navigate — the shared derive)
+    fn_11 «agent_constructor»  [coord, coord, cellvalue, cellvalue] -> fn
+      body: (fork (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)) (sync_to_world $3))
+      *** AGENT TYPE CONSTRUCTOR (belief) ***
+          shared holes: $3 (x2)  — actor AND committer
+
+  abstraction usage by family (from stitch's rewritten programs):
+    physics       (bare prims)×4
+    desire        (bare prims)×16
+    overlay       (bare prims)×4
+    comet         (bare prims)×4
+    registration  (bare prims)×4
+    belief        fn_6×50, fn_11×47, fn_8×46, fn_9×32, fn_7×24, fn_10×5
+    flee          (bare prims)×4
+    deletion      (bare prims)×4
+    denoise       (bare prims)×4
+    obstacle      fn_10×47, (bare prims)×1
+    relocate      (bare prims)×16
+    underlay      (bare prims)×4
+    perception    (bare prims)×4
+    multi_reg     (bare prims)×4
+    reg_except    (bare prims)×4
+    inpaint       (bare prims)×4
+    readout       (bare prims)×4
+
+========================================================================
+(B′) ABSTRACTION GENERALITY — does seek/policy carry holes for (gv, av)?
+========================================================================
+
+  desire: 8 distinct (gv,av) combos solved & rewritten
+    (no seek/policy abstraction reached these rewritten programs)
+
+  obstacle: 8 distinct (gv,av) combos solved & rewritten
+    fn_10 [policy]  reused by 8/8 combos  holes=4
+        body: (compose (wall_at $1 $0) (optimize (neg_dist $2) $3))
+
+  belief: 8 distinct (gv,av) combos solved & rewritten
+    fn_7 [seek]  reused by 8/8 combos  holes=3
+        body: (compose $2 (optimize (neg_dist $1) $0))
+    fn_11 [policy]  reused by 8/8 combos  holes=4
+        body: (fork (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)) (sync_to_world $3))
+    fn_9 [policy]  reused by 8/8 combos  holes=5
+        body: (compose (fork (compose (wall_at c2 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2)) (optimize (neg_dist $3) $4))
+    fn_6 [seek]  reused by 8/8 combos  holes=3
+        body: (fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world $0))
+    fn_8 [seek]  reused by 8/8 combos  holes=2
+        body: (fork (compose (optimize (distance $0) $0) (optimize (neg_dist $0) $1)) (sync_to_world $1))
+    fn_10 [policy]  reused by 5/8 combos  holes=4
+        body: (compose (wall_at $1 $0) (optimize (neg_dist $2) $3))
+
+  distinct belief (gv,av) combos in corpus            : 8
+  widest combo-span of one OBSTACLE policy (leading)  : 8
+  widest combo-span of one belief seek/policy (confirm): 8
+  => policy GENERALIZES into belief: one abstraction serves multiple combos via
+     holes — belief's skeleton is genuinely shallow.
+
+========================================================================
+(B″) DL CENSUS — what the library buys each family, in nats
+========================================================================
+
+  family        solves    before     after     saved   (median nats per task; saved > 0 = the library is shorter)
+  ------------------------------------------------------------------
+  desire            16      7.86      7.86      0.00
+  comet              4     12.63     12.63      0.00
+  registration       4      4.50      4.50      0.00
+  belief           109     33.71     13.38     18.19  <- belief
+  flee               4      7.86      7.86      0.00
+  deletion           4      5.78      5.78      0.00
+  denoise            4      4.87      4.87      0.00
+  obstacle          48     16.21     10.39      5.82
+  relocate          16     14.13     14.13      0.00
+  perception         4      4.50      4.50      0.00
+  multi_reg          4      2.20      2.20      0.00
+  reg_except         4      4.50      4.50      0.00
+  inpaint            4      2.20      2.20      0.00
+  readout            4      2.20      2.20      0.00
+
+  belief by variant:
+    belief_goal             15 solves     25.36 ->     7.17  (saved  18.19)
+    belief_observers        17 solves     35.78 ->    17.60  (saved  18.19)
+    belief_wall             24 solves     23.28 ->    10.39  (saved  12.89)
+    belief_witness          44 solves     33.71 ->    13.38  (saved  20.32)
+    belief_false_obstacle    9 solves     23.28 ->    10.39  (saved  12.89)
+
+  belief: 33.71 nats before the library -> 13.38 after (median saving 18.19; 1824.26 over 109 solves)
+  other families' median saving, for scale: 0.00 nats/task
+  belief solves whose library form invokes fn_8 (the constructor): 28/109
+
+========================================================================
+VERDICT
+========================================================================
+  (A) parts are general    : fork∉belief-only=True, sync∉belief-only=True, wall∉belief-only=True
+  (A) only agency is unique: fork∧sync unique to belief=True, belief recombines=True, wall-based=False
+  (A) no scope-complement rival among belief solves : False   (1 complement, 0 degenerate, 156 literal)
+  (B) constructor invented : True (fn_8, arity 2; 2 shared agency hole(s): $0×3, $1×2)
+  (B) constructor is belief-specific: used by belief=True, absent from other families=True
+  (B) belief DL before -> after the library: 33.71 -> 13.38 nats (median saving 18.19 over 109 solves;
+      28/109 invoke the constructor; other families save 0.00 nats/task for scale)
+  (B) MDL margin over non-belief rivals: unavailable — no mdl_margins.json yet — run `python mdl_margin.py` to price belief against its rivals
+  (A′) cube: belief picks the lone asymmetric corner over the full field: True
+
+  => not fully demonstrated this run (raise timeouts / n_bel / stitch_iters,
+     or drop --smoke).
+     failed criteria: ['belief_is_wall_based', 'no_belief_complement']
+  wrote verdict artifact to phase1_verdict.json

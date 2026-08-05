@@ -1,21 +1,24 @@
 {
  "decomposed": true,
  "phase": 2,
- "smoke": true,
- "n_rounds": 1,
- "n_tasks": 62,
+ "smoke": false,
+ "n_rounds": 4,
+ "n_tasks": 276,
  "family_counts": {
-  "physics": 2,
-  "desire": 8,
-  "world": 52,
-  "belief": 0
+  "physics": 4,
+  "desire": 16,
+  "world": 124,
+  "belief": 132
  },
- "signature_round": 1,
- "signature_drop": 0.0,
+ "signature_round": 2,
+ "signature_drop": 1107.973138809204,
  "final_library": [
   "fn_0",
   "fn_1",
-  "fn_2"
+  "fn_2",
+  "fn_3",
+  "fn_4",
+  "fn_5"
  ],
  "rounds": [
   {
@@ -23,72 +26,141 @@
    "n_invented": 0,
    "invented": [],
    "n_solved": 0,
-   "corpus_dl": 602.6760597229004,
+   "corpus_dl": 5328.598012924194,
    "library_cost": 0.0,
-   "total_dl": 602.6760597229004,
+   "total_dl": 5328.598012924194,
    "by_family": {
-    "physics": 11.26957893371582,
-    "desire": 57.953819274902344,
-    "world": 533.4526615142822,
-    "belief": 0.0
+    "physics": 22.53915786743164,
+    "desire": 115.90763854980469,
+    "world": 1333.0741233825684,
+    "belief": 3857.0770931243896
    }
   },
   {
    "round": 1,
-   "n_invented": 3,
+   "n_invented": 6,
    "invented": [
     "fn_0",
     "fn_1",
-    "fn_2"
+    "fn_2",
+    "fn_3",
+    "fn_4",
+    "fn_5"
    ],
-   "n_solved": 62,
-   "corpus_dl": 514.0887088775635,
-   "library_cost": 15.262789249420166,
-   "total_dl": 529.3514981269836,
+   "n_solved": 144,
+   "corpus_dl": 4277.466485977173,
+   "library_cost": 31.14063596725464,
+   "total_dl": 4308.6071219444275,
    "by_family": {
-    "physics": 11.772208213806152,
-    "desire": 59.96433639526367,
-    "world": 442.35216426849365,
-    "belief": 0.0
+    "physics": 24.695144653320312,
+    "desire": 113.44123077392578,
+    "world": 1016.9898109436035,
+    "belief": 3122.3402996063232
+   }
+  },
+  {
+   "round": 2,
+   "n_invented": 6,
+   "invented": [
+    "fn_0",
+    "fn_1",
+    "fn_2",
+    "fn_3",
+    "fn_4",
+    "fn_5"
+   ],
+   "n_solved": 219,
+   "corpus_dl": 3337.147979736328,
+   "library_cost": 50.849990367889404,
+   "total_dl": 3387.9979701042175,
+   "by_family": {
+    "physics": 24.695144653320312,
+    "desire": 124.53158569335938,
+    "world": 1173.5540885925293,
+    "belief": 2014.3671607971191
+   }
+  },
+  {
+   "round": 3,
+   "n_invented": 6,
+   "invented": [
+    "fn_0",
+    "fn_1",
+    "fn_2",
+    "fn_3",
+    "fn_4",
+    "fn_5"
+   ],
+   "n_solved": 251,
+   "corpus_dl": 3267.9090671539307,
+   "library_cost": 46.755645751953125,
+   "total_dl": 3314.664712905884,
+   "by_family": {
+    "physics": 24.695144653320312,
+    "desire": 124.53158569335938,
+    "world": 1290.3447246551514,
+    "belief": 1828.3376121520996
+   }
+  },
+  {
+   "round": 4,
+   "n_invented": 6,
+   "invented": [
+    "fn_0",
+    "fn_1",
+    "fn_2",
+    "fn_3",
+    "fn_4",
+    "fn_5"
+   ],
+   "n_solved": 276,
+   "corpus_dl": 3267.9090671539307,
+   "library_cost": 46.755645751953125,
+   "total_dl": 3314.664712905884,
+   "by_family": {
+    "physics": 24.695144653320312,
+    "desire": 124.53158569335938,
+    "world": 1290.3447246551514,
+    "belief": 1828.3376121520996
    }
   }
  ],
  "provenance": {
   "git": {
-   "commit": "a6965cde7c05d6ec2628c121d24f442b54642b09",
-   "commit_short": "a6965cd",
+   "commit": "8fd611b18c6319b971b88bca4d868b3a4002a9a9",
+   "commit_short": "8fd611b",
    "branch": "master",
-   "dirty": true
+   "dirty": false
   },
-  "timestamp": "2026-08-03T12:49:38Z",
-  "host": "Gidons-MacBook-Air.local",
-  "python": "3.12.7",
-  "argv": "phase2.py --smoke",
+  "timestamp": "2026-08-04T15:19:13Z",
+  "host": "tcn548.local.snellius.surf.nl",
+  "python": "3.12.13",
+  "argv": "/home/gkaminer/dumbcoder/phase2.py --t-fn 3600 --ecd-iters 6 --no-dream --samples",
   "knobs": {
    "decomposed": true,
-   "smoke": true,
+   "smoke": false,
    "cube": true,
-   "t_fn": 15,
-   "t_fn_round1": 15,
-   "t_reg": 45,
-   "ecd_iters": 2,
-   "stitch_iters": 3,
-   "dream_on": true,
-   "dream_iters": 120,
+   "t_fn": 3600.0,
+   "t_fn_round1": 1200.0,
+   "t_reg": 60,
+   "ecd_iters": 6,
+   "stitch_iters": 6,
+   "dream_on": false,
+   "dream_iters": 600,
    "plain_belief": false,
    "curriculum": true,
    "k": 4,
-   "n_phys": 2,
-   "n_des": 1,
-   "n_ov": 2,
-   "n_comet": 2,
-   "n_reg": 2,
-   "n_bel": 1,
-   "n_belvar": 1,
-   "n_goal": 2,
-   "n_corner": 2,
-   "n_obstacle": 2,
-   "n_relocate": 4
+   "n_phys": 4,
+   "n_des": 2,
+   "n_ov": 4,
+   "n_comet": 4,
+   "n_reg": 4,
+   "n_bel": 6,
+   "n_belvar": 3,
+   "n_goal": 6,
+   "n_corner": 4,
+   "n_obstacle": 6,
+   "n_relocate": 16
   },
   "seeds": {
    "physics": 0,
@@ -117,6 +189,6 @@
    "drift_reg": 30,
    "map_update": 31
   },
-  "repro": "commit a6965cd+dirty | phase2 (decomposed, smoke) | t_fn=15 t_fn_round1=15 t_reg=45 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-08-03T12:49:38Z"
+  "repro": "commit 8fd611b | phase2 (decomposed) | t_fn=3600 t_fn_round1=1200 t_reg=60 ecd_iters=6 stitch_iters=6 dream=off curriculum=on | n_bel=6 n_goal=6 n_obstacle=6 n_relocate=16 | 2026-08-04T15:19:13Z"
  }
 }

@@ -147,9 +147,17 @@ TASK_SEEDS = {
 # compose_gp/dup/mapsnd are fork's decomposition and register is sync's: in a
 # decomposed (phase 2) run atomic `fork`/`sync_to_world` are gone and the same
 # structure shows up as (pipe_gpg (compose_gp dup (mapsnd …)) (register …)).
+# The last row is the pair-plumbing complements their claiming families reach for
+# (wipe/composite/drift_reg/map_update/perception): without them uses_by_kind
+# reported e.g. composite's (compose_pg (bimap …) overlay) as bare ['compose',
+# 'overlay', 'step'], which read as a bimap-free solve when it was the intended
+# program all along.  Verdict gates test specific names by membership, so widening
+# the census cannot flip a gate.
 _INTERFACE = ('fork', 'sync_to_world', 'overlay', 'then_sync',
               'wall_at', 'optimize', 'step', 'neg_dist', 'compose',
-              'pipe_gpg', 'compose_gp', 'dup', 'mapsnd', 'register')
+              'pipe_gpg', 'compose_gp', 'dup', 'mapsnd', 'register',
+              'compose_pg', 'bimap', 'mapfst', 'swap', 'pair_blank',
+              'snd_gg', 'erase', 'sync_all', 'sync_except', 'locate', 'place')
 
 
 def _uses_sync(use_set):
@@ -1520,10 +1528,15 @@ def run_phase(decomposed=False, smoke=False, samples=False, samples_only=False,
         n_obstacle = 6
         n_relocate = 16
         # t_reg is ONE shared sweep over every still-unsolved template task, so it
-        # scales with the corpus, not the task: 30s covered six 1-2 node families and
-        # is tight for nine that now include three ~15-nat ones.  Cheap insurance
-        # next to the fn budget.
-        _t_fn, t_reg, stitch_iters, _ecd_iters = 180, 60, 6, 4
+        # scales with the corpus, not the task.  60s was calibrated on a laptop where
+        # the full 36-task sweep finishes in ~38s (composite, the deepest family, is
+        # the ~40,000th enumerated program under the uniform Q) — but the aug4 HPC
+        # run's slower cores got through only ~30k programs in 60s, so composite
+        # missed in EVERY round: 0/4, and the bimap corner went unclaimed for want
+        # of budget, exactly the false alarm the smoke branch's comment describes.
+        # 300s clears the deepest template with margin on either machine; misses
+        # cost at most t_reg per round, noise next to the fn budget.
+        _t_fn, t_reg, stitch_iters, _ecd_iters = 180, 300, 6, 4
     t_fn = _t_fn if t_fn is None else t_fn
     ecd_iters = _ecd_iters if ecd_iters is None else ecd_iters
     # Per-round fn timeout schedule (DreamCoder-style curriculum): round 1 is capped

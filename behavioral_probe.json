@@ -1,13 +1,13 @@
 {
  "provenance": {
   "git": {
-   "commit": "a6965cde7c05d6ec2628c121d24f442b54642b09",
-   "commit_short": "a6965cd",
+   "commit": "8fd611b18c6319b971b88bca4d868b3a4002a9a9",
+   "commit_short": "8fd611b",
    "branch": "master",
    "dirty": false
   },
-  "timestamp": "2026-07-29T21:55:46Z",
-  "host": "tcn732.local.snellius.surf.nl",
+  "timestamp": "2026-08-04T15:19:13Z",
+  "host": "tcn548.local.snellius.surf.nl",
   "python": "3.12.13",
   "argv": "/home/gkaminer/dumbcoder/phase1.py --t-fn 3600 --ecd-iters 6 --no-dream",
   "knobs": {
@@ -16,7 +16,7 @@
    "cube": true,
    "t_fn": 3600.0,
    "t_fn_round1": 1200.0,
-   "t_reg": 30,
+   "t_reg": 60,
    "ecd_iters": 6,
    "stitch_iters": 6,
    "dream_on": false,
@@ -57,14 +57,18 @@
    "belief_goal": 23,
    "belief_observers": 27,
    "belief_fob": 25,
-   "relocate": 26
+   "relocate": 26,
+   "wipe": 28,
+   "composite": 29,
+   "drift_reg": 30,
+   "map_update": 31
   },
-  "repro": "commit a6965cd | phase1 (atomic) | t_fn=3600 t_fn_round1=1200 t_reg=30 ecd_iters=6 stitch_iters=6 dream=off curriculum=on | n_bel=6 n_goal=6 n_obstacle=6 n_relocate=16 | 2026-07-29T21:55:46Z"
+  "repro": "commit 8fd611b | phase1 (atomic) | t_fn=3600 t_fn_round1=1200 t_reg=60 ecd_iters=6 stitch_iters=6 dream=off curriculum=on | n_bel=6 n_goal=6 n_obstacle=6 n_relocate=16 | 2026-08-04T15:19:13Z"
  },
  "phase": 1,
  "decomposed": false,
  "smoke": false,
- "source": "hpc_run_results/jul30/p1-nodream-jul30/phase1_run.json",
+ "source": "phase1_run.json",
  "seed": 101,
  "index": 0,
  "library": [

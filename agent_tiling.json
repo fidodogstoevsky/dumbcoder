@@ -2,7 +2,7 @@
  "phase": 1,
  "decomposed": false,
  "smoke": false,
- "source": "hpc_run_results/jul30/p1-nodream-jul30/phase1_run.json",
+ "source": "phase1_run.json",
  "library": [
   "fn_6",
   "fn_7",

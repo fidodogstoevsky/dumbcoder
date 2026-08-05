@@ -1,40 +1,40 @@
 {
  "provenance": {
   "git": {
-   "commit": "a6965cde7c05d6ec2628c121d24f442b54642b09",
-   "commit_short": "a6965cd",
+   "commit": "8fd611b18c6319b971b88bca4d868b3a4002a9a9",
+   "commit_short": "8fd611b",
    "branch": "master",
-   "dirty": true
+   "dirty": false
   },
-  "timestamp": "2026-08-03T12:49:38Z",
-  "host": "Gidons-MacBook-Air.local",
-  "python": "3.12.7",
-  "argv": "phase2.py --smoke",
+  "timestamp": "2026-08-04T15:19:13Z",
+  "host": "tcn548.local.snellius.surf.nl",
+  "python": "3.12.13",
+  "argv": "/home/gkaminer/dumbcoder/phase2.py --t-fn 3600 --ecd-iters 6 --no-dream --samples",
   "knobs": {
    "decomposed": true,
-   "smoke": true,
+   "smoke": false,
    "cube": true,
-   "t_fn": 15,
-   "t_fn_round1": 15,
-   "t_reg": 45,
-   "ecd_iters": 2,
-   "stitch_iters": 3,
-   "dream_on": true,
-   "dream_iters": 120,
+   "t_fn": 3600.0,
+   "t_fn_round1": 1200.0,
+   "t_reg": 60,
+   "ecd_iters": 6,
+   "stitch_iters": 6,
+   "dream_on": false,
+   "dream_iters": 600,
    "plain_belief": false,
    "curriculum": true,
    "k": 4,
-   "n_phys": 2,
-   "n_des": 1,
-   "n_ov": 2,
-   "n_comet": 2,
-   "n_reg": 2,
-   "n_bel": 1,
-   "n_belvar": 1,
-   "n_goal": 2,
-   "n_corner": 2,
-   "n_obstacle": 2,
-   "n_relocate": 4
+   "n_phys": 4,
+   "n_des": 2,
+   "n_ov": 4,
+   "n_comet": 4,
+   "n_reg": 4,
+   "n_bel": 6,
+   "n_belvar": 3,
+   "n_goal": 6,
+   "n_corner": 4,
+   "n_obstacle": 6,
+   "n_relocate": 16
   },
   "seeds": {
    "physics": 0,
@@ -63,28 +63,6390 @@
    "drift_reg": 30,
    "map_update": 31
   },
-  "repro": "commit a6965cd+dirty | phase2 (decomposed, smoke) | t_fn=15 t_fn_round1=15 t_reg=45 ecd_iters=2 stitch_iters=3 dream=on curriculum=on | n_bel=1 n_goal=2 n_obstacle=2 n_relocate=4 | 2026-08-03T12:49:38Z"
+  "repro": "commit 8fd611b | phase2 (decomposed) | t_fn=3600 t_fn_round1=1200 t_reg=60 ecd_iters=6 stitch_iters=6 dream=off curriculum=on | n_bel=6 n_goal=6 n_obstacle=6 n_relocate=16 | 2026-08-04T15:19:13Z"
  },
  "phase": 2,
  "decomposed": true,
- "smoke": true,
- "source": "phase2_run.smoke.json",
+ "smoke": false,
+ "source": "phase2_run.json",
  "library": [
   "fn_0",
   "fn_1",
-  "fn_2"
+  "fn_2",
+  "fn_3",
+  "fn_4",
+  "fn_5"
  ],
- "n_belief_tasks": 0,
- "n_belief_unsolved": 48,
+ "n_belief_tasks": 132,
+ "n_belief_unsolved": 36,
  "summary": {
-  "by_variant": {},
+  "by_variant": {
+   "belief_goal": {
+    "n_tasks": 27,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   },
+   "belief_observers": {
+    "n_tasks": 24,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   },
+   "belief_wall": {
+    "n_tasks": 24,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   },
+   "belief_witness": {
+    "n_tasks": 48,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   },
+   "belief_false_obstacle": {
+    "n_tasks": 9,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   }
+  },
   "n_competitor_pairs": 0,
   "pct_competitors_longer": null,
   "n_competitors_shorter": 0,
-  "n_excluded_shorter": 0,
-  "n_action_right_scene_wrong": 0,
+  "n_excluded_shorter": 120,
+  "n_action_right_scene_wrong": 99,
   "margin_lib_median": null,
   "margin_lib_min": null
  },
- "records": []
+ "records": [
+  {
+   "variant": "belief_witness",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(compose (optimize (neg_dist 5) 4) (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c3) (optimize (neg_dist 2) 1)))) sync_all))",
+   "found_lib": "(compose (optimize (neg_dist 5) 4) (fn_3 c3 c1 2 1))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 20.577083587646484,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -5.70378303527832
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 0.40546607971191406
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c1) (optimize (neg_dist 2) 1)))) sync_all) (optimize (neg_dist 5) 4))",
+   "found_lib": "(fn_2 4 5 (fn_3 c1 c2 2 1))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c3) (optimize (neg_dist 2) 1)))) sync_all) (optimize (neg_dist 4) 5))",
+   "found_lib": "(fn_2 5 4 (fn_3 c3 c2 2 1))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c3) (optimize (neg_dist 2) 1)))) sync_all) (optimize (neg_dist 4) 5))",
+   "found_lib": "(fn_2 5 4 (fn_3 c3 c1 2 1))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c2) (optimize (neg_dist 2) 1)))) sync_all) (optimize (neg_dist 5) 4))",
+   "found_lib": "(fn_2 4 5 (fn_3 c2 c1 2 1))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(compose (optimize (neg_dist 4) 5) (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c1) (optimize (neg_dist 2) 1)))) sync_all))",
+   "found_lib": "(compose (optimize (neg_dist 4) 5) (fn_3 c1 c3 2 1))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 20.577083587646484,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -5.70378303527832
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 0.40546607971191406
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(compose (optimize (neg_dist 2) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c1) (optimize (neg_dist 5) 4)))) sync_all))",
+   "found_lib": "(compose (optimize (neg_dist 2) 1) (fn_3 c1 c2 5 4))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 20.577083587646484,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -5.70378303527832
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 0.40546607971191406
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(compose (optimize (neg_dist 2) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c1) (optimize (neg_dist 5) 4)))) sync_all))",
+   "found_lib": "(compose (optimize (neg_dist 2) 1) (fn_3 c1 c2 5 4))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 20.577083587646484,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -5.70378303527832
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 0.40546607971191406
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 5) 4)))) sync_all) (optimize (neg_dist 2) 1))",
+   "found_lib": "(fn_2 1 2 (fn_3 c2 c2 5 4))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c3) (optimize (neg_dist 5) 4)))) sync_all) (optimize (neg_dist 2) 1))",
+   "found_lib": "(fn_2 1 2 (fn_3 c3 c3 5 4))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 5) 4)))) sync_all) (optimize (neg_dist 1) 2))",
+   "found_lib": "(fn_2 2 1 (fn_3 c2 c2 5 4))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c2) (optimize (neg_dist 5) 4)))) sync_all) (optimize (neg_dist 2) 1))",
+   "found_lib": "(fn_2 1 2 (fn_3 c2 c3 5 4))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c1) (optimize (neg_dist 7) 6)))) sync_all) (optimize (neg_dist 5) 4))",
+   "found_lib": "(fn_2 4 5 (fn_3 c1 c1 7 6))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c2) (optimize (neg_dist 7) 6)))) sync_all) (optimize (neg_dist 5) 1))",
+   "found_lib": "(fn_2 1 5 (fn_3 c2 c1 7 6))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)))) sync_all) (optimize (neg_dist 5) 2))",
+   "found_lib": "(fn_2 2 5 (fn_3 c2 c2 7 6))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c2) (optimize (neg_dist 7) 6)))) sync_all) (optimize (neg_dist 1) 5))",
+   "found_lib": "(fn_2 5 1 (fn_3 c2 c1 7 6))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c3) (optimize (neg_dist 7) 6)))) sync_all) (optimize (neg_dist 2) 4))",
+   "found_lib": "(fn_2 4 2 (fn_3 c3 c1 7 6))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)))) sync_all) (optimize (neg_dist 2) 5))",
+   "found_lib": "(fn_2 5 2 (fn_3 c2 c2 7 6))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c4) (optimize (neg_dist 9) 8)))) sync_all) (optimize (neg_dist 2) 1))",
+   "found_lib": "(fn_2 1 2 (fn_3 c4 c2 9 8))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)))) sync_all) (optimize (neg_dist 5) 2))",
+   "found_lib": "(fn_2 2 5 (fn_3 c2 c2 9 8))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c4) (optimize (neg_dist 9) 8)))) sync_all) (optimize (neg_dist 5) 2))",
+   "found_lib": "(fn_2 2 5 (fn_3 c4 c2 9 8))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c1) (optimize (neg_dist 9) 8)))) sync_all) (optimize (neg_dist 5) 1))",
+   "found_lib": "(fn_2 1 5 (fn_3 c1 c3 9 8))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)))) sync_all) (optimize (neg_dist 2) 1))",
+   "found_lib": "(fn_2 1 2 (fn_3 c2 c2 9 8))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)))) sync_all) (optimize (neg_dist 4) 5))",
+   "found_lib": "(fn_2 5 4 (fn_3 c2 c2 9 8))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c1) (optimize (neg_dist 6) 2)))) sync_all) (optimize (neg_dist 4) 1))",
+   "found_lib": "(fn_2 1 4 (fn_3 c1 c1 6 2))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 6) 2)))) sync_all) (optimize (neg_dist 5) 4))",
+   "found_lib": "(fn_2 4 5 (fn_3 c2 c2 6 2))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)))) sync_all) (optimize (neg_dist 1) 4))",
+   "found_lib": "(fn_2 4 1 (fn_3 c3 c2 6 2))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 6) 2)))) sync_all) (optimize (neg_dist 1) 4))",
+   "found_lib": "(fn_2 4 1 (fn_3 c2 c2 6 2))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)))) sync_all) (optimize (neg_dist 4) 5))",
+   "found_lib": "(fn_2 5 4 (fn_3 c3 c2 6 2))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)))) sync_all) (optimize (neg_dist 1) 4))",
+   "found_lib": "(fn_2 4 1 (fn_3 c3 c2 6 2))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 8) 5)))) sync_all) (optimize (neg_dist 1) 4))",
+   "found_lib": "(fn_2 4 1 (fn_3 c2 c2 8 5))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c3) (optimize (neg_dist 8) 5)))) sync_all) (optimize (neg_dist 4) 1))",
+   "found_lib": "(fn_2 1 4 (fn_3 c3 c2 8 5))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c1) (optimize (neg_dist 8) 5)))) sync_all) (optimize (neg_dist 4) 1))",
+   "found_lib": "(fn_2 1 4 (fn_3 c1 c2 8 5))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c1) (optimize (neg_dist 8) 5)))) sync_all) (optimize (neg_dist 1) 4))",
+   "found_lib": "(fn_2 4 1 (fn_3 c1 c2 8 5))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 8) 5)))) sync_all) (optimize (neg_dist 4) 1))",
+   "found_lib": "(fn_2 1 4 (fn_3 c2 c2 8 5))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c3) (optimize (neg_dist 8) 5)))) sync_all) (optimize (neg_dist 2) 4))",
+   "found_lib": "(fn_2 4 2 (fn_3 c3 c2 8 5))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(compose (optimize (neg_dist 2) 5) (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c1) (optimize (neg_dist 1) 7)))) sync_all))",
+   "found_lib": "(compose (optimize (neg_dist 2) 5) (fn_3 c1 c2 1 7))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 20.577083587646484,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -5.70378303527832
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 0.40546607971191406
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 7.495542526245117
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 1) 7)))) sync_all) (optimize (neg_dist 2) 5))",
+   "found_lib": "(fn_2 5 2 (fn_3 c2 c2 1 7))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 1) 7)))) sync_all) (optimize (neg_dist 4) 2))",
+   "found_lib": "(fn_2 2 4 (fn_3 c2 c2 1 7))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c4) (optimize (neg_dist 1) 7)))) sync_all) (optimize (neg_dist 4) 5))",
+   "found_lib": "(fn_2 5 4 (fn_3 c4 c2 1 7))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c1) (optimize (neg_dist 1) 7)))) sync_all) (optimize (neg_dist 2) 4))",
+   "found_lib": "(fn_2 4 2 (fn_3 c1 c2 1 7))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c3) (optimize (neg_dist 1) 7)))) sync_all) (optimize (neg_dist 2) 4))",
+   "found_lib": "(fn_2 4 2 (fn_3 c3 c2 1 7))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 4) 9)))) sync_all) (optimize (neg_dist 1) 2))",
+   "found_lib": "(fn_2 2 1 (fn_3 c2 c2 4 9))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c2) (optimize (neg_dist 4) 9)))) sync_all) (optimize (neg_dist 1) 5))",
+   "found_lib": "(fn_2 5 1 (fn_3 c2 c3 4 9))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c3) (optimize (neg_dist 4) 9)))) sync_all) (optimize (neg_dist 2) 1))",
+   "found_lib": "(fn_2 1 2 (fn_3 c3 c2 4 9))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 4) 9)))) sync_all) (optimize (neg_dist 5) 1))",
+   "found_lib": "(fn_2 1 5 (fn_3 c2 c2 4 9))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c1) (optimize (neg_dist 4) 9)))) sync_all) (optimize (neg_dist 1) 2))",
+   "found_lib": "(fn_2 2 1 (fn_3 c1 c1 4 9))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_witness",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c3) (optimize (neg_dist 4) 9)))) sync_all) (optimize (neg_dist 1) 2))",
+   "found_lib": "(fn_2 2 1 (fn_3 c3 c3 4 9))",
+   "dl_found_base": 34.50569152832031,
+   "dl_found_lib": 17.399028778076172,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -16.454336166381836,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient, witness ignored",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -10.345087051391602,
+     "margin_lib": 3.5835208892822266
+    },
+    {
+     "label": "stamp/act/erase then witness",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "witness then stamp/act/erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 31.250680923461914,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 13.851652145385742
+    },
+    {
+     "label": "stamp, witness, act, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "stamp, act, witness, erase",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 34.428733825683594,
+     "dl_lib": 28.0726261138916,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 2 down) (optimize (neg_dist 2) 1)))) (sync_except 2))",
+   "found_lib": "(fn_4 2 down 1)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 2 up) (optimize (neg_dist 2) 1)))) (sync_except 2))",
+   "found_lib": "(fn_4 2 up 1)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c2) (optimize (neg_dist 1) 2)))) sync_all) (optimize (neg_dist 0) 2)) (optimize (neg_dist 2) 1)))) (sync_except 2))",
+   "found_lib": "(fn_0 1 2 (fn_2 2 0 (fn_3 c2 c3 1 2)) (sync_except 2))",
+   "dl_found_base": 55.34206008911133,
+   "dl_found_lib": 28.988916397094727,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -47.55883598327637,
+     "margin_lib": -21.205692291259766
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -30.2414493560791,
+     "margin_lib": -7.0663604736328125
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 42.41799545288086,
+     "dl_lib": 39.23994064331055,
+     "margin_base": -12.924064636230469,
+     "margin_lib": 10.25102424621582
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(compose (compose (optimize (neg_dist 2) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (step 2 down) (optimize (neg_dist 2) 1)))) (sync_except 2))) (optimize (distance 2) 1))",
+   "found_lib": "(compose (fn_1 2 down 1 1) (optimize (distance 2) 1))",
+   "dl_found_base": 47.54641342163086,
+   "dl_found_lib": 21.047088623046875,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -39.7631893157959,
+     "margin_lib": -13.263864517211914
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -22.445802688598633,
+     "margin_lib": 0.8754673004150391
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 42.41799545288086,
+     "dl_lib": 39.23994064331055,
+     "margin_base": -5.12841796875,
+     "margin_lib": 18.192852020263672
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 5 up) (optimize (neg_dist 5) 4)))) (sync_except 5))",
+   "found_lib": "(fn_4 5 up 4)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 9) 5)))) sync_all) (optimize (neg_dist 9) 5)) (optimize (neg_dist 5) 4)))) (sync_except 5))",
+   "found_lib": "(fn_0 4 5 (fn_2 5 9 (fn_3 c2 c2 9 5)) (sync_except 5))",
+   "dl_found_base": 55.34206008911133,
+   "dl_found_lib": 28.988916397094727,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -47.55883598327637,
+     "margin_lib": -21.205692291259766
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -30.2414493560791,
+     "margin_lib": -7.0663604736328125
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 42.41799545288086,
+     "dl_lib": 39.23994064331055,
+     "margin_base": -12.924064636230469,
+     "margin_lib": 10.25102424621582
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 5 down) (optimize (neg_dist 5) 4)))) (sync_except 5))",
+   "found_lib": "(fn_4 5 down 4)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 5 up) (optimize (neg_dist 5) 4)))) (sync_except 5))",
+   "found_lib": "(fn_4 5 up 4)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 7 up) (optimize (neg_dist 7) 6)))) (sync_except 7))",
+   "found_lib": "(fn_4 7 up 6)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 7 down) (optimize (neg_dist 7) 6)))) (sync_except 7))",
+   "found_lib": "(fn_4 7 down 6)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 7 up) (optimize (neg_dist 7) 6)))) (sync_except 7))",
+   "found_lib": "(fn_4 7 up 6)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 9 up) (optimize (neg_dist 9) 8)))) (sync_except 9))",
+   "found_lib": "(fn_4 9 up 8)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c2) (optimize (neg_dist 7) 9)))) sync_all) (optimize (neg_dist 7) 9)) (optimize (neg_dist 9) 8)))) (sync_except 9))",
+   "found_lib": "(fn_0 8 9 (fn_2 9 7 (fn_3 c2 c3 7 9)) (sync_except 9))",
+   "dl_found_base": 55.34206008911133,
+   "dl_found_lib": 28.988916397094727,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -47.55883598327637,
+     "margin_lib": -21.205692291259766
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -30.2414493560791,
+     "margin_lib": -7.0663604736328125
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 42.41799545288086,
+     "dl_lib": 39.23994064331055,
+     "margin_base": -12.924064636230469,
+     "margin_lib": 10.25102424621582
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 9 down) (optimize (neg_dist 9) 8)))) (sync_except 9))",
+   "found_lib": "(fn_4 9 down 8)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 9 up) (optimize (neg_dist 9) 8)))) (sync_except 9))",
+   "found_lib": "(fn_4 9 up 8)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 6 up) (optimize (neg_dist 6) 2)))) (sync_except 6))",
+   "found_lib": "(fn_4 6 up 2)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 6 down) (optimize (neg_dist 6) 2)))) (sync_except 6))",
+   "found_lib": "(fn_4 6 down 2)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 8 up) (optimize (neg_dist 8) 5)))) (sync_except 8))",
+   "found_lib": "(fn_4 8 up 5)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 8 down) (optimize (neg_dist 8) 5)))) (sync_except 8))",
+   "found_lib": "(fn_4 8 down 5)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 1 down) (optimize (neg_dist 1) 7)))) (sync_except 1))",
+   "found_lib": "(fn_4 1 down 7)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 1 up) (optimize (neg_dist 1) 7)))) (sync_except 1))",
+   "found_lib": "(fn_4 1 up 7)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(compose (compose (optimize (neg_dist 1) 7) (pipe_gpg (compose_gp dup (mapsnd (compose (step 1 up) (optimize (neg_dist 1) 7)))) (sync_except 1))) (optimize (distance 1) 7))",
+   "found_lib": "(compose (fn_1 1 up 7 7) (optimize (distance 1) 7))",
+   "dl_found_base": 47.54641342163086,
+   "dl_found_lib": 21.047088623046875,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -39.7631893157959,
+     "margin_lib": -13.263864517211914
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -22.445802688598633,
+     "margin_lib": 0.8754673004150391
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 42.41799545288086,
+     "dl_lib": 39.23994064331055,
+     "margin_base": -5.12841796875,
+     "margin_lib": 18.192852020263672
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 1 down) (optimize (neg_dist 1) 7)))) (sync_except 1))",
+   "found_lib": "(fn_4 1 down 7)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 4 up) (optimize (neg_dist 4) 9)))) (sync_except 4))",
+   "found_lib": "(fn_4 4 up 9)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 4 down) (optimize (neg_dist 4) 9)))) (sync_except 4))",
+   "found_lib": "(fn_4 4 down 9)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 4 up) (optimize (neg_dist 4) 9)))) (sync_except 4))",
+   "found_lib": "(fn_4 4 up 9)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_goal",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (step 4 down) (optimize (neg_dist 4) 9)))) (sync_except 4))",
+   "found_lib": "(fn_4 4 down 9)",
+   "dl_found_base": 27.01015281677246,
+   "dl_found_lib": 8.476371765136719,
+   "rivals": [
+    {
+     "label": "pure desire (no belief)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -19.2269287109375,
+     "margin_lib": -0.6931476593017578
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -10.568235397338867,
+     "margin_lib": 4.7874908447265625
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 25.100610733032227,
+     "dl_lib": 21.922555923461914,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 13.446184158325195
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(compose (optimize (neg_dist 2) 6) (pipe_gpg (compose_gp dup (mapsnd (compose (step 2 up) (optimize (neg_dist 2) 1)))) (sync_except 2)))",
+   "found_lib": "(fn_1 2 up 1 6)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(compose (optimize (neg_dist 2) 8) (pipe_gpg (compose_gp dup (mapsnd (compose (step 2 down) (optimize (neg_dist 2) 1)))) (sync_except 2)))",
+   "found_lib": "(fn_1 2 down 1 8)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(compose (optimize (neg_dist 2) 8) (pipe_gpg (compose_gp dup (mapsnd (compose (step 2 up) (optimize (neg_dist 2) 1)))) (sync_except 2)))",
+   "found_lib": "(fn_1 2 up 1 8)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(compose (optimize (neg_dist 5) 2) (pipe_gpg (compose_gp dup (mapsnd (compose (step 5 up) (optimize (neg_dist 5) 4)))) (sync_except 5)))",
+   "found_lib": "(fn_1 5 up 4 2)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(compose (optimize (neg_dist 5) 2) (pipe_gpg (compose_gp dup (mapsnd (compose (step 5 down) (optimize (neg_dist 5) 4)))) (sync_except 5)))",
+   "found_lib": "(fn_1 5 down 4 2)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(compose (optimize (neg_dist 5) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (step 5 up) (optimize (neg_dist 5) 4)))) (sync_except 5)))",
+   "found_lib": "(fn_1 5 up 4 1)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(compose (optimize (neg_dist 7) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (step 7 up) (optimize (neg_dist 7) 6)))) (sync_except 7)))",
+   "found_lib": "(fn_1 7 up 6 1)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(compose (optimize (neg_dist 7) 9) (pipe_gpg (compose_gp dup (mapsnd (compose (step 7 down) (optimize (neg_dist 7) 6)))) (sync_except 7)))",
+   "found_lib": "(fn_1 7 down 6 9)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(compose (optimize (neg_dist 7) 8) (pipe_gpg (compose_gp dup (mapsnd (compose (step 7 up) (optimize (neg_dist 7) 6)))) (sync_except 7)))",
+   "found_lib": "(fn_1 7 up 6 8)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(compose (optimize (neg_dist 9) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (step 9 up) (optimize (neg_dist 9) 8)))) (sync_except 9)))",
+   "found_lib": "(fn_1 9 up 8 1)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(compose (optimize (neg_dist 9) 5) (pipe_gpg (compose_gp dup (mapsnd (compose (step 9 down) (optimize (neg_dist 9) 8)))) (sync_except 9)))",
+   "found_lib": "(fn_1 9 down 8 5)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(compose (optimize (neg_dist 9) 7) (pipe_gpg (compose_gp dup (mapsnd (compose (step 9 up) (optimize (neg_dist 9) 8)))) (sync_except 9)))",
+   "found_lib": "(fn_1 9 up 8 7)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(compose (optimize (neg_dist 6) 5) (pipe_gpg (compose_gp dup (mapsnd (compose (step 6 up) (optimize (neg_dist 6) 2)))) (sync_except 6)))",
+   "found_lib": "(fn_1 6 up 2 5)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(compose (optimize (neg_dist 6) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (step 6 down) (optimize (neg_dist 6) 2)))) (sync_except 6)))",
+   "found_lib": "(fn_1 6 down 2 1)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(compose (optimize (neg_dist 6) 5) (pipe_gpg (compose_gp dup (mapsnd (compose (step 6 up) (optimize (neg_dist 6) 2)))) (sync_except 6)))",
+   "found_lib": "(fn_1 6 up 2 5)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(compose (optimize (neg_dist 8) 4) (pipe_gpg (compose_gp dup (mapsnd (compose (step 8 up) (optimize (neg_dist 8) 5)))) (sync_except 8)))",
+   "found_lib": "(fn_1 8 up 5 4)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(compose (optimize (neg_dist 8) 9) (pipe_gpg (compose_gp dup (mapsnd (compose (step 8 down) (optimize (neg_dist 8) 5)))) (sync_except 8)))",
+   "found_lib": "(fn_1 8 down 5 9)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(compose (optimize (neg_dist 8) 7) (pipe_gpg (compose_gp dup (mapsnd (compose (step 8 up) (optimize (neg_dist 8) 5)))) (sync_except 8)))",
+   "found_lib": "(fn_1 8 up 5 7)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(compose (optimize (neg_dist 1) 8) (pipe_gpg (compose_gp dup (mapsnd (compose (step 1 up) (optimize (neg_dist 1) 7)))) (sync_except 1)))",
+   "found_lib": "(fn_1 1 up 7 8)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(compose (optimize (neg_dist 1) 2) (pipe_gpg (compose_gp dup (mapsnd (compose (step 1 down) (optimize (neg_dist 1) 7)))) (sync_except 1)))",
+   "found_lib": "(fn_1 1 down 7 2)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(compose (optimize (neg_dist 1) 6) (pipe_gpg (compose_gp dup (mapsnd (compose (step 1 up) (optimize (neg_dist 1) 7)))) (sync_except 1)))",
+   "found_lib": "(fn_1 1 up 7 6)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(compose (optimize (neg_dist 4) 1) (pipe_gpg (compose_gp dup (mapsnd (compose (step 4 up) (optimize (neg_dist 4) 9)))) (sync_except 4)))",
+   "found_lib": "(fn_1 4 up 9 1)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(compose (optimize (neg_dist 4) 2) (pipe_gpg (compose_gp dup (mapsnd (compose (step 4 down) (optimize (neg_dist 4) 9)))) (sync_except 4)))",
+   "found_lib": "(fn_1 4 down 9 2)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_observers",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(compose (optimize (neg_dist 4) 5) (pipe_gpg (compose_gp dup (mapsnd (compose (step 4 up) (optimize (neg_dist 4) 9)))) (sync_except 4)))",
+   "found_lib": "(fn_1 4 up 9 5)",
+   "dl_found_base": 37.278282165527344,
+   "dl_found_lib": 10.77895736694336,
+   "rivals": [
+    {
+     "label": "both agents seek the goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 18.051355361938477,
+     "dl_lib": 14.873300552368164,
+     "margin_base": -19.226926803588867,
+     "margin_lib": 4.094343185424805
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 26.71004867553711,
+     "dl_lib": 23.53199577331543,
+     "margin_base": -10.568233489990234,
+     "margin_lib": 12.75303840637207
+    },
+    {
+     "label": "transient shove (shove/act/restore)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 35.36874008178711,
+     "dl_lib": 32.19068908691406,
+     "margin_base": -1.9095420837402344,
+     "margin_lib": 21.411731719970703
+    }
+   ]
+  },
+  {
+   "variant": "belief_false_obstacle",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c0 c1) (optimize (neg_dist 2) 1)))) (register (locate 1) (place 1)))",
+   "found_lib": "(fn_0 1 2 (wall_at c0 c1) (fn_5 1))",
+   "dl_found_base": 28.84273338317871,
+   "dl_found_lib": 17.293668746948242,
+   "rivals": [
+    {
+     "label": "no belief (seek past real wall)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -21.05950927734375,
+     "margin_lib": -9.510444641113281
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -12.400815963745117,
+     "margin_lib": -4.029806137084961
+    },
+    {
+     "label": "transient phantom + shove goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 32.819297790527344,
+     "dl_lib": 29.641244888305664,
+     "margin_base": 3.976564407348633,
+     "margin_lib": 12.347576141357422
+    }
+   ]
+  },
+  {
+   "variant": "belief_false_obstacle",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c0 c4) (optimize (neg_dist 2) 1)))) (register (locate 1) (place 1)))",
+   "found_lib": "(fn_0 1 2 (wall_at c0 c4) (fn_5 1))",
+   "dl_found_base": 28.84273338317871,
+   "dl_found_lib": 17.293668746948242,
+   "rivals": [
+    {
+     "label": "no belief (seek past real wall)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -21.05950927734375,
+     "margin_lib": -9.510444641113281
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -12.400815963745117,
+     "margin_lib": -4.029806137084961
+    },
+    {
+     "label": "transient phantom + shove goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 32.819297790527344,
+     "dl_lib": 29.641244888305664,
+     "margin_base": 3.976564407348633,
+     "margin_lib": 12.347576141357422
+    }
+   ]
+  },
+  {
+   "variant": "belief_false_obstacle",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c0 c1) (optimize (neg_dist 5) 4)))) (register (locate 4) (place 4)))",
+   "found_lib": "(fn_0 4 5 (wall_at c0 c1) (fn_5 4))",
+   "dl_found_base": 28.84273338317871,
+   "dl_found_lib": 17.293668746948242,
+   "rivals": [
+    {
+     "label": "no belief (seek past real wall)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -21.05950927734375,
+     "margin_lib": -9.510444641113281
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -12.400815963745117,
+     "margin_lib": -4.029806137084961
+    },
+    {
+     "label": "transient phantom + shove goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 32.819297790527344,
+     "dl_lib": 29.641244888305664,
+     "margin_base": 3.976564407348633,
+     "margin_lib": 12.347576141357422
+    }
+   ]
+  },
+  {
+   "variant": "belief_false_obstacle",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c0 c2) (optimize (neg_dist 5) 4)))) (register (locate 4) (place 4)))",
+   "found_lib": "(fn_0 4 5 (wall_at c0 c2) (fn_5 4))",
+   "dl_found_base": 28.84273338317871,
+   "dl_found_lib": 17.293668746948242,
+   "rivals": [
+    {
+     "label": "no belief (seek past real wall)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -21.05950927734375,
+     "margin_lib": -9.510444641113281
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -12.400815963745117,
+     "margin_lib": -4.029806137084961
+    },
+    {
+     "label": "transient phantom + shove goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 32.819297790527344,
+     "dl_lib": 29.641244888305664,
+     "margin_base": 3.976564407348633,
+     "margin_lib": 12.347576141357422
+    }
+   ]
+  },
+  {
+   "variant": "belief_false_obstacle",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c2) (optimize (neg_dist 9) 8)))) (register (locate 8) (place 8)))",
+   "found_lib": "(fn_0 8 9 (wall_at c1 c2) (fn_5 8))",
+   "dl_found_base": 28.84273338317871,
+   "dl_found_lib": 17.293668746948242,
+   "rivals": [
+    {
+     "label": "no belief (seek past real wall)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -21.05950927734375,
+     "margin_lib": -9.510444641113281
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -12.400815963745117,
+     "margin_lib": -4.029806137084961
+    },
+    {
+     "label": "transient phantom + shove goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 32.819297790527344,
+     "dl_lib": 29.641244888305664,
+     "margin_base": 3.976564407348633,
+     "margin_lib": 12.347576141357422
+    }
+   ]
+  },
+  {
+   "variant": "belief_false_obstacle",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c3) (optimize (neg_dist 6) 2)))) (register (locate 2) (place 2)))",
+   "found_lib": "(fn_0 2 6 (wall_at c3 c3) (fn_5 2))",
+   "dl_found_base": 28.84273338317871,
+   "dl_found_lib": 17.293668746948242,
+   "rivals": [
+    {
+     "label": "no belief (seek past real wall)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -21.05950927734375,
+     "margin_lib": -9.510444641113281
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -12.400815963745117,
+     "margin_lib": -4.029806137084961
+    },
+    {
+     "label": "transient phantom + shove goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 32.819297790527344,
+     "dl_lib": 29.641244888305664,
+     "margin_base": 3.976564407348633,
+     "margin_lib": 12.347576141357422
+    }
+   ]
+  },
+  {
+   "variant": "belief_false_obstacle",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c0 c1) (optimize (neg_dist 6) 2)))) (register (locate 2) (place 2)))",
+   "found_lib": "(fn_0 2 6 (wall_at c0 c1) (fn_5 2))",
+   "dl_found_base": 28.84273338317871,
+   "dl_found_lib": 17.293668746948242,
+   "rivals": [
+    {
+     "label": "no belief (seek past real wall)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -21.05950927734375,
+     "margin_lib": -9.510444641113281
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -12.400815963745117,
+     "margin_lib": -4.029806137084961
+    },
+    {
+     "label": "transient phantom + shove goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 32.819297790527344,
+     "dl_lib": 29.641244888305664,
+     "margin_base": 3.976564407348633,
+     "margin_lib": 12.347576141357422
+    }
+   ]
+  },
+  {
+   "variant": "belief_false_obstacle",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c0 c2) (optimize (neg_dist 8) 5)))) (register (locate 5) (place 5)))",
+   "found_lib": "(fn_0 5 8 (wall_at c0 c2) (fn_5 5))",
+   "dl_found_base": 28.84273338317871,
+   "dl_found_lib": 17.293668746948242,
+   "rivals": [
+    {
+     "label": "no belief (seek past real wall)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -21.05950927734375,
+     "margin_lib": -9.510444641113281
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -12.400815963745117,
+     "margin_lib": -4.029806137084961
+    },
+    {
+     "label": "transient phantom + shove goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 32.819297790527344,
+     "dl_lib": 29.641244888305664,
+     "margin_base": 3.976564407348633,
+     "margin_lib": 12.347576141357422
+    }
+   ]
+  },
+  {
+   "variant": "belief_false_obstacle",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c0) (optimize (neg_dist 4) 9)))) (register (locate 9) (place 9)))",
+   "found_lib": "(fn_0 9 4 (wall_at c1 c0) (fn_5 9))",
+   "dl_found_base": 28.84273338317871,
+   "dl_found_lib": 17.293668746948242,
+   "rivals": [
+    {
+     "label": "no belief (seek past real wall)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -21.05950927734375,
+     "margin_lib": -9.510444641113281
+    },
+    {
+     "label": "shove goal in world",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 16.441917419433594,
+     "dl_lib": 13.263862609863281,
+     "margin_base": -12.400815963745117,
+     "margin_lib": -4.029806137084961
+    },
+    {
+     "label": "transient phantom + shove goal",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 32.819297790527344,
+     "dl_lib": 29.641244888305664,
+     "margin_base": 3.976564407348633,
+     "margin_lib": 12.347576141357422
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c2) (optimize (neg_dist 2) 1)))) sync_all)",
+   "found_lib": "(fn_3 c2 c1 2 1)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c4) (optimize (neg_dist 2) 1)))) sync_all)",
+   "found_lib": "(fn_3 c4 c3 2 1)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 1,
+   "gv": 2,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c3) (optimize (neg_dist 2) 1)))) sync_all)",
+   "found_lib": "(fn_3 c3 c2 2 1)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c3) (optimize (neg_dist 5) 4)))) sync_all)",
+   "found_lib": "(fn_3 c3 c1 5 4)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c0 c2) (optimize (neg_dist 5) 4)))) sync_all)",
+   "found_lib": "(fn_3 c2 c0 5 4)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 4,
+   "gv": 5,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c2) (optimize (neg_dist 5) 4)))) sync_all)",
+   "found_lib": "(fn_3 c2 c3 5 4)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c1) (optimize (neg_dist 7) 6)))) sync_all)",
+   "found_lib": "(fn_3 c1 c2 7 6)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 7) 6)))) sync_all)",
+   "found_lib": "(fn_3 c2 c2 7 6)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 6,
+   "gv": 7,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c2) (optimize (neg_dist 7) 6)))) sync_all)",
+   "found_lib": "(fn_3 c2 c3 7 6)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c2) (optimize (neg_dist 9) 8)))) sync_all)",
+   "found_lib": "(fn_3 c2 c2 9 8)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c3) (optimize (neg_dist 9) 8)))) sync_all)",
+   "found_lib": "(fn_3 c3 c1 9 8)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 8,
+   "gv": 9,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c4) (optimize (neg_dist 9) 8)))) sync_all)",
+   "found_lib": "(fn_3 c4 c2 9 8)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c3) (optimize (neg_dist 6) 2)))) sync_all)",
+   "found_lib": "(fn_3 c3 c2 6 2)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c1) (optimize (neg_dist 6) 2)))) sync_all)",
+   "found_lib": "(fn_3 c1 c1 6 2)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 2,
+   "gv": 6,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c1) (optimize (neg_dist 6) 2)))) sync_all)",
+   "found_lib": "(fn_3 c1 c3 6 2)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c3) (optimize (neg_dist 8) 5)))) sync_all)",
+   "found_lib": "(fn_3 c3 c2 8 5)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c2) (optimize (neg_dist 8) 5)))) sync_all)",
+   "found_lib": "(fn_3 c2 c3 8 5)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 5,
+   "gv": 8,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c2) (optimize (neg_dist 8) 5)))) sync_all)",
+   "found_lib": "(fn_3 c2 c1 8 5)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c3) (optimize (neg_dist 1) 7)))) sync_all)",
+   "found_lib": "(fn_3 c3 c3 1 7)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c1) (optimize (neg_dist 1) 7)))) sync_all)",
+   "found_lib": "(fn_3 c1 c3 1 7)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 7,
+   "gv": 1,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c4) (optimize (neg_dist 1) 7)))) sync_all)",
+   "found_lib": "(fn_3 c4 c3 1 7)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c3 c2) (optimize (neg_dist 4) 9)))) sync_all)",
+   "found_lib": "(fn_3 c2 c3 4 9)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c1 c1) (optimize (neg_dist 4) 9)))) sync_all)",
+   "found_lib": "(fn_3 c1 c1 4 9)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  },
+  {
+   "variant": "belief_wall",
+   "av": 9,
+   "gv": 4,
+   "found_base": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at c2 c1) (optimize (neg_dist 4) 9)))) sync_all)",
+   "found_lib": "(fn_3 c1 c2 4 9)",
+   "dl_found_base": 24.23756217956543,
+   "dl_found_lib": 10.308952331542969,
+   "rivals": [
+    {
+     "label": "no wall (physics)",
+     "competitor": false,
+     "reproduces_agents": false,
+     "dl_base": 7.783224105834961,
+     "dl_lib": 7.783224105834961,
+     "margin_base": -16.45433807373047,
+     "margin_lib": -2.525728225708008
+    },
+    {
+     "label": "transient wall (stamp/act/erase)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 24.16060447692871,
+     "dl_lib": 20.9825496673584,
+     "margin_base": -0.07695770263671875,
+     "margin_lib": 10.67359733581543
+    },
+    {
+     "label": "transient wall (stamp/act/erase 3)",
+     "competitor": false,
+     "reproduces_agents": true,
+     "dl_base": 23.244314193725586,
+     "dl_lib": 20.066259384155273,
+     "margin_base": -0.9932479858398438,
+     "margin_lib": 9.757307052612305
+    }
+   ]
+  }
+ ]
 }

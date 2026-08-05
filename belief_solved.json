@@ -2,12 +2,12 @@
  "phase": 1,
  "decomposed": false,
  "smoke": false,
- "source": "hpc_run_results/jul30/p1-dream-jul30/phase1_run.json",
+ "source": "phase1_run.json",
  "per_variant": {
   "belief_goal": {
    "total": 48,
-   "solved": 46,
-   "rate": 0.9583333333333334
+   "solved": 43,
+   "rate": 0.8958333333333334
   },
   "belief_observers": {
    "total": 24,
@@ -26,11 +26,11 @@
   },
   "belief_false_obstacle": {
    "total": 24,
-   "solved": 17,
-   "rate": 0.7083333333333334
+   "solved": 16,
+   "rate": 0.6666666666666666
   }
  },
  "total": 168,
- "solved": 159,
- "rate": 0.9464285714285714
+ "solved": 155,
+ "rate": 0.9226190476190477
 }

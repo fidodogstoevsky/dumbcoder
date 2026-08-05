@@ -54,6 +54,95 @@ This appendix collects the implementation of the model outlined in Chapter 3.
   caption: [The task families, by the program behind them. The first block are trajectory tasks, solved by transition functions; the last are template tasks, solved by commits (roots). Programs are written throughout in the abbreviated spelling of @signature: `fork` and `sync_to_world` are not primitives of the learner's library but compounds it must assemble . The last three families exist only under the combinator library: nothing in the atomic control maps both channels, maps the world channel of a #emph[given] pair, or commits wholesale into the model, so they have no program there at any length. `wipe` has one in both, at three nodes against eight.],
 ) <tab-families>
 
+== The BToM correspondence <app-btom-map>
+
+@sec-btom-map reads the invented term against the stipulations of @stipulated. The same correspondence, item by item.
+
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    align: (left, left, left),
+    table.header([BToM (Chapter 3)], [In the discovered term], [Status here]),
+    [A planner mapping (utility, environment model) to action],
+    [`optimize (neg_dist gv) av`, applied to whatever grid it is handed],
+    [Granted as a primitive (@rationality)],
+
+    [The environment model $m'$ supplied as an #emph[input] to the planner],
+    [The second channel of the pair, the only one the derive writes],
+    [Discovered: `mapsnd`, not `mapfst`; the world channel is untouched],
+
+    [$m eq.not m'$ permitted --- the divergence that makes false belief expressible],
+    [The derive is an arbitrary `fn` applied to the private copy only],
+    [Discovered: which channel is transformed is a search choice with an exercised opposite],
+
+    [The goal $g$, ranging over a given space under a given prior],
+    [Whichever `cellvalue` lands in `neg_dist`'s slot, priced like every other symbol],
+    [Not a space: no goal type, no goal prior (@no-btom)],
+
+    [The attribution: $m'$ is #emph[this agent's] model, on whose behalf the planner runs],
+    [The shared hole --- planner, derive and commit boundary bound to one value: the agent in the atomic constructor, the believed content in the combinator one],
+    [Discovered: the conjunct the compression step kept, from either side of the boundary],
+
+    [The nested evaluation: the observer runs the planner inside itself],
+    [`fork`'s private grid lives for one call and is discarded, never rendered],
+    [Structural, in program space; the interpreter has no such mode (@app-interpreter)],
+
+    [Inverse planning: infer $(g, m)$ from the trajectory by Bayes],
+    [Cheapest-first enumeration under the library prior, indicator likelihood],
+    [The inference of @sec-bayes, unchanged and not agent-directed],
+
+    [Belief as a state that is #emph[formed] and could be #emph[revised]],
+    [Nothing: the model exists for one transition and has no history],
+    [Absent --- the honest gap (@sec-limits)],
+  ),
+  caption: [What BToM stipulates, and where it turns up in the term the compression step invented.],
+) <tab-btom-map>
+
+== The atomic control's library <app-lib-p1>
+
+@sec-atomic-run describes what the control run converged to; this is the library itself, alongside @tab-lib-p2 for the combinator endowment.
+
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    align: (left, left, center),
+    table.header([Symbol], [Body], [Belief solves]),
+    [`fn_6`], [`(fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world $0))`], [37],
+    [`fn_7`], [`(compose $2 (optimize (neg_dist $1) $0))`], [18],
+    [`fn_8`], [`(compose (optimize (neg_dist $1) $3) (fork (compose (step $1 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2)))`], [24],
+    [`fn_9`], [`(fork (compose (fork (compose (optimize (neg_dist $1) $0) (optimize (neg_dist 0) $0)) (sync_to_world $0)) (optimize (neg_dist $0) $1)) (sync_to_world $1))`], [14],
+    [`fn_10`], [`(compose (fork (compose (wall_at c2 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2)) (optimize (neg_dist $3) $4))`], [29],
+    [`fn_11`], [`(fork (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)) (sync_to_world $3))`], [52],
+  ),
+  caption: [The final library under the atomic control (`p1-nodream`), bodies expanded to base primitives. Five of the six carry the agency signature; `fn_7` is the bare seek policy, which belief shares with the obstacle family (47 obstacle solves are rewritten through it).],
+) <tab-lib-p1>
+
+== The per-family description-length census <app-dl-census>
+
+@sec-compression reports what the learned library buys each family. The full census, from which those figures are taken.
+
+#figure(
+  table(
+    columns: (auto, auto, auto, auto, auto),
+    align: (left, center, center, center, center),
+    table.header([Family], [Solves priced], [Base (nats)], [Final library], [Saved]),
+    [belief],       [25], [34.51], [17.40], [*17.11*],
+    [obstacle],     [48], [15.97], [12.79], [3.18],
+    [registration], [4],  [6.80],  [4.50],  [2.30],
+    [perception],   [4],  [10.39], [8.08],  [2.30],
+    [drift_reg],    [4],  [16.56], [14.26], [2.30],
+    [desire],       [16], [7.78],  [7.78],  [0.00],
+    [comet],        [4],  [16.05], [16.05], [0.00],
+    [relocate],     [16], [13.89], [13.89], [0.00],
+    [flee],         [4],  [7.78],  [7.78],  [0.00],
+    [deletion],     [4],  [5.70],  [5.70],  [0.00],
+    [denoise],      [4],  [4.79],  [4.79],  [0.00],
+    [wipe / map_update], [4 each], [5.78], [5.78], [0.00],
+    [multi_reg / reg_except / inpaint / readout], [4 each], [2.20--4.50], [unchanged], [0.00],
+  ),
+  caption: [Median description length per task (`p2-nodream`), before and after the learned library. Belief saves 17.11 nats per task and 412 nats over the priced solves; obstacle saves through the shared seek `fn_8`, and the three registration-flavoured families each save exactly 2.30 nats --- the price of the reassembled `register (locate v) (place v)` token.],
+) <tab-dl-census>
+
 == The interpreter <app-interpreter>
 
 
@@ -242,3 +331,5 @@ The reason is a difference of scale between DreamCoder's setting and this one. A
 Omitting the phase also removes it as a place where the result could be smuggled in. A recognition model trained on solved tasks is a component whose prior over the library is fit to data, and belief is precisely the structure the corpus is meant to leave unfitted. With no such component, no distribution anywhere in the loop is conditioned on what a scene looks like, and the audit of @no-btom has one fewer item to defend.
 
 This is a departure from DreamCoder, and it is one we arrived at by measurement rather than by design: the loop was run both ways before it was settled, and @sec-limits reports what each way gave.
+
+The second is to abandon enumeration in prior order for enumeration under a learned proposal distribution, trained to guess which primitives a task of this appearance is likely to need. This is amortized inference. The system this thesis builds uses only the first, for reasons given in @no-amortization; it is the first that does the work the argument needs, since it is the one that changes what is _reachable_ rather than merely what is reached sooner --- an intervention on the problem rather than on the procedure for solving it. 

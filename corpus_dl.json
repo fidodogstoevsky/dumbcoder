@@ -2,16 +2,16 @@
  "decomposed": false,
  "phase": 1,
  "smoke": false,
- "n_rounds": 3,
+ "n_rounds": 2,
  "n_tasks": 291,
  "family_counts": {
   "physics": 4,
   "desire": 16,
-  "world": 112,
-  "belief": 159
+  "world": 116,
+  "belief": 155
  },
  "signature_round": 1,
- "signature_drop": 2024.5515117645264,
+ "signature_drop": 1840.9271392822266,
  "final_library": [
   "fn_0",
   "fn_1",
@@ -26,14 +26,14 @@
    "n_invented": 0,
    "invented": [],
    "n_solved": 0,
-   "corpus_dl": 6017.4728927612305,
+   "corpus_dl": 5764.75156211853,
    "library_cost": 0.0,
-   "total_dl": 6017.4728927612305,
+   "total_dl": 5764.75156211853,
    "by_family": {
     "physics": 22.53915786743164,
     "desire": 115.90763854980469,
-    "world": 1156.211368560791,
-    "belief": 4722.814727783203
+    "world": 1222.7605934143066,
+    "belief": 4403.544172286987
    }
   },
   {
@@ -47,15 +47,15 @@
     "fn_4",
     "fn_5"
    ],
-   "n_solved": 187,
-   "corpus_dl": 3776.125431060791,
+   "n_solved": 191,
+   "corpus_dl": 3719.4092559814453,
    "library_cost": 40.18595600128174,
-   "total_dl": 3816.3113870620728,
+   "total_dl": 3759.595211982727,
    "by_family": {
     "physics": 25.015316009521484,
     "desire": 114.72190856933594,
-    "world": 938.1249904632568,
-    "belief": 2698.2632160186768
+    "world": 1017.0549983978271,
+    "belief": 2562.6170330047607
    }
   },
   {
@@ -69,61 +69,39 @@
     "fn_4",
     "fn_5"
    ],
-   "n_solved": 281,
-   "corpus_dl": 3628.0874395370483,
-   "library_cost": 40.18595600128174,
-   "total_dl": 3668.27339553833,
-   "by_family": {
-    "physics": 25.015316009521484,
-    "desire": 125.81227111816406,
-    "world": 1023.6690988540649,
-    "belief": 2453.590753555298
-   }
-  },
-  {
-   "round": 3,
-   "n_invented": 6,
-   "invented": [
-    "fn_0",
-    "fn_1",
-    "fn_2",
-    "fn_3",
-    "fn_4",
-    "fn_5"
-   ],
    "n_solved": 291,
-   "corpus_dl": 3639.7612857818604,
-   "library_cost": 46.92529249191284,
-   "total_dl": 3686.686578273773,
+   "corpus_dl": 3463.8435831069946,
+   "library_cost": 52.485974073410034,
+   "total_dl": 3516.3295571804047,
    "by_family": {
     "physics": 25.015316009521484,
     "desire": 125.81227111816406,
-    "world": 1144.221703529358,
-    "belief": 2344.711995124817
+    "world": 1223.1517114639282,
+    "belief": 2089.864284515381
    }
   }
  ],
  "provenance": {
   "git": {
-   "commit": "a6965cde7c05d6ec2628c121d24f442b54642b09",
-   "commit_short": "a6965cd",
+   "commit": "8fd611b18c6319b971b88bca4d868b3a4002a9a9",
+   "commit_short": "8fd611b",
    "branch": "master",
    "dirty": false
   },
-  "timestamp": "2026-07-29T21:55:43Z",
-  "host": "tcn725.local.snellius.surf.nl",
+  "timestamp": "2026-08-04T15:19:13Z",
+  "host": "tcn548.local.snellius.surf.nl",
   "python": "3.12.13",
-  "argv": "/home/gkaminer/dumbcoder/phase1.py --t-fn 3600 --ecd-iters 6",
+  "argv": "/home/gkaminer/dumbcoder/phase1.py --t-fn 3600 --ecd-iters 6 --no-dream",
   "knobs": {
    "decomposed": false,
    "smoke": false,
    "cube": true,
    "t_fn": 3600.0,
    "t_fn_round1": 1200.0,
-   "t_reg": 30,
+   "t_reg": 60,
    "ecd_iters": 6,
    "stitch_iters": 6,
-   "dream_on": true,
+   "dream_on": false,
    "dream_iters": 600,
    "plain_belief": false,
    "curriculum": true,
@@ -161,8 +139,12 @@
    "belief_goal": 23,
    "belief_observers": 27,
    "belief_fob": 25,
-   "relocate": 26
+   "relocate": 26,
+   "wipe": 28,
+   "composite": 29,
+   "drift_reg": 30,
+   "map_update": 31
   },
-  "repro": "commit a6965cd | phase1 (atomic) | t_fn=3600 t_fn_round1=1200 t_reg=30 ecd_iters=6 stitch_iters=6 dream=on curriculum=on | n_bel=6 n_goal=6 n_obstacle=6 n_relocate=16 | 2026-07-29T21:55:43Z"
+  "repro": "commit 8fd611b | phase1 (atomic) | t_fn=3600 t_fn_round1=1200 t_reg=60 ecd_iters=6 stitch_iters=6 dream=off curriculum=on | n_bel=6 n_goal=6 n_obstacle=6 n_relocate=16 | 2026-08-04T15:19:13Z"
  }
 }

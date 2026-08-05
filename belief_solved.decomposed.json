@@ -1,36 +1,36 @@
 {
  "phase": 2,
  "decomposed": true,
- "smoke": true,
- "source": "phase2_run.smoke.json",
+ "smoke": false,
+ "source": "phase2_run.json",
  "per_variant": {
   "belief_goal": {
-   "total": 16,
-   "solved": 0,
-   "rate": 0.0
+   "total": 48,
+   "solved": 27,
+   "rate": 0.5625
   },
   "belief_observers": {
-   "total": 8,
-   "solved": 0,
-   "rate": 0.0
+   "total": 24,
+   "solved": 24,
+   "rate": 1.0
   },
   "belief_wall": {
-   "total": 8,
-   "solved": 0,
-   "rate": 0.0
+   "total": 24,
+   "solved": 24,
+   "rate": 1.0
   },
   "belief_witness": {
-   "total": 8,
-   "solved": 0,
-   "rate": 0.0
+   "total": 48,
+   "solved": 48,
+   "rate": 1.0
   },
   "belief_false_obstacle": {
-   "total": 8,
-   "solved": 0,
-   "rate": 0.0
+   "total": 24,
+   "solved": 9,
+   "rate": 0.375
   }
  },
- "total": 48,
- "solved": 0,
- "rate": 0.0
+ "total": 168,
+ "solved": 132,
+ "rate": 0.7857142857142857
 }

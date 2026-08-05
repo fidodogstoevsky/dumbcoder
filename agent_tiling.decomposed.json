@@ -1,21 +1,186 @@
 {
  "phase": 2,
  "decomposed": true,
- "smoke": true,
- "source": "phase2_run.smoke.json",
+ "smoke": false,
+ "source": "phase2_run.json",
  "library": [
-  "fn_3",
-  "fn_4",
-  "fn_5"
+  "fn_6",
+  "fn_7",
+  "fn_8",
+  "fn_9",
+  "fn_10",
+  "fn_11"
  ],
- "agent_ctor": null,
- "agent_ctor_uses": 0,
- "n_solved_belief": 0,
+ "agent_ctor": "fn_9",
+ "agent_ctor_uses": 75,
+ "n_solved_belief": 132,
  "tiled": false,
  "columns": [
-  "fn_3",
-  "fn_4",
-  "fn_5"
+  "fn_9",
+  "fn_6",
+  "fn_7",
+  "fn_8",
+  "fn_10",
+  "fn_11"
  ],
- "combos": []
+ "combos": [
+  {
+   "gv": 1,
+   "av": 7,
+   "solved": 16,
+   "variants": [
+    "belief_goal",
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_9": 9,
+    "fn_6": 0,
+    "fn_7": 4,
+    "fn_8": 5,
+    "fn_10": 3,
+    "fn_11": 0
+   }
+  },
+  {
+   "gv": 2,
+   "av": 1,
+   "solved": 18,
+   "variants": [
+    "belief_false_obstacle",
+    "belief_goal",
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_9": 10,
+    "fn_6": 3,
+    "fn_7": 4,
+    "fn_8": 5,
+    "fn_10": 2,
+    "fn_11": 2
+   }
+  },
+  {
+   "gv": 4,
+   "av": 9,
+   "solved": 17,
+   "variants": [
+    "belief_false_obstacle",
+    "belief_goal",
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_9": 9,
+    "fn_6": 1,
+    "fn_7": 3,
+    "fn_8": 6,
+    "fn_10": 4,
+    "fn_11": 1
+   }
+  },
+  {
+   "gv": 5,
+   "av": 4,
+   "solved": 18,
+   "variants": [
+    "belief_false_obstacle",
+    "belief_goal",
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_9": 10,
+    "fn_6": 3,
+    "fn_7": 3,
+    "fn_8": 5,
+    "fn_10": 3,
+    "fn_11": 2
+   }
+  },
+  {
+   "gv": 6,
+   "av": 2,
+   "solved": 16,
+   "variants": [
+    "belief_false_obstacle",
+    "belief_goal",
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_9": 9,
+    "fn_6": 2,
+    "fn_7": 3,
+    "fn_8": 6,
+    "fn_10": 2,
+    "fn_11": 2
+   }
+  },
+  {
+   "gv": 7,
+   "av": 6,
+   "solved": 15,
+   "variants": [
+    "belief_goal",
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_9": 9,
+    "fn_6": 0,
+    "fn_7": 3,
+    "fn_8": 6,
+    "fn_10": 3,
+    "fn_11": 0
+   }
+  },
+  {
+   "gv": 8,
+   "av": 5,
+   "solved": 15,
+   "variants": [
+    "belief_false_obstacle",
+    "belief_goal",
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_9": 9,
+    "fn_6": 1,
+    "fn_7": 3,
+    "fn_8": 6,
+    "fn_10": 2,
+    "fn_11": 1
+   }
+  },
+  {
+   "gv": 9,
+   "av": 8,
+   "solved": 17,
+   "variants": [
+    "belief_false_obstacle",
+    "belief_goal",
+    "belief_observers",
+    "belief_wall",
+    "belief_witness"
+   ],
+   "counts": {
+    "fn_9": 10,
+    "fn_6": 2,
+    "fn_7": 3,
+    "fn_8": 7,
+    "fn_10": 3,
+    "fn_11": 1
+   }
+  }
+ ]
 }

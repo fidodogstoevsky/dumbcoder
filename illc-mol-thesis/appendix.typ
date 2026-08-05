@@ -39,16 +39,16 @@ This appendix collects the implementation of the model outlined in Chapter 3.
     [`overlay` / `underlay`], [`fork (step v d) overlay`], [`fork` with a #emph[non-mental] commit; z-order],
     [`comet`], [`fork (optimize …) overlay`], [`fork`'s derive slot taking a seek policy],
     [`wipe`], [`pipe_gpg pair_blank snd`], [the pairing complement: a fresh blank channel, not a copy],
-    [`belief_wall`], [`fork (compose (wall_at r c) (optimize …)) (sync_to_world av)`], [detour round an #emph[invisible] wall],
-    [`belief_witness`], [the above, composed with a second bare seeker], [a witness who crosses the phantom wall],
-    [`belief_goal`], [`fork (seq (step gv d) (optimize …)) (sync_to_world av)`], [Sally-Anne: belief whose #emph[content] varies],
-    [`belief_observers`], [a bare seeker composed with a forked one], [selective attribution: one agent forks, one does not],
-    [`belief_false_obstacle`], [`fork (seq (wall_at Wb) (step gv d) (optimize …)) (sync_to_world av)`], [wrong about obstacle #emph[and] goal, with a real wall present],
+    [`belief_wall` (false-wall)], [`fork (compose (wall_at r c) (optimize …)) (sync_to_world av)`], [detour round an #emph[invisible] wall],
+    [`belief_witness` (witness)], [the above, composed with a second bare seeker], [a witness who crosses the phantom wall],
+    [`belief_goal` (goal-displacement)], [`fork (seq (step gv d) (optimize …)) (sync_to_world av)`], [Sally-Anne: belief whose #emph[content] varies],
+    [`belief_observers` (two-observer)], [a bare seeker composed with a forked one], [selective attribution: one agent forks, one does not],
+    [`belief_false_obstacle` (false-obstacle)], [`fork (seq (wall_at Wb) (step gv d) (optimize …)) (sync_to_world av)`], [wrong about obstacle #emph[and] goal, with a real wall present],
     [`registration` / `perception`], [`sync_to_world v` / `sync_to_model v`], [the sync commits doing #emph[non-mental] alignment],
     [`multi_registration` / `registration_except`], [`sync_all` / `sync_except v`], [the scope complements],
     [`inpainting` / `readout`], [`underlay` / `snd`], [the z-order and projection complements],
-    [`composite`], [`compose_pg (bimap (step u d) (erase w)) overlay`], [the full bifunctor: two layers, one map each],
-    [`drift_reg`], [`compose_pg (mapfst (step u d)) (register …)`], [the world-channel map: register while the image scrolls],
+    [`composite` (layer-compositing)], [`compose_pg (bimap (step u d) (erase w)) overlay`], [the full bifunctor: two layers, one map each],
+    [`drift_reg` (drifting registration)], [`compose_pg (mapfst (step u d)) (register …)`], [the world-channel map: register while the image scrolls],
     [`map_update`], [`compose_pg swap sync_all`], [the twist: the model adopts the world wholesale],
   ),
   caption: [The task families, by the program behind them. The first block are trajectory tasks, solved by transition functions; the last are template tasks, solved by commits (roots). Programs are written throughout in the abbreviated spelling of @signature: `fork` and `sync_to_world` are not primitives of the learner's library but compounds it must assemble . The last three families exist only under the combinator library: nothing in the atomic control maps both channels, maps the world channel of a #emph[given] pair, or commits wholesale into the model, so they have no program there at any length. `wipe` has one in both, at three nodes against eight.],
@@ -64,7 +64,7 @@ This appendix collects the implementation of the model outlined in Chapter 3.
     align: (left, left, left),
     table.header([BToM (Chapter 3)], [In the discovered term], [Status here]),
     [A planner mapping (utility, environment model) to action],
-    [`optimize (neg_dist gv) av`, applied to whatever grid it is handed],
+    [$pi_a^g$ (that is, `optimize (neg_dist g) a`), applied to whatever grid it is handed],
     [Granted as a primitive (@rationality)],
 
     [The environment model $m'$ supplied as an #emph[input] to the planner],
@@ -98,9 +98,37 @@ This appendix collects the implementation of the model outlined in Chapter 3.
   caption: [What BToM stipulates, and where it turns up in the term the compression step invented.],
 ) <tab-btom-map>
 
-== The atomic control's library <app-lib-p1>
+== The libraries, verbatim <app-lib-p1>
 
-@sec-atomic-run describes what the control run converged to; this is the library itself, alongside @tab-lib-p2 for the combinator endowment.
+@tab-lib-p2 gives the combinator run's final library as arrows, under names of our own. This is the same library as the compression step emitted it: the run's names, the types, the argument orders, and the bodies expanded to base primitives, for a reader who wants to count symbols rather than read denotations --- the two views differ in exactly the way @sec-selective turns on. The arguments a term takes are written `$0`, `$1`, … in the body, and are supplied in that order, which is the searcher's and carries no meaning; @tab-lib-p2's letters are assigned by role instead.
+
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    align: (left, left, left),
+    table.header([Symbol], [Type, in argument order], [Body]),
+    [`fn_6`], [$V times V times (G arrow.r G) times (G times G arrow.r G) arrow.r (G arrow.r G)$], [`(pipe_gpg (compose_gp dup (mapsnd (compose $2 (optimize (neg_dist $1) $0)))) $3)`],
+    [`fn_7`], [$V times D times V times V arrow.r (G arrow.r G)$], [`(compose (optimize (neg_dist $0) $3) (pipe_gpg (compose_gp dup (mapsnd (compose (step $0 $1) (optimize (neg_dist $0) $2)))) (sync_except $0)))`],
+    [`fn_8`], [$V times V times (G arrow.r G) arrow.r (G arrow.r G)$], [`(compose $2 (optimize (neg_dist $1) $0))`],
+    [`fn_9`], [$C times C times V times V arrow.r (G arrow.r G)$], [`(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)))) sync_all)`],
+    [`fn_10`], [$V times D times V arrow.r (G arrow.r G)$], [`(pipe_gpg (compose_gp dup (mapsnd (compose (step $0 $1) (optimize (neg_dist $0) $2)))) (sync_except $0))`],
+    [`fn_11`], [$V arrow.r (G times G arrow.r G)$], [`(register (locate $0) (place $0))`],
+  ),
+  caption: [The final library under the combinator endowment (run `p2-nodream`), verbatim. Read as arrows in @tab-lib-p2.],
+) <tab-lib-p2-raw>
+
+@sec-found also summarizes the control run; this is the library it converged to. The five constructors differ in what the private derive does. In the notation of @signature they read
+
+$
+"fn"_(6)(a,g,delta) &= "fork"(pi_a^g compose delta, space "sync"_a) \
+"fn"_(7)(a,g,delta) &= pi_a^g compose delta \
+"fn"_(8)(d,b,a,n) &= "fork"(pi_a^b compose "step"_(b,d), space "sync"_a) compose pi_n^b \
+"fn"_(9)(u,v) &= "fork"(pi_v^u compose "fork"(pi_u^0 compose pi_u^v, space "sync"_u), space "sync"_v) \
+"fn"_(10)(c,g,a,g',n) &= pi_n^(g') compose "fork"(pi_a^g compose "wall"_(c_2,c), space "sync"_a) \
+"fn"_(11)(c,r,g,a) &= "fork"(pi_a^g compose "wall"_(r,c), space "sync"_a) \
+$
+
+so the derive is an arbitrary hole $delta$ in `fn_6`, a shove of the goal in `fn_8`, a phantom wall at a free coordinate in `fn_11` --- the most-used, carrying 52 of the 155 belief solutions --- and at a fixed column in `fn_10`. `fn_9` is worth a remark: its derive contains another fork, so it is an agent whose private model is itself derived by forking, and fourteen solutions are rewritten through it. That is not second-order mentalizing in the sense of @timeline, since the inner fork is part of the outer agent's model rather than a model of another mind, but it does establish that the discovered shape embeds, one of the properties @explanandum asked for.
 
 #figure(
   table(
@@ -114,7 +142,7 @@ This appendix collects the implementation of the model outlined in Chapter 3.
     [`fn_10`], [`(compose (fork (compose (wall_at c2 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2)) (optimize (neg_dist $3) $4))`], [29],
     [`fn_11`], [`(fork (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)) (sync_to_world $3))`], [52],
   ),
-  caption: [The final library under the atomic control (`p1-nodream`), bodies expanded to base primitives. Five of the six carry the agency signature; `fn_7` is the bare seek policy, which belief shares with the obstacle family (47 obstacle solves are rewritten through it).],
+  caption: [The final library under the atomic control (run `p1-nodream`), bodies expanded to base primitives; the readings are above. Five of the six carry the agency signature; `fn_7` is the bare seek policy $pi_a^g$ with a derive prefix, which belief shares with the obstacle family (47 obstacle solves are rewritten through it).],
 ) <tab-lib-p1>
 
 == The per-family description-length census <app-dl-census>
@@ -140,7 +168,7 @@ This appendix collects the implementation of the model outlined in Chapter 3.
     [wipe / map_update], [4 each], [5.78], [5.78], [0.00],
     [multi_reg / reg_except / inpaint / readout], [4 each], [2.20--4.50], [unchanged], [0.00],
   ),
-  caption: [Median description length per task (`p2-nodream`), before and after the learned library. Belief saves 17.11 nats per task and 412 nats over the priced solves; obstacle saves through the shared seek `fn_8`, and the three registration-flavoured families each save exactly 2.30 nats --- the price of the reassembled `register (locate v) (place v)` token.],
+  caption: [Median description length per task (`p2-nodream`), before and after the learned library. Belief saves 17.11 nats per task and 412 nats over the priced solves; obstacle saves through the shared seek `fn_8`, and the three registration-flavoured families each save exactly 2.30 nats --- the price of the reassembled $"sync"_v$ token.],
 ) <tab-dl-census>
 
 == The interpreter <app-interpreter>

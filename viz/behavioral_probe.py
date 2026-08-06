@@ -59,7 +59,12 @@ product-category plumbing (phase 2).  Default is phase 1, matching `mdl_margin.p
 Writes behavioral_probe[.decomposed].json and behavioral_probe[.decomposed].png/.pdf.
 """
 
+import os
 import sys
+# the analysis modules live in the repo root, one level up from viz/; the sibling
+# figure scripts live here, so put both on the path however this file is launched
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path[:0] = [_HERE, os.path.dirname(_HERE)]
 import json
 from ecd import (
     Deltas, saturate_stitch, rewrite_through_library, mat_key, tr,

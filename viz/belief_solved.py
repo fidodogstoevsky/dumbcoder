@@ -36,7 +36,12 @@ an artefact of reconstruction.
 Writes belief_solved[.decomposed].json and belief_solved.png/.pdf.
 """
 
+import os
 import sys
+# the analysis modules live in the repo root, one level up from viz/; the sibling
+# figure scripts live here, so put both on the path however this file is launched
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path[:0] = [_HERE, os.path.dirname(_HERE)]
 import json
 
 from ecd import mat_key_id

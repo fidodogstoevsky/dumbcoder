@@ -30,7 +30,7 @@ gstack ::= () | (grid, *gstack)
 
 with `nil` and `cons` as constructors, and every pair operation is replaced by a depth-polymorphic lift of itself that acts on the top of the stack. The type system of Types gains the arrows $G arrow.r G^*$, $G^* arrow.r G^*$ and $G^* arrow.r G$ to push, transform and project, and loses the arrows into and out of $G times G$ that fixed the arity at two. At depth 1 the lifts reproduce `fork` and `sync_to_world` exactly, so nothing expressible under either endowment of @primitives is lost; but the number of private channels a program opens is now something search selects rather than something the type system fixes.
 
-The same monomorphism is also why the language needs a separate composer at each arrow of Types. The pieces belief is assembled from --- $Delta$, $"id" times f$ and $compose$ --- are defined at any objects, not just at $G$, so the four composers of @primitives are four copies of one operation the type system cannot state once. Nothing in the argument turns on this, but a language with polymorphic plumbing would collapse them into a single symbol, and the wiring belief needs would be that much less of the endowment.
+The same monomorphism is also why the language needs a separate composer at each arrow of Types. The pieces belief is assembled from --- copying a grid, altering one channel of a pair, and composing two functions --- are defined at any objects, not just at $G$, so the four composers of @primitives are four copies of one operation the type system cannot state once. Nothing in the argument turns on this, but a language with polymorphic plumbing would collapse them into a single symbol, and the wiring belief needs would be that much less of the endowment.
 
 The measurement is then per family: for each solved task, read off the maximum stack depth its program reaches, and compare that against the depth the family's ground-truth program uses. The corpus would need at least one non-mental family whose ground truth genuinely requires depth 2 --- a cross-channel blur, say --- so that arity 2 is known to be both expressible and selectable, and the physics and desire families should sit at arity 0, holding no private channel at all. The prediction the thesis's argument makes is that no family, mental or not, selects more than one private channel except the one whose ground truth demands two; and the quantity that would carry it is not the observation but the margin, the description length of the arity-1 encoding of a belief scene against the arity-2 encoding of the same scene, under base primitives and under the learned library.
 
@@ -51,6 +51,10 @@ this primitive packs in a lot, it's a full bfs search. so try to rediscover that
 an agent that sometimes does this and sometimes that, etc
 
 Go from a LoT to a PLoT
+
+== no sequencing
+
+
 
 == vs. real world
 

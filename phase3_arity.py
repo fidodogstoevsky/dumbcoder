@@ -1,6 +1,20 @@
-"""File 17: arity generalization — the number of private channels is discovered.
+"""Arity generalization — the number of private channels as a free parameter.
 
-file16's "cube" gives belief's primitives *role* symmetry: for every choice baked
+    NOT A REPORTED RESULT.  This is an exploratory implementation of the experiment
+    the thesis sets out as FURTHER WORK in chapter 6, "Channel arity as a free
+    parameter" (<sec-arity>).  Nothing in the thesis is measured by this file, and
+    no figure or number in chapters 4-5 comes from it.  It is kept in the tree
+    because the design it describes is what <sec-arity> proposes, and because the
+    depth-3 ground-truth program below is the existence proof that the grid-stack
+    calculus in dsl.py runs.  In particular the corpus it needs — at least one
+    non-mental family whose ground truth genuinely requires depth 2 — does not
+    exist: see the "no natural task here genuinely requires arity >= 2" paragraph
+    below, which is the reason the measurement is further work rather than a result.
+
+    The reported experiments are phase1.py (atomic control) and phase2.py
+    (combinator endowment); see ARCHITECTURE.md.
+
+The combinator "cube" gives belief's primitives *role* symmetry: for every choice baked
 into the two channels (direction / scope / z-order / projection / bifunctor /
 pairing / utility / grid-edit) the complementary corner is in the DSL, and joint
 MDL still selects exactly belief's corner — so the agency signature is discovered,
@@ -39,8 +53,8 @@ MDL never SELECTS more than one private channel — physics/desire pick 0, belie
 picks exactly 1, and even ostensibly two-buffer tasks serialize back to 1.  Belief's
 single private model is thus the *generic* non-zero arity (shared with non-mental
 overlay/crossblur), discovered as the minimal sufficient channel count rather than
-imposed by a pair_gg type.  What distinguishes belief is the commit DIRECTION (the
-file16 cube axis), not the channel COUNT.
+imposed by a pair_gg type.  What distinguishes belief is the commit DIRECTION (a
+cube axis), not the channel COUNT.
 
 The joint run reports two things that separate an MDL PREFERENCE from a SEARCH failure
 (otherwise "arity 2 never selected" is indistinguishable from "never enumerated that
@@ -73,15 +87,15 @@ import numpy as np
 import torch as th
 
 from ecd import (
-    Deltas, Delta, solve_enumeration, saturate_stitch, mat_key, normalize,
+    Deltas, solve_enumeration, saturate_stitch, mat_key, normalize,
     _worker_init, _n_cpus_available, dream, dreamed_q,
 )
 from dsl import (
-    fn, direction, cellvalue, fn_s_s,
+    fn, cellvalue,
     fork, sync_to_world, overlay, compose, step, optimize, neg_distance, wall_at,
     unfold, tr, simplify,
     # stack calculus (the arity generalization)
-    base, dup_top, blank_top, map_top, swap_top, zip_top, commit_top, peek,
+    base, dup_top, map_top, swap_top, zip_top, peek,
     compose_gs, pipe_gsg, fork_stack_decomposed,
 )
 from tasks import (
@@ -89,7 +103,7 @@ from tasks import (
     K_SCENES, _collect, COMBOS, SIZE, DIRS,
     make_overlay_tasks,
 )
-from scenes import Scenes, as_scenes, solves
+from scenes import as_scenes, solves
 from prims import make_stack_prims
 
 # core parts whose presence in a solution we report (pre-stitch)
@@ -181,7 +195,7 @@ def make_crossblur_tasks(n, size=SIZE, vals=(1, 4), seed=0, k=K_SCENES):
 
 
 # ── DSL: lean atomic core + the stack calculus (isolates the ARITY axis) ──────────
-# Deliberately NOT the file16 cube (that isolates the role axis; the two extensions
+# Deliberately NOT the symmetric cube (that isolates the role axis; the extensions
 # are orthogonal).  Atomic fork/sync stay — they are belief's cheap depth-1 path —
 # so the search chooses depth, it isn't forced into the stack.
 
@@ -189,7 +203,7 @@ def make_crossblur_tasks(n, size=SIZE, vals=(1, 4), seed=0, k=K_SCENES):
 # canonical home for primitive sets.
 
 
-# ── Q tensors (mirror file16 so enumeration cost matches the curriculum) ──────────
+# ── Q tensors (mirror phase1/2 so enumeration cost matches the curriculum) ───────
 
 def uniform_type_q(D):
     "type-conditioned uniform log-prob: logp[i] = -log(#symbols sharing i's type)"
@@ -593,7 +607,7 @@ def main(smoke=False, dream_on=True, k=K_SCENES):
         print(f"  MDL margin (arity-{a2} − arity-{a1}, library)   = {margin_lib:+.2f} nats")
         if margin_lib > 0:
             print(f"  => the arity-{a1} encoding is strictly shorter; MDL's avoidance of the second")
-            print(f"     private channel is a quantified preference, not merely an absence of evidence.")
+            print("     private channel is a quantified preference, not merely an absence of evidence.")
 
     # ── (B) joint compression — the final library learned across the wake-sleep rounds ─
     print("\n" + "=" * 72)
@@ -613,7 +627,7 @@ def main(smoke=False, dream_on=True, k=K_SCENES):
             cand = (d, body, shared)
             if agent_constructor is None or len(shared) > len(agent_constructor[2]):
                 agent_constructor = cand
-            print(f"      *** AGENT TYPE CONSTRUCTOR (belief, depth-1) ***")
+            print("      *** AGENT TYPE CONSTRUCTOR (belief, depth-1) ***")
             if shared:
                 print("          shared holes: "
                       + ', '.join(f'{v} (×{n})' for v, n in shared.items())
@@ -627,7 +641,7 @@ def main(smoke=False, dream_on=True, k=K_SCENES):
     print(f"  (B)  arity-1 agent constructor extracted by joint stitch          : "
           f"{agent_constructor is not None}")
     if agent_constructor is not None and agent_constructor[2]:
-        print(f"       shared-av signature survives                                : True")
+        print("       shared-av signature survives                                : True")
 
 
 # ── stack spellings (shared by the ablation and its ground-truth check) ────────────

@@ -1,0 +1,28 @@
+.claude/
+notes/
+sources/
+__pycache__/
+sync.sh
+.DS_Store
+
+# Run artifacts.  A run writes these into whatever directory it is launched from,
+# so tracking them means every run dirties the tree it is reporting the commit of
+# and build_provenance stamps the numbers `<sha>+dirty` (see run.job).  The
+# citable copies live under hpc_run_results/<date>/<cell>/.
+#
+# Every pattern is anchored with a leading `/` so it matches ONLY the working
+# copies at the repo root — an unanchored pattern matches at any depth and would
+# silently stop `git add` from picking up the next run dir's artifacts.
+/phase[12]_run.json
+/phase[12]_traj.json
+/phase[12]_verdict.json
+/phase[12]_run.smoke.json
+/phase[12]_traj.smoke.json
+/phase[12]_verdict.smoke.json
+/task_samples.json
+/scaffold.json
+/scaffold.decomposed.json
+/scaffold.smoke.json
+/scaffold.decomposed.smoke.json
+/mdl_margins.json
+/mdl_margins.decomposed.json

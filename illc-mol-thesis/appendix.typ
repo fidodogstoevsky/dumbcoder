@@ -49,9 +49,9 @@ This appendix collects the implementation of the model outlined in Chapter 3.
     [`inpainting` / `readout`], [`underlay` / `snd`], [the z-order and projection complements],
     [`composite` (layer-compositing)], [`compose_pg (bimap (step u d) (erase w)) overlay`], [the full bifunctor: two layers, one map each],
     [`drift_reg` (drifting registration)], [`compose_pg (mapfst (step u d)) (register …)`], [the world-channel map: register while the image scrolls],
-    [`map_update`], [`compose_pg swap sync_all`], [the twist: the model adopts the world wholesale],
+    [`map_update`], [`compose_pg swap sync_all`], [the swap: the model adopts the world wholesale],
   ),
-  caption: [The task families, by the program behind them. The first block are trajectory tasks, solved by transition functions; the last are template tasks, solved by commits (roots). Programs are written throughout in the abbreviated spelling of @signature: `fork` and `sync_to_world` are not primitives of the learner's library but compounds it must assemble . The last three families exist only under the combinator library: nothing in the atomic control maps both channels, maps the world channel of a #emph[given] pair, or commits wholesale into the model, so they have no program there at any length. `wipe` has one in both, at three nodes against eight.],
+  caption: [The task families, by the program behind them. The first block are trajectory tasks, solved by transition functions; the last are template tasks, solved by commits (roots). Programs are written throughout in the atomic control's spelling: `fork` and `sync_to_world` are not primitives of the combinator library but compounds it must assemble. The last three families exist only under the combinator library: nothing in the atomic control maps both channels, maps the world channel of a #emph[given] pair, or commits wholesale into the model, so they have no program there at any length. `wipe` has one in both, at three nodes against eight.],
 ) <tab-families>
 
 == The BToM correspondence <app-btom-map>
@@ -64,7 +64,7 @@ This appendix collects the implementation of the model outlined in Chapter 3.
     align: (left, left, left),
     table.header([BToM (Chapter 3)], [In the discovered term], [Status here]),
     [A planner mapping (utility, environment model) to action],
-    [$pi_a^g$ (that is, `optimize (neg_dist g) a`), applied to whatever grid it is handed],
+    [Move one named value to the adjacent cell closest to another, in whatever grid it is handed --- that is, `optimize (neg_dist g) a`],
     [Granted as a primitive (@rationality)],
 
     [The environment model $m'$ supplied as an #emph[input] to the planner],
@@ -84,7 +84,7 @@ This appendix collects the implementation of the model outlined in Chapter 3.
     [Discovered: the conjunct the compression step kept, from either side of the boundary],
 
     [The nested evaluation: the observer runs the planner inside itself],
-    [`fork`'s private grid lives for one call and is discarded, never rendered],
+    [the private copy lives for one call and is discarded, never rendered],
     [Structural, in program space; the interpreter has no such mode (@app-interpreter)],
 
     [Inverse planning: infer $(g, m)$ from the trajectory by Bayes],
@@ -100,7 +100,7 @@ This appendix collects the implementation of the model outlined in Chapter 3.
 
 == The libraries, verbatim <app-lib-p1>
 
-@tab-lib-p2 gives the combinator run's final library as arrows, under names of our own. This is the same library as the compression step emitted it: the run's names, the types, the argument orders, and the bodies expanded to base primitives, for a reader who wants to count symbols rather than read denotations --- the two views differ in exactly the way @sec-selective turns on. The arguments a term takes are written `$0`, `$1`, … in the body, and are supplied in that order, which is the searcher's and carries no meaning; @tab-lib-p2's letters are assigned by role instead.
+@tab-lib-p2 says in English what each of the combinator run's final abstractions does, under names of our own. This is the same library as the compression step emitted it: the run's names, the types, the argument orders, and the bodies expanded to base primitives, for a reader who wants to count symbols rather than read descriptions --- the two views differ in exactly the way @sec-selective turns on. The arguments a term takes are written `$0`, `$1`, … in the body, and are supplied in that order, which is the searcher's and carries no meaning; @tab-lib-p2's letters are assigned by role instead.
 
 #figure(
   table(
@@ -114,21 +114,27 @@ This appendix collects the implementation of the model outlined in Chapter 3.
     [`fn_10`], [$V times D times V arrow.r (G arrow.r G)$], [`(pipe_gpg (compose_gp dup (mapsnd (compose (step $0 $1) (optimize (neg_dist $0) $2)))) (sync_except $0))`],
     [`fn_11`], [$V arrow.r (G times G arrow.r G)$], [`(register (locate $0) (place $0))`],
   ),
-  caption: [The final library under the combinator endowment (run `p2-nodream`), verbatim. Read as arrows in @tab-lib-p2.],
+  caption: [The final library under the combinator endowment (run `p2-nodream`), verbatim. Read in English in @tab-lib-p2.],
 ) <tab-lib-p2-raw>
 
-@sec-found also summarizes the control run; this is the library it converged to. The five constructors differ in what the private derive does. In the notation of @signature they read
+@sec-found also summarizes the control run; this is the library it converged to. The five constructors differ in what is done to the private copy. What each does at a time step, with its arguments as free letters:
 
-$
-"fn"_(6)(a,g,delta) &= "fork"(pi_a^g compose delta, space "sync"_a) \
-"fn"_(7)(a,g,delta) &= pi_a^g compose delta \
-"fn"_(8)(d,b,a,n) &= "fork"(pi_a^b compose "step"_(b,d), space "sync"_a) compose pi_n^b \
-"fn"_(9)(u,v) &= "fork"(pi_v^u compose "fork"(pi_u^0 compose pi_u^v, space "sync"_u), space "sync"_v) \
-"fn"_(10)(c,g,a,g',n) &= pi_n^(g') compose "fork"(pi_a^g compose "wall"_(c_2,c), space "sync"_a) \
-"fn"_(11)(c,r,g,a) &= "fork"(pi_a^g compose "wall"_(r,c), space "sync"_a) \
-$
+#figure(
+  table(
+    columns: (auto, auto),
+    align: (left, left),
+    table.header([Symbol], [What it does at each time step]),
+    [`fn_6`$(a,g,delta)$], [on a private copy of the grid altered in some unspecified way $delta$, $a$ moves to the adjacent cell closest to $g$; then $a$'s new position, and nothing else, is written back to the world],
+    [`fn_7`$(a,g,delta)$], [the alteration $delta$ is made to the grid itself, and then $a$ moves to the adjacent cell closest to $g$ --- no copy is opened],
+    [`fn_8`$(d,b,a,n)$], [$n$ moves to the adjacent cell closest to $b$; then, on a private copy in which $b$ has been displaced one cell in direction $d$, $a$ moves to the adjacent cell closest to $b$; then $a$'s position alone is written back],
+    [`fn_9`$(u,v)$], [on a private copy: $u$ moves to the adjacent cell closest to $v$ and then to the adjacent cell closest to the nearest 0, and $u$'s position is written into that copy; still in the copy, $v$ then moves to the adjacent cell closest to $u$; finally $v$'s position alone is written back to the world],
+    [`fn_10`$(c,g,a,g',n)$], [on a private copy with an impassable wall stamped in row 2 at column $c$, $a$ moves to the adjacent cell closest to $g$, and $a$'s position alone is written back; then, in the world, $n$ moves to the adjacent cell closest to $g'$],
+    [`fn_11`$(c,r,g,a)$], [on a private copy with an impassable wall stamped at row $r$, column $c$, $a$ moves to the adjacent cell closest to $g$; then $a$'s position alone is written back],
+  ),
+  caption: [The atomic control's five constructors and its seek block, read out. The bodies these are read from are below.],
+) <tab-lib-p1-read>
 
-so the derive is an arbitrary hole $delta$ in `fn_6`, a shove of the goal in `fn_8`, a phantom wall at a free coordinate in `fn_11` --- the most-used, carrying 52 of the 155 belief solutions --- and at a fixed column in `fn_10`. `fn_9` is worth a remark: its derive contains another fork, so it is an agent whose private model is itself derived by forking, and fourteen solutions are rewritten through it. That is not second-order mentalizing in the sense of @timeline, since the inner fork is part of the outer agent's model rather than a model of another mind, but it does establish that the discovered shape embeds, one of the properties @explanandum asked for.
+So what the private copy is wrong about is left an arbitrary hole in `fn_6`, is a shove of the goal in `fn_8`, and is a phantom wall at a free coordinate in `fn_11` --- the most-used, carrying 52 of the 155 belief solutions --- and at a coordinate free only in its column in `fn_10`. `fn_9` is worth a remark: what it does to its private copy itself opens a second private copy, so it is an agent whose private model is itself derived by copying and altering, and fourteen solutions are rewritten through it. That is not second-order mentalizing in the sense of @timeline, since the inner copy is part of the outer agent's model rather than a model of another mind, but it does establish that the discovered shape embeds, one of the properties @explanandum asked for.
 
 #figure(
   table(
@@ -142,7 +148,7 @@ so the derive is an arbitrary hole $delta$ in `fn_6`, a shove of the goal in `fn
     [`fn_10`], [`(compose (fork (compose (wall_at c2 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2)) (optimize (neg_dist $3) $4))`], [29],
     [`fn_11`], [`(fork (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)) (sync_to_world $3))`], [52],
   ),
-  caption: [The final library under the atomic control (run `p1-nodream`), bodies expanded to base primitives; the readings are above. Five of the six carry the agency signature; `fn_7` is the bare seek policy $pi_a^g$ with a derive prefix, which belief shares with the obstacle family (47 obstacle solves are rewritten through it).],
+  caption: [The final library under the atomic control (run `p1-nodream`), bodies expanded to base primitives; the readings are above. Five of the six carry the agency signature; `fn_7` is the bare seek policy --- move $a$ toward $g$ --- with room for one edit in front of it, which belief shares with the obstacle family (47 obstacle solves are rewritten through it).],
 ) <tab-lib-p1>
 
 == The per-family description-length census <app-dl-census>
@@ -168,7 +174,7 @@ so the derive is an arbitrary hole $delta$ in `fn_6`, a shove of the goal in `fn
     [wipe / map_update], [4 each], [5.78], [5.78], [0.00],
     [multi_reg / reg_except / inpaint / readout], [4 each], [2.20--4.50], [unchanged], [0.00],
   ),
-  caption: [Median description length per task (`p2-nodream`), before and after the learned library. Belief saves 17.11 nats per task and 412 nats over the priced solves; obstacle saves through the shared seek `fn_8`, and the three registration-flavoured families each save exactly 2.30 nats --- the price of the reassembled $"sync"_v$ token.],
+  caption: [Median description length per task (`p2-nodream`), before and after the learned library. Belief saves 17.11 nats per task and 412 nats over the priced solves; obstacle saves through the shared seek `fn_8`, and the three registration-flavoured families each save exactly 2.30 nats --- the price of the reassembled single-value publication.],
 ) <tab-dl-census>
 
 == The interpreter <app-interpreter>
@@ -247,19 +253,19 @@ The primitive sets handed to the searcher are summarised at the model level in @
     columns: (auto, auto, auto),
     align: (left, left, left),
     table.header([Symbol], [Type], [Semantics]),
-    [`dup`], [$G arrow.r G times G$], [$Delta$: pair a grid with a copy of itself],
+    [`dup`], [$G arrow.r G times G$], [pair a grid with a copy of itself],
     [`mapsnd`], [$(G arrow.r G) arrow.r (G times G arrow.r G times G)$], [$"id" times f$: act on the second channel],
     [`compose_gp`], [$(G arrow.r G times G) times (G times G arrow.r G times G) arrow.r (G arrow.r G times G)$], [compose a pair producer with a pair endomorphism],
     [`pipe_gpg`], [$(G arrow.r G times G) times (G times G arrow.r G) arrow.r (G arrow.r G)$], [produce a pair, then consume it],
-    [`locate`], [$V arrow.r (G arrow.r C times C)$], [$"loc"_v$: where $v$ is in a grid],
-    [`place`], [$V arrow.r (G times (C times C) arrow.r G)$], [$"put"_v$: move $v$ to a position],
+    [`locate`], [$V arrow.r (G arrow.r C times C)$], [where a named value is in a grid],
+    [`place`], [$V arrow.r (G times (C times C) arrow.r G)$], [move a named value to a position],
     [`register`], [$(G arrow.r C times C) times (G times (C times C) arrow.r G) arrow.r (G times G arrow.r G)$], [$(w, m) arrow.r.bar "plc"(w, "loc"(m))$: read a position off one channel, impose it on the other],
     [`overlay`], [$G times G arrow.r G$], [union the channels, model wins ties --- a #emph[non-mental] commit],
     [`underlay`], [$G times G arrow.r G$], [union the channels, world wins ties],
     [`sync_all`], [$G times G arrow.r G$], [move #emph[every] shared value to its model position],
     [`sync_except`], [$V arrow.r (G times G arrow.r G)$], [every shared value but one],
     [`fst` / `snd`], [$G times G arrow.r G$], [project the world channel / the model channel],
-    [`swap`], [$G times G arrow.r G times G$], [the twist: exchange the channels],
+    [`swap`], [$G times G arrow.r G times G$], [the symmetry isomorphism: exchange the channels],
     [`mapfst`], [$(G arrow.r G) arrow.r (G times G arrow.r G times G)$], [$f times "id"$: act on the #emph[first] channel],
     [`bimap`], [$(G arrow.r G)^2 arrow.r (G times G arrow.r G times G)$], [$f times g$: act on both],
     [`pair_blank`], [$G arrow.r G times G$], [pair a grid with a fresh blank rather than a copy],
@@ -268,9 +274,21 @@ The primitive sets handed to the searcher are summarised at the model level in @
   caption: [The product combinators: the plumbing, the commits that consume a pair, and the symmetric complements. The lower rows are the complements discussed in @primitives.],
 ) <tab-combinators>
 
-#block(inset: (left: 1em))[
-  *TODO:* the atomic variant's pair interface, transcribed from `prims.py`.
-]
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    align: (left, left, left),
+    table.header([Symbol], [Type], [Semantics]),
+    [`fork`], [$(G arrow.r G) times (G times G arrow.r G) arrow.r (G arrow.r G)$], [the fork frame of @signature, bought whole: copy the grid, run the derive on the copy, hand the (world, copy) pair to the commit],
+    [`sync_to_world`], [$V arrow.r (G times G arrow.r G)$], [the single-value publication bought whole: move $v$ in the world to its position in the model, return the world],
+    [`sync_to_model`], [$V arrow.r (G times G arrow.r G)$], [the direction complement, also atomic here: move $v$ in the model to its position in the world, return the model --- perception rather than action],
+    [`then_sync`], [$(G times G arrow.r G) times V arrow.r (G times G arrow.r G)$], [run the given commit, then `sync_to_world` $v$ on its result. Absent from the combinator endowment, where it would smuggle an atomic `sync_to_world` back in --- with it, registration solves as `(then_sync fst_gg v)` and never reaches for the register/locate/place spelling],
+    [`sync_all` / `sync_except`], [$G times G arrow.r G$ #h(0.4em)/#h(0.4em) $V arrow.r (G times G arrow.r G)$], [the scope collapses, atomic in both endowments (@tab-combinators)],
+    [`overlay` / `underlay`], [$G times G arrow.r G$], [the z-order unions, atomic in both endowments],
+    [`fst_gg` / `snd_gg`], [$G times G arrow.r G$], [the projections --- the `fst`/`snd` of @primitives, under the searcher's reprs --- atomic in both endowments],
+  ),
+  caption: [The atomic control's pair interface, transcribed from `prims.py` (`make_symmetric_prims` with `decomposed` off). The grid core of @tab-core is shared unchanged. Relative to the combinator endowment of @tab-combinators, every plumbing row --- `dup`, `mapsnd`, `mapfst`, `bimap`, `swap`, `pair_blank`, `locate`, `place`, `register` and the three composers --- is absent, and in their place stand the four tokens of the first four rows. This is the endowment ls the atomic control, and the absence of the channel-mapping plumbing is why the three families that act on the channels of a given pair (layer-compositing, drifting registration, map-update) have no program under it.],
+) <tab-atomic>
 
 == Program representation <app-delta>
 

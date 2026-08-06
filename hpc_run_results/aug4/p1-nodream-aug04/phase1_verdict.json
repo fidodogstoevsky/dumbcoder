@@ -626,8 +626,74 @@
   "nonmental_saved_median": 0.0,
   "n_belief_using_ctor": 51
  },
- "mdl_margin": null,
- "mdl_margin_note": "no mdl_margins.json yet \u2014 run `python mdl_margin.py` to price belief against its rivals",
+ "mdl_margin": {
+  "by_variant": {
+   "belief_goal": {
+    "n_tasks": 43,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   },
+   "belief_observers": {
+    "n_tasks": 24,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   },
+   "belief_wall": {
+    "n_tasks": 24,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   },
+   "belief_witness": {
+    "n_tasks": 48,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   },
+   "belief_false_obstacle": {
+    "n_tasks": 16,
+    "n_tasks_with_competitor": 0,
+    "n_competitor_pairs": 0,
+    "margin_lib_min": null,
+    "margin_lib_median": null,
+    "margin_lib_max": null,
+    "margin_base_median": null
+   }
+  },
+  "n_competitor_pairs": 0,
+  "pct_competitors_longer": null,
+  "n_competitors_shorter": 0,
+  "n_excluded_shorter": 104,
+  "n_action_right_scene_wrong": 115,
+  "margin_lib_median": null,
+  "margin_lib_min": null,
+  "source": "phase1_run.json",
+  "library": [
+   "fn_0",
+   "fn_1",
+   "fn_2",
+   "fn_3",
+   "fn_4",
+   "fn_5"
+  ],
+  "n_belief_tasks": 155,
+  "n_belief_unsolved": 13
+ },
+ "mdl_margin_note": null,
  "constructor_found": true,
  "constructor_shared": true,
  "belief_uses_ctor": true,

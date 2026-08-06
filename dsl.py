@@ -67,11 +67,6 @@ def compose(f, g):
         return g(f(x))
     return _composed
 
-def _id_fn_impl(g):
-    return g.copy()
-
-id_fn = _id_fn_impl
-
 def step(v, d):
     "int, dir -> fn: move all cells with value v one step in direction d"
     def _step(g):
@@ -162,7 +157,7 @@ def wall_at(r, c):
         return gset(g, r, c, 3)
     return _f
 
-# ── single-grid calculus (file13) ───────────────────────────────────────────────
+# ── single-grid calculus (the atomic endowment, phase1.py) ─────────────────────
 # Earlier iterations hardwired a second grid into the interpreter's state (the
 # pair) so that intensionality could be *expressed as a compound* and then
 # discovered by compression.  Here the interpreter shrinks to threading a single
@@ -206,7 +201,7 @@ def sync_to_world(v):
         return out
     return _c
 
-# ── non-mental inhabitants of the pair interface (file14) ───────────────────────
+# ── non-mental inhabitants of the pair interface ────────────────────────────────
 # fork produces pairs; fn_p_g consumes them.  If fork only ever fed sync_to_world
 # (and sync only ever ate fork), the fork/sync split would be a disguised belief
 # primitive.  These give the interface independent extension: `overlay` is a second
@@ -270,8 +265,8 @@ def snd_gg(p):
     "pair_gg -> grid: project the second channel"
     return p[1].copy()
 
-# ── decomposed fork: product-category combinators (file15) ───────────────────────
-# file13's `fork(derive, commit)` hides two operations inside one closure: the
+# ── decomposed fork: product-category combinators (phase2.py) ───────────────────
+# The atomic `fork(derive, commit)` hides two operations inside one closure: the
 # private copy (`w.copy()`) and the application of `derive` to it.  Spelled out,
 #
 #     fork(derive, commit)(w) = commit((w, derive(w)))
@@ -335,7 +330,7 @@ def fork_decomposed(derive, commit):
     "the decomposition identity (for ground-truth checks): == fork(derive, commit)"
     return pipe_gpg(compose_gp(dup, mapsnd(derive)), commit)
 
-# ── decomposed sync: locate / place (file15 — defined, but kept atomic) ──────────
+# ── decomposed sync: locate / place (defined, but kept atomic) ──────────────────
 # sync_to_world(v) decomposes the same way on the key v: read v's coordinate
 # through one channel, impose it on the other —
 #
@@ -346,13 +341,13 @@ def fork_decomposed(derive, commit):
 #
 # These are honest, non-mental parts (a find and a move).  We DEFINE them and
 # prove the identity, but DELIBERATELY keep `sync_to_world` a single DSL node (see
-# file15's docstring): folding the committer into a 4-node subtree would bury the
-# shared-`av` coincidence — av in the actor `(optimize … av)` AND the committer
-# `(sync_to_world av)` — which is the structural signature of agency that stitch
+# `granularity` in ARCHITECTURE.md): folding the committer into a 4-node subtree
+# would bury the shared-`av` coincidence — av in the actor `(optimize … av)` AND
+# the committer `(sync_to_world av)` — the structural signature of agency stitch
 # is meant to surface.  The sweet spot is to decompose fork (cheap; `dup` is a
 # great independent primitive) while leaving the agent signature one node deep.
 #
-# file15 (search-path variant) wires the decomposition in anyway, to *measure*
+# Phase 2 wires the decomposition in anyway, to *measure*
 # whether the prediction holds: `register(loc, plc)` is the av-free plumbing of
 # the commit (the analog of pipe_gpg/compose_gp for fork), so the committer
 # becomes `(register (locate av) (place av))` and av now appears 3× — in optimize,
@@ -398,7 +393,7 @@ def register(loc, plc):
         return plc(w, loc(m))
     return _c
 
-# ── symmetric complements (file16 — the "cube") ─────────────────────────────────
+# ── symmetric complements (the "cube") ─────────────────────────────────────────
 # Every commit/combinator above bakes in a *choice* that belief happens to want:
 # sync_to_world reads the coordinate off the MODEL, writes it into the WORLD,
 # returns the WORLD, and moves exactly ONE value.  Those are independent axes
@@ -554,7 +549,7 @@ def erase(v):
         return out
     return _f
 
-# ── arity generalization: the cons/nil grid-stack (file17) ───────────────────────
+# ── arity generalization: the cons/nil grid-stack (phase3_arity.py) ─────────────
 # The cube above introduces *role* symmetry (every choice baked into the two
 # channels gets its complementary corner), but every cube combinator is hardwired
 # to ARITY 2: pair_gg = (grid, grid), `swap` exchanges "the two" channels, `dup`
@@ -1050,7 +1045,7 @@ def simplify(tree):
           filtering the data — cleans the census, cube check, and stitch corpus in
           one place, since they all pass programs through simplify.
 
-    Structural rewrites over fork/sync/projection nodes (file13/15's DSL); trees from
+    Structural rewrites over fork/sync/projection nodes; trees from
     other DSLs contain no such nodes and pass through unchanged.
     """
     if not isinstance(tree, Delta):

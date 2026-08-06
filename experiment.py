@@ -60,27 +60,25 @@ Run:
 
 import sys
 import os
-import math
 import re as _re
 from collections import Counter
 from copy import deepcopy
 from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
-import torch as th
 
 import tasks as tasks_mod
-from scenes import Scenes, as_scenes, solves
+from scenes import as_scenes, solves
 from ecd import (
     Deltas, solve_enumeration, saturate_stitch, mat_key, mat_key_id, normalize,
     _solve_one_task, _worker_init, _n_cpus_available,
     dream, dreamed_q, content_boost, uniform_type_q,
 )
 from dsl import (
-    fn, fn_p_g, cellvalue, coord, Delta,
-    unfold, unfold_with_template, tr, simplify, length,
+    fn, fn_p_g, Delta,
+    tr, simplify,
     # used by check_decomposition_identities (phase 2)
-    compose, wall_at, clear_at, optimize, neg_distance, step,
+    compose, wall_at, optimize, neg_distance, step,
     fork, sync_to_world, fork_decomposed, register, locate, place,
 )
 
@@ -92,7 +90,7 @@ from tasks import (
     make_goal_displacement_tasks, make_two_observer_tasks,
     make_false_obstacle_belief_tasks,
     belief_variant,
-    COMBOS, SIZE, DIRS,
+    COMBOS, DIRS,
     make_overlay_tasks, make_comet_tasks, make_registration_tasks,
     # one task per symmetric corner
     make_flee_tasks, make_deletion_tasks, make_denoise_tasks, make_obstacle_tasks,
@@ -105,15 +103,10 @@ from tasks import (
 )
 from prims import make_core_prims, make_symmetric_prims
 
-# corpus families by interpreter / root type.  The first block is fixed; the cube
-# corner families (second block) are appended only in --cube runs, where their
-# primitives exist.  Reporting loops iterate these so new families show up
-# everywhere without per-call edits.
-_FN_KINDS   = ['physics', 'desire', 'overlay', 'comet', 'belief',
-               'flee', 'deletion', 'denoise', 'obstacle', 'relocate', 'underlay',
-               'wipe']
-_PAIR_KINDS = ['registration', 'perception', 'multi_reg', 'reg_except',
-               'inpaint', 'readout', 'composite', 'drift_reg', 'map_update']
+# Corpus families.  _ALL_KINDS is the whole corpus, in report order; _CUBE_KINDS is
+# the subset that claims a symmetric corner, and is what the cube census iterates.
+# Reporting loops iterate these so new families show up everywhere without per-call
+# edits.
 _CUBE_KINDS = ['flee', 'deletion', 'denoise', 'obstacle', 'relocate', 'underlay',
                'perception', 'multi_reg', 'reg_except', 'inpaint', 'readout',
                'wipe', 'composite', 'drift_reg', 'map_update']
@@ -1380,7 +1373,7 @@ def report_mdl_margin(decomposed, smoke):
     if note:
         print(f"  (B) MDL margin over non-belief rivals  [{note}]")
     else:
-        print(f"  (B) MDL margin over non-belief rivals (nats, under this run's library):")
+        print("  (B) MDL margin over non-belief rivals (nats, under this run's library):")
     for var in _BELIEF_VARIANTS:
         s = (summary.get('by_variant') or {}).get(var)
         if s is None:
@@ -2091,7 +2084,7 @@ def run_phase(decomposed=False, smoke=False, samples=False, samples_only=False,
         selective['observer_committed'] += int(names_observer)
         selective['believer_only'] += int(names_believer and not names_observer)
     if selective['solved']:
-        print(f"\n  two observers, one world — SELECTIVE attribution:")
+        print("\n  two observers, one world — SELECTIVE attribution:")
         print(f"  {selective['believer_only']}/{selective['solved']} solved scenes commit "
               f"for the believer and NOT for the observer")
         print(f"  ({selective['observer_committed']} commit for the bystander too, whose "
@@ -2099,10 +2092,10 @@ def run_phase(decomposed=False, smoke=False, samples=False, samples_only=False,
         if selective['wholesale']:
             print(f"  (wholesale multi-mover commits among them: {selective['wholesale']} "
                   f"— ONE shared model, both")
-            print(f"   agents published together rather than a private model per "
-                  f"agent — see (A))")
-        print(f"  (degenerate scope commits are canonicalised to the agency commit "
-              f"first — see (A))")
+            print("   agents published together rather than a private model per "
+                  "agent — see (A))")
+        print("  (degenerate scope commits are canonicalised to the agency commit "
+              "first — see (A))")
 
     # fork is general if a non-belief family reaches for it — with EITHER derive:
     # overlay's fixed `step` or comet's `optimize` seek (fork's derive slot is a
@@ -2156,20 +2149,20 @@ def run_phase(decomposed=False, smoke=False, samples=False, samples_only=False,
           f"   (plain/false-obstacle only; goal/observers are displaced-goal, not wall)")
     if n_belief_degenerate:
         tot_bel = n_belief_literal + n_belief_degenerate
-        print(f"\n  DISCLOSURE — agency commit on minimal scenes")
+        print("\n  DISCLOSURE — agency commit on minimal scenes")
         print(f"  {n_belief_degenerate}/{tot_bel} belief solutions commit via a SCOPE complement "
               f"(sync_except gv / sync_all) rather")
-        print(f"  than sync_to_world(av).  On a scene whose only committed model-mover is the")
-        print(f"  agent, 'move everything but the goal' == 'move the agent' — the two commits are")
-        print(f"  extensionally identical (verified for every belief family).  It is the SAME")
-        print(f"  fork-structured belief with the agency hole expressed on the goal rather than")
-        print(f"  the actor, NOT a non-belief rival; counted as the agency commit above.")
+        print("  than sync_to_world(av).  On a scene whose only committed model-mover is the")
+        print("  agent, 'move everything but the goal' == 'move the agent' — the two commits are")
+        print("  extensionally identical (verified for every belief family).  It is the SAME")
+        print("  fork-structured belief with the agency hole expressed on the goal rather than")
+        print("  the actor, NOT a non-belief rival; counted as the agency commit above.")
         if belief_variants.get('belief_goal', {}).get('degenerate', 0):
-            print(f"  For goal-displacement this is INTRINSIC, not sampled: on a two-value scene")
-            print(f"  sync_except(gv) moves exactly {{av}}, so it IS sync_to_world(av) on every")
-            print(f"  expressible scene.  Certified at construction (_goal_scope_certified): every")
-            print(f"  OTHER scope complement fails per scene; the family whose scenes FORCE the")
-            print(f"  literal spelling is false-obstacle, below.")
+            print("  For goal-displacement this is INTRINSIC, not sampled: on a two-value scene")
+            print("  sync_except(gv) moves exactly {av}, so it IS sync_to_world(av) on every")
+            print("  expressible scene.  Certified at construction (_goal_scope_certified): every")
+            print("  OTHER scope complement fails per scene; the family whose scenes FORCE the")
+            print("  literal spelling is false-obstacle, below.")
 
     # ── FINDING — the communal model: attribution spelled wholesale ──────────────────
     # These solves are not failures of the mentality claim and are deliberately NOT
@@ -2193,9 +2186,9 @@ def run_phase(decomposed=False, smoke=False, samples=False, samples_only=False,
         print(f"  Families: {', '.join(f'{f}×{n}' for f, n in _fams.most_common())}; "
               f"movers per commit: "
               f"{', '.join(f'{a}×{n}' for a, n in sorted(_arities.items()))}.")
-        print(f"  Each publishes ONLY values its own model sought, and is extensionally the")
-        print(f"  chain of their single-value agency commits — so the content is attribution;")
-        print(f"  the spelling is one model for everybody, committed in one step.  Reported")
+        print("  Each publishes ONLY values its own model sought, and is extensionally the")
+        print("  chain of their single-value agency commits — so the content is attribution;")
+        print("  the spelling is one model for everybody, committed in one step.  Reported")
         print(f"  apart from the non-mental rivals, which number {n_belief_nonmental}.")
 
     # ── the degeneracy REMOVED: false-obstacle scenes force the literal commit ────────
@@ -2240,24 +2233,24 @@ def run_phase(decomposed=False, smoke=False, samples=False, samples_only=False,
         n_fob_multi = sum(1 for f in fob_forms if f == 'multi_mover')
         n_fob_nonmental = sum(1 for f in fob_forms if f == 'nonmental')
         n_fob_scope = n_fob_deg + n_fob_multi + n_fob_nonmental
-        print(f"\n  FORCED LITERAL COMMIT — false-obstacle family (degeneracy excluded by construction)")
+        print("\n  FORCED LITERAL COMMIT — false-obstacle family (degeneracy excluded by construction)")
         print(f"  {len(fob_forms)}/{n_fob} false-obstacle tasks solved; commit forms: "
               f"{n_fob_lit} literal, {n_fob_deg} degenerate, {n_fob_multi} multi-mover, "
               f"{n_fob_nonmental} non-mental.")
         if not n_fob_scope:
-            print(f"  Every solved one commits via the literal sync_to_world(av): no scope complement")
-            print(f"  reproduces these scenes when paired with the derive this family certifies")
-            print(f"  (real wall and goal stay put), so the agency commit is FORCED and found —")
-            print(f"  not merely argued extensionally equal to a cheaper complement.")
+            print("  Every solved one commits via the literal sync_to_world(av): no scope complement")
+            print("  reproduces these scenes when paired with the derive this family certifies")
+            print("  (real wall and goal stay put), so the agency commit is FORCED and found —")
+            print("  not merely argued extensionally equal to a cheaper complement.")
         else:
             print(f"  {n_fob_scope} scope commit(s) reached the world-level commit position "
                   f"on a real-wall")
-            print(f"  scene.  _scope_complements_all_fail certifies the scope "
-                  f"complements against")
-            print(f"  the derive the generator RAN, and a scope commit is extensionally "
-                  f"unconstrained on its own, so")
-            print(f"  this means the search found a derive the certification did not price. "
-                  f"The solutions:")
+            print("  scene.  _scope_complements_all_fail certifies the scope "
+                  "complements against")
+            print("  the derive the generator RAN, and a scope commit is extensionally "
+                  "unconstrained on its own, so")
+            print("  this means the search found a derive the certification did not price. "
+                  "The solutions:")
             for x, m in all_tasks:
                 if m['kind'] != 'belief' or 'real_wall' not in m:
                     continue
@@ -2371,8 +2364,8 @@ def run_phase(decomposed=False, smoke=False, samples=False, samples_only=False,
             # chain of individual attributions — is the (A) finding, not this test.
             print(f"    (note: {n_belief_multi} belief solve(s) committed wholesale over "
                   f"several movers and DO")
-            print(f"     count as reaching for the scope corner here; see the communal-model "
-                  f"finding in (A))")
+            print("     count as reaching for the scope corner here; see the communal-model "
+                  "finding in (A))")
         print(f"  some complement is used elsewhere (field is live)        : {any_complement_used}")
         print(f"  complements claimed by another family                    : {sorted(used_complements)}")
         if unused_complements:
@@ -2463,10 +2456,10 @@ def run_phase(decomposed=False, smoke=False, samples=False, samples_only=False,
             cand = (d, body, shared)
             if _ctor_rank(cand) > _ctor_rank(agent_constructor):
                 agent_constructor = cand
-            print(f"      *** AGENT TYPE CONSTRUCTOR (belief) ***")
+            print("      *** AGENT TYPE CONSTRUCTOR (belief) ***")
             print(f"          used by {belief_use_count[d.repr]} belief solves")
             if shared:
-                print(f"          shared holes: "
+                print("          shared holes: "
                       + ', '.join(f'{v} (x{n})' for v, n in shared.items())
                       + "  — actor AND committer")
         elif _has_fork(body) and _has_scope and ('optimize' in body or 'neg_dist' in body):
@@ -2477,18 +2470,18 @@ def run_phase(decomposed=False, smoke=False, samples=False, samples_only=False,
             cand = (d, body, shared)
             if _ctor_rank(cand) > _ctor_rank(agent_constructor_degen):
                 agent_constructor_degen = cand
-            print(f"      *** AGENT TYPE CONSTRUCTOR (belief — degenerate scope-complement commit) ***")
+            print("      *** AGENT TYPE CONSTRUCTOR (belief — degenerate scope-complement commit) ***")
             print(f"          used by {belief_use_count[d.repr]} belief solves")
             if shared:
-                print(f"          shared holes: "
+                print("          shared holes: "
                       + ', '.join(f'{v} (x{n})' for v, n in shared.items())
                       + "  — actor AND committer (commit expressed on the goal)")
         elif _has_fork(body) and 'overlay' in body:
-            print(f"      (non-belief: fork + overlay — motion blur)")
+            print("      (non-belief: fork + overlay — motion blur)")
         elif 'wall_at' in body and ('optimize' in body or 'neg_dist' in body):
-            print(f"      (obstacle/belief policy: stamp wall ▸ navigate — the shared derive)")
+            print("      (obstacle/belief policy: stamp wall ▸ navigate — the shared derive)")
         elif 'optimize' in body or 'neg_dist' in body:
-            print(f"      (desire fragment)")
+            print("      (desire fragment)")
 
     # Prefer a literal sync_to_world constructor; fall back to the degenerate
     # scope-complement form only if stitch invented no literal one (see (A) disclosure).

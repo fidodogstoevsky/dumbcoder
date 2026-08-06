@@ -23,6 +23,19 @@
 //   #scenes-figure("belief_wall")            // the k scenes, path view, in a row
 //   #task-figure("desire", mode: "path", scenes: auto)   // the same thing, longhand
 //
+// OBJECTS THE PROGRAM POSITS (`posited:` / `posited-scenes:`):
+//   Some values are not scenery the scene arrives with — the obstacle family's
+//   wall is stamped onto the grid by `wall_at`, the very term the learner has to
+//   find.  `posited: 3` draws that value hollow and hatched rather than as a solid
+//   numbered cell, so a reader does not take it for a given, and `posited-scenes`
+//   (1-based, auto = all) restricts which scenes draw it at all — elsewhere it is
+//   erased.  Chapter 4 uses the pair to show the obstacle task twice: first as the
+//   learner gets it, with nothing on the grid to explain the detour, then with the
+//   wall the solution posits drawn in.  A figure that suppresses it is no longer
+//   the raw scene set, so its caption has to say so.
+//   #scenes-figure("obstacle", posited: 3, posited-scenes: ())   // no wall drawn
+//   #scenes-figure("obstacle", posited: 3)                       // hatched, all k
+//
 // PLACEMENT AND CAPTIONS:
 //   task-figure / scenes-figure draw the grids and nothing else, centred on the
 //   page (`caption: none` and `alignment: center` are the defaults; `alignment:
@@ -73,9 +86,31 @@
 
 #let grid-gutter = 1pt
 
+// A POSITED cell: hollow, hatched, dashed, and carrying no digit.  Some objects
+// are not scenery given with the scene but are stamped onto the grid by the very
+// program the learner is looking for (the obstacle family's wall, `wall_at`).
+// Drawing those as ordinary solid cells reads as "the task came with a wall in
+// it", which is exactly wrong, so they get a notation of their own.
+#let posited-cell(size: 11pt, ink: rgb("#54585c")) = box(
+  width: size, height: size,
+  radius: 1.2pt, inset: 0pt, clip: true,
+  stroke: (paint: ink, thickness: 0.8pt, dash: "dashed"),
+  {
+    // hatching: the anti-diagonals x + y = d, clipped to the square
+    let s = (paint: ink.lighten(35%), thickness: 0.6pt)
+    for d in (0.35, 0.7, 1.05, 1.4, 1.75) {
+      let (p, q) = if d <= 1 { ((0pt, size * d), (size * d, 0pt)) }
+                   else { ((size * (d - 1), size), (size, size * (d - 1))) }
+      place(top + left, line(start: p, end: q, stroke: s))
+    }
+  },
+)
+
 // `ghost: true` draws the cell as a washed-out outline — used by the path view to
 // show where an object ENDS UP without pretending it is there at t0.
-#let cell(v, size: 11pt, ghost: false) = box(
+#let cell(v, size: 11pt, ghost: false, posited: false) = if posited {
+  posited-cell(size: size)
+} else { box(
   width: size, height: size,
   radius: 1.2pt, inset: 0pt,
   fill: if ghost { palette.at(str(v), default: rgb("#cccccc")).lighten(78%) }
@@ -89,19 +124,21 @@
            fill: if ghost { palette.at(str(v), default: rgb("#cccccc")).darken(15%) } else { white },
            weight: "bold", str(v))
     }),
-)
+) }
 
-#let render-grid(g, size: 11pt) = grid(
+// `posited` (a cell value, or none) names the value to draw in the posited
+// notation wherever it occurs — see `posited-cell`.
+#let render-grid(g, size: 11pt, posited: none) = grid(
   columns: (size,) * g.at(0).len(),
   rows: (size,) * g.len(),
   gutter: grid-gutter,
-  ..g.flatten().map(v => cell(v, size: size)),
+  ..g.flatten().map(v => cell(v, size: size, posited: v == posited)),
 )
 
 // a labelled grid (one frame / channel)
-#let panel(p, size: 11pt) = stack(dir: ttb, spacing: 3pt,
+#let panel(p, size: 11pt, posited: none) = stack(dir: ttb, spacing: 3pt,
   text(size: 8pt, fill: luma(110), p.label),
-  render-grid(p.grid, size: size),
+  render-grid(p.grid, size: size, posited: posited),
 )
 
 // ── collapsed path view ───────────────────────────────────────────────────────
@@ -165,7 +202,7 @@
 
 // One grid carrying the whole trajectory.  `show-steps` numbers each arrow with
 // the frame index it leaves, for trajectories where the order is not obvious.
-#let path-grid(frames, size: 20pt, show-steps: false) = {
+#let path-grid(frames, size: 20pt, show-steps: false, posited: none) = {
   let base = frames.first()
   let final = frames.last()
   let (rows, cols) = (base.len(), base.at(0).len())
@@ -230,14 +267,17 @@
 
   // base = t0; cells occupied only at the end are ghosted in, so a path that walks
   // into empty space still shows where it lands, and deleted cells are washed out
-  // under their ✕ rather than sitting there at full strength
+  // under their ✕ rather than sitting there at full strength.  A `posited` value
+  // takes its own notation whether it is in the base or arrives later — it is not
+  // a thing the scene shows up with, however long it then stands.
   let layer = ()
   for r in range(rows) {
     let row = ()
     for c in range(cols) {
-      let v = base.at(r).at(c)
-      row.push(if v != 0 { cell(v, size: size, ghost: dead.any(g => g.cell == (r, c))) }
-               else if final.at(r).at(c) != 0 { cell(final.at(r).at(c), size: size, ghost: true) }
+      let (v, f) = (base.at(r).at(c), final.at(r).at(c))
+      row.push(if v == posited or (v == 0 and f == posited) { posited-cell(size: size) }
+               else if v != 0 { cell(v, size: size, ghost: dead.any(g => g.cell == (r, c))) }
+               else if f != 0 { cell(f, size: size, ghost: true) }
                else { cell(0, size: size) })
     }
     layer.push(row)
@@ -255,13 +295,14 @@
 // the path counterpart of `panel`: one grid, labelled with the span it covers.
 // `label` overrides that text — the multi-scene views say which scene it is
 // instead, which matters more there than the frame span.
-#let path-panel(frames, labels, size: 20pt, show-steps: false, label: auto) = stack(
+#let path-panel(frames, labels, size: 20pt, show-steps: false, label: auto,
+                posited: none) = stack(
   dir: ttb, spacing: 3pt,
   text(size: 8pt, fill: luma(110),
        if label == auto {
          labels.first() + sym.arrow.r + labels.last() + " (" + str(frames.len()) + " frames)"
        } else { label }),
-  path-grid(frames, size: size, show-steps: show-steps),
+  path-grid(frames, size: size, show-steps: show-steps, posited: posited),
 )
 
 // Which panels of a sample form a trajectory?  fn families list t0 … tn; fn_p_g
@@ -348,16 +389,16 @@
 // there is no path to draw.  `label` (when given) names the scene on the path
 // panel, or as a line above the frame row.
 #let _render-scene(sc, size: 11pt, gap: 12pt, mode: "frames", show-steps: false,
-                   label: none) = {
+                   label: none, posited: none) = {
   let (frames, extras) = _split-panels(sc)
   let path-mode = mode == "path" and frames.len() >= 2
   let body = if path-mode {
     let p0 = path-panel(frames.map(p => p.grid), frames.map(p => p.label),
-                        size: size, show-steps: show-steps,
+                        size: size, show-steps: show-steps, posited: posited,
                         label: if label == none { auto } else { label })
-    (p0,) + extras.map(p => panel(p, size: size))
+    (p0,) + extras.map(p => panel(p, size: size, posited: posited))
   } else {
-    sc.panels.map(p => panel(p, size: size))
+    sc.panels.map(p => panel(p, size: size, posited: posited))
   }
   let row = stack(dir: ltr, spacing: gap, ..body)
   // in frames mode the scene label has no panel header to ride on, so it gets its
@@ -377,6 +418,15 @@
   if n == auto or n == none or n >= all.len() { all } else { all.slice(0, n) }
 }
 #let _scene-dir(mode, dir) = if dir != auto { dir } else if mode == "path" { ltr } else { ttb }
+
+// Erase one value from every frame of a scene.  `posited-scenes` uses this to show
+// a program-stamped object ONLY in the scene whose geometry forces the program to
+// stamp it: in the obstacle family the wall stands at the same cell in all four
+// scenes, but it lies on the agent's direct path in only one of them, and that one
+// scene is the whole reason the wall is in the program.  Drawing it in the other
+// three invites the reader to hunt for work it is not doing there.
+#let _strip-value(sc, v) = (..sc, panels: sc.panels.map(p =>
+  (..p, grid: p.grid.map(row => row.map(x => if x == v { 0 } else { x })))))
 
 // How many grids one scene occupies: in the path view its frames collapse to one,
 // but a template channel still rides alongside (fn_p_g), so those scenes are twice
@@ -420,6 +470,10 @@
 // `mode` is "frames" (the grid sequence t0 … tn) or "path" (one grid, arrows for
 // the transitions).  `scenes` is how many of the task's k scenes to show (auto =
 // all); with more than one, each is labelled "scene i".
+// `posited` names a cell value the PROGRAM stamps rather than the scene supplies:
+// it is drawn hollow and hatched instead of as a solid numbered cell, and
+// `posited-scenes` (1-based indices into the drawn scenes, auto = all) restricts
+// which scenes draw it at all — elsewhere it is erased from the frames.
 #let render-sample(
   s,
   size: auto,
@@ -432,6 +486,8 @@
   scene-gap: auto,
   scene-cols: auto,
   alignment: center,
+  posited: none,
+  posited-scenes: auto,
 ) = {
   let cap = if caption == auto { default-caption(s) } else { caption }
   let chosen = _pick-scenes(s, scenes)
@@ -439,8 +495,11 @@
   let sdir = _scene-dir(mode, scene-dir)
   let sgap = if scene-gap != auto { scene-gap } else if sdir == ltr { 16pt } else { 9pt }
   let cols = if scene-cols != auto { scene-cols } else { _scene-cols(chosen, mode, sdir) }
+  let shows-posited(i) = (
+    posited == none or posited-scenes == auto or posited-scenes.contains(i + 1))
   let bodies = chosen.enumerate().map(((i, sc)) => _render-scene(
-    sc, size: sz, gap: gap, mode: mode, show-steps: show-steps,
+    if shows-posited(i) { sc } else { _strip-value(sc, posited) },
+    size: sz, gap: gap, mode: mode, show-steps: show-steps, posited: posited,
     label: if chosen.len() > 1 { "scene " + str(i + 1) } else { none }))
   _placed(block(breakable: false, stack(dir: ttb, spacing: 5pt,
     ..if cap != none { (cap,) } else { () },
@@ -453,7 +512,9 @@
 #let legend(size: 11pt) = stack(dir: ltr, spacing: 10pt,
   ..((0, "empty"), (1, "id 1"), (2, "id 2"), (3, "wall"), (4, "id 4"), (5, "id 5"))
     .map(e => stack(dir: ltr, spacing: 4pt,
-      cell(e.at(0), size: size), text(size: 8pt, fill: luma(90), e.at(1)))))
+      cell(e.at(0), size: size), text(size: 8pt, fill: luma(90), e.at(1)))),
+  stack(dir: ltr, spacing: 4pt,
+    posited-cell(size: size), text(size: 8pt, fill: luma(90), "posited by the program")))
 
 // ── lookups over the loaded data ──────────────────────────────────────────────
 #let sample-for(kind, data: task-data) = data.samples.find(s => s.kind == kind)
@@ -486,6 +547,8 @@
   scene-gap: auto,
   scene-cols: auto,
   alignment: center,
+  posited: none,
+  posited-scenes: auto,
 ) = {
   let want = kinds.pos()
   let chosen = if want.len() == 0 { data.samples } else {
@@ -498,7 +561,8 @@
                                            mode: mode, show-steps: show-steps,
                                            scenes: scenes, scene-dir: scene-dir,
                                            scene-gap: scene-gap, scene-cols: scene-cols,
-                                           alignment: per-item))
+                                           alignment: per-item,
+                                           posited: posited, posited-scenes: posited-scenes))
   let items = if show-legend { (_placed(legend(), per-item),) + body } else { body }
   _placed(stack(dir: dir, spacing: spacing, ..items),
           if dir == ltr { alignment } else { none })

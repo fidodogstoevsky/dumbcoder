@@ -1,76 +1,18 @@
-"""Task-generator library: one undifferentiated bag of tasks.
-
-The interpreter threads a single grid and renders every frame:
-
-    unfold(g, T, f)    f :: fn = grid -> grid
-
-An agent's private model is never interpreter state and never a primitive. It is
-introduced locally in program space by general, non-mental combinators and
-collapsed back to one grid in the same step:
-
-    fork(derive, commit) :: fn, fn_p_g -> fn      w |-> commit((w, derive(w)))
-    sync_to_world(v)     :: int      -> fn_p_g     move v in world to its pos in derived
-
-Neither primitive denotes a mental state on its own. Belief is the *composition* --
-and that composition is what stitch is meant to extract as the agent-type
-constructor. A `believe(...)` primitive would have been intensional by
-construction; the whole point is that belief stays a compound of general parts.
-
-The generators here are the whole corpus, distinguished only by each task's
-individual `kind` -- never by any coarse world/mind or scaffold/non-scaffold
-label. Physics and desire are the shallow rungs whose programs are literally
-sub-terms of the belief compound (compositional structure, not a category
-boundary); the fork/sync parts also earn independent extension on non-mental
-tasks (overlay trails, registration, and one family per symmetric cube corner) so
-the decomposition is honest rather than a `believe` primitive split into two gears
-that only ever re-mesh. Which tasks end up *serving* as scaffold for discovering
-belief is read off a run's results, not stipulated here.
-
-Expected solutions (one shared DSL across the curriculum):
-
-  physics  (3 nodes):  (step v d)
-  desire   (4 nodes):  (optimize (neg_dist gv) av)
-  belief  (11 nodes):  (fork (compose (wall_at r c) (optimize (neg_dist gv) av))
-                             (sync_to_world av))
-
-The two families the belief claim rests on are both false beliefs about an OBJECT,
-so they need no wall and no blocking semantics:
-
-  Sally-Anne     (fork (compose (step gv d) (optimize (neg_dist gv) av))
-                       (sync_to_world av))
-  two observers  (compose (optimize (neg_dist gv) ao)
-                          (fork (compose (step gv d) (optimize (neg_dist gv) av))
-                                (sync_to_world av)))
-
-The second is the first with a bystander who is right about the world: two agents,
-one goal, one grid, walking to two different cells.  The library has to invent the
-agent constructor and then apply it to av and NOT to ao — mental state attributed
-selectively, to exactly the agent whose behaviour cannot be read off the world.
-
-av appears twice -- in optimize (who acts on the model) and in sync_to_world
-(whose move is committed to the world) -- the structural signature of agency. The
-hoped-for stitch discovery is the agent-type constructor:
-
-  fn_agent($r, $c, $gv, $av) =
-    (fork (compose (wall_at $r $c) (optimize (neg_dist $gv) $av))
-          (sync_to_world $av))
-
-Run a phase via `python phase1.py`.
+"""Task-generator library
 """
 
 from collections import defaultdict
 
 import numpy as np
 
-from scenes import Scenes, solves
+from scenes import Scenes
 from dsl import (
-    fn, direction, fn_p_g,
     RIGHT, LEFT, UP, DOWN,
     fork, sync_to_world, sync_all, sync_except,
     compose, step, optimize, neg_distance, distance, wall_at, clear_at, erase,
-    unfold, unfold_with_template, tr,
+    unfold, unfold_with_template,
     overlay, underlay, fst_gg, snd_gg, sync_to_model,   # non-mental fork/pair families
-    dup, bimap, compose_gp, pipe_gpg,   # decomposed-fork plumbing (world-channel rival sweep)
+    bimap, pipe_gpg,   # decomposed-fork plumbing (world-channel rival sweep)
     # the pair-plumbing complements and the composer that reaches them — the closed
     # rival sets and the generators of the "pair-plumbing complements" section at the
     # end of this file are built out of these
@@ -211,81 +153,42 @@ def _placements_vary(scenes, av, gv, least=2):
             and _varies(scenes, lambda s: int(s.shape[0]), least))
 
 
-def _distractor_values(av, gv, pool=(1, 2, 4, 5, 6, 7, 8, 9)):
-    "cell values free to name an inert bystander on an (av, gv) scene (3 = wall)."
-    return [v for v in pool if v not in (av, gv)]
-
-
-def _add_distractors(rng, g, exclude, values):
-    """Scatter the task's bystander `values` on empty cells of `g` (in place).
-
-    Distractors are scene noise no program in the corpus names, and
-    `optimize`/`neg_distance` block on walls (3) alone, so a bystander cannot bend a
-    trajectory — it can only be walked over, which the caller rejects.  What they buy
-    is a scene whose value set is bigger than the program's literals, so a rival that
-    aims at a third value (a "beacon" seek that happens to sit on the route) has that
-    value put somewhere ELSE in the next scene and dies there.
-
-    `values` is a per-TASK set, fixed across the k scenes, and that is a deliberate
-    cost decision, not a shortcut.  `experiment.content_q` prices a cellvalue terminal
-    at 0 nats when its head is visible anywhere in the task, so every distinct
-    bystander value the scene set mentions is another free literal at each of the
-    program's four cellvalue slots.  Drawing fresh values per SCENE put ~7 free values
-    on a task that names 2, and measurably pushed the family out of budget (a
-    one-shove task the searcher solved in 24 s at 2 free values was still unsolved at
-    90 s).  Fixing the set per task keeps the free band at 3 while leaving the
-    bystanders where they do their work: a beacon rival must now fit the same value at
-    four different cells.  Their CELLS, and which of them appear, still vary per scene.
-
-    Returns {value: (r, c)}, or None if there was no room; empty `values` disables
-    them (the A/B baseline).
-    """
-    if not len(values):
-        return {}
-    size = g.shape[0]
-    free = [(r, c) for r in range(size) for c in range(size)
-            if g[r, c] == 0 and (r, c) not in exclude]
-    n = 1 + int(rng.integers(len(values)))        # 1..len(values) of them this scene
-    if len(free) < n:
-        return None
-    cells = [free[i] for i in rng.permutation(len(free))[:n]]
-    vals  = [values[i] for i in rng.permutation(len(values))[:n]]
-    out = {}
-    for v, (r, c) in zip(vals, cells):
-        g[r, c] = v
-        out[int(v)] = (int(r), int(c))
-    return out
-
-
-def _bystanders_still(x, cells):
-    "True iff every distractor keeps its value and its cell in every frame."
-    return all(int((x[t] == v).sum()) == 1 and int(x[t][r, c]) == v
-               for v, (r, c) in cells.items() for t in range(x.shape[0]))
-
-
-# ── on the rival batteries that used to live here ─────────────────────────────
-# Six hand-maintained functions once sat between `_agent_pos` and the generators:
-# `_physically_explainable`, `_compose_base_fns`/`_compose_rival_explainable`, and
-# `_displaced_goal_explainable` (plus the per-family `_witness_` and
-# `_false_obstacle_` and `_wall_` variants below).  Each enumerated a list of
-# non-mental programs and rejected any scene one of them reproduced, so that the
-# intended program stayed the only explanation.
+# ── what excludes a non-mental rival, and what no longer has to ───────────────
+# Six hand-maintained batteries of non-mental programs used to sit here, each
+# rejecting any scene one of its entries reproduced.  They are gone, and the rule
+# for whether some other check may follow them is the taxonomy below.  Anything a
+# generator still does falls in exactly one of three classes:
 #
-# They are gone.  Each was a patch on a specific hole in a representation with
-# infinitely many holes: one trajectory simply does not determine its program, so
-# every long run found a new coincidence (a fixed shove that happened to trace one
-# detour, a wall-beacon that happened to sit on the greedy ray) and the answer was
-# always another battery entry.  The k-scene task format is the general cure — a
-# rival must now reproduce every scene of the set, and a coincidence that survives
-# four independent placements of the same latent program is not a coincidence.
+#  1. COINCIDENCE, and the k scenes handle it.  One trajectory does not determine
+#     its program, so every long run found a new accident (a fixed shove that traced
+#     one detour, a wall-beacon that sat on the greedy ray) and the answer was always
+#     another battery entry — a patch on one hole in a representation with infinitely
+#     many.  A rival must now reproduce EVERY scene of a set that shares only the
+#     latents, and an accident that survives four independent placements of the same
+#     program is not an accident.  Nothing in this class is left; a filter that turns
+#     out to belong to it should go.  (Its price is `_placements_vary`: the format
+#     bites only where the unnamed parameters really vary, so the families carrying
+#     the belief claim assert that rather than trusting the sampler.)
 #
-# What is NOT deleted: the closed-set uniqueness certifications
-# (`_scope_complements_all_fail`, `_goal_scope_certified`, `_unique_pair_corner`).
-# Those are a different animal — they range over a FINITE, fully enumerated set of
-# rivals (the scope commits; the atomic fn_p_g corners) and some of what they
-# exclude is an identity rather than a coincidence: sync_except(gv) IS
-# sync_to_world(av) on any two-value scene, so no number of scenes separates them.
-# They are lifted to task level instead (a rival counts only if it fits all k).
+#  2. IDENTITY over a closed set, which no number of scenes touches
+#     (`_no_transient_wall`, `_goal_scope_certified`, `_scope_complements_all_fail`,
+#     `_unique_pair_corner`, `_cheaper_pair_program_fits`, the step/erase sweeps).
+#     These range over a FINITE, fully enumerated rival set — the scope commits, the
+#     fn_p_g corners, stamp-act-undo at every cell — and some of what they exclude is
+#     an identity rather than an accident: sync_except(gv) IS sync_to_world(av) on any
+#     two-value scene.  Kept, and lifted to task level (a rival counts only if it fits
+#     all k).
+#
+#  3. STRUCTURE: the scene is built so the rival cannot render it at all — the
+#     bystander on the phantom-wall cell, the witness who walks through it, the goal
+#     that never moves.  This is the strongest class and the one to reach for first,
+#     because it holds under any pricing (see the transient-wall history in
+#     `make_belief_tasks`).  Class-2 checks are mostly the regression test that a
+#     class-3 device is doing its job.
+#
+# Everything else a generator rejects is well-posedness — the agent has to arrive,
+# the detour has to be a detour — not rival exclusion, and is not evidence about the
+# corpus's strength either way.
 
 def make_physics_tasks(n, size=SIZE, vals=(1, 4), seed=0, k=K_SCENES):
     "Ground truth: (step v d).  Latent: the moved value and the direction."
@@ -462,7 +365,15 @@ def _bystander_value(av, gv, cell, size=SIZE):
     Never av or gv (they are what the policy names) and never 3 (that is a wall).
     Keyed on the wall cell so the marker is not the same value in every task, but
     deterministic so all k scenes of one task agree — see the pooling note in
-    `make_belief_tasks`."""
+    `make_belief_tasks`.
+
+    Determinism is also a cost decision.  `experiment.content_q` prices a cellvalue
+    terminal at 0 nats when its head is visible anywhere in the task, so every
+    distinct value the k scenes mention is another free literal at each of the
+    program's four cellvalue slots.  Drawing a fresh bystander per SCENE put ~7 free
+    values on a task that names 2 and measurably pushed a family out of budget (a
+    one-shove task solved in 24 s at 2 free values was still unsolved at 90 s); one
+    value per task holds the band at 3."""
     pool = [v for v in (1, 2, 4, 5, 6, 7, 8, 9) if v not in (av, gv)]
     return pool[(cell[0] * size + cell[1]) % len(pool)]
 
@@ -530,8 +441,16 @@ def make_witness_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max
     the real grid.  Because `unfold` iterates one fixed per-frame fn, any program
     that makes av detour by stamping a *real* wall must stamp it every frame and so
     clobbers the witness as it crosses — only a private-copy `fork` lets av see the
-    wall while the witness passes through.  That argument is structural, which is
-    why this family needs no rival battery: the crossing witness does the excluding.
+    wall while the witness passes through.  That argument is structural, which is why
+    this family needs no rival battery against WALL-STAMPING rivals: the crossing
+    witness does the excluding.
+
+    It says nothing, however, about the wall-FREE rival — two plain seekers, one per
+    agent, stamping nothing — and that one has to be excluded by making the phantom
+    wall cost av extra steps, below.  `belief_wall` gets this from
+    `_no_transient_wall`'s `repro(seek)` line; here it is a generation check, since
+    the family carries no certification.  `rival_audit`'s sweep does not cover it:
+    every schedule it yields begins with `wall_at`.
 
     Latent: (av, gv, aw, gw, pr, pc) — both agent/goal pairs and the phantom wall.
     The k scenes hold all six fixed and vary the four placements, so the witness has
@@ -575,8 +494,23 @@ def make_witness_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max
                 return None
             T = t_arrive + 1
             x = x_full[:T].copy()
-            if np.array_equal(x, av_clean[:T]):                 # av must really detour
+            # The phantom wall must cause a detour that COSTS av extra steps, exactly
+            # as in `make_belief_tasks`.  Comparing against `av_clean` here would be
+            # vacuous — that baseline freezes the witness, so a two-mover trajectory
+            # can only equal it if the witness never moves — and the comparison that
+            # bites is against the wall-free program for BOTH movers, in either
+            # composition order.  Without these two the family generated free
+            # reroutes: av walked a shortest path anyway and the belief bought
+            # nothing but `optimize`'s tie-break (measured 0/48 tasks paying in all
+            # k scenes, against 24/24 for belief_wall).
+            if (T - 1) <= abs(ar - gr) + abs(ac - gc):
                 return None
+            for rival in (compose(optimize(neg_distance(gv), av),
+                                  optimize(neg_distance(gw), aw)),
+                          compose(optimize(neg_distance(gw), aw),
+                                  optimize(neg_distance(gv), av))):
+                if np.array_equal(unfold(g, T, rival), x):
+                    return None
             if not any(_agent_pos(x[t], aw) == (pr, pc) for t in range(T)):
                 return None                                      # witness must cross the wall cell
             # all four values present and distinct up to (not incl.) av's arrival
@@ -597,9 +531,7 @@ def make_witness_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max
 # never moves in the world, so a stationary object is the witness that defeats the
 # single-grid rival (a program that genuinely shoves the goal would render the
 # goal drifting).  Crucially `move_goal_in_model` is NOT a new primitive — it is
-# `(step gv d)`, an ordinary physics fn, sitting in fork's derive slot.  This is
-# the same construction the wall-belief generator already rejects as a rival via
-# `_displaced_goal_explainable`; here we PROMOTE it to its own belief family.
+# `(step gv d)`, an ordinary physics fn, sitting in fork's derive slot.
 
 def _goal_displacement_program(av, gv, ds):
     """Per-frame transition for a displaced-goal false belief:
@@ -632,9 +564,9 @@ def _goal_scope_certified(scenes, derive_of, av, gv, assemble=fork):
     left alone is already at its model position, so moving it is a no-op.
     sync_except(gv) IS sync_to_world(av) on EVERY expressible scene of this family,
     not a sampling accident (verified: 0% of candidate scenes separate them), and
-    the distractors do not change that: an inert bystander sits at the same cell in
-    both channels.  Prising the two apart needs a third world value the derive is
-    FORCED to perturb, and forcing that requires blocking semantics — which is the
+    no amount of scenery changes that — anything the derive leaves alone sits at the
+    same cell in both channels.  Prising the two apart needs a third world value the
+    derive is FORCED to perturb, and forcing that requires blocking semantics — the
     false-obstacle family.  So the census's 'degenerate' label on goal solves is a
     provably benign spelling of the same agency commit, never a rival, and the
     forced-literal claim lives with fob.
@@ -694,14 +626,14 @@ def _goal_scope_certified(scenes, derive_of, av, gv, assemble=fork):
 # vertical leg first and its horizontal leg last.  A horizontally-displaced believed
 # cell therefore always sits on the direct-seek path (the scene is a truncated plain
 # desire — rejected as its prefix), and an L-displaced cell is always approached
-# horizontally, so a wall-beacon one cell past it reproduces the walk (rejected by
-# `_wall_explainable`).  Verified empirically: 0/4000 candidate scenes survive for
-# every horizontal or L-shaped spec, at every combo.
+# horizontally, so a wall-beacon one cell past it reproduces the walk.  Measured
+# when the batteries still existed: 0/4000 candidate scenes survive for every
+# horizontal or L-shaped spec, at every combo.
 _GOAL_CONTENT_SPECS = [('up',), ('down',), ('up', 'up'), ('down', 'down')]
 
 
 def make_goal_displacement_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0,
-                                 max_T=8, k=K_SCENES, n_distract=1):
+                                 max_T=8, k=K_SCENES):
     """Sally-Anne: the agent walks to where it *believes* the goal is — displaced
     along a one- or two-step shove from its true position — while the true goal
     sits still.  Each combo cycles through a shuffled `_GOAL_CONTENT_SPECS`, so the
@@ -722,27 +654,32 @@ def make_goal_displacement_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0,
         cell one or two steps off the goal — sits somewhere different in every
         scene: a phantom wall, or a seek-the-wall beacon, can be fitted to any ONE
         walk toward a fixed empty cell, but not to four that move with the goal);
-      * the trajectory length (so nothing can be read off a shared arrival time);
-      * the distractor objects — inert bystanders drawn from `n_distract` values the
-        combo does not use (default 1), sitting at a different cell in every scene.
-        They put more in the scene than the program names, so a beacon-style rival (a
-        seek aimed at a third value that happens to sit on the route) has to find that
-        same value at four different cells.  The value SET is per task, not per scene,
-        and it is deliberately small: see `_add_distractors` — every distinct value
-        the set mentions is a free literal under `content_q`, so bystanders are bought
-        with search budget.  Measured at 90 s against the smoke library: 2 free values
-        (none) solved a one-shove task in 24 s, 3 (`n_distract=1`) in 77 s, 4 not at
-        all.  One bystander is the setting that pays for itself.
+      * the trajectory length (so nothing can be read off a shared arrival time).
     `_placements_vary` asserts the first two actually came out varied rather than
     pooling four near-copies.
+
+    The grid carries nothing but av and gv.  Each scene used to get an inert
+    bystander as well, on the reasoning that a scene richer than the program's
+    literals makes a beacon-style rival (a seek aimed at a third value that happens
+    to sit on the route) fit that same value at four different cells.  That was a
+    pre-k-scenes argument and it is circular: with no bystander there is no third
+    value on the grid, so a beacon has nothing to aim at and does not fit even one
+    scene — the bystander SUPPLIES the target and k-scene variation then has to kill
+    it again.  Swept 2026-08-06 over both settings, 16 tasks each, closed beacon set
+    (`optimize (neg_distance v) av` and `optimize (distance v) av`, every v): best
+    beacon reproduced 0/4 scenes bare and 1/4 with a bystander.  Nor could an
+    adversarial placement help — a beacon must sit where the agent settles, which is
+    the believed cell, and a bystander the agent walks over is a scene the program
+    does not explain.  A bare grid is also cheaper to search: every distinct value a
+    task mentions is a free literal at each cellvalue slot under
+    `experiment.content_q` (see `_bystander_value`), so this holds the free band at
+    the 2 values the program names.
 
     Necessity (per scene, all structural — the task must be well-posed):
       * the agent settles exactly on the believed (displaced) cell, never on the
         true goal cell — so it is not plain desire, which settles ON the goal;
       * the true goal keeps its value & position in every frame — the stationary
-        witness that rules out any program that *actually* moves the goal;
-      * so does every distractor: a bystander the agent walked over would be a
-        scene the program does not explain (nothing in the program names it).
+        witness that rules out any program that *actually* moves the goal.
     And per task: every scope complement that CAN discriminate fails
     (`_goal_scope_certified`) — sync_all and sync_except(k != gv) never reproduce
     it.  sync_except(gv) is exempt because it is provably sync_to_world(av) on every
@@ -753,7 +690,6 @@ def make_goal_displacement_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0,
     rng = np.random.default_rng(seed)
     tasks = []
     for av, gv in combos:
-        dvals = _distractor_values(av, gv)
         order = list(_GOAL_CONTENT_SPECS)
         rng.shuffle(order)
         made = 0
@@ -767,10 +703,8 @@ def make_goal_displacement_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0,
             vecs = [DIRS[dn] for dn in spec]
             derive = _seq(*([step(gv, d) for d in vecs]
                             + [optimize(neg_distance(gv), av)]))
-            # this task's bystander values, drawn once and shared by its k scenes
-            dset = [int(v) for v in rng.permutation(dvals)[:n_distract]]
 
-            def propose(rng, av=av, gv=gv, spec=spec, vecs=vecs, dset=dset):
+            def propose(rng, av=av, gv=gv, spec=spec, vecs=vecs):
                 ar, ac = int(rng.integers(size)), int(rng.integers(size))
                 gr, gc = int(rng.integers(size)), int(rng.integers(size))
                 if (ar, ac) == (gr, gc):
@@ -779,10 +713,8 @@ def make_goal_displacement_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0,
                 # stay in bounds and clear of the agent, or the model shove
                 # clobbers/vanishes
                 br, bc, ok = gr, gc, True
-                shove_cells = []
                 for dr, dc in vecs:
                     br, bc = br + dr, bc + dc
-                    shove_cells.append((br, bc))
                     if not (0 <= br < size and 0 <= bc < size) or (br, bc) == (ar, ac):
                         ok = False
                         break
@@ -793,13 +725,6 @@ def make_goal_displacement_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0,
                 g = np.zeros((size, size), dtype=int)
                 g[ar, ac] = av
                 g[gr, gc] = gv
-                # inert bystanders: never on the believed cell (the agent settles
-                # there) and never on a shove cell (the model's `step gv` would
-                # overwrite them in the private copy).
-                dist_cells = _add_distractors(
-                    rng, g, {(ar, ac), (gr, gc), *shove_cells}, dset)
-                if dist_cells is None:
-                    return None
 
                 prog = _goal_displacement_program(av, gv, vecs)
                 x_full = unfold(g, max_T, prog)
@@ -815,26 +740,15 @@ def make_goal_displacement_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0,
                 # agent must never step onto the true goal cell
                 if any(_agent_pos(x[t], av) == (gr, gc) for t in range(T)):
                     return None
-                # …nor over a bystander: the program names none of them, so a scene
-                # where one vanishes is a scene the program does not explain
-                if not _bystanders_still(x, dist_cells):
-                    return None
                 # must diverge from a plain goal-seek (else it is mere desire)
                 if np.array_equal(x, unfold(g, T, optimize(neg_distance(gv), av))):
                     return None
                 return ((av, gv, spec), x,
                         {'kind': 'belief', 'av': av, 'gv': gv,
-                         'displaced_to': (br, bc), 'dirs': spec,
-                         'distractors': dist_cells})
+                         'displaced_to': (br, bc), 'dirs': spec})
 
             def certify(scs, m, derive=derive, av=av, gv=gv):
-                # the bystanders must move around too — a value pinned to one cell in
-                # all k scenes is exactly the beacon a rival could seek.  (Vacuous
-                # when n_distract=0, the A/B baseline: there is nothing to pin.)
-                placements = {tuple(sorted(sm['distractors'].items()))
-                              for sm in m['per_scene']}
-                return ((n_distract == 0 or len(placements) >= 2)
-                        and _placements_vary(scs, av, gv)
+                return (_placements_vary(scs, av, gv)
                         and _goal_scope_certified(scs, lambda _s: derive, av, gv))
 
             got = _collect(propose, 1, k, rng, attempts=60000, certify=certify)
@@ -1016,10 +930,6 @@ def make_two_observer_tasks(n_per_combo, combos=COMBOS, size=SIZE, seed=0, max_T
 
 
 # ── shared geometry + plumbing helpers ─────────────────────────────────────────
-# `_clean_path_table` was written for the deleted contradictory-beliefs generator
-# (see the two-observer note above).  It survives because the false-obstacle
-# generator inverts it the same way (`_fob_fits`): a phantom wall is placeable at a
-# cell only for placements whose clean path covers it.
 
 _PATH_CELLS = {}
 
@@ -1062,17 +972,15 @@ def _seq(*fs):
 
 
 # ── non-mental rival SPELLINGS, as priceable strings ────────────────────────────
-# The `_*_rival_explainable` batteries above build EXECUTABLE closures to reject scenes
-# a non-mental program reproduces; task generation keeps only scenes where they all fail.
-# For the MDL-margin experiment we need the same rivals as PRICEABLE s-expressions — the
-# non-mental programs a skeptic would offer as "almost as short" as the belief compound.
-# These builders mirror the closure batteries one-for-one (keep them in sync), emitting
-# base-primitive strings in the same token conventions as `experiment.gt_program_str`
-# (coords as c{r}/c{c}, `neg_dist`, directions by name).  Only NON-MENTAL rivals are
-# listed: a fork/sync rival would itself be a belief reading, so it cannot bear on the
-# "a non-mental program was almost as short" objection.
+# The generators above exclude rivals by EXECUTING them: a scene set is kept only if
+# no rival reproduces it.  For the MDL-margin experiment we need the same rivals as
+# PRICEABLE s-expressions instead — the non-mental programs a skeptic would offer as
+# "almost as short" as the belief compound — emitted as base-primitive strings in the
+# same token conventions as `experiment.gt_program_str` (coords as c{r}/c{c},
+# `neg_dist`, directions by name).  Only NON-MENTAL rivals are listed: a fork/sync
+# rival would itself be a belief reading, so it cannot bear on the "a non-mental
+# program was almost as short" objection.
 
-_DIR_NAME = {v: k for k, v in DIRS.items()}   # (dr,dc) vector -> 'right'/'left'/...
 _OPPOSITE = {'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left'}
 
 
@@ -1107,8 +1015,8 @@ def belief_rival_specs(m):
     """Non-mental rival spellings for a belief task, as (label, s-expression) pairs.
 
     Wall/witness rivals are the transient-wall family (stamp / act / erase, in the
-    interpreter's one fixed per-frame fn) plus the no-wall physics — the exact programs
-    the corresponding `_*_rival_explainable` battery enumerated.  The displaced-goal
+    interpreter's one fixed per-frame fn) plus the no-wall physics — the same programs
+    `_no_transient_wall` sweeps at generation time.  The displaced-goal
     families (Sally-Anne, two-observer) get the same three shapes with the goal in place
     of the wall: no belief at all, a permanent shove in the WORLD (which the stationary
     goal rules out), and the transient shove that puts the goal back before the frame is
@@ -1186,7 +1094,8 @@ def belief_rival_specs(m):
     ]
 
 
-# ── Task family: DUAL false belief (obstacle + goal) — forbids the degenerate commit ──
+# ── Task family: FALSE-OBSTACLE belief (wrong about obstacle AND goal) ──────────
+# The family that forbids the degenerate commit.
 # The single-agent belief scenes above are, on the world, extensionally solved by a
 # SCOPE complement (sync_all / sync_except gv) as well as by sync_to_world(av): when
 # the only world-value that ends up moved is the agent, "move all-but-goal" == "move
@@ -1267,7 +1176,7 @@ def make_false_obstacle_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE,
     Latent: (av, gv, believed wall, real wall, shove direction) — five literals, the
     most of any family, since the derive names both walls and the displacement.  The
     k scenes hold all five fixed and move the agent and goal, which is what retires
-    the transient-wall sweep the old `_false_obstacle_rival_explainable` ran: a
+    this family's old per-scene transient-wall sweep: a
     stamp-and-clear schedule fitted to one realised path does not survive the same
     two wall cells being approached from four directions.
 
@@ -1417,7 +1326,7 @@ def make_false_obstacle_belief_tasks(n_per_combo, combos=COMBOS, size=SIZE,
 
 # ── Non-mental task generators ───────────────────────────────────────────────────
 # Both generate through the same combinators/interpreters the searcher uses, so a
-# solvability failure is always search, never encoding (file13's discipline).
+# solvability failure is always search, never encoding.
 
 def make_overlay_tasks(n, size=SIZE, vals=(1, 4), seed=0, max_T=6, k=K_SCENES):
     """fork without sync: a value leaves a trail.
@@ -1602,7 +1511,6 @@ def make_registration_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0, n_distra
     reason, as the world-only value in the registration-except family.)
     """
     rng = np.random.default_rng(seed)
-    n_distract = max(2, n_distract)
 
     def propose(rng, target=None):
         cells = [(r, c) for r in range(size) for c in range(size)]
@@ -1619,19 +1527,8 @@ def make_registration_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0, n_distra
 
         working  = np.zeros((size, size), dtype=int)
         template = np.zeros((size, size), dtype=int)
-        working[cells[0]]  = v                     # v is misplaced…
-        template[cells[1]] = v                     # …it belongs here, per template
-        ci, ok = 2, True
-        for dv in distract_vals:                   # distractors misplaced AND retained
-            dsrc, dtgt = cells[ci], cells[ci + 1]
-            ci += 2
-            if dsrc == dtgt:
-                ok = False
-                break
-            working[dsrc]  = dv
-            template[dtgt] = dv
-        if not ok:
-            return None
+        # v and the distractors are all misplaced; only v is registered
+        ci = _misplace(working, template, cells, 0, [v] + distract_vals)
         working[cells[ci]] = static                # present in world only → stays put
         got = _pair_propose(rng, ('sync_to_world', sync_to_world(v)),
                             (working, template), {'kind': 'registration', 'val': v},
@@ -1641,7 +1538,7 @@ def make_registration_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0, n_distra
     return _collect(propose, n, k, rng, attempts=20000, target_tries=2000)
 
 
-# ── one non-mental task per symmetric corner (file16's "cube") ────────────────────
+# ── one non-mental task per symmetric corner (the "cube") ───────────────────────
 # The cube (make_symmetric_prims) hands the searcher the *complement* of every
 # choice baked into belief's corner.  A complement that no task ever needs is an
 # inert distractor: the cube census can only show "belief avoids the complements"
@@ -1973,6 +1870,26 @@ _PAIR_INT     = {'sync_to_world': sync_to_world, 'sync_to_model': sync_to_model,
                  'sync_except': sync_except}
 
 
+def _misplace(working, template, cells, ci, vals):
+    """Put each of `vals` in BOTH channels at different cells (in place).
+
+    The shared device of the fn_p_g families: a value the two channels disagree
+    about is one a commit either registers or leaves, so it is what makes the scope
+    commits (sync_to_world / sync_all / sync_except) extensionally distinct.  Every
+    family needs at least two of them for that, which is what its `n_movers` /
+    `n_keep` / `n_distract` floor is.
+
+    Consumes two cells of `cells` per value and returns the next free index.  The
+    caller passes a SHUFFLED list of distinct grid cells, so the source and target
+    always differ and no scene can come out idle.
+    """
+    for v in vals:
+        working[cells[ci]] = v
+        template[cells[ci + 1]] = v
+        ci += 2
+    return ci
+
+
 def _pair_rivals(vals):
     """(corner, commit, node count) for every fn_p_g program EITHER library can build
     at or below the length of the deepest family here.
@@ -2083,22 +2000,13 @@ def make_perception_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0, n_keep=2,
         if len(cells) < 4 + 2 * n_keep:
             return None
         P, Q, cw, cm = cells[0], cells[1], cells[2], cells[3]
-        if P == Q:
-            return None
         working  = np.zeros((size, size), dtype=int)
         template = np.zeros((size, size), dtype=int)
         working[P]   = v                 # world sees v here…
         template[Q]  = v                 # …the map still has it there (stale)
         working[cw]  = dw                # distractors differ between the channels so
         template[cm] = dm                # keep-world and keep-model are distinguishable
-        ci = 4
-        for u in keepers:                # shared, misplaced, and NOT recorded
-            src, tgt = cells[ci], cells[ci + 1]
-            ci += 2
-            if src == tgt:
-                return None
-            working[src]  = u
-            template[tgt] = u
+        _misplace(working, template, cells, 4, keepers)   # shared, misplaced, NOT recorded
         got = _pair_propose(rng, ('sync_to_model', sync_to_model(v)),
                             (working, template), {'kind': 'perception', 'val': v},
                             want_cost=7)     # (compose_pg swap (register (locate v) (place v)))
@@ -2122,7 +2030,7 @@ def make_multi_registration_tasks(n, size=SIZE, vals=(1, 2, 4, 5), seed=0,
     """
     rng = np.random.default_rng(seed)
 
-    def propose(rng, target=None):
+    def propose(rng):
         chosen = rng.permutation(vals).tolist()
         movers, static = chosen[:n_movers], chosen[n_movers]  # last is world-only
         cells = [(r, c) for r in range(size) for c in range(size)]
@@ -2131,17 +2039,7 @@ def make_multi_registration_tasks(n, size=SIZE, vals=(1, 2, 4, 5), seed=0,
             return None
         working  = np.zeros((size, size), dtype=int)
         template = np.zeros((size, size), dtype=int)
-        ci, ok = 0, True
-        for u in movers:
-            src, tgt = cells[ci], cells[ci + 1]
-            ci += 2
-            if src == tgt:
-                ok = False
-                break
-            working[src]  = u
-            template[tgt] = u
-        if not ok:
-            return None
+        ci = _misplace(working, template, cells, 0, movers)
         working[cells[ci]] = static                 # present in world only → stays put
         got = _pair_propose(rng, ('sync_all', sync_all), (working, template),
                             {'kind': 'multi_reg', 'vals': movers})
@@ -2184,17 +2082,8 @@ def make_registration_except_tasks(n, size=SIZE, vals=(1, 2, 4, 5), seed=0,
             return None
         working  = np.zeros((size, size), dtype=int)
         template = np.zeros((size, size), dtype=int)
-        ci, ok = 0, True
-        for u in movers:                 # every value (incl. anchor) is misplaced
-            src, tgt = cells[ci], cells[ci + 1]
-            ci += 2
-            if src == tgt:
-                ok = False
-                break
-            working[src]  = u
-            template[tgt] = u
-        if not ok:
-            return None
+        # every value, the anchor included, is misplaced
+        ci = _misplace(working, template, cells, 0, movers)
         working[cells[ci]] = static      # world-only: breaks the sync_to_model tie
         got = _pair_propose(rng, ('sync_except', sync_except(anchor)),
                             (working, template),
@@ -2218,7 +2107,7 @@ def make_inpainting_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0, k=K_SCENES):
     """
     rng = np.random.default_rng(seed)
 
-    def propose(rng, target=None):
+    def propose(rng):
         ref_val, paint = int(rng.choice(vals)), int(rng.choice(vals))
         cells = [(r, c) for r in range(size) for c in range(size)]
         rng.shuffle(cells)
@@ -2251,7 +2140,7 @@ def make_readout_tasks(n, size=SIZE, vals=(1, 2, 4), seed=0, k=K_SCENES):
     """
     rng = np.random.default_rng(seed)
 
-    def propose(rng, target=None):
+    def propose(rng):
         cells = [(r, c) for r in range(size) for c in range(size)]
         rng.shuffle(cells)
         wcells, tcells = cells[:3], cells[3:6]
@@ -2357,39 +2246,56 @@ def _repro_all_pair(scenes, metas, c):
     return True
 
 
-def _cheaper_pair_program_fits(scs, metas):
-    """True if any program but the intended one reproduces the whole drifting-
-    registration task at no greater cost.
+def _cheaper_pair_program_fits(scs, metas, intended=None, bimap_skip=None):
+    """True if any program but the intended one reproduces the whole template-rooted
+    task at no greater cost — the closed set for the two `compose_pg` families.
 
-    The closed set is the commits the DECOMPOSED library can build at or below the
-    intended program's length: a bare corner; a corner behind a pair-map on either
-    channel or behind `swap`; and the register commit on any value.  Ties count as
-    defeats (the enumerator keeps whichever it reaches first), so the same shape with
-    a different drifter or a different registered value is included.
+    The set is the commits the DECOMPOSED library can build at or below the intended
+    program's length: a bare corner; a corner behind a pair-map on either channel or
+    behind `swap`; and the register commit on any value.  Ties count as defeats (the
+    enumerator keeps whichever it reaches first), so the same shape with a different
+    drifter or a different registered value is included.
 
-    The set is the decomposed DSL's, not the union of both: this family is generated
-    only for decomposed runs, where `sync_to_world` / `sync_to_model` are not
-    primitives at all — the single-value commit is `register (locate v) (place v)`,
-    which is swept, and its model-direction conjugate is `compose_pg swap` over the
-    same thing, also swept.  Pricing the atomic nodes here would reject every scene
-    for losing to a program the searcher cannot write.
+    It is the decomposed DSL's set, not the union of both: these families are
+    generated only for decomposed runs, where `sync_to_world` / `sync_to_model` are
+    not primitives at all — the single-value commit is `register (locate v) (place
+    v)`, which is swept, and its model-direction conjugate is `compose_pg swap` over
+    the same thing, also swept.  Pricing the atomic nodes here would reject every
+    scene for losing to a program the searcher cannot write.
 
     Pair-maps are swept over every value and direction the scenes show, not just the
-    intended (u, d): a drifter the generator did not name is exactly the kind of
+    intended one: a drifter the generator did not name is exactly the kind of
     coincidence the k-scene format is meant to kill, and here it is cheap to check.
+
+    The two callers differ only in which shape is theirs and how wide the sweep has
+    to be:
+
+      `intended`    the (endo, commit) name pair to exempt — the drifting-
+                    registration program itself.
+      `bimap_skip`  set by the layer-composite family, whose program IS a bimap: it
+                    widens the sweep by the masks and by every OTHER (drift, mask,
+                    dir) bimap (same length, so a tie, so a defeat), and its own
+                    triple is what gets skipped.  That family needs no `intended`
+                    exemption because its program is never built.
     """
-    u_want, d_want, v_want = metas[0]['drift'], metas[0]['dir'], metas[0]['val']
     vals = sorted({u for s in scs for u in _grid_vals(s[0])}
                   | {u for mt in metas for u in _grid_vals(mt['template'])})
     commits = ([(nm, f) for nm, f in _PAIR_NULLARY.items()]
                + [(f'sync_except {w}', sync_except(w)) for w in vals]
                + [(f'register {w}', register(locate(w), place(w))) for w in vals])
+    wide = bimap_skip is not None
     endos = [('', None), ('swap', swap)]
     for u in vals:
+        if wide:
+            endos.append((f'erasefst {u}', mapfst(erase(u))))
+            endos.append((f'erasesnd {u}', mapsnd(erase(u))))
         for dn, d in DIRS.items():
             endos.append((f'mapfst {u} {dn}', mapfst(step(u, d))))
             endos.append((f'mapsnd {u} {dn}', mapsnd(step(u, d))))
-    intended = (f'mapfst {u_want} {d_want}', f'register {v_want}')
+            for w in (vals if wide else ()):
+                if (u, w, dn) == bimap_skip:
+                    continue
+                endos.append((f'bimap {u} {w} {dn}', bimap(step(u, d), erase(w))))
     for enm, endo in endos:
         for cnm, c in commits:
             if (enm, cnm) == intended:
@@ -2452,16 +2358,9 @@ def make_drifting_registration_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0,
             return None
         working  = np.zeros((size, size), dtype=int)
         template = np.zeros((size, size), dtype=int)
-        working[cells[0]]  = v                    # v is misplaced…
-        template[cells[1]] = v                    # …it belongs here, per the template
-        ci = 2
-        for dv in pool[:n_distract]:              # misplaced AND retained: no scope commit
-            src, tgt = cells[ci], cells[ci + 1]
-            ci += 2
-            if src == tgt:
-                return None
-            working[src]  = dv
-            template[tgt] = dv
+        # v is registered; the distractors are misplaced AND retained, so no
+        # wholesale scope commit passes for the single-value one
+        ci = _misplace(working, template, cells, 0, [v] + pool[:n_distract])
         # the drifter: world-only, and its whole path must stay on-grid and clear of
         # every other value (a collision overwrites cells and muddies what the commit
         # is being asked to do).
@@ -2482,48 +2381,11 @@ def make_drifting_registration_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0,
                  'template': template})
 
     def certify(scs, m):
-        return not _cheaper_pair_program_fits(scs, m['per_scene'])
+        intended = (f"mapfst {m['drift']} {m['dir']}", f"register {m['val']}")
+        return not _cheaper_pair_program_fits(scs, m['per_scene'], intended=intended)
 
     return _collect(propose, n, k, rng, attempts=20000, target_tries=2000,
                     certify=certify)
-
-
-def _cheaper_composite_fits(scs, metas):
-    """True if any program but the intended one reproduces the whole layer-composite
-    task at no greater cost — the closed set for `(compose_pg (bimap f g) c)`.
-
-    Same discipline and same decomposed-library rival set as
-    `_cheaper_pair_program_fits`, one tier wider: a bimap program is beaten by any
-    SINGLE-channel map with the same commit (that is the corner claim — one map is
-    not enough), by a bare commit, and by the same shape mapping the wrong values.
-    Both single-channel families are swept over every value and direction the scenes
-    show, so "the composite needed both channels" is checked, not assumed."""
-    u_want, w_want, d_want = metas[0]['drift'], metas[0]['masked'], metas[0]['dir']
-    vals = sorted({u for s in scs for u in _grid_vals(s[0])}
-                  | {u for mt in metas for u in _grid_vals(mt['template'])})
-    commits = ([(nm, f) for nm, f in _PAIR_NULLARY.items()]
-               + [(f'sync_except {w}', sync_except(w)) for w in vals]
-               + [(f'register {w}', register(locate(w), place(w))) for w in vals])
-    endos = [('', None), ('swap', swap)]
-    for u in vals:
-        endos.append((f'erasefst {u}', mapfst(erase(u))))
-        endos.append((f'erasesnd {u}', mapsnd(erase(u))))
-        for dn, d in DIRS.items():
-            endos.append((f'mapfst {u} {dn}', mapfst(step(u, d))))
-            endos.append((f'mapsnd {u} {dn}', mapsnd(step(u, d))))
-            # the intended shape with some OTHER pair of values: same length, so a
-            # tie, so a defeat.
-            for w in vals:
-                if (u, w, dn) == (u_want, w_want, d_want):
-                    continue
-                endos.append((f'bimap {u} {w} {dn}',
-                              bimap(step(u, d), erase(w))))
-    for enm, endo in endos:
-        for cnm, c in commits:
-            full = c if endo is None else compose_pg(endo, c)
-            if _repro_all_pair(scs, metas, full):
-                return True
-    return False
 
 
 def make_layer_composite_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0,
@@ -2542,8 +2404,8 @@ def make_layer_composite_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0,
     the WORKING channel only, so no model-channel map moves it; the masked value `w`
     is in the REFERENCE channel only, so no world-channel map removes it (and the
     blend re-stamps it every frame if nobody does).  One map cannot do both jobs, and
-    `_cheaper_composite_fits` sweeps every single-channel spelling to show it — along
-    with the bare commits and the same shape on the wrong values.  n_ref>=2 reference
+    `_cheaper_pair_program_fits` sweeps every single-channel spelling to show it —
+    along with the bare commits and the same shape on the wrong values.  n_ref>=2 reference
     values keep a single `register` from passing for the composite.
 
     Behind a `dup` this corner is unreachable on purpose: there both channels start
@@ -2600,7 +2462,9 @@ def make_layer_composite_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0,
                  'template': template})
 
     def certify(scs, m):
-        return not _cheaper_composite_fits(scs, m['per_scene'])
+        return not _cheaper_pair_program_fits(
+            scs, m['per_scene'],
+            bimap_skip=(m['drift'], m['masked'], m['dir']))
 
     return _collect(propose, n, k, rng, attempts=20000, target_tries=2000,
                     certify=certify)
@@ -2635,7 +2499,7 @@ def make_map_update_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0, n_movers=2
     rng = np.random.default_rng(seed)
     commit = compose_pg(swap, sync_all)
 
-    def propose(rng, target=None):
+    def propose(rng):
         chosen = [int(u) for u in rng.permutation(vals)]
         if len(chosen) < n_movers + 2:
             return None
@@ -2646,14 +2510,7 @@ def make_map_update_tasks(n, size=SIZE, vals=(1, 2, 4, 5, 6), seed=0, n_movers=2
             return None
         working  = np.zeros((size, size), dtype=int)
         template = np.zeros((size, size), dtype=int)
-        ci = 0
-        for u in movers:
-            src, tgt = cells[ci], cells[ci + 1]
-            ci += 2
-            if src == tgt:
-                return None
-            working[src]  = u
-            template[tgt] = u
+        ci = _misplace(working, template, cells, 0, movers)
         template[cells[ci]] = stale        # map-only: survives the update
         working[cells[ci + 1]] = fresh     # world-only: the update does not import it
         got = _pair_propose(rng, ('sync_all_to_model', commit), (working, template),

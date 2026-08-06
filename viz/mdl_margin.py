@@ -42,7 +42,12 @@ not a ground-truth reconstruction of it.
 Writes mdl_margins[.decomposed].json; plot with `python plot_mdl_margin.py`.
 """
 
+import os
 import sys
+# the analysis modules live in the repo root, one level up from viz/; the sibling
+# figure scripts live here, so put both on the path however this file is launched
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path[:0] = [_HERE, os.path.dirname(_HERE)]
 import json
 import math
 
@@ -54,7 +59,7 @@ from ecd import (
     mat_key, mat_key_id, tr, normalize, simplify,
 )
 from dsl import unfold
-from scenes import as_scenes, solves
+from scenes import as_scenes
 from prims import make_symmetric_prims
 from tasks import (
     COMBOS,

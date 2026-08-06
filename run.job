@@ -31,11 +31,15 @@
 # the slow case and short jobs are free to shorten it.  SLURM charges actual use, so a
 # generous ceiling costs a phase-1 cell nothing but queue priority.
 #
-# WHY THE OUTPUT DIR IS OUTSIDE THE CHECKOUT.  The phase artifacts are tracked
-# files, so a run that writes them into the repo root dirties the tree it is
-# reporting the commit of — build_provenance then stamps `<sha>+dirty` and the
-# numbers are not citable.  (That, plus rsyncing sources over a stale checkout,
-# is why every Jul-26 run carried the DIRTY warning.)  Keep $HOME/dumbcoder a
+# WHY THE OUTPUT DIR IS OUTSIDE THE CHECKOUT.  A run that writes its artifacts into
+# the repo root dirties the tree it is reporting the commit of — build_provenance
+# then stamps `<sha>+dirty` and the numbers are not citable.  (That, plus rsyncing
+# sources over a stale checkout, is why every Jul-26 run carried the DIRTY warning.)
+# The phase artifacts are now git-ignored at the repo root, which stops them showing
+# up as *modified* tracked files, but writing outside the checkout is still the rule:
+# it also covers the SLURM log below, and it keeps the citable copies in one place
+# (hpc_run_results/<date>/<cell>/) rather than wherever a job happened to run.  Keep
+# $HOME/dumbcoder a
 # clean `git pull`-ed checkout and let runs write elsewhere; git_provenance reads
 # the repo via the source file's own path, so the cd below does not confuse it.
 #
@@ -47,9 +51,10 @@
 # $RUNS/slurm_%A.out — deliberately OUTSIDE the checkout.  SLURM opens that file the
 # moment the job starts, so a log written into $SRC would be an untracked file that
 # dirties the tree, and the clean-tree guard below would fail the *next* submission
-# on the *previous* job's log.  (.gitignore cannot fix this: it is itself untracked,
-# so an ignore rule never reaches the cluster through git pull.)  $RUNS must exist
-# before the first sbatch — `mkdir -p ~/dumbcoder-runs`.
+# on the *previous* job's log.  (.gitignore is tracked now, so an ignore rule *would*
+# reach the cluster through git pull — but the log name carries the job id, so there
+# is no stable pattern to ignore.  Writing outside the checkout is the fix.)  $RUNS
+# must exist before the first sbatch — `mkdir -p ~/dumbcoder-runs`.
 
 set -u
 

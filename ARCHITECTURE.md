@@ -477,20 +477,24 @@ false-belief uniqueness guarantee for a shallower first solve).
 | `scenes.py` | `Scenes` (a task = `k` trajectories sharing one latent program), task identity/hashing, and `solves` — the single place that decides whether a program solves a task. |
 | `tasks.py` | All task generators (one bag, distinguished by `kind`), the `_collect` latent-pooling driver, the closed-set uniqueness certifications, + `COMBOS`/`SIZE`/`DIRS`/`K_SCENES`. |
 | `experiment.py` | Shared harness: `run_phase`, corpus assembly, ground-truth verification, decomposition-identity checks, the usage-census / abstraction-generality reporting, run/trajectory artifact export, CLI parsing. |
-| `phase1.py` / `phase2.py` / `phase3_arity.py` | Thin phase drivers (atomic / decomposed / arity-stack). |
-| `run.job` / `template.job` / `sync.sh` | HPC batch-run scaffolding. |
+| `phase1.py` / `phase2.py` | Thin drivers for the two reported runs (atomic control / combinator endowment). |
+| `phase3_arity.py` | The arity-stack driver. **Not a reported result** — an exploratory implementation of the further-work experiment of thesis ch. 6; see its docstring. |
+| `run.job` / `sync.sh` | HPC batch-run scaffolding. |
 
 **Analysis & figure scripts** (consume a phase's run/trajectory artifacts —
-`phase{1,2}_run.json`, `phase{1,2}_traj.json` — and emit the thesis figures):
+`phase{1,2}_run.json`, `phase{1,2}_traj.json` — and emit the thesis figures). The
+figure scripts live in `viz/`; each puts the repo root on its own `sys.path`, so they
+run from any working directory:
 
 | File | Figure |
 |---|---|
-| `belief_solved.py` | Solve-rate per belief variant (the honest denominator: solved / total). |
-| `solve_dynamics.py` | Cumulative-solve S-curve + per-task solve-time collapse — *when* belief becomes reachable. |
-| `corpus_dl.py` | DreamCoder-style per-round total-DL trajectory — the compression belief buys. |
-| `mdl_margin.py` / `plot_mdl_margin.py` | Prices the found belief compound vs. its non-belief rivals under the final library (nats); the "not almost as short" figure. |
-| `agent_tiling.py` | `(gv,av)` × abstraction-used tiling — the win is *one* reused agent constructor, not a per-task fluke. |
-| `behavioral_probe.py` | The false-belief test: on a held-out Sally-Anne scene the belief compound predicts the *believed* cell, the shortest non-belief rival the *true* cell. |
+| `viz/belief_solved.py` | Solve-rate per belief variant (the honest denominator: solved / total). |
+| `viz/solve_dynamics.py` | Cumulative-solve S-curve + per-task solve-time collapse — *when* belief becomes reachable. |
+| `viz/corpus_dl.py` | DreamCoder-style per-round total-DL trajectory — the compression belief buys. |
+| `viz/mdl_margin.py` / `viz/plot_mdl_margin.py` | Prices the found belief compound vs. its non-belief rivals under the final library (nats); the "not almost as short" figure. |
+| `viz/agent_tiling.py` | `(gv,av)` × abstraction-used tiling — the win is *one* reused agent constructor, not a per-task fluke. |
+| `viz/behavioral_probe.py` | The false-belief test: on a held-out Sally-Anne scene the belief compound predicts the *believed* cell, the shortest non-belief rival the *true* cell. |
+| `scaffold.py` | Recovers, from a run's own output, which shallower tasks and abstractions built up to belief. |
 | `rival_audit.py` | Diagnostic: replays suspicious caught programs against the corpus to check for rival leaks. |
 
 > **Removed.** `file11.py` / `file12.py` (the earlier `sfn` / `machine` baselines)

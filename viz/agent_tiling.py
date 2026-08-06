@@ -37,8 +37,13 @@ contains.  So the tiling is what the run compressed to, not a reconstruction of 
 Writes agent_tiling[.decomposed].json and agent_tiling.png/.pdf.
 """
 
-import re
+import os
 import sys
+# the analysis modules live in the repo root, one level up from viz/; the sibling
+# figure scripts live here, so put both on the path however this file is launched
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path[:0] = [_HERE, os.path.dirname(_HERE)]
+import re
 import json
 from collections import Counter, defaultdict
 

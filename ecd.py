@@ -95,20 +95,6 @@ class Deltas:
     def __repr__(self):
         return f"{self.core} + {self.invented}"
 
-    def __contains__(self, d):
-        if d in self.ds:
-            return True
-
-        if isinstance(d, Delta):
-            outd = d()
-        else:
-            outd = d
-
-        od = [d() for d in self.ds if not d.tailtypes]
-
-        return outd in od
-
-
     def index(self, d: Union[Delta, str]):
         if isinstance(d, str):
             return self._idx_by_repr.get(d)
@@ -712,7 +698,7 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
                          unfold(scene[0], T_scene, f).
     root_type=fn_p_g   : programs are pair->grid commits; each scene is wrapped as
                          unfold_with_template(scene[0], template_i, T_scene, c)
-                         (file14).  The second grid is a given template, not a
+                         The second grid is a given template, not a
                          derived model, so templates[key] is a list of k templates
                          — one per scene, in scene order.
     """
@@ -737,7 +723,7 @@ def solve_enumeration(Xs, D, Q, solutions=None, maxdepth=10, timeout=60, budget=
 
     def cb(tree, logp):
         """called once per enumerated program."""
-        nonlocal cnt, all_cnt, done, stime
+        nonlocal cnt, all_cnt, done
 
         all_cnt += 1
         if not(all_cnt % 10000) and time() - stime > timeout:
@@ -1085,10 +1071,6 @@ class MatRecognitionModel(nn.Module):
         "(B,T,H,W) -> dsl_logits (B,nd)"
         matrix_h, _ = self.encode_matrix(x)
         return self.head(matrix_h)
-
-    @property
-    def mat_embed_size(self):
-        return self.mat_emb
 
 def sample(ps):
     # ps is either a softmax prob vector (newtree) or a log_softmax list with -inf-masked

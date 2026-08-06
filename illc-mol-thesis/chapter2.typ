@@ -10,7 +10,7 @@
 
 The learner takes as input a trajectory of bodies through space, and outputs the process that generated the trajectory. The output process is formulated in terms of mental states (beliefs, desires, intentions) that don't appear in the data. The trajectory underdetermines the process, since any behaviour is compatible with indefinitely many belief-desire pairs. So no amount of further observation eliminates all but one.
 
-Stated this way the problem is an instance of a familiar one: given data, entertain hypotheses about the process that generated it, assign each a prior plausibility, and revise those plausibilities as new data comes in. There's already a known answer to the normative question of how such revision ought to proceed, which is Bayes' rule. So our computational-level claim @marr_vision_2010 is that acquiring a theory of mind is the problem of finding the best explanation of observed behaviour, where the best explanation takes into account both its prior plausibility and how well it fits the data.
+So the problem is of the form: given data, entertain hypotheses about the process that generated it, assign each a prior plausibility, and revise those plausibilities as new data comes in. There's already a known answer to the normative question of how such revision ought to proceed, which is Bayes' rule. So our computational-level claim @marr_vision_2010 is that acquiring a theory of mind is the problem of finding the best explanation of observed behaviour, where the best explanation takes into account both its prior plausibility and how well it fits the data.
 
 == Bayesian inference: the logic of learning <sec-bayes>
 

@@ -1,0 +1,172 @@
+▗ ▗   ▖ ▖  Claude Code v2.1.222
+           Fable 5 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/mol/s26/dumbcoder
+
+
+❯ /model                                                                        
+  ⎿  Set model to Fable 5 and saved as your default for new sessions · Draws
+     from usage credits
+
+❯ The problem with chapter4.typ and chapter5.typ is that this should be about   
+  the model, the higher-level problem that the implementation is solving, but   
+  it reads more like it's about the implementation but explained through        
+  mathematical notation instead of references to the code. But of course it's   
+  unavoidable if we're talking about the tasks and the primitives and programs. 
+  What would it even look like to talk about this at the model level? are we    
+  at the model level? how can we make this project clear even to people who     
+  haven't read the code?                                                        
+
+⏺ This is a question about framing, so let me actually read the two chapters
+  before opining.
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ Let me skim the upstream chapters to see what conceptual scaffolding already
+  exists before these two.
+
+  Read 3 files (ctrl+o to expand)
+
+⏺ This is a real question about the chapters' framing, and having read both
+  chapters plus the upstream ones, my assessment is: you are at the model level 
+  more than it feels like, and the "implementation-y" feel has identifiable 
+  causes that are not the notation. Let me answer your three questions in order.
+
+  Are we at the model level?
+
+  Yes, in the sense that matters — and your own thesis already defines which
+  sense that is. Chapter 2 states the computational-level claim and explicitly
+  positions the system as an "algorithmic-level realisation" whose role is
+  "sufficiency rather than fidelity." Chapter 1's constructivism section sets up
+  the gap the thesis fills: the theory theory "does not say what process does
+  the constructing," and the nativist's position is "parasitic on the absence of
+  a mechanism." That means the contribution is the exhibited mechanism, and a
+  mechanism is necessarily concrete. The concreteness of Chapter 4 isn't
+  incidental detail obscuring a model — it's the load-bearing content, because
+  the claim being answered is an existence claim ("no such mechanism exists").
+  You can't refute that abstractly.
+
+  The anxiety comes from conflating two senses of "model": cognitive model
+  (which Chapter 4 is) and abstract description (which it partially isn't). A
+  cognitive model of acquisition has to say exactly what the learner is given,
+  shown, and optimizes — and those answers are unavoidably specific. The
+  question is not "can we remove the specifics" but "does the reader always know
+  which specifics carry the claim."
+
+  Why it reads like implementation anyway
+
+  Three causes, none of which is the mathematical notation:
+
+  1. The model is never stated as one object. Chapter 4 presents its components
+  in sequence — corpus, program space, primitives, search, compression — but
+  never hands the reader the single sentence that makes them components of
+  something: the model is a triple (initial language $L_0$, corpus $D$,
+  description-length objective), the learner is the map from that triple to a
+  final library, and the thesis's claim is that the belief-attribution schema is
+  in the image of that map, reached through non-mental waypoints. Without that
+  sentence up front, each section reads as an artifact being documented rather
+  than a quantifier being instantiated. This is the cheapest fix with the
+  biggest payoff.
+
+  2. Inventory comes before principle. The primitives section reads as a parts
+  catalog ("We have two ways of building a pair… four ways of transforming…"),
+  and the corpus section as a data appendix (the 25-family tour). But in both
+  cases the generative principle exists in the chapter — it just arrives late,
+  as a defense. @granularity's "the kit is complete rather than curated — these
+  maps are what having a product is" is a mathematical characterization of the
+  library, not a design choice; stated first, it turns the list into a
+  corollary. Same for the corpus: "each family should be readable as a claim on
+  some corner of the language" is the model-level statement, and the tour drowns
+  it. Derive, then list — or list in a table and spend the prose on the
+  principle.
+
+  3. There's no essential/incidental separation. A reader who hasn't read the
+  code can't tell which details they're allowed to forget. Is the 5×5 grid
+  essential? The ten cell values? The 3600-second budget? The product structure?
+  Right now all are presented with equal weight. The model-level move is a
+  short paragraph saying: essential are the product $G \times G$, the granted
+  planner, the MDL objective, and the one-bag unlabeled corpus; incidental are
+  grids, sizes, budgets, and every name the searcher prints. That one paragraph
+  does more for a code-naïve reader than any amount of rewriting.
+
+  What would talking at the model level actually look like?
+
+  Here's the reframe that I think dissolves most of the worry: the programs are 
+  not the implementation — they are the psychology. Your hypotheses are programs
+  by the argument of Chapter 2 (language of thought, executability, countable
+  parts). So $\pi_a^g$ is not code; it's the proposed content of the infant's
+  teleological schema. $\mathrm{fork}(\pi_a^g \circ \mathrm{wall}_{r,c},
+  \mathrm{sync}_a)$ is not code; it's the proposed structure of the mental state
+  "Sally believes a wall is there," written in a candidate language of thought.
+  When the prose carries that gloss, the reader experiences a theory of mental
+  representation; when the gloss is missing, the same formula reads as
+  implementation. Chapter 4 mostly has the glosses (the fork-anatomy figure, the
+  agency-signature discussion, the no-BToM section are genuinely model-level
+  writing). Where it lapses is exactly where it feels implementation-y: the
+  composers compose_gp/pipe_gpg (pure plumbing, presented at the same altitude
+  as the planner), the searcher's type names, the family tour.
+
+  Concretely, model-level talk about this project would mean:
+
+  - A worked Sally-Anne translation before any inventory. Open Chapter 4 with:
+  here is the false-belief scene as the learner sees it (four scene renderings),
+  here is the hypothesis it must eventually be able to write (the fork term,
+  glossed clause by clause as "Sally believes…"), and here is the question (can
+  a learner that starts without the word arrive at it, and in what order). You
+  have this material — fig-fork-anatomy — but it sits 130 lines in, after the
+  reader has already absorbed the corpus and library as unmotivated inventory.
+  Everything after the worked example is then "filling in how," and the reader
+  knows why each piece exists.
+  - A dual-reader discipline: every section readable by a philosopher who skips
+  every formula (the prose glosses alone must carry the argument) and by a
+  technical reader who skips the prose (the formal statements must be complete).
+  Most of Chapter 4 passes the first test; the primitives and composer
+  paragraphs fail it. Demote what fails to a table or the appendix, or give it a
+  one-line role-gloss ("each arrow needs its own composition operator; their
+  names carry no content").
+  - A grid-free statement of the model in two or three paragraphs before the
+  instantiation: an observer over world-dynamics $W \to W$, with the product $W
+  \times W$, a granted planner, and a two-part-code objective; then "we
+  instantiate $W$ as small grids because scenes must be renderable and
+  hypotheses enumerable." That's the intermediate level between Chapter 3's BToM
+  and the concrete system, and it's what makes the essential/incidental line
+  visible.
+
+  On Chapter 5 specifically
+
+  I'd largely acquit it. Results chapters are supposed to be concrete — the
+  numbers are measurements of the model, and the arrow-notation convention you
+  already adopted did the main lifting. The reading-guide table, the English
+  names for fn_7, the "the arrow is what the abstraction is; the verbatim
+  expression is what it cost" distinction — that's model-level reporting of a
+  run. The residual implementation-feel there is run-bookkeeping (round-trip
+  census caveats, machine symbol names), and that's honest reporting that should
+  stay. If anything in Chapter 5 needs the treatment, it's making sure every
+  quoted term gets its intentional-stance gloss on first use, which it mostly
+  already does ("agent 1 believes 2 is one cell up; agent 6 knows better" is
+  exactly the right move).
+
+  The short version
+
+  The problem isn't that the chapters are about the implementation — it's that
+  Chapter 4 presents its components as found objects rather than as
+  instantiations of a declared model, so the reader can't tell load-bearing from
+  incidental. Three cheap additions fix most of it: a one-paragraph model
+  statement (the triple and the claim about its image), a worked
+  Sally-Anne-to-term translation moved to the front, and an explicit
+  essential/incidental paragraph. Plus one reordering: state the "complete kit,
+  nothing curated" and "each family claims a corner" principles before the lists
+  they justify, not after as defenses.
+
+  If you want, I can draft those three additions and the reordered opening of
+  the primitives/corpus sections so you can judge them in place.
+
+✻ Worked for 2m 5s
+
+❯ draft the three additions and the reordered opening                           
+  ⎿  You're out of usage credits. Run /usage-credits to keep using Fable 5 or 
+     /model to switch models.
+
+✻ Cooked for 0s
+
+❯ /model 
+  ⎿  Kept model as Fable 5

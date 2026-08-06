@@ -37,7 +37,12 @@ while a bespoke non-mental schedule never does.  Round 0 is the base-primitive c
 Writes corpus_dl[.decomposed].json and corpus_dl.png/.pdf.
 """
 
+import os
 import sys
+# the analysis modules live in the repo root, one level up from viz/; the sibling
+# figure scripts live here, so put both on the path however this file is launched
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path[:0] = [_HERE, os.path.dirname(_HERE)]
 import json
 import math
 from collections import defaultdict

@@ -49,7 +49,10 @@ that certifies it — belief read back as a composition of the rungs below it.
 Writes scaffold[.decomposed][.smoke].json.
 """
 
+import os
 import sys
+# build_corpus/_remap_names live with the figure scripts in viz/
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'viz'))
 import json
 import re as _re
 from copy import deepcopy
@@ -379,7 +382,7 @@ def _print_report(data, phase):
         if a['donor_families']:
             print(f"          donor families: {', '.join(a['donor_families'])}")
         elif a['belief_users'] and a['is_belief_subshape']:
-            print(f"          (belief-specific, but its body is a belief subterm)")
+            print("          (belief-specific, but its body is a belief subterm)")
 
     print("\n  " + "-" * 76)
     print("  (3) ASSEMBLY — a belief solution per variant, decomposed into its scaffold")

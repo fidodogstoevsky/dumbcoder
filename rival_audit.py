@@ -10,18 +10,18 @@ them is the measurement that justifies deleting the generators' rival batteries:
 "fits some scene" is what the old per-scene filters had to reject one coincidence at
 a time, and "fits all scenes" is what survives the format change.
 """
+import os
 import sys
-sys.path.insert(0, '/Users/gidonkaminer/Documents/mol/s26/dumbcoder')
-import numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from dsl import (RIGHT, DOWN, compose, step, optimize, neg_distance,
-                 distance, wall_at, clear_at, erase, unfold, fork, sync_to_world,
+                 distance, wall_at, clear_at, erase, fork, sync_to_world,
                  snd_gg)
 from scenes import solves, solves_any
 from tasks import (make_belief_tasks,
                    make_witness_belief_tasks, make_goal_displacement_tasks,
                    make_two_observer_tasks, make_false_obstacle_belief_tasks,
-                   COMBOS, DIRS, SIZE, belief_variant, belief_rival_specs)
+                   COMBOS, DIRS, SIZE, belief_variant)
 
 # full-run corpus (run_phase non-smoke): n_bel=6, n_goal=6, n_belvar=3, belief_extra=3
 print("generating corpora (same seeds as run_phase)…", flush=True)
@@ -97,7 +97,7 @@ if len(partial) > 12:
 # the deep transient-wall program out of the round where belief must win.  Every OTHER
 # family (goal / witness / observers / false-obstacle) must have zero hits after (a)+(c).
 other_hits = [(name, fam, m) for name, fam, m in hits if fam != 'scaffold']
-print(f"\n=== regression gate ===")
+print("\n=== regression gate ===")
 print(f"  scaffold hits (by design, handled by round-1 t_fn cap): "
       f"{sum(1 for _, fam, _ in hits if fam == 'scaffold')}")
 if other_hits:

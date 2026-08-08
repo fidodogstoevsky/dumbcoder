@@ -32,6 +32,7 @@ while a bespoke non-mental schedule never does.  Round 0 is the base-primitive c
     python corpus_dl.py --smoke               use the .smoke trajectory artifacts
     python corpus_dl.py --run PATH            consume a specific trajectory artifact
     python corpus_dl.py --no-plot             recompute the JSON only
+    python corpus_dl.py --replot              redraw from an existing corpus_dl*.json
     python corpus_dl.py out.png               choose the figure path
 
 Writes corpus_dl[.decomposed].json and corpus_dl.png/.pdf.
@@ -47,7 +48,6 @@ import json
 import math
 from collections import defaultdict
 
-import numpy as np
 import torch as th
 
 from ecd import (
@@ -92,7 +92,9 @@ def _body_dl(D, Q, tree):
 # Belief variants all carry kind 'belief' (including the extra plain wall-belief batch);
 # they fold into the single 'belief' facet.  physics / desire are their own families;
 # every non-mental maker folds into the single 'world' facet — the contrast the figure
-# is about is belief vs the rest.
+# is about is belief vs the rest.  ('world' is only the internal key; it is LABELLED
+# 'non-mental', the thesis' own word for these families — 'world' would collide with the
+# world model.)
 def family(kind):
     if kind.startswith('belief'):
         return 'belief'
@@ -101,7 +103,11 @@ def family(kind):
     return 'world'
 
 
-FAM_ORDER = ['physics', 'desire', 'world', 'belief']   # stack bottom→top; belief on top
+FAM_ORDER = ['physics', 'desire', 'world', 'belief']   # priced order; belief last
+# ...but only two of them are DRAWN.  physics (4 tasks) and desire (16) sit flat against
+# the axis at this scale and carry no contrast the pooled non-mental curve does not
+# already carry; they stay in the JSON, out of the figure.
+PLOT_FAMS = ['world', 'belief']
 FAM_COLOR = {
     'physics': '#eb6834',   # orange
     'desire':  '#157f5a',   # green (darkened for label contrast on the light surface)
@@ -109,13 +115,12 @@ FAM_COLOR = {
     'belief':  '#2a78d6',   # blue — the hero
 }
 FAM_LABEL = {
-    'physics': 'physics',
-    'desire':  'desire',
-    'world':   'world (non-mental)',
+    'physics': 'constant movement',
+    'desire':  'goal-directed movement',
+    'world':   'non-mental',
     'belief':  'belief',
 }
-LIB_COLOR = '#b8b7b2'        # neutral: the library's structure cost (not a categorical hue)
-INK, MUTED, GRID = '#0b0b0b', '#52514e', '#e6e6e2'
+MUTED, GRID = '#52514e', '#e6e6e2'
 
 
 # ── the trajectory computation ────────────────────────────────────────────────────────
@@ -231,75 +236,56 @@ def run(decomposed=False, smoke=False, run_path=None):
 
 
 # ── plotting ──────────────────────────────────────────────────────────────────────────
-def _panel_stack(ax, data):
-    "Panel A: total DL as a family-stacked area (+ library band on top); the outline falls."
-    rounds = data['rounds']
-    xs = [rd['round'] for rd in rounds]
-    stacks = [np.array([rd['by_family'][f] for rd in rounds], float) for f in FAM_ORDER]
-    lib = np.array([rd['library_cost'] for rd in rounds], float)
-    bottoms = np.cumsum([np.zeros_like(lib)] + stacks, axis=0)
-
-    for i, f in enumerate(FAM_ORDER):
-        ax.fill_between(xs, bottoms[i], bottoms[i] + stacks[i], color=FAM_COLOR[f],
-                        alpha=0.92, lw=0, zorder=2, step=None)
-        # 2px surface gap between segments so the bands read as distinct
-        ax.plot(xs, bottoms[i] + stacks[i], color='#fcfcfb', lw=2, zorder=3)
-    top = bottoms[-1]
-    ax.fill_between(xs, top, top + lib, color=LIB_COLOR, alpha=0.9, lw=0, zorder=2,
-                    hatch='///', edgecolor='#fcfcfb')
-
-    total = top + lib
-    ax.plot(xs, total, color=INK, lw=2.2, zorder=5, solid_capstyle='round')
-    ax.scatter(xs, total, s=26, color=INK, zorder=6)
-
-    # direct labels on each band at the final round
-    for i, f in enumerate(FAM_ORDER):
-        y = bottoms[i][-1] + stacks[i][-1] / 2
-        if stacks[i][-1] > total.max() * 0.03:
-            ax.text(xs[-1] + 0.06, y, FAM_LABEL[f], color=FAM_COLOR[f], fontsize=8.6,
-                    va='center', ha='left', zorder=7, fontweight='bold')
-    yl = top[-1] + lib[-1] / 2
-    ax.text(xs[-1] + 0.06, yl, 'library', color=MUTED, fontsize=8.2, va='center',
-            ha='left', zorder=7)
-
-    _style_axes(ax, xs)
-    ax.set_ylabel('description length  (nats)', fontsize=9.5, color=MUTED)
-    ax.set_ylim(0, total.max() * 1.08)
+# Figures carry no titles, captions or annotations: the thesis body explains them, and
+# the only text on the surface is the axes plus the direct series labels that stand in
+# for a legend.  The figure is ONE panel — the per-family lines.  It used to be paired
+# with a family-stacked area of the same four numbers, whose only extra content was the
+# total and the library's own structure cost; the latter is under 1% of the axis (47 of
+# 3315 nats), so it was never legible, and the totals are given in the prose instead.
 
 
 def _panel_families(ax, data):
-    "Panel B: per-family corpus DL vs round — belief's steep drop against the flat rest."
+    "Per-family corpus DL vs round — belief's steep drop against the flat rest."
     rounds = data['rounds']
     xs = [rd['round'] for rd in rounds]
-    for f in FAM_ORDER:
+    for f in PLOT_FAMS:
         ys = [rd['by_family'][f] for rd in rounds]
         hero = f == 'belief'
         ax.plot(xs, ys, color=FAM_COLOR[f], lw=2.6 if hero else 1.8,
                 alpha=1.0 if hero else 0.85, zorder=5 if hero else 3,
                 marker='o', ms=6 if hero else 4, solid_capstyle='round')
-        ax.text(xs[-1] + 0.06, ys[-1], FAM_LABEL[f], color=FAM_COLOR[f],
-                fontsize=8.8 if hero else 8.2, va='center', ha='left',
-                fontweight='bold' if hero else 'normal', zorder=6)
 
     _style_axes(ax, xs)
-    ax.set_ylabel('corpus DL by family  (nats)', fontsize=9.5, color=MUTED)
-    ymax = max(rd['by_family'][f] for rd in rounds for f in FAM_ORDER)
+    ax.set_ylabel('description length  (nats)', fontsize=11, color=MUTED)
+    ymax = max(rd['by_family'][f] for rd in rounds for f in PLOT_FAMS)
     ax.set_ylim(0, ymax * 1.10)
+
+    # label each line at its final point, pushed apart if the two families end up close
+    # together.
+    ends = sorted(((rounds[-1]['by_family'][f], f) for f in PLOT_FAMS))
+    gap = ymax * 0.055
+    ys_lab = []
+    for y, _f in ends:
+        ys_lab.append(y if not ys_lab else max(y, ys_lab[-1] + gap))
+    for (y, f), yl in zip(ends, ys_lab):
+        hero = f == 'belief'
+        ax.text(xs[-1] + 0.08, yl, FAM_LABEL[f], color=FAM_COLOR[f],
+                fontsize=13 if hero else 12, va='center', ha='left',
+                fontweight='bold' if hero else 'normal', zorder=6)
 
 
 def _style_axes(ax, xs):
-    ax.set_xlabel('ECD round  (enumerate ↦ joint stitch)', fontsize=9.5, color=MUTED)
+    ax.set_xlabel('round', fontsize=11, color=MUTED)
     ax.set_xlim(min(xs) - 0.15, max(xs) + 1.15)
     ax.set_xticks(xs)
-    labels = [('0\n(base)' if x == 0 else str(x)) for x in xs]
-    ax.set_xticklabels(labels)
+    ax.set_xticklabels([str(x) for x in xs])
     ax.grid(True, axis='y', color=GRID, lw=0.8, zorder=0)
     ax.set_axisbelow(True)
     for s in ('top', 'right'):
         ax.spines[s].set_visible(False)
     for s in ('left', 'bottom'):
         ax.spines[s].set_color(GRID)
-    ax.tick_params(colors=MUTED, labelsize=8.5)
+    ax.tick_params(colors=MUTED, labelsize=10)
 
 
 def plot(datasets, out_path='corpus_dl.png'):
@@ -308,31 +294,14 @@ def plot(datasets, out_path='corpus_dl.png'):
     import matplotlib.pyplot as plt
 
     n = len(datasets)
-    fig, axes = plt.subplots(n, 2, figsize=(13.4, 4.7 * n + 0.8), squeeze=False)
+    fig, axes = plt.subplots(n, 1, figsize=(8.4, 4.6 * n), squeeze=False)
     fig.patch.set_facecolor('#fcfcfb')
     for row, d in enumerate(datasets):
-        kind = 'atomic fork/sync' if not d['decomposed'] else 'decomposed plumbing'
-        axA, axB = axes[row, 0], axes[row, 1]
-        for ax in (axA, axB):
-            ax.set_facecolor('#fcfcfb')
-        axA.set_title(f"Phase {d['phase']}  —  {kind}   "
-                      f"(final library: {len(d['final_library'])} abstractions)",
-                      fontsize=11, color=INK, loc='left', pad=8)
-        axB.set_title("per-family contribution", fontsize=11, color=INK, loc='left', pad=8)
-        _panel_stack(axA, d)
-        _panel_families(axB, d)
+        ax = axes[row, 0]
+        ax.set_facecolor('#fcfcfb')
+        _panel_families(ax, d)
 
-    top = 1 - 1.0 / fig.get_figheight()
-    fig.tight_layout(rect=[0, 0, 1, top])
-    fig.text(0.02, 1 - 0.32 / fig.get_figheight(),
-             'The learned library drives the corpus description length down — '
-             'and belief drops the most',
-             fontsize=13.5, fontweight='bold', color=INK, ha='left', va='top')
-    fig.text(0.02, 1 - 0.66 / fig.get_figheight(),
-             'Total DL = Σ program DL under the round’s library + the library’s own cost, '
-             'over a fixed corpus. Belief’s band collapses at the round its agency signature '
-             'first recurs enough to abstract.',
-             fontsize=9, color=MUTED, ha='left', va='top')
+    fig.tight_layout()
 
     for ext in ({out_path, out_path.rsplit('.', 1)[0] + '.pdf'}):
         fig.savefig(ext, dpi=200, facecolor=fig.get_facecolor())
@@ -340,6 +309,23 @@ def plot(datasets, out_path='corpus_dl.png'):
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────────────
+def replot(decomposed=False):
+    """Redraw from this script's OWN artifact, skipping the re-stitch.
+
+    The per-round per-family series is already in corpus_dl[.decomposed].json, so a purely
+    presentational change to the figure need not re-price the corpus — and must not, when
+    the working tree has moved past the commit the run was priced at."""
+    out = f"corpus_dl{'.decomposed' if decomposed else ''}.json"
+    try:
+        with open(out) as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        raise SystemExit(f"no {out} — run without --replot to compute it first.")
+    prov = (data.get('provenance') or {}).get('repro', 'unknown provenance')
+    print(f"replot phase {data['phase']} from {out}  [{prov}]")
+    return data
+
+
 def main(argv):
     smoke = '--smoke' in argv
     both = '--both' in argv
@@ -348,6 +334,12 @@ def main(argv):
     if '--run' in argv:
         run_path = argv[argv.index('--run') + 1]
     out_path = next((a for a in argv[1:] if a.endswith('.png')), 'corpus_dl.png')
+
+    if '--replot' in argv:
+        datasets = ([replot(False), replot(True)] if both
+                    else [replot('--decomposed' in argv)])
+        plot(datasets, out_path)
+        return
 
     if both:
         datasets = [run(decomposed=False, smoke=smoke),

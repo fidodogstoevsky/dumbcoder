@@ -38,6 +38,21 @@ not a ground-truth reconstruction of it.
     python mdl_margin.py --both          phases 1 and 2, one JSON each
     python mdl_margin.py --smoke         use the .smoke run artifacts
     python mdl_margin.py --ground-truth  legacy: stitch ground-truth programs, no run needed
+    python mdl_margin.py --nonmental     price under a library stitched from the NON-MENTAL
+                                         solutions only (the circularity control, below)
+
+THE CIRCULARITY CONTROL (`--nonmental`).  The margin above is priced under the library one
+joint stitch found over the WHOLE solved corpus — belief solutions included.  That invites
+the obvious objection: the mental reading is short under that library because compression
+was shown the mental solutions and built a token for them, so the comparison assumes what
+it sets out to measure.  `--nonmental` withholds every belief solution from the stitch and
+learns the library from the non-mental solutions alone (overlay, registration, obstacle,
+comet, ...).  Both readings are then repriced under THAT library, which has never seen a
+belief program.  Any abstraction the belief compound collapses into was earned somewhere
+else in the corpus, so a margin that survives here is a claim about the reusability of the
+structure rather than an artefact of having compressed the answer.  Writes
+mdl_margins.nonmental[.decomposed].json and does NOT back-fill the verdict (the headline
+nats stay the full-library ones).
 
 Writes mdl_margins[.decomposed].json; plot with `python plot_mdl_margin.py`.
 """
@@ -249,13 +264,15 @@ def build_corpus(smoke=False, k=None, decomposed=False):
 
 # ── found programs: from a phase run's search output (default) or ground truth ───────
 def _load_found(decomposed, smoke, tasks, D, run_path, ground_truth):
-    """Return (sols, found_of, rewritten_of, run_library, run_prov):
+    """Return (sols, found_of, rewritten_of, run_library, run_prov, kinds):
       sols        — {key: tree} to re-stitch into the FINAL library (mutates D).
       found_of    — {key_id: base-primitive 'found' program} per solved belief task.
       rewritten_of— {key_id: library-rewritten found program}, or None to re-derive.
       run_library — the run's invented-abstraction names (for name remapping), or None.
       run_prov    — the source run's provenance block (commit + knobs), or None when
                     reconstructing from ground truth / reading a pre-header artifact.
+      kinds       — {key_id: family kind}, the split `--nonmental` partitions the stitch
+                    pool on; empty when reconstructing from ground truth.
 
     Default source is a phase run's artifact (the searched sols/rewritten that
     `experiment.save_run_artifact` writes); `ground_truth=True` restores the old
@@ -264,7 +281,7 @@ def _load_found(decomposed, smoke, tasks, D, run_path, ground_truth):
         sols = {mat_key(x): tr(D, gt_program_str(D, m)) for x, m in tasks}
         found_of = {mat_key_id(x): gt_program_str(D, m) for x, m in tasks}
         print("  source: ground-truth programs (legacy; no phase run consumed)")
-        return sols, found_of, None, None, None
+        return sols, found_of, None, None, None, {}
 
     if run_path is None:
         run_path = f"phase{2 if decomposed else 1}_run{'.smoke' if smoke else ''}.json"
@@ -288,7 +305,8 @@ def _load_found(decomposed, smoke, tasks, D, run_path, ground_truth):
           f"programs; run library {art.get('library', [])})")
     print(f"  {provenance_line(art, run_path)}")
     return (sols, dict(art['sols']), dict(art.get('rewritten', {})),
-            list(art.get('library', [])), art.get('provenance'))
+            list(art.get('library', [])), art.get('provenance'),
+            dict(art.get('kinds', {})))
 
 
 def _remap_names(rewritten_of, run_library, D):
@@ -312,10 +330,11 @@ def _remap_names(rewritten_of, run_library, D):
 
 
 # ── the experiment ──────────────────────────────────────────────────────────────────
-def run(decomposed=False, smoke=False, run_path=None, ground_truth=False):
+def run(decomposed=False, smoke=False, run_path=None, ground_truth=False, nonmental=False):
     phase = 2 if decomposed else 1
     print(f"\n{'='*72}\nMDL-MARGIN EXPERIMENT — phase {phase} "
           f"({'decomposed' if decomposed else 'atomic'} fork/sync){' [smoke]' if smoke else ''}"
+          f"{' [NON-MENTAL LIBRARY CONTROL]' if nonmental else ''}"
           f"\n{'='*72}")
 
     tasks = build_corpus(smoke, decomposed=decomposed)
@@ -326,14 +345,34 @@ def run(decomposed=False, smoke=False, run_path=None, ground_truth=False):
 
     # the found programs + the sols that define the FINAL library both come from the run
     # (or ground truth, with --ground-truth); re-stitching the sols mutates D in place.
-    sols, found_of, rewritten_of, run_library, run_prov = _load_found(
+    sols, found_of, rewritten_of, run_library, run_prov, kinds = _load_found(
         decomposed, smoke, tasks, D, run_path, ground_truth)
+
+    # The circularity control: withhold every belief solution from compression, so the
+    # library the two readings are priced under was learned from non-mental solutions
+    # alone.  The run's own `rewritten` forms are under the FULL library and must not be
+    # reused — dropping them sends the found programs through `rewrite_through_library`
+    # below, i.e. through whatever the non-mental stitch actually invented.
+    n_belief_withheld = 0
+    if nonmental:
+        if not kinds:
+            raise SystemExit("--nonmental needs a run artifact's `kinds` map; it is not "
+                             "available on the --ground-truth path.")
+        n_before = len(sols)
+        sols = {k: v for k, v in sols.items() if kinds.get(k) != 'belief'}
+        n_belief_withheld = n_before - len(sols)
+        if not sols:
+            raise SystemExit("--nonmental left no solutions to stitch.")
+        rewritten_of = None
+        print(f"  CONTROL: stitching {len(sols)} non-mental solutions only; "
+              f"{n_belief_withheld} belief solutions withheld from compression")
+
     saturate_stitch(D, sols, iterations=(3 if smoke else 6), max_arity=5)
     if rewritten_of is not None:
         rewritten_of = _remap_names(rewritten_of, run_library, D)
     Q = uniform_type_q(D)
-    print(f"  final library: {len(D)} tokens ({len(D.invented)} invented: "
-          f"{[d.repr for d in D.invented]})")
+    print(f"  {'non-mental' if nonmental else 'final'} library: {len(D)} tokens "
+          f"({len(D.invented)} invented: {[d.repr for d in D.invented]})")
 
     # every wall-belief task (including the extra distinct-seeded batch) is a genuine
     # belief_wall variant.  The transient-wall rival used to reproduce the FULL scene
@@ -414,19 +453,27 @@ def run(decomposed=False, smoke=False, run_path=None, ground_truth=False):
         'smoke': smoke,
         'source': 'ground-truth' if ground_truth else (run_path or f"phase{phase}_run"
                                                         f"{'.smoke' if smoke else ''}.json"),
+        'nonmental_library': bool(nonmental),
+        'n_stitch_sols': len(sols),
+        'n_belief_withheld': n_belief_withheld,
         'library': [d.repr for d in D.invented],
         'n_belief_tasks': len(records),
         'n_belief_unsolved': n_missing,
         'summary': summary,
         'records': records,
     }
-    path = f"mdl_margins{'.decomposed' if decomposed else ''}.json"
+    path = (f"mdl_margins{'.nonmental' if nonmental else ''}"
+            f"{'.decomposed' if decomposed else ''}.json")
     with open(path, 'w') as f:
         json.dump(out, f, indent=1)
     print(f"  wrote {len(records)} belief tasks x rivals to {path}")
     # close the loop back to the run: the verdict quotes these nats (experiment.py's
     # load_mdl_margin echoes them on the next run; this back-fill fixes up THIS one).
-    _backfill_verdict(summary, out, decomposed, smoke)
+    # The control never touches the verdict — the headline nats are the full-library ones.
+    if nonmental:
+        print("  (control run — verdict not back-filled)")
+    else:
+        _backfill_verdict(summary, out, decomposed, smoke)
     return out
 
 
@@ -556,6 +603,7 @@ def _backfill_verdict(summary, out, decomposed, smoke):
 if __name__ == '__main__':
     smoke = '--smoke' in sys.argv
     ground_truth = '--ground-truth' in sys.argv
+    nonmental = '--nonmental' in sys.argv
     run_path = None
     if '--run' in sys.argv:
         run_path = sys.argv[sys.argv.index('--run') + 1]
@@ -563,8 +611,8 @@ if __name__ == '__main__':
         if run_path is not None:
             sys.exit("--run names a single phase artifact; drop --both or run each phase "
                      "separately with its own --run.")
-        run(decomposed=False, smoke=smoke, ground_truth=ground_truth)
-        run(decomposed=True, smoke=smoke, ground_truth=ground_truth)
+        run(decomposed=False, smoke=smoke, ground_truth=ground_truth, nonmental=nonmental)
+        run(decomposed=True, smoke=smoke, ground_truth=ground_truth, nonmental=nonmental)
     else:
         run(decomposed='--decomposed' in sys.argv, smoke=smoke,
-            run_path=run_path, ground_truth=ground_truth)
+            run_path=run_path, ground_truth=ground_truth, nonmental=nonmental)

@@ -1,39 +1,46 @@
-"""Behavioral probe (phase 2): the discovered library passes the false-belief test.
+"""The Sally-Anne illustration figure: what the belief compound computes, drawn.
 
-Where `mdl_margin.py` prices belief against its behavioural competitors and `corpus_dl.py`
-charts the compression it buys, this script asks the developmental-psychology question
-directly: put the learner in front of a *held-out* Sally-Anne scene and see which location
-it predicts the agent will search.
+*** THIS IS NOT A TEST, AND THE THESIS NO LONGER PRESENTS IT AS ONE. ***
 
-We reuse the goal-displacement (Sally-Anne) family: the agent walks to where it *believes*
-the goal is — one cell displaced from the true goal — while the true goal never moves.
-Unlike the wall/witness families, whose transient-wall rival reproduces the whole scene
-(so MDL is the only discriminator — that is the `mdl_margin` story), the goal-displacement
-scene behaviourally *diverges*:
+Read `compute()` before citing anything this prints.  NOTHING HERE IS ENUMERATED.  The
+"mental" program is `experiment.gt_program_str(D, m)` — the family's ground-truth
+s-expression, built out of the scene's OWN metadata (`m['dirs']`, `m['displaced_to']`) —
+and the "rival" is the shortest member of `tasks.belief_rival_specs(m)`, likewise authored.
+The search is never run on these scenes.  So the headline count (24/24 to the believed
+cell) is ANALYTIC, not a measurement: a program whose body plans against a copy in which
+the goal has been shoved one cell up lands on the shoved cell by construction, and no
+scene could have made it do otherwise.  There is no outcome here that could have come
+out the other way, which is exactly why it is not a criterion.
 
-  * the MENTAL reading — the belief compound the run discovered (the `fork(derive, commit)`
-    abstraction `fn_5` the library reprices belief through) — sends the agent to the
-    BELIEVED cell.  It answers the classic false-belief question the way a competent
-    mentalizer does: the agent searches where it *thinks* the goal is.
-  * the shortest NON-MENTAL program expressible under the SAME library — pure desire
-    `optimize(neg_dist gv) av`, which the library collapses to `fn_1` — sends the agent to
-    the TRUE goal.  That is the naive, reality-bound answer three-year-olds give before
-    they pass the false-belief task.
+What it IS good for is the picture, and the thesis uses it that way — chapter 4 §4.5
+(`fig-sally-anne`), as a second worked example of the derive-run-commit frame beside the
+false-wall walkthrough.  Keep the frame, change the derive, and the agent is wrong about
+where the GOAL is rather than about a wall:
 
-So a learner that has compressed the corpus into a belief compound passes the test; a
-learner restricted to the non-mental fragment fails it, and fails it in the specific way
-the developmental literature documents — predicting the true location, not the believed one.
+  * the belief compound derives a private copy with the goal shoved one cell up, plans
+    the agent's move against THAT, and commits the agent's position and nothing else —
+    so the agent settles on the BELIEVED cell and the true goal never moves.
+  * plain desire `(optimize (neg_dist gv) av)`, the shortest program that attributes
+    nothing, walks the agent onto the TRUE goal.
 
-The scenes are HELD OUT: they are drawn from a fresh seed that never entered the run
-(`--seed`, default 101), and we assert their matrices are absent from the phase corpus.
-The library and the belief compound both come from an actual PHASE RUN — `run_phase`
-writes `phase{1,2}_run[.smoke].json`; we re-stitch its searched sols to rebuild exactly the
-library it converged to (the same reconstruction `mdl_margin.py` performs), then instantiate
-the discovered belief abstraction on the novel scene.  Nothing here is re-enumerated: the
-mental program is the verified ground-truth belief compound (`experiment.gt_program_str`,
-which `verify_ground_truth` renders to confirm it reproduces the scene), rewritten through
-the run's library; the non-mental rival is the shortest of the task's discriminating
-battery under that library.
+The two ending in different cells is the whole point of the figure: unlike the wall and
+witness families (whose transient-wall rival reproduces the trajectory exactly, so only
+description length separates the readings — that is the `mdl_margin` story), a displaced
+goal makes the two readings behaviourally distinguishable.  Note the DL numbers run the
+other way here — plain desire is SHORTER (7.8 vs 17.8) — which costs nothing, since
+length only ranks programs that already reproduce every scene, and desire does not.
+
+The genuine behavioural experiment, which nobody has run, is in the thesis's limitations
+section: enumerate under the converged library over held-out scenes, at the same per-task
+budget and success criterion, and report what the SEARCH returns.  That would need a real
+enumeration pass here, not `gt_program_str`.
+
+The scenes are drawn from a seed that never entered the run (`--seed`, default 101) and
+we assert their matrices are absent from the phase corpus — true, and worth keeping, but
+it buys much less than "held out" normally buys, since no learning happens on them.  The
+library is reconstructed from an actual PHASE RUN (`run_phase` writes
+`phase{1,2}_run[.smoke].json`; we re-stitch its searched sols exactly as `mdl_margin.py`
+does), which is what makes the DL numbers the converged library's numbers.
 
 The behavioural divergence is DSL-independent — phase 1 (atomic fork/sync) and phase 2
 (decomposed plumbing) are the same machine, so the agent lands on the same cells either
@@ -79,13 +86,36 @@ from experiment import verify_ground_truth, gt_program_str, check_decomposition_
 from mdl_margin import build_corpus, uniform_type_q, _load_found, _remap_names
 
 
-# ── palette (inherits belief_solved.py's house colours) ──────────────────────────────
-INK, MUTED, GRID, BG = '#0b0b0b', '#52514e', '#e6e6e2', '#fcfcfb'
-AGENT   = '#0b4f9e'   # the mind-bearing agent (belief deep-blue)
-GOAL    = '#e0982f'   # the true goal object (amber)
-BELIEF  = '#2a78d6'   # the believed / displaced cell marker
-GOOD, BAD = '#1a7f45', '#b5321f'   # passes / fails the false-belief test
-CELL_BG = '#f4f3ef'   # empty grid cell
+# ── notation (mirrors illc-mol-thesis/viz.typ) ───────────────────────────────────────
+# The probe draws the same object on the same grid as the task figures, so it draws it
+# the same way: cells are coloured by the OBJECT ID they carry (the agent and the goal
+# keep the colours they have in every other grid in the thesis), a trajectory collapses
+# onto ONE grid with an arrow per transition, a cell an object only reaches at the end is
+# ghosted in, and a cell the PROGRAM posits rather than the scene supplying it — here the
+# believed goal cell — is hollow, dashed and hatched.
+PALETTE = {0: '#f4f4f6', 1: '#4e79a7', 2: '#59a14f', 3: '#54585c', 4: '#e1812c',
+           5: '#b07aa1', 6: '#e15759', 7: '#76b7b2', 8: '#b8a02e', 9: '#9c755f'}
+CELL_EDGE = '#c2c2c8'     # viz.typ's 0.3pt cell stroke
+LABEL     = '#6e6e6e'     # viz.typ's luma(110) panel label
+BG        = 'white'
+GUTTER    = 0.05          # gap between cells, as a fraction of the cell pitch
+ROUNDING  = 0.06          # cell corner radius, likewise (viz.typ: 1.2pt on a 20pt cell)
+
+
+def _rgb(h):
+    return tuple(int(h[i:i + 2], 16) / 255 for i in (1, 3, 5))
+
+
+def _lighten(h, p):        # Typst's colour.lighten: mix towards white
+    return tuple(c + (1 - c) * p for c in _rgb(h))
+
+
+def _darken(h, p):         # Typst's colour.darken: mix towards black
+    return tuple(c * (1 - p) for c in _rgb(h))
+
+
+def _col(v):
+    return PALETTE.get(int(v), '#cccccc')
 
 
 # ── DL pricing (identical convention to mdl_margin._dl / phase3_arity._dl) ────────────
@@ -108,8 +138,8 @@ def _rebuild_library(decomposed, smoke, run_path):
     verify_ground_truth(D, tasks)
     if decomposed:
         check_decomposition_identities(tasks)
-    sols, _found, _rw, run_library, run_prov = _load_found(decomposed, smoke, tasks, D,
-                                                           run_path, False)
+    sols, _found, _rw, run_library, run_prov, _kinds = _load_found(decomposed, smoke,
+                                                                   tasks, D, run_path, False)
     saturate_stitch(D, sols, iterations=(3 if smoke else 6), max_arity=5)
     _remap_names(_rw, run_library, D)          # register the run's names on D (side-effect free here)
     Q = uniform_type_q(D)
@@ -207,15 +237,17 @@ def _json_path(decomposed):
 
 def run(decomposed=False, smoke=False, run_path=None, seed=101, index=0):
     phase = 2 if decomposed else 1
-    print(f"\n{'='*72}\nBEHAVIORAL PROBE — phase {phase} "
-          f"({'decomposed' if decomposed else 'atomic'} fork/sync) — held-out Sally-Anne scenes"
-          f"{' [smoke]' if smoke else ''}\n{'='*72}")
+    print(f"\n{'='*72}\nSALLY-ANNE ILLUSTRATION — phase {phase} "
+          f"({'decomposed' if decomposed else 'atomic'} fork/sync)"
+          f"{' [smoke]' if smoke else ''}\n"
+          f"  authored programs rendered on fresh scenes — NOT a test, see the module "
+          f"docstring\n{'='*72}")
     out = compute(decomposed, smoke, run_path, seed, index)
     n = out['n_heldout']
-    print(f"  {n} held-out goal-displacement scenes (seed {seed}, none in the run's corpus)")
-    print(f"  belief compound searches the BELIEVED cell:  "
-          f"{out['n_mental_searches_believed']}/{n}")
-    print(f"  shortest non-mental rival searches the TRUE cell: "
+    print(f"  {n} goal-displacement scenes (seed {seed}, none in the run's corpus)")
+    print(f"  belief compound settles on the BELIEVED cell:  "
+          f"{out['n_mental_searches_believed']}/{n}  (analytic — its derive shoves the goal)")
+    print(f"  shortest non-mental rival settles on the TRUE cell: "
           f"{out['n_rival_searches_true']}/{n}")
     r = out['records'][index]
     print(f"\n  rendered scene #{index}  (av={r['av']} gv={r['gv']} goal displaced "
@@ -223,11 +255,11 @@ def run(decomposed=False, smoke=False, run_path=None, seed=101, index=0):
     print(f"    true goal   {tuple(r['true_goal'])}   believed cell {tuple(r['believed_cell'])}")
     print(f"    MENTAL  {r['mental']['program_lib']}")
     print(f"      -> agent settles on {tuple(r['mental']['final'])}  "
-          f"({'BELIEVED — passes' if r['mental']['searches_believed'] else 'MISS'}); "
+          f"({'BELIEVED' if r['mental']['searches_believed'] else 'MISS — a real bug'}); "
           f"DL {r['mental']['dl']:.2f} nats")
     print(f"    RIVAL   {r['rival']['program_lib']}   [{r['rival']['label']}]")
     print(f"      -> agent settles on {tuple(r['rival']['final'])}  "
-          f"({'TRUE — naive answer' if r['rival']['searches_true'] else 'other'}); "
+          f"({'TRUE' if r['rival']['searches_true'] else 'other'}); "
           f"DL {r['rival']['dl']:.2f} nats")
 
     # serialise (drop the numpy frames carried for plotting)
@@ -242,69 +274,187 @@ def run(decomposed=False, smoke=False, run_path=None, seed=101, index=0):
     return out
 
 
-# ── plotting: the initial scene + the two predicted final frames ──────────────────────
-def _draw_grid(ax, frame, av, gv, *, path=None, believed=None, true_goal=None,
-               agent_at=None, size=5):
-    """Render one 5x5 frame: empty cells, the true goal (amber square), the agent token
-    (blue disc) at `agent_at` (defaults to its position in `frame`), a dashed marker on
-    the believed cell, and a faint dotted trajectory `path` (list of (r,c))."""
-    import matplotlib.patches as mp
+# ── plotting: the held-out scene + the two predicted trajectories, viz.typ's path view ─
+# Object identity is the cell value.  Between consecutive frames each cell a value GAINS
+# is matched to the nearest cell it LOST (greedy, Manhattan) — that pairing is the move;
+# a gain with nothing lost is a growth step, drawn from an adjacent cell the value already
+# occupied, and a loss with nothing gained is a deletion.  This is viz.typ's
+# `_transitions`, ported so the two renderers say the same thing about the same frames.
+def _cells_of(g, v):
+    return [(r, c) for r in range(g.shape[0]) for c in range(g.shape[1]) if g[r][c] == v]
 
+
+def _manhattan(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+
+def _values_in(frames):
+    return sorted({int(v) for f in frames for v in f.flatten().tolist() if v != 0})
+
+
+def _transitions(frames):
+    moves, gone = [], []
+    for t in range(len(frames) - 1):
+        a, b = frames[t], frames[t + 1]
+        for v in _values_in((a, b)):
+            pa, pb = _cells_of(a, v), _cells_of(b, v)
+            added = [p for p in pb if p not in pa]
+            lost = [p for p in pa if p not in pb]
+            for p in added:
+                # prefer a cell the value just vacated; else an adjacent cell it kept
+                src = lost if lost else [q for q in pa if _manhattan(q, p) <= 1]
+                frm = min(src, key=lambda q: _manhattan(q, p)) if src else None
+                if frm is not None:
+                    moves.append({'from': frm, 'to': p, 'v': v, 't': t})
+                    lost = [q for q in lost if q != frm]
+            gone += [{'cell': q, 'v': v, 't': t} for q in lost]
+    return moves, gone
+
+
+def _box(r, c, *, scale=1.0, **kw):
+    """One cell-shaped rounded square centred on (r, c), in grid coordinates."""
+    import matplotlib.patches as mp
+    s = (1 - GUTTER) * scale
+    return mp.FancyBboxPatch((c - s / 2, r - s / 2), s, s,
+                             boxstyle=f'round,pad=0,rounding_size={ROUNDING * scale}', **kw)
+
+
+def _draw_cell(ax, r, c, v, *, fs, scale=1.0, ghost=False, z=2):
+    """A grid cell carrying value `v`.  `ghost` is viz.typ's washed-out outline: where an
+    object ENDS UP, without pretending it is there at t0."""
+    col = _col(v)
+    if ghost:
+        ax.add_patch(_box(r, c, scale=scale, facecolor=_lighten(col, 0.78),
+                          edgecolor=_lighten(col, 0.30), lw=0.7, ls=(0, (1, 1.6)),
+                          zorder=z))
+    else:
+        ax.add_patch(_box(r, c, scale=scale, facecolor=col, edgecolor=CELL_EDGE,
+                          lw=0.5, zorder=z))
+    if v != 0:
+        ax.text(c, r, str(int(v)), ha='center', va='center', zorder=z + 1,
+                fontsize=fs * scale, fontweight='bold',
+                color=_darken(col, 0.15) if ghost else 'white')
+
+
+def _draw_posited(ax, r, c, ink, *, z=2):
+    """viz.typ's POSITED cell: hollow, dashed and hatched, carrying no digit.  The
+    believed goal cell is not scenery the scene arrives with — it is a cell the program
+    the learner found posits — so it gets the notation the obstacle family's `wall_at`
+    cell gets, in the colour of the object posited there."""
+    ax.add_patch(_box(r, c, facecolor='none', edgecolor=_lighten(ink, 0.35),
+                      lw=0.0, hatch='///', zorder=z))
+    ax.add_patch(_box(r, c, facecolor='none', edgecolor=ink, lw=1.0,
+                      ls=(0, (2.4, 1.6)), zorder=z + 1))
+
+
+def _draw_arrow(ax, m, *, lane, cell_pt, z=6):
+    """One transition: a shaft with a flat triangular head, in the mover's own colour,
+    offset onto its own lane so crossing paths stay readable."""
+    import matplotlib.patches as mp
+    from math import hypot
+    (y1, x1), (y2, x2) = m['from'], m['to']
+    dy, dx = y2 - y1, x2 - x1
+    length = hypot(dx, dy)
+    if length == 0:
+        return
+    ux, uy = dx / length, dy / length
+    px, py = -uy * lane, ux * lane                  # perpendicular lane offset
+    head = min(0.30 * (1 - GUTTER), 6.0 / cell_pt)  # viz.typ: min(size * 0.30, 6pt)
+    tail = 0.28 * (1 - GUTTER)                      # keep the shaft clear of the digits
+    tip = (x2 - ux * tail + px, y2 - uy * tail + py)
+    foot = (x1 + ux * tail + px, y1 + uy * tail + py)
+    end = (tip[0] - ux * head, tip[1] - uy * head)
+    ink = _darken(_col(m['v']), 0.22)
+    ax.plot([foot[0], end[0]], [foot[1], end[1]], color=ink, lw=1.0,
+            solid_capstyle='round', zorder=z)
+    ax.add_patch(mp.Polygon([tip, (end[0] - uy * head * 0.42, end[1] + ux * head * 0.42),
+                             (end[0] + uy * head * 0.42, end[1] - ux * head * 0.42)],
+                            closed=True, facecolor=ink, edgecolor='none', zorder=z))
+
+
+def _draw_strike(ax, g, *, z=6):
+    """A value that was there and is not any more (and was not merely moved onto)."""
+    y, x = g['cell']
+    d, ink = 0.24, _darken(_col(g['v']), 0.22)
+    for sx in (1, -1):
+        ax.plot([x - d * sx, x + d * sx], [y - d, y + d], color=ink, lw=0.9,
+                solid_capstyle='round', zorder=z)
+
+
+def _path_grid(ax, frames, *, believed, believed_ink, cell_pt, size=5):
+    """ONE grid carrying a whole trajectory: the t0 state, an arrow per transition, cells
+    reached only later ghosted in.  A single frame just draws the state."""
     ax.set_xlim(-0.5, size - 0.5)
-    ax.set_ylim(size - 0.5, -0.5)          # row 0 at top
+    ax.set_ylim(size - 0.5, -0.5)               # row 0 at top
     ax.set_aspect('equal')
     ax.set_xticks([]); ax.set_yticks([])
+    ax.set_facecolor(BG)
     for s in ax.spines.values():
         s.set_visible(False)
 
-    # cells
+    base, final = frames[0], frames[-1]
+    moves, gone = _transitions(frames)
+    # a value that disappears because something MOVED ONTO it (the agent reaching the
+    # goal) was occluded, not deleted — the incoming arrowhead already says so
+    dead = [g for g in gone
+            if not any(m['t'] == g['t'] and m['to'] == g['cell'] for m in moves)]
+    fs = 0.55 * cell_pt
+
     for r in range(size):
         for c in range(size):
-            ax.add_patch(mp.Rectangle((c - 0.5, r - 0.5), 1, 1, facecolor=CELL_BG,
-                                      edgecolor=GRID, lw=1.0, zorder=1))
-    # believed (displaced) cell — dashed outline, drawn under the tokens
-    if believed is not None:
-        br, bc = believed
-        ax.add_patch(mp.Rectangle((bc - 0.5, br - 0.5), 1, 1, facecolor='none',
-                                  edgecolor=BELIEF, lw=2.2, ls=(0, (3, 2)), zorder=2))
-        # label just inside the top edge so it never sits under the agent token
-        ax.text(bc, br - 0.37, 'believed', ha='center', va='center', color=BELIEF,
-                fontsize=6.5, style='italic', zorder=6)
-    # trajectory
-    if path:
-        ys = [p[0] for p in path]; xs = [p[1] for p in path]
-        ax.plot(xs, ys, color=AGENT, lw=1.6, ls=':', alpha=0.5, zorder=3,
-                solid_capstyle='round')
-    # true goal (amber rounded square)
-    if true_goal is not None:
-        gr, gc = true_goal
-        ax.add_patch(mp.FancyBboxPatch((gc - 0.30, gr - 0.30), 0.60, 0.60,
-                     boxstyle='round,pad=0.02,rounding_size=0.12',
-                     facecolor=GOAL, edgecolor='white', lw=1.5, zorder=4))
-        ax.text(gc, gr, 'g', ha='center', va='center', color='white',
-                fontsize=10, fontweight='bold', zorder=5)
-    # agent (blue disc)
-    if agent_at is None:
-        agent_at = _agent_pos(frame, av)
-    if agent_at is not None:
-        ar, ac = agent_at
-        ax.add_patch(mp.Circle((ac, ar), 0.32, facecolor=AGENT, edgecolor='white',
-                               lw=1.5, zorder=5))
-        ax.text(ac, ar, 'a', ha='center', va='center', color='white',
-                fontsize=10, fontweight='bold', zorder=6)
+            v, f = int(base[r][c]), int(final[r][c])
+            on_believed = believed is not None and (r, c) == tuple(believed)
+            if on_believed:
+                _draw_posited(ax, r, c, believed_ink)
+            else:
+                _draw_cell(ax, r, c, 0, fs=fs)   # the empty cell under everything
+            # an occupant of the believed cell sits INSIDE its hatched square, so the
+            # marker survives the agent arriving on it — which is the whole point
+            scale = 0.72 if on_believed else 1.0
+            if v != 0:
+                _draw_cell(ax, r, c, v, fs=fs, scale=scale, z=4,
+                           ghost=any(g['cell'] == (r, c) for g in dead))
+            elif f != 0:
+                _draw_cell(ax, r, c, f, fs=fs, scale=scale, z=4, ghost=True)
+
+    movers = [v for v in _values_in(frames) if any(m['v'] == v for m in moves)]
+    for m in moves:
+        i = movers.index(m['v'])
+        lane = 0.0 if len(movers) < 2 else (i - (len(movers) - 1) / 2) * 1.7 / cell_pt
+        _draw_arrow(ax, m, lane=lane, cell_pt=cell_pt)
+    for g in dead:
+        _draw_strike(ax, g)
 
 
-def _panel_title(ax, title, sub, color):
-    "Bold title above a two-line descriptive sub, both floated clear above the grid."
-    ax.text(0.5, 1.135, title, transform=ax.transAxes, ha='center', va='bottom',
-            fontsize=11.5, color=color, fontweight='bold')
-    ax.text(0.5, 1.02, sub, transform=ax.transAxes, ha='center', va='bottom',
-            fontsize=8.2, color=MUTED, linespacing=1.35)
+# The figure carries no headline, no descriptive subtitles, no verdict lines and no
+# program strings: the thesis body explains all of it, quotes both programs and gives
+# their nats.  What stays is one short label per panel — with three grids side by side
+# nothing else says which reading produced which — and the legend, which is what names
+# the two object ids and the hatched cell.
+def _panel_label(ax, label, fs):
+    ax.text(0.0, 1.03, label, transform=ax.transAxes, ha='left', va='bottom',
+            fontsize=fs, color=LABEL)
 
 
-def _path_of(frames, av):
-    return [_agent_pos(frames[t], av) for t in range(len(frames))
-            if _agent_pos(frames[t], av) is not None]
+def _legend(ax, entries, *, posited_ink, cell_pt, width):
+    """viz.typ's legend row: the swatch as it is drawn in the grids, then its name."""
+    ax.set_xlim(0, width); ax.set_ylim(0.5, -0.5)
+    ax.set_aspect('equal')
+    ax.set_xticks([]); ax.set_yticks([])
+    ax.set_facecolor(BG)
+    for s in ax.spines.values():
+        s.set_visible(False)
+    fs = 0.36 * cell_pt
+    pad, per_char = 0.34, 0.30 * fs / cell_pt       # crude text metrics, for centring
+    span = sum(1 + pad + per_char * len(t) + 0.9 for _, t in entries) - 0.9
+    x = max(0.0, (width - span) / 2)
+    for swatch, text in entries:
+        if swatch is None:
+            _draw_posited(ax, 0, x, posited_ink)
+        else:
+            _draw_cell(ax, 0, x, swatch, fs=0.55 * cell_pt)
+        ax.text(x + 0.5 + pad, 0, text, ha='left', va='center', fontsize=fs, color=LABEL)
+        x += 1 + pad + per_char * len(text) + 0.9
 
 
 def plot(out, out_path='behavioral_probe.png'):
@@ -312,67 +462,52 @@ def plot(out, out_path='behavioral_probe.png'):
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
 
+    matplotlib.rcParams['hatch.linewidth'] = 0.6
+    # the thesis sets New Computer Modern; matplotlib ships Computer Modern (cmr10),
+    # the same letterform.  Take the first of these that is actually installed, so a
+    # machine without NCM renders in CM rather than printing a findfont warning per label.
+    from matplotlib import font_manager as fm
+    have = {f.name for f in fm.fontManager.ttflist}
+    matplotlib.rcParams['font.family'] = [f for f in ('New Computer Modern', 'cmr10',
+                                                      'STIX Two Text', 'DejaVu Serif')
+                                          if f in have] or ['serif']
+
+    # The held-out scene panel shows the OBSERVED trajectory — the frames a successful
+    # program must reproduce — drawn exactly as the task figures draw a scene.  The
+    # believed-cell hatch appears only on the belief-compound panel: it is that program's
+    # posit, not scenery, so neither the scene nor the beliefless program carries it.
     r = out['records'][out['index']]
-    x = r['_x']
     av, gv = r['av'], r['gv']
-    believed = tuple(r['believed_cell']); true_goal = tuple(r['true_goal'])
-    decomposed = out['decomposed']
-    fork_sub = ('learner with the discovered fork,\nas decomposed plumbing' if decomposed
-                else 'learner with the discovered\nfork(derive, commit)')
+    believed = tuple(r['believed_cell'])
+    panels = [('held-out scene', list(r['_x']), None),
+              ('belief compound', list(r['_mental_frames']), believed),
+              ('shortest non-mental program', list(r['_rival_frames']), None)]
 
-    fig, axes = plt.subplots(1, 3, figsize=(12.4, 6.6))
+    # deterministic geometry: fixing the cell size in inches fixes it in POINTS, so every
+    # stroke, digit and label can keep viz.typ's ratio to the cell
+    size = int(r['_x'].shape[1])
+    cell_in, gap_in, margin_in = 0.44, 0.40, 0.16
+    label_in, legend_in = 0.30, 0.62
+    grid_in = size * cell_in
+    fig_w = 3 * grid_in + 2 * gap_in + 2 * margin_in
+    fig_h = margin_in + label_in + grid_in + legend_in + margin_in
+    cell_pt = cell_in * 72
+
+    fig = plt.figure(figsize=(fig_w, fig_h))
     fig.patch.set_facecolor(BG)
-    fig.subplots_adjust(top=0.70, bottom=0.18, left=0.03, right=0.97, wspace=0.14)
-    for ax in axes:
-        ax.set_facecolor(BG)
+    y0 = (margin_in + legend_in) / fig_h
+    for i, (label, frames, bel) in enumerate(panels):
+        x0 = (margin_in + i * (grid_in + gap_in)) / fig_w
+        ax = fig.add_axes([x0, y0, grid_in / fig_w, grid_in / fig_h])
+        _path_grid(ax, frames, believed=bel, believed_ink=_col(gv),
+                   cell_pt=cell_pt, size=size)
+        _panel_label(ax, label, 0.40 * cell_pt)
 
-    # panel 1 — the held-out scene (initial frame): agent, true goal, believed cell
-    _draw_grid(axes[0], x[0], av, gv, believed=believed, true_goal=true_goal)
-    _panel_title(axes[0], 'A held-out scene',
-                 'agent a, true goal g; the goal is\n"believed" one cell away', INK)
-
-    # panel 2 — the belief compound: agent searches the believed cell
-    mpath = _path_of(r['_mental_frames'], av)
-    _draw_grid(axes[1], r['_mental_frames'][-1], av, gv, path=mpath,
-               believed=believed, true_goal=true_goal, agent_at=tuple(r['mental']['final']))
-    _panel_title(axes[1], 'Belief compound  ✓', fork_sub, GOOD)
-    axes[1].text(0.5, -0.045, 'searches the BELIEVED cell — passes',
-                 transform=axes[1].transAxes, ha='center', va='top',
-                 fontsize=9.5, color=GOOD, fontweight='bold')
-
-    # panel 3 — the non-mental fragment: agent searches the true cell (naive answer)
-    rpath = _path_of(r['_rival_frames'], av)
-    _draw_grid(axes[2], r['_rival_frames'][-1], av, gv, path=rpath,
-               believed=believed, true_goal=true_goal, agent_at=tuple(r['rival']['final']))
-    _panel_title(axes[2], 'Non-mental fragment  ✗',
-                 'learner restricted to\nphysics only', BAD)
-    axes[2].text(0.5, -0.045, 'searches the TRUE cell — the naive answer',
-                 transform=axes[2].transAxes, ha='center', va='top',
-                 fontsize=9.5, color=BAD, fontweight='bold')
-
-    # program strings + DL beneath the two prediction panels
-    axes[1].text(0.5, -0.115, f"{r['mental']['program_lib']}\n{r['mental']['dl']:.1f} nats",
-                 transform=axes[1].transAxes, ha='center', va='top', fontsize=7.0,
-                 color=MUTED, family='monospace')
-    axes[2].text(0.5, -0.115, f"{r['rival']['program_lib']}\n{r['rival']['dl']:.1f} nats "
-                              f"· shortest non-mental",
-                 transform=axes[2].transAxes, ha='center', va='top', fontsize=7.0,
-                 color=MUTED, family='monospace')
-
-    fig.text(0.03, 0.955,
-             'The discovered belief compound passes the false-belief test',
-             fontsize=14.5, fontweight='bold', color=INK, ha='left', va='top')
-    fig.text(0.03, 0.90,
-             f"On a held-out Sally-Anne scene, the learned fork(derive, commit) abstraction "
-             f"sends the agent to where it believes the\ngoal is; the shortest program in the "
-             f"non-mental fragment sends it to the true goal — the answer three-year-olds give. "
-             f"({out['n_mental_searches_believed']}/{out['n_heldout']} held-out scenes, both.)",
-             fontsize=9.5, color=MUTED, ha='left', va='top', linespacing=1.5)
-    # phase chip, top-right — which DSL the mental program is displayed through
-    fig.text(0.97, 0.955,
-             f"Phase {out['phase']} · {'decomposed' if decomposed else 'atomic'} fork/sync",
-             fontsize=9, color=MUTED, ha='right', va='top',
-             bbox=dict(boxstyle='round,pad=0.35', fc='#eef3fb', ec='#cfe0f4', lw=1))
+    lax = fig.add_axes([margin_in / fig_w, margin_in / fig_h,
+                        (fig_w - 2 * margin_in) / fig_w, cell_in / fig_h])
+    _legend(lax, [(av, 'agent'), (gv, 'goal'), (None, 'believed goal cell')],
+            posited_ink=_col(gv), cell_pt=cell_pt,
+            width=(fig_w - 2 * margin_in) / cell_in)
 
     for ext in ({out_path, out_path.rsplit('.', 1)[0] + '.pdf'}):
         fig.savefig(ext, dpi=200, facecolor=fig.get_facecolor())

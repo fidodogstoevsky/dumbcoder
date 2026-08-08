@@ -1,0 +1,475 @@
+{
+ "decomposed": false,
+ "phase": 1,
+ "smoke": false,
+ "n_rounds": 2,
+ "rounds": [
+  {
+   "round": 1,
+   "n_solved_through": 191,
+   "solved_by_family": {
+    "physics": 4,
+    "desire": 16,
+    "world": 116,
+    "belief": 55
+   },
+   "n_abstractions": 6,
+   "abstractions": [
+    {
+     "name": "fn_0",
+     "local_name": "fn_0",
+     "stable_id": "t1",
+     "first_seen": 1,
+     "role": "agent_constructor_wallfree",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue",
+      "fn"
+     ],
+     "arity": 3,
+     "body": "(fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world $0))",
+     "body_expanded": "(fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world $0))",
+     "calls": [],
+     "users": 4,
+     "users_belief": 4,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 4
+     },
+     "users_by_kind": {
+      "belief": 4
+     },
+     "contains_prev_round": [],
+     "persisted": false
+    },
+    {
+     "name": "fn_1",
+     "local_name": "fn_1",
+     "stable_id": "t2",
+     "first_seen": 1,
+     "role": "wall_policy",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue",
+      "coord",
+      "coord"
+     ],
+     "arity": 4,
+     "body": "(compose (wall_at $3 $2) (optimize (neg_dist $1) $0))",
+     "body_expanded": "(compose (wall_at $3 $2) (optimize (neg_dist $1) $0))",
+     "calls": [],
+     "users": 47,
+     "users_belief": 0,
+     "users_nonmental": 47,
+     "users_by_family": {
+      "world": 47
+     },
+     "users_by_kind": {
+      "obstacle": 47
+     },
+     "contains_prev_round": [],
+     "persisted": false
+    },
+    {
+     "name": "fn_2",
+     "local_name": "fn_2",
+     "stable_id": "t3",
+     "first_seen": 1,
+     "role": "agent_constructor_wallfree",
+     "type": "fn",
+     "argtypes": [
+      "dir",
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 3,
+     "body": "(fn_0 $2 $1 (step $1 $0))",
+     "body_expanded": "(fork (compose (step $1 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2))",
+     "calls": [
+      "fn_0"
+     ],
+     "users": 19,
+     "users_belief": 19,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 19
+     },
+     "users_by_kind": {
+      "belief": 19
+     },
+     "contains_prev_round": [],
+     "persisted": false
+    },
+    {
+     "name": "fn_3",
+     "local_name": "fn_3",
+     "stable_id": "t4",
+     "first_seen": 1,
+     "role": "agent_constructor",
+     "type": "fn",
+     "argtypes": [
+      "coord",
+      "coord",
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 4,
+     "body": "(fn_0 $3 $2 (wall_at $1 $0))",
+     "body_expanded": "(fork (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)) (sync_to_world $3))",
+     "calls": [
+      "fn_0"
+     ],
+     "users": 32,
+     "users_belief": 32,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 32
+     },
+     "users_by_kind": {
+      "belief": 32
+     },
+     "contains_prev_round": [],
+     "persisted": false
+    },
+    {
+     "name": "fn_4",
+     "local_name": "fn_4",
+     "stable_id": "t5",
+     "first_seen": 1,
+     "role": "other",
+     "type": "fn",
+     "argtypes": [
+      "coord",
+      "coord",
+      "coord",
+      "coord"
+     ],
+     "arity": 4,
+     "body": "(compose (wall_at $3 $2) (clear_at $1 $0))",
+     "body_expanded": "(compose (wall_at $3 $2) (clear_at $1 $0))",
+     "calls": [],
+     "users": 16,
+     "users_belief": 0,
+     "users_nonmental": 16,
+     "users_by_family": {
+      "world": 16
+     },
+     "users_by_kind": {
+      "relocate": 16
+     },
+     "contains_prev_round": [],
+     "persisted": false
+    },
+    {
+     "name": "fn_5",
+     "local_name": "fn_5",
+     "stable_id": "t6",
+     "first_seen": 1,
+     "role": "desire_fragment",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 2,
+     "body": "(optimize (neg_dist $0) $1)",
+     "body_expanded": "(optimize (neg_dist $0) $1)",
+     "calls": [],
+     "users": 24,
+     "users_belief": 3,
+     "users_nonmental": 21,
+     "users_by_family": {
+      "desire": 16,
+      "world": 5,
+      "belief": 3
+     },
+     "users_by_kind": {
+      "desire": 16,
+      "comet": 4,
+      "belief": 3,
+      "obstacle": 1
+     },
+     "contains_prev_round": [],
+     "persisted": false
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "n_solved_through": 291,
+   "solved_by_family": {
+    "physics": 4,
+    "desire": 16,
+    "world": 116,
+    "belief": 155
+   },
+   "n_abstractions": 6,
+   "abstractions": [
+    {
+     "name": "fn_6",
+     "local_name": "fn_0",
+     "stable_id": "t1",
+     "first_seen": 2,
+     "role": "agent_constructor_wallfree",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue",
+      "fn"
+     ],
+     "arity": 3,
+     "body": "(fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world $0))",
+     "body_expanded": "(fork (compose $2 (optimize (neg_dist $1) $0)) (sync_to_world $0))",
+     "calls": [],
+     "users": 37,
+     "users_belief": 37,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 37
+     },
+     "users_by_kind": {
+      "belief": 37
+     },
+     "contains_prev_round": [
+      "t6"
+     ],
+     "persisted": true
+    },
+    {
+     "name": "fn_7",
+     "local_name": "fn_1",
+     "stable_id": "t7",
+     "first_seen": 2,
+     "role": "desire_fragment",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue",
+      "fn"
+     ],
+     "arity": 3,
+     "body": "(compose $2 (optimize (neg_dist $1) $0))",
+     "body_expanded": "(compose $2 (optimize (neg_dist $1) $0))",
+     "calls": [],
+     "users": 65,
+     "users_belief": 18,
+     "users_nonmental": 47,
+     "users_by_family": {
+      "world": 47,
+      "belief": 18
+     },
+     "users_by_kind": {
+      "obstacle": 47,
+      "belief": 18
+     },
+     "contains_prev_round": [
+      "t6"
+     ],
+     "persisted": false
+    },
+    {
+     "name": "fn_8",
+     "local_name": "fn_2",
+     "stable_id": "t8",
+     "first_seen": 2,
+     "role": "agent_constructor_wallfree",
+     "type": "fn",
+     "argtypes": [
+      "dir",
+      "cellvalue",
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 4,
+     "body": "(compose (optimize (neg_dist $1) $3) (fn_0 $2 $1 (step $1 $0)))",
+     "body_expanded": "(compose (optimize (neg_dist $1) $3) (fork (compose (step $1 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2)))",
+     "calls": [
+      "fn_6"
+     ],
+     "users": 24,
+     "users_belief": 24,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 24
+     },
+     "users_by_kind": {
+      "belief": 24
+     },
+     "contains_prev_round": [
+      "t3",
+      "t6"
+     ],
+     "persisted": false
+    },
+    {
+     "name": "fn_9",
+     "local_name": "fn_3",
+     "stable_id": "t9",
+     "first_seen": 2,
+     "role": "agent_constructor_wallfree",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 2,
+     "body": "(fn_0 $1 $0 (fn_0 $0 0 (optimize (neg_dist $1) $0)))",
+     "body_expanded": "(fork (compose (fork (compose (optimize (neg_dist $1) $0) (optimize (neg_dist 0) $0)) (sync_to_world $0)) (optimize (neg_dist $0) $1)) (sync_to_world $1))",
+     "calls": [
+      "fn_6"
+     ],
+     "users": 14,
+     "users_belief": 14,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 14
+     },
+     "users_by_kind": {
+      "belief": 14
+     },
+     "contains_prev_round": [
+      "t6"
+     ],
+     "persisted": false
+    },
+    {
+     "name": "fn_10",
+     "local_name": "fn_4",
+     "stable_id": "t10",
+     "first_seen": 2,
+     "role": "agent_constructor",
+     "type": "fn",
+     "argtypes": [
+      "coord",
+      "cellvalue",
+      "cellvalue",
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 5,
+     "body": "(fn_1 $4 $3 (fn_0 $2 $1 (wall_at c2 $0)))",
+     "body_expanded": "(compose (fork (compose (wall_at c2 $0) (optimize (neg_dist $1) $2)) (sync_to_world $2)) (optimize (neg_dist $3) $4))",
+     "calls": [
+      "fn_6",
+      "fn_7"
+     ],
+     "users": 29,
+     "users_belief": 29,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 29
+     },
+     "users_by_kind": {
+      "belief": 29
+     },
+     "contains_prev_round": [
+      "t6"
+     ],
+     "persisted": false
+    },
+    {
+     "name": "fn_11",
+     "local_name": "fn_5",
+     "stable_id": "t4",
+     "first_seen": 2,
+     "role": "agent_constructor",
+     "type": "fn",
+     "argtypes": [
+      "coord",
+      "coord",
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 4,
+     "body": "(fn_0 $3 $2 (wall_at $1 $0))",
+     "body_expanded": "(fork (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)) (sync_to_world $3))",
+     "calls": [
+      "fn_6"
+     ],
+     "users": 52,
+     "users_belief": 52,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 52
+     },
+     "users_by_kind": {
+      "belief": 52
+     },
+     "contains_prev_round": [
+      "t2",
+      "t6"
+     ],
+     "persisted": true
+    }
+   ]
+  }
+ ],
+ "provenance": {
+  "git": {
+   "commit": "179716982197fd35172b1c8c4c894f025e293f51",
+   "commit_short": "1797169",
+   "branch": "master",
+   "dirty": false
+  },
+  "timestamp": "2026-08-05T19:35:11Z",
+  "host": "tcn818.local.snellius.surf.nl",
+  "python": "3.12.13",
+  "argv": "/home/gkaminer/dumbcoder/phase1.py --t-fn 3600 --ecd-iters 6 --no-dream",
+  "knobs": {
+   "decomposed": false,
+   "smoke": false,
+   "cube": true,
+   "t_fn": 3600.0,
+   "t_fn_round1": 1200.0,
+   "t_reg": 300,
+   "ecd_iters": 6,
+   "stitch_iters": 6,
+   "dream_on": false,
+   "dream_iters": 600,
+   "plain_belief": false,
+   "curriculum": true,
+   "k": 4,
+   "n_phys": 4,
+   "n_des": 2,
+   "n_ov": 4,
+   "n_comet": 4,
+   "n_reg": 4,
+   "n_bel": 6,
+   "n_belvar": 3,
+   "n_goal": 6,
+   "n_corner": 4,
+   "n_obstacle": 6,
+   "n_relocate": 16
+  },
+  "seeds": {
+   "physics": 0,
+   "desire": 1,
+   "belief": 2,
+   "overlay": 3,
+   "registration": 4,
+   "comet": 5,
+   "flee": 10,
+   "deletion": 11,
+   "denoise": 12,
+   "perception": 13,
+   "multi_reg": 14,
+   "reg_except": 15,
+   "inpaint": 16,
+   "readout": 17,
+   "obstacle": 18,
+   "underlay": 19,
+   "belief_extra": 22,
+   "belief_goal": 23,
+   "belief_observers": 27,
+   "belief_fob": 25,
+   "relocate": 26,
+   "wipe": 28,
+   "composite": 29,
+   "drift_reg": 30,
+   "map_update": 31
+  },
+  "repro": "commit 1797169 | phase1 (atomic) | t_fn=3600 t_fn_round1=1200 t_reg=300 ecd_iters=6 stitch_iters=6 dream=off curriculum=on | n_bel=6 n_goal=6 n_obstacle=6 n_relocate=16 | 2026-08-05T19:35:11Z"
+ }
+}

@@ -1025,7 +1025,7 @@ def _sample_kind(m):
 
 
 def _scene_panels(scene, m, i, max_frames):
-    """The labelled panels of ONE scene: world | template | result(s), or t0 … tn.
+    """The labelled panels of ONE scene: canvas | template | result(s), or t0 … tn.
 
     `max_frames=None` (the default everywhere) means EVERY frame, and that is not a
     cosmetic preference.  A trajectory task ends when the dynamic completes — the
@@ -1037,12 +1037,12 @@ def _scene_panels(scene, m, i, max_frames):
     deliberately does not have, and the frame that is dropped is the LAST one — the
     step onto the goal — so the agent appears to stop one cell short for no reason.
     A cap here therefore does not merely shorten a figure, it misreports the task."""
-    if 'template' in m:                      # fn_p_g: world | template | result(s)
+    if 'template' in m:                      # fn_p_g: canvas | template | result(s)
         # each scene carries its own template channel (per_scene); the task's
         # top-level copy is scene 0's, so only fall back to it for scene 0.
         tmpl = m['per_scene'][i]['template'] if 'per_scene' in m else m['template']
         extra = list(scene[1:] if max_frames is None else scene[1:max_frames - 1])
-        panels = [('world', scene[0]), ('template', tmpl)]
+        panels = [('canvas', scene[0]), ('template', tmpl)]
         return panels + [(f't{t}', g) for t, g in enumerate(extra, start=1)]
     n = len(scene) if max_frames is None else min(len(scene), max_frames)
     return [(f't{t}', scene[t])              # fn: successive frames of the unfold
@@ -1059,7 +1059,7 @@ def _select_samples(tasks, max_frames=None):
     only wants a representative trajectory need not know about the set.
 
     fn families show successive `unfold` frames t0…; fn_p_g families show
-    world | template | result, surfacing the otherwise-invisible template channel
+    canvas | template | result, surfacing the otherwise-invisible template channel
     (per scene — each scene has its own).  The rendered grids are exactly what the
     searcher sees — belief's phantom wall lives only in the private model, so it
     never appears here.  The single kind='belief' is split into its variants

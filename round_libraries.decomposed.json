@@ -1,0 +1,863 @@
+{
+ "decomposed": true,
+ "phase": 2,
+ "smoke": false,
+ "n_rounds": 4,
+ "rounds": [
+  {
+   "round": 1,
+   "n_solved_through": 148,
+   "solved_by_family": {
+    "physics": 4,
+    "desire": 16,
+    "world": 128
+   },
+   "n_abstractions": 6,
+   "abstractions": [
+    {
+     "name": "fn_0",
+     "local_name": "fn_0",
+     "stable_id": "t1",
+     "first_seen": 1,
+     "role": "wall_policy",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue",
+      "coord",
+      "coord"
+     ],
+     "arity": 4,
+     "body": "(compose (wall_at $3 $2) (optimize (neg_dist $1) $0))",
+     "body_expanded": "(compose (wall_at $3 $2) (optimize (neg_dist $1) $0))",
+     "calls": [],
+     "users": 28,
+     "users_belief": 0,
+     "users_nonmental": 28,
+     "users_by_family": {
+      "world": 28
+     },
+     "users_by_kind": {
+      "obstacle": 28
+     },
+     "contains_prev_round": [],
+     "persisted": false
+    },
+    {
+     "name": "fn_1",
+     "local_name": "fn_1",
+     "stable_id": "t2",
+     "first_seen": 1,
+     "role": "other",
+     "type": "fn_p_g",
+     "argtypes": [
+      "cellvalue"
+     ],
+     "arity": 1,
+     "body": "(register (locate $0) (place $0))",
+     "body_expanded": "(register (locate $0) (place $0))",
+     "calls": [],
+     "users": 12,
+     "users_belief": 0,
+     "users_nonmental": 12,
+     "users_by_family": {
+      "world": 12
+     },
+     "users_by_kind": {
+      "registration": 4,
+      "perception": 4,
+      "drift_reg": 4
+     },
+     "contains_prev_round": [],
+     "persisted": false
+    },
+    {
+     "name": "fn_2",
+     "local_name": "fn_2",
+     "stable_id": "t3",
+     "first_seen": 1,
+     "role": "other",
+     "type": "fn",
+     "argtypes": [
+      "fn",
+      "fn_p_g"
+     ],
+     "arity": 2,
+     "body": "(pipe_gpg (compose_gp dup (mapsnd $0)) $1)",
+     "body_expanded": "(pipe_gpg (compose_gp dup (mapsnd $0)) $1)",
+     "calls": [],
+     "users": 12,
+     "users_belief": 0,
+     "users_nonmental": 12,
+     "users_by_family": {
+      "world": 12
+     },
+     "users_by_kind": {
+      "overlay": 4,
+      "comet": 4,
+      "underlay": 4
+     },
+     "contains_prev_round": [],
+     "persisted": false
+    },
+    {
+     "name": "fn_3",
+     "local_name": "fn_3",
+     "stable_id": "t4",
+     "first_seen": 1,
+     "role": "other",
+     "type": "fn",
+     "argtypes": [
+      "coord",
+      "coord",
+      "coord",
+      "coord"
+     ],
+     "arity": 4,
+     "body": "(compose (wall_at $3 $2) (clear_at $1 $0))",
+     "body_expanded": "(compose (wall_at $3 $2) (clear_at $1 $0))",
+     "calls": [],
+     "users": 16,
+     "users_belief": 0,
+     "users_nonmental": 16,
+     "users_by_family": {
+      "world": 16
+     },
+     "users_by_kind": {
+      "relocate": 16
+     },
+     "contains_prev_round": [],
+     "persisted": false
+    },
+    {
+     "name": "fn_4",
+     "local_name": "fn_4",
+     "stable_id": "t5",
+     "first_seen": 1,
+     "role": "desire_fragment",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 2,
+     "body": "(optimize (neg_dist $0) $1)",
+     "body_expanded": "(optimize (neg_dist $0) $1)",
+     "calls": [],
+     "users": 21,
+     "users_belief": 0,
+     "users_nonmental": 21,
+     "users_by_family": {
+      "desire": 16,
+      "world": 5
+     },
+     "users_by_kind": {
+      "desire": 16,
+      "comet": 4,
+      "obstacle": 1
+     },
+     "contains_prev_round": [],
+     "persisted": false
+    },
+    {
+     "name": "fn_5",
+     "local_name": "fn_5",
+     "stable_id": "t6",
+     "first_seen": 1,
+     "role": "wall_policy",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue",
+      "coord"
+     ],
+     "arity": 3,
+     "body": "(fn_0 $1 $0 c2 $2)",
+     "body_expanded": "(compose (wall_at $2 c2) (optimize (neg_dist $0) $1))",
+     "calls": [
+      "fn_0"
+     ],
+     "users": 19,
+     "users_belief": 0,
+     "users_nonmental": 19,
+     "users_by_family": {
+      "world": 19
+     },
+     "users_by_kind": {
+      "obstacle": 19
+     },
+     "contains_prev_round": [],
+     "persisted": false
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "n_solved_through": 223,
+   "solved_by_family": {
+    "physics": 4,
+    "desire": 16,
+    "world": 128,
+    "belief": 75
+   },
+   "n_abstractions": 6,
+   "abstractions": [
+    {
+     "name": "fn_6",
+     "local_name": "fn_0",
+     "stable_id": "t7",
+     "first_seen": 2,
+     "role": "desire_fragment",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue",
+      "fn",
+      "fn_p_g"
+     ],
+     "arity": 4,
+     "body": "(pipe_gpg (compose_gp dup (mapsnd (compose $2 (optimize (neg_dist $1) $0)))) $3)",
+     "body_expanded": "(pipe_gpg (compose_gp dup (mapsnd (compose $2 (optimize (neg_dist $1) $0)))) $3)",
+     "calls": [],
+     "users": 9,
+     "users_belief": 9,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 9
+     },
+     "users_by_kind": {
+      "belief": 9
+     },
+     "contains_prev_round": [
+      "t5"
+     ],
+     "persisted": false
+    },
+    {
+     "name": "fn_7",
+     "local_name": "fn_1",
+     "stable_id": "t1",
+     "first_seen": 2,
+     "role": "wall_policy",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue",
+      "coord",
+      "coord"
+     ],
+     "arity": 4,
+     "body": "(compose (wall_at $3 $2) (optimize (neg_dist $1) $0))",
+     "body_expanded": "(compose (wall_at $3 $2) (optimize (neg_dist $1) $0))",
+     "calls": [],
+     "users": 47,
+     "users_belief": 0,
+     "users_nonmental": 47,
+     "users_by_family": {
+      "world": 47
+     },
+     "users_by_kind": {
+      "obstacle": 47
+     },
+     "contains_prev_round": [
+      "t5"
+     ],
+     "persisted": true
+    },
+    {
+     "name": "fn_8",
+     "local_name": "fn_2",
+     "stable_id": "t8",
+     "first_seen": 2,
+     "role": "agent_constructor_degenerate",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue",
+      "coord",
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 5,
+     "body": "(compose (fn_0 $4 $3 (wall_at $2 c2) sync_all) (optimize (neg_dist $1) $0))",
+     "body_expanded": "(compose (pipe_gpg (compose_gp dup (mapsnd (compose (wall_at $2 c2) (optimize (neg_dist $3) $4)))) sync_all) (optimize (neg_dist $1) $0))",
+     "calls": [
+      "fn_6"
+     ],
+     "users": 20,
+     "users_belief": 20,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 20
+     },
+     "users_by_kind": {
+      "belief": 20
+     },
+     "contains_prev_round": [
+      "t5",
+      "t6"
+     ],
+     "persisted": false
+    },
+    {
+     "name": "fn_9",
+     "local_name": "fn_3",
+     "stable_id": "t9",
+     "first_seen": 2,
+     "role": "agent_constructor_degenerate",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "dir",
+      "cellvalue"
+     ],
+     "arity": 3,
+     "body": "(fn_0 $2 $0 (step $0 $1) (sync_except $0))",
+     "body_expanded": "(pipe_gpg (compose_gp dup (mapsnd (compose (step $0 $1) (optimize (neg_dist $0) $2)))) (sync_except $0))",
+     "calls": [
+      "fn_6"
+     ],
+     "users": 22,
+     "users_belief": 22,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 22
+     },
+     "users_by_kind": {
+      "belief": 22
+     },
+     "contains_prev_round": [
+      "t5"
+     ],
+     "persisted": false
+    },
+    {
+     "name": "fn_10",
+     "local_name": "fn_4",
+     "stable_id": "t2",
+     "first_seen": 2,
+     "role": "other",
+     "type": "fn_p_g",
+     "argtypes": [
+      "cellvalue"
+     ],
+     "arity": 1,
+     "body": "(register (locate $0) (place $0))",
+     "body_expanded": "(register (locate $0) (place $0))",
+     "calls": [],
+     "users": 21,
+     "users_belief": 9,
+     "users_nonmental": 12,
+     "users_by_family": {
+      "world": 12,
+      "belief": 9
+     },
+     "users_by_kind": {
+      "belief": 9,
+      "registration": 4,
+      "perception": 4,
+      "drift_reg": 4
+     },
+     "contains_prev_round": [],
+     "persisted": true
+    },
+    {
+     "name": "fn_11",
+     "local_name": "fn_5",
+     "stable_id": "t10",
+     "first_seen": 2,
+     "role": "agent_constructor_degenerate",
+     "type": "fn",
+     "argtypes": [
+      "coord",
+      "coord",
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 4,
+     "body": "(fn_0 $3 $2 (wall_at $1 $0) sync_all)",
+     "body_expanded": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)))) sync_all)",
+     "calls": [
+      "fn_6"
+     ],
+     "users": 24,
+     "users_belief": 24,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 24
+     },
+     "users_by_kind": {
+      "belief": 24
+     },
+     "contains_prev_round": [
+      "t1",
+      "t5"
+     ],
+     "persisted": false
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "n_solved_through": 255,
+   "solved_by_family": {
+    "physics": 4,
+    "desire": 16,
+    "world": 128,
+    "belief": 107
+   },
+   "n_abstractions": 6,
+   "abstractions": [
+    {
+     "name": "fn_6",
+     "local_name": "fn_0",
+     "stable_id": "t7",
+     "first_seen": 3,
+     "role": "desire_fragment",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue",
+      "fn",
+      "fn_p_g"
+     ],
+     "arity": 4,
+     "body": "(pipe_gpg (compose_gp dup (mapsnd (compose $2 (optimize (neg_dist $1) $0)))) $3)",
+     "body_expanded": "(pipe_gpg (compose_gp dup (mapsnd (compose $2 (optimize (neg_dist $1) $0)))) $3)",
+     "calls": [],
+     "users": 12,
+     "users_belief": 12,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 12
+     },
+     "users_by_kind": {
+      "belief": 12
+     },
+     "contains_prev_round": [],
+     "persisted": true
+    },
+    {
+     "name": "fn_7",
+     "local_name": "fn_1",
+     "stable_id": "t11",
+     "first_seen": 3,
+     "role": "agent_constructor_degenerate",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "dir",
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 4,
+     "body": "(compose (optimize (neg_dist $0) $3) (fn_0 $2 $0 (step $0 $1) (sync_except $0)))",
+     "body_expanded": "(compose (optimize (neg_dist $0) $3) (pipe_gpg (compose_gp dup (mapsnd (compose (step $0 $1) (optimize (neg_dist $0) $2)))) (sync_except $0)))",
+     "calls": [
+      "fn_6"
+     ],
+     "users": 24,
+     "users_belief": 24,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 24
+     },
+     "users_by_kind": {
+      "belief": 24
+     },
+     "contains_prev_round": [
+      "t9"
+     ],
+     "persisted": false
+    },
+    {
+     "name": "fn_8",
+     "local_name": "fn_2",
+     "stable_id": "t12",
+     "first_seen": 3,
+     "role": "desire_fragment",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue",
+      "fn"
+     ],
+     "arity": 3,
+     "body": "(compose $2 (optimize (neg_dist $1) $0))",
+     "body_expanded": "(compose $2 (optimize (neg_dist $1) $0))",
+     "calls": [],
+     "users": 70,
+     "users_belief": 23,
+     "users_nonmental": 47,
+     "users_by_family": {
+      "world": 47,
+      "belief": 23
+     },
+     "users_by_kind": {
+      "obstacle": 47,
+      "belief": 23
+     },
+     "contains_prev_round": [],
+     "persisted": false
+    },
+    {
+     "name": "fn_9",
+     "local_name": "fn_3",
+     "stable_id": "t10",
+     "first_seen": 3,
+     "role": "agent_constructor_degenerate",
+     "type": "fn",
+     "argtypes": [
+      "coord",
+      "coord",
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 4,
+     "body": "(fn_0 $3 $2 (wall_at $1 $0) sync_all)",
+     "body_expanded": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)))) sync_all)",
+     "calls": [
+      "fn_6"
+     ],
+     "users": 52,
+     "users_belief": 52,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 52
+     },
+     "users_by_kind": {
+      "belief": 52
+     },
+     "contains_prev_round": [
+      "t1"
+     ],
+     "persisted": true
+    },
+    {
+     "name": "fn_10",
+     "local_name": "fn_4",
+     "stable_id": "t9",
+     "first_seen": 3,
+     "role": "agent_constructor_degenerate",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "dir",
+      "cellvalue"
+     ],
+     "arity": 3,
+     "body": "(fn_0 $2 $0 (step $0 $1) (sync_except $0))",
+     "body_expanded": "(pipe_gpg (compose_gp dup (mapsnd (compose (step $0 $1) (optimize (neg_dist $0) $2)))) (sync_except $0))",
+     "calls": [
+      "fn_6"
+     ],
+     "users": 22,
+     "users_belief": 22,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 22
+     },
+     "users_by_kind": {
+      "belief": 22
+     },
+     "contains_prev_round": [],
+     "persisted": true
+    },
+    {
+     "name": "fn_11",
+     "local_name": "fn_5",
+     "stable_id": "t2",
+     "first_seen": 3,
+     "role": "other",
+     "type": "fn_p_g",
+     "argtypes": [
+      "cellvalue"
+     ],
+     "arity": 1,
+     "body": "(register (locate $0) (place $0))",
+     "body_expanded": "(register (locate $0) (place $0))",
+     "calls": [],
+     "users": 21,
+     "users_belief": 9,
+     "users_nonmental": 12,
+     "users_by_family": {
+      "world": 12,
+      "belief": 9
+     },
+     "users_by_kind": {
+      "belief": 9,
+      "registration": 4,
+      "perception": 4,
+      "drift_reg": 4
+     },
+     "contains_prev_round": [],
+     "persisted": true
+    }
+   ]
+  },
+  {
+   "round": 4,
+   "n_solved_through": 280,
+   "solved_by_family": {
+    "physics": 4,
+    "desire": 16,
+    "world": 128,
+    "belief": 132
+   },
+   "n_abstractions": 6,
+   "abstractions": [
+    {
+     "name": "fn_6",
+     "local_name": "fn_0",
+     "stable_id": "t7",
+     "first_seen": 4,
+     "role": "desire_fragment",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue",
+      "fn",
+      "fn_p_g"
+     ],
+     "arity": 4,
+     "body": "(pipe_gpg (compose_gp dup (mapsnd (compose $2 (optimize (neg_dist $1) $0)))) $3)",
+     "body_expanded": "(pipe_gpg (compose_gp dup (mapsnd (compose $2 (optimize (neg_dist $1) $0)))) $3)",
+     "calls": [],
+     "users": 12,
+     "users_belief": 12,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 12
+     },
+     "users_by_kind": {
+      "belief": 12
+     },
+     "contains_prev_round": [
+      "t12"
+     ],
+     "persisted": true
+    },
+    {
+     "name": "fn_7",
+     "local_name": "fn_1",
+     "stable_id": "t11",
+     "first_seen": 4,
+     "role": "agent_constructor_degenerate",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "dir",
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 4,
+     "body": "(compose (optimize (neg_dist $0) $3) (fn_0 $2 $0 (step $0 $1) (sync_except $0)))",
+     "body_expanded": "(compose (optimize (neg_dist $0) $3) (pipe_gpg (compose_gp dup (mapsnd (compose (step $0 $1) (optimize (neg_dist $0) $2)))) (sync_except $0)))",
+     "calls": [
+      "fn_6"
+     ],
+     "users": 26,
+     "users_belief": 26,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 26
+     },
+     "users_by_kind": {
+      "belief": 26
+     },
+     "contains_prev_round": [
+      "t9"
+     ],
+     "persisted": true
+    },
+    {
+     "name": "fn_8",
+     "local_name": "fn_2",
+     "stable_id": "t12",
+     "first_seen": 4,
+     "role": "desire_fragment",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "cellvalue",
+      "fn"
+     ],
+     "arity": 3,
+     "body": "(compose $2 (optimize (neg_dist $1) $0))",
+     "body_expanded": "(compose $2 (optimize (neg_dist $1) $0))",
+     "calls": [],
+     "users": 93,
+     "users_belief": 46,
+     "users_nonmental": 47,
+     "users_by_family": {
+      "world": 47,
+      "belief": 46
+     },
+     "users_by_kind": {
+      "obstacle": 47,
+      "belief": 46
+     },
+     "contains_prev_round": [],
+     "persisted": true
+    },
+    {
+     "name": "fn_9",
+     "local_name": "fn_3",
+     "stable_id": "t10",
+     "first_seen": 4,
+     "role": "agent_constructor_degenerate",
+     "type": "fn",
+     "argtypes": [
+      "coord",
+      "coord",
+      "cellvalue",
+      "cellvalue"
+     ],
+     "arity": 4,
+     "body": "(fn_0 $3 $2 (wall_at $1 $0) sync_all)",
+     "body_expanded": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)))) sync_all)",
+     "calls": [
+      "fn_6"
+     ],
+     "users": 75,
+     "users_belief": 75,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 75
+     },
+     "users_by_kind": {
+      "belief": 75
+     },
+     "contains_prev_round": [],
+     "persisted": true
+    },
+    {
+     "name": "fn_10",
+     "local_name": "fn_4",
+     "stable_id": "t9",
+     "first_seen": 4,
+     "role": "agent_constructor_degenerate",
+     "type": "fn",
+     "argtypes": [
+      "cellvalue",
+      "dir",
+      "cellvalue"
+     ],
+     "arity": 3,
+     "body": "(fn_0 $2 $0 (step $0 $1) (sync_except $0))",
+     "body_expanded": "(pipe_gpg (compose_gp dup (mapsnd (compose (step $0 $1) (optimize (neg_dist $0) $2)))) (sync_except $0))",
+     "calls": [
+      "fn_6"
+     ],
+     "users": 22,
+     "users_belief": 22,
+     "users_nonmental": 0,
+     "users_by_family": {
+      "belief": 22
+     },
+     "users_by_kind": {
+      "belief": 22
+     },
+     "contains_prev_round": [],
+     "persisted": true
+    },
+    {
+     "name": "fn_11",
+     "local_name": "fn_5",
+     "stable_id": "t2",
+     "first_seen": 4,
+     "role": "other",
+     "type": "fn_p_g",
+     "argtypes": [
+      "cellvalue"
+     ],
+     "arity": 1,
+     "body": "(register (locate $0) (place $0))",
+     "body_expanded": "(register (locate $0) (place $0))",
+     "calls": [],
+     "users": 21,
+     "users_belief": 9,
+     "users_nonmental": 12,
+     "users_by_family": {
+      "world": 12,
+      "belief": 9
+     },
+     "users_by_kind": {
+      "belief": 9,
+      "registration": 4,
+      "perception": 4,
+      "drift_reg": 4
+     },
+     "contains_prev_round": [],
+     "persisted": true
+    }
+   ]
+  }
+ ],
+ "provenance": {
+  "git": {
+   "commit": "179716982197fd35172b1c8c4c894f025e293f51",
+   "commit_short": "1797169",
+   "branch": "master",
+   "dirty": false
+  },
+  "timestamp": "2026-08-05T19:35:11Z",
+  "host": "tcn818.local.snellius.surf.nl",
+  "python": "3.12.13",
+  "argv": "/home/gkaminer/dumbcoder/phase2.py --t-fn 3600 --ecd-iters 6 --no-dream",
+  "knobs": {
+   "decomposed": true,
+   "smoke": false,
+   "cube": true,
+   "t_fn": 3600.0,
+   "t_fn_round1": 1200.0,
+   "t_reg": 300,
+   "ecd_iters": 6,
+   "stitch_iters": 6,
+   "dream_on": false,
+   "dream_iters": 600,
+   "plain_belief": false,
+   "curriculum": true,
+   "k": 4,
+   "n_phys": 4,
+   "n_des": 2,
+   "n_ov": 4,
+   "n_comet": 4,
+   "n_reg": 4,
+   "n_bel": 6,
+   "n_belvar": 3,
+   "n_goal": 6,
+   "n_corner": 4,
+   "n_obstacle": 6,
+   "n_relocate": 16
+  },
+  "seeds": {
+   "physics": 0,
+   "desire": 1,
+   "belief": 2,
+   "overlay": 3,
+   "registration": 4,
+   "comet": 5,
+   "flee": 10,
+   "deletion": 11,
+   "denoise": 12,
+   "perception": 13,
+   "multi_reg": 14,
+   "reg_except": 15,
+   "inpaint": 16,
+   "readout": 17,
+   "obstacle": 18,
+   "underlay": 19,
+   "belief_extra": 22,
+   "belief_goal": 23,
+   "belief_observers": 27,
+   "belief_fob": 25,
+   "relocate": 26,
+   "wipe": 28,
+   "composite": 29,
+   "drift_reg": 30,
+   "map_update": 31
+  },
+  "repro": "commit 1797169 | phase2 (decomposed) | t_fn=3600 t_fn_round1=1200 t_reg=300 ecd_iters=6 stitch_iters=6 dream=off curriculum=on | n_bel=6 n_goal=6 n_obstacle=6 n_relocate=16 | 2026-08-05T19:35:11Z"
+ }
+}

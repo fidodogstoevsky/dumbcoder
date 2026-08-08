@@ -1,0 +1,811 @@
+{
+ "decomposed": true,
+ "smoke": false,
+ "n_solved": 280,
+ "n_total": 316,
+ "stitch_iters": 6,
+ "ecd_iters": 6,
+ "t_fn": 3600.0,
+ "t_fn_round1": 1200.0,
+ "constructor_round": 2,
+ "first_solve_round_by_kind": {
+  "physics": 1,
+  "desire": 1,
+  "overlay": 1,
+  "comet": 1,
+  "flee": 1,
+  "deletion": 1,
+  "denoise": 1,
+  "underlay": 1,
+  "obstacle": 1,
+  "relocate": 1,
+  "wipe": 1,
+  "readout": 1,
+  "inpaint": 1,
+  "multi_reg": 1,
+  "reg_except": 1,
+  "map_update": 1,
+  "registration": 1,
+  "perception": 1,
+  "drift_reg": 1,
+  "composite": 1,
+  "belief": 2
+ },
+ "first_solve_round_by_variant": {
+  "physics": 1,
+  "desire": 1,
+  "overlay": 1,
+  "comet": 1,
+  "flee": 1,
+  "deletion": 1,
+  "denoise": 1,
+  "underlay": 1,
+  "obstacle": 1,
+  "relocate": 1,
+  "wipe": 1,
+  "readout": 1,
+  "inpaint": 1,
+  "multi_reg": 1,
+  "reg_except": 1,
+  "map_update": 1,
+  "registration": 1,
+  "perception": 1,
+  "drift_reg": 1,
+  "composite": 1,
+  "belief_witness": 2,
+  "belief_goal": 2,
+  "belief_false_obstacle": 2,
+  "belief_wall": 2,
+  "belief_observers": 3
+ },
+ "solved_by_kind": {
+  "physics": 4,
+  "desire": 16,
+  "overlay": 4,
+  "comet": 4,
+  "belief": 132,
+  "flee": 4,
+  "deletion": 4,
+  "denoise": 4,
+  "underlay": 4,
+  "obstacle": 48,
+  "relocate": 16,
+  "wipe": 4,
+  "registration": 4,
+  "perception": 4,
+  "multi_reg": 4,
+  "reg_except": 4,
+  "inpaint": 4,
+  "readout": 4,
+  "composite": 4,
+  "drift_reg": 4,
+  "map_update": 4
+ },
+ "total_by_kind": {
+  "physics": 4,
+  "desire": 16,
+  "overlay": 4,
+  "comet": 4,
+  "belief": 168,
+  "flee": 4,
+  "deletion": 4,
+  "denoise": 4,
+  "underlay": 4,
+  "obstacle": 48,
+  "relocate": 16,
+  "wipe": 4,
+  "registration": 4,
+  "perception": 4,
+  "multi_reg": 4,
+  "reg_except": 4,
+  "inpaint": 4,
+  "readout": 4,
+  "composite": 4,
+  "drift_reg": 4,
+  "map_update": 4
+ },
+ "uses_by_kind": {
+  "physics": [
+   "step"
+  ],
+  "desire": [
+   "neg_dist",
+   "optimize"
+  ],
+  "overlay": [
+   "compose",
+   "compose_gp",
+   "dup",
+   "mapsnd",
+   "overlay",
+   "pipe_gpg",
+   "step"
+  ],
+  "comet": [
+   "compose",
+   "compose_gp",
+   "dup",
+   "mapsnd",
+   "neg_dist",
+   "optimize",
+   "overlay",
+   "pipe_gpg"
+  ],
+  "belief": [
+   "compose",
+   "compose_gp",
+   "dup",
+   "locate",
+   "mapsnd",
+   "neg_dist",
+   "optimize",
+   "pipe_gpg",
+   "place",
+   "register",
+   "step",
+   "sync_to_world",
+   "wall_at"
+  ],
+  "flee": [
+   "optimize"
+  ],
+  "deletion": [],
+  "denoise": [
+   "erase"
+  ],
+  "underlay": [
+   "compose",
+   "compose_gp",
+   "dup",
+   "mapsnd",
+   "pipe_gpg",
+   "step"
+  ],
+  "obstacle": [
+   "compose",
+   "neg_dist",
+   "optimize",
+   "wall_at"
+  ],
+  "relocate": [
+   "compose",
+   "wall_at"
+  ],
+  "wipe": [
+   "pair_blank",
+   "pipe_gpg",
+   "snd_gg"
+  ],
+  "registration": [
+   "locate",
+   "place",
+   "register"
+  ],
+  "perception": [
+   "compose",
+   "compose_pg",
+   "locate",
+   "place",
+   "register",
+   "swap"
+  ],
+  "multi_reg": [
+   "sync_all"
+  ],
+  "reg_except": [
+   "sync_except"
+  ],
+  "inpaint": [],
+  "readout": [
+   "snd_gg"
+  ],
+  "composite": [
+   "bimap",
+   "compose",
+   "compose_pg",
+   "erase",
+   "overlay",
+   "step"
+  ],
+  "drift_reg": [
+   "compose",
+   "compose_pg",
+   "locate",
+   "mapfst",
+   "place",
+   "register",
+   "step"
+  ],
+  "map_update": [
+   "compose",
+   "compose_pg",
+   "swap",
+   "sync_all"
+  ]
+ },
+ "belief_commit": {
+  "literal": 9,
+  "degenerate": 123,
+  "multi_mover": 0,
+  "nonmental": 0
+ },
+ "belief_multi_mover": [],
+ "belief_variants": {
+  "belief_witness": {
+   "solved": 48,
+   "total": 48,
+   "literal": 0,
+   "degenerate": 48,
+   "multi_mover": 0,
+   "nonmental": 0
+  },
+  "belief_goal": {
+   "solved": 27,
+   "total": 48,
+   "literal": 0,
+   "degenerate": 27,
+   "multi_mover": 0,
+   "nonmental": 0
+  },
+  "belief_observers": {
+   "solved": 24,
+   "total": 24,
+   "literal": 0,
+   "degenerate": 24,
+   "multi_mover": 0,
+   "nonmental": 0
+  },
+  "belief_false_obstacle": {
+   "solved": 9,
+   "total": 24,
+   "literal": 9,
+   "degenerate": 0,
+   "multi_mover": 0,
+   "nonmental": 0
+  },
+  "belief_wall": {
+   "solved": 24,
+   "total": 24,
+   "literal": 0,
+   "degenerate": 24,
+   "multi_mover": 0,
+   "nonmental": 0
+  }
+ },
+ "selective_attribution": {
+  "n": 24,
+  "solved": 24,
+  "believer_only": 24,
+  "observer_committed": 0,
+  "wholesale": 0
+ },
+ "false_obstacle": {
+  "n": 24,
+  "literal": 9,
+  "degenerate": 0,
+  "multi_mover": 0,
+  "nonmental": 0
+ },
+ "A": {
+  "fork_general": true,
+  "sync_general": true,
+  "wall_general": true,
+  "belief_uses_both": true,
+  "agency_unique": true,
+  "obstacle_belief_misrepresents_obstacle": true,
+  "no_nonmental_rival": true
+ },
+ "cube": {
+  "enabled": true,
+  "cube_ok": true,
+  "corners_by_kind": {
+   "physics": {},
+   "desire": {
+    "neg_dist": 16
+   },
+   "overlay": {
+    "overlay": 4,
+    "dup": 4,
+    "mapsnd": 4
+   },
+   "comet": {
+    "overlay": 4,
+    "dup": 4,
+    "neg_dist": 4,
+    "mapsnd": 4
+   },
+   "belief": {
+    "neg_dist": 81,
+    "wall_at": 81,
+    "dup": 81,
+    "mapsnd": 81,
+    "sync_to_world": 72,
+    "locate": 9,
+    "place": 9,
+    "register": 9
+   },
+   "flee": {
+    "distance": 4
+   },
+   "deletion": {
+    "clear_at": 4
+   },
+   "denoise": {
+    "erase": 4
+   },
+   "underlay": {
+    "dup": 4,
+    "underlay": 4,
+    "mapsnd": 4
+   },
+   "obstacle": {
+    "neg_dist": 48,
+    "wall_at": 48
+   },
+   "relocate": {
+    "wall_at": 16,
+    "clear_at": 16
+   },
+   "wipe": {
+    "snd_gg": 4,
+    "pair_blank": 4
+   },
+   "registration": {
+    "locate": 4,
+    "register": 4,
+    "place": 4
+   },
+   "perception": {
+    "swap": 4,
+    "locate": 4,
+    "register": 4,
+    "place": 4
+   },
+   "multi_reg": {
+    "sync_all": 4
+   },
+   "reg_except": {
+    "sync_except": 4
+   },
+   "inpaint": {
+    "underlay": 4
+   },
+   "readout": {
+    "snd_gg": 4
+   },
+   "composite": {
+    "overlay": 4,
+    "bimap": 4,
+    "erase": 4
+   },
+   "drift_reg": {
+    "locate": 4,
+    "mapfst": 4,
+    "register": 4,
+    "place": 4
+   },
+   "map_update": {
+    "swap": 4,
+    "sync_all": 4
+   }
+  },
+  "belief_keeps_corner": true,
+  "belief_avoids_complements": true,
+  "any_complement_used": true,
+  "used_complements": [
+   "bimap",
+   "clear_at",
+   "distance",
+   "erase",
+   "mapfst",
+   "pair_blank",
+   "snd_gg",
+   "swap",
+   "sync_all",
+   "sync_except",
+   "underlay"
+  ],
+  "unused_complements": []
+ },
+ "invented": [
+  {
+   "repr": "fn_6",
+   "type": "fn",
+   "tailtypes": [
+    "cellvalue",
+    "cellvalue",
+    "fn",
+    "fn_p_g"
+   ],
+   "body": "(pipe_gpg (compose_gp dup (mapsnd (compose $2 (optimize (neg_dist $1) $0)))) $3)",
+   "shared_holes": {},
+   "role": "desire_fragment"
+  },
+  {
+   "repr": "fn_7",
+   "type": "fn",
+   "tailtypes": [
+    "cellvalue",
+    "dir",
+    "cellvalue",
+    "cellvalue"
+   ],
+   "body": "(compose (optimize (neg_dist $0) $3) (pipe_gpg (compose_gp dup (mapsnd (compose (step $0 $1) (optimize (neg_dist $0) $2)))) (sync_except $0)))",
+   "shared_holes": {
+    "$0": 4
+   },
+   "role": "agent_constructor_degenerate"
+  },
+  {
+   "repr": "fn_8",
+   "type": "fn",
+   "tailtypes": [
+    "cellvalue",
+    "cellvalue",
+    "fn"
+   ],
+   "body": "(compose $2 (optimize (neg_dist $1) $0))",
+   "shared_holes": {},
+   "role": "desire_fragment"
+  },
+  {
+   "repr": "fn_9",
+   "type": "fn",
+   "tailtypes": [
+    "coord",
+    "coord",
+    "cellvalue",
+    "cellvalue"
+   ],
+   "body": "(pipe_gpg (compose_gp dup (mapsnd (compose (wall_at $1 $0) (optimize (neg_dist $2) $3)))) sync_all)",
+   "shared_holes": {},
+   "role": "agent_constructor_degenerate"
+  },
+  {
+   "repr": "fn_10",
+   "type": "fn",
+   "tailtypes": [
+    "cellvalue",
+    "dir",
+    "cellvalue"
+   ],
+   "body": "(pipe_gpg (compose_gp dup (mapsnd (compose (step $0 $1) (optimize (neg_dist $0) $2)))) (sync_except $0))",
+   "shared_holes": {
+    "$0": 3
+   },
+   "role": "agent_constructor_degenerate"
+  },
+  {
+   "repr": "fn_11",
+   "type": "fn_p_g",
+   "tailtypes": [
+    "cellvalue"
+   ],
+   "body": "(register (locate $0) (place $0))",
+   "shared_holes": {
+    "$0": 2
+   },
+   "role": "other"
+  }
+ ],
+ "agent_constructor": "fn_7",
+ "agent_constructor_shared_holes": {
+  "$0": 4
+ },
+ "agent_constructor_n_shared_holes": 1,
+ "agent_constructor_max_hole_uses": 4,
+ "agent_constructor_belief_uses": 26,
+ "belief_uses_by_abstraction": {
+  "fn_9": 75,
+  "fn_8": 46,
+  "fn_10": 22,
+  "fn_6": 12,
+  "fn_7": 26,
+  "fn_11": 9
+ },
+ "abstraction_usage_by_kind": {
+  "physics": {
+   "(bare prims)": 4
+  },
+  "desire": {
+   "(bare prims)": 16
+  },
+  "overlay": {
+   "(bare prims)": 4
+  },
+  "comet": {
+   "(bare prims)": 4
+  },
+  "belief": {
+   "fn_9": 75,
+   "fn_8": 46,
+   "fn_10": 22,
+   "fn_6": 12,
+   "fn_7": 26,
+   "fn_11": 9
+  },
+  "flee": {
+   "(bare prims)": 4
+  },
+  "deletion": {
+   "(bare prims)": 4
+  },
+  "denoise": {
+   "(bare prims)": 4
+  },
+  "underlay": {
+   "(bare prims)": 4
+  },
+  "obstacle": {
+   "fn_8": 47,
+   "(bare prims)": 1
+  },
+  "relocate": {
+   "(bare prims)": 16
+  },
+  "wipe": {
+   "(bare prims)": 4
+  },
+  "registration": {
+   "fn_11": 4
+  },
+  "perception": {
+   "fn_11": 4
+  },
+  "multi_reg": {
+   "(bare prims)": 4
+  },
+  "reg_except": {
+   "(bare prims)": 4
+  },
+  "inpaint": {
+   "(bare prims)": 4
+  },
+  "readout": {
+   "(bare prims)": 4
+  },
+  "composite": {
+   "(bare prims)": 4
+  },
+  "drift_reg": {
+   "fn_11": 4
+  },
+  "map_update": {
+   "(bare prims)": 4
+  }
+ },
+ "dl": {
+  "by_kind": {
+   "desire": {
+    "n": 16,
+    "dl_base_median": 7.783224105834961,
+    "dl_lib_median": 7.783224105834961,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "comet": {
+    "n": 4,
+    "dl_base_median": 16.048873901367188,
+    "dl_lib_median": 16.048873901367188,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "belief": {
+    "n": 25,
+    "dl_base_median": 34.50569152832031,
+    "dl_lib_median": 17.399028778076172,
+    "saved_median": 17.10666275024414,
+    "saved_mean": 16.47105178833008,
+    "saved_total": 411.77629470825195
+   },
+   "flee": {
+    "n": 4,
+    "dl_base_median": 7.783224105834961,
+    "dl_lib_median": 7.783224105834961,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "deletion": {
+    "n": 4,
+    "dl_base_median": 5.703782558441162,
+    "dl_lib_median": 5.703782558441162,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "denoise": {
+    "n": 4,
+    "dl_base_median": 4.787491798400879,
+    "dl_lib_median": 4.787491798400879,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "obstacle": {
+    "n": 48,
+    "dl_base_median": 15.971914291381836,
+    "dl_lib_median": 12.793859481811523,
+    "saved_median": 3.1780548095703125,
+    "saved_mean": 3.111845334370931,
+    "saved_total": 149.3685760498047
+   },
+   "relocate": {
+    "n": 16,
+    "dl_base_median": 13.892471313476562,
+    "dl_lib_median": 13.892471313476562,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "wipe": {
+    "n": 4,
+    "dl_base_median": 5.780743598937988,
+    "dl_lib_median": 5.780743598937988,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "registration": {
+    "n": 4,
+    "dl_base_median": 6.802394866943359,
+    "dl_lib_median": 4.499809741973877,
+    "saved_median": 2.3025851249694824,
+    "saved_mean": 2.3025851249694824,
+    "saved_total": 9.21034049987793
+   },
+   "perception": {
+    "n": 4,
+    "dl_base_median": 10.385913848876953,
+    "dl_lib_median": 8.083328247070312,
+    "saved_median": 2.3025856018066406,
+    "saved_mean": 2.3025856018066406,
+    "saved_total": 9.210342407226562
+   },
+   "multi_reg": {
+    "n": 4,
+    "dl_base_median": 2.1972246170043945,
+    "dl_lib_median": 2.1972246170043945,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "reg_except": {
+    "n": 4,
+    "dl_base_median": 4.499809741973877,
+    "dl_lib_median": 4.499809741973877,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "inpaint": {
+    "n": 4,
+    "dl_base_median": 2.1972246170043945,
+    "dl_lib_median": 2.1972246170043945,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "readout": {
+    "n": 4,
+    "dl_base_median": 2.1972246170043945,
+    "dl_lib_median": 2.1972246170043945,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "composite": {
+    "n": 4,
+    "dl_base_median": 16.742021560668945,
+    "dl_lib_median": 16.742021560668945,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   },
+   "drift_reg": {
+    "n": 4,
+    "dl_base_median": 16.55970001220703,
+    "dl_lib_median": 14.257115364074707,
+    "saved_median": 2.302584648132324,
+    "saved_mean": 2.302584648132324,
+    "saved_total": 9.210338592529297
+   },
+   "map_update": {
+    "n": 4,
+    "dl_base_median": 5.780743598937988,
+    "dl_lib_median": 5.780743598937988,
+    "saved_median": 0.0,
+    "saved_mean": 0.0,
+    "saved_total": 0.0
+   }
+  },
+  "belief_by_variant": {
+   "belief_witness": {
+    "n": 25,
+    "dl_base_median": 34.50569152832031,
+    "dl_lib_median": 17.399028778076172,
+    "saved_median": 17.10666275024414,
+    "saved_mean": 16.47105178833008,
+    "saved_total": 411.77629470825195
+   }
+  },
+  "nonmental_saved_median": 0.0,
+  "n_belief_using_ctor": 0
+ },
+ "mdl_margin": null,
+ "mdl_margin_note": "no mdl_margins.decomposed.json yet \u2014 run `python mdl_margin.py --decomposed` to price belief against its rivals",
+ "constructor_found": true,
+ "constructor_shared": true,
+ "belief_uses_ctor": true,
+ "nonmental_free_of_ctor": true,
+ "failures": [],
+ "ok": true,
+ "provenance": {
+  "git": {
+   "commit": "179716982197fd35172b1c8c4c894f025e293f51",
+   "commit_short": "1797169",
+   "branch": "master",
+   "dirty": false
+  },
+  "timestamp": "2026-08-05T19:35:11Z",
+  "host": "tcn818.local.snellius.surf.nl",
+  "python": "3.12.13",
+  "argv": "/home/gkaminer/dumbcoder/phase2.py --t-fn 3600 --ecd-iters 6 --no-dream",
+  "knobs": {
+   "decomposed": true,
+   "smoke": false,
+   "cube": true,
+   "t_fn": 3600.0,
+   "t_fn_round1": 1200.0,
+   "t_reg": 300,
+   "ecd_iters": 6,
+   "stitch_iters": 6,
+   "dream_on": false,
+   "dream_iters": 600,
+   "plain_belief": false,
+   "curriculum": true,
+   "k": 4,
+   "n_phys": 4,
+   "n_des": 2,
+   "n_ov": 4,
+   "n_comet": 4,
+   "n_reg": 4,
+   "n_bel": 6,
+   "n_belvar": 3,
+   "n_goal": 6,
+   "n_corner": 4,
+   "n_obstacle": 6,
+   "n_relocate": 16
+  },
+  "seeds": {
+   "physics": 0,
+   "desire": 1,
+   "belief": 2,
+   "overlay": 3,
+   "registration": 4,
+   "comet": 5,
+   "flee": 10,
+   "deletion": 11,
+   "denoise": 12,
+   "perception": 13,
+   "multi_reg": 14,
+   "reg_except": 15,
+   "inpaint": 16,
+   "readout": 17,
+   "obstacle": 18,
+   "underlay": 19,
+   "belief_extra": 22,
+   "belief_goal": 23,
+   "belief_observers": 27,
+   "belief_fob": 25,
+   "relocate": 26,
+   "wipe": 28,
+   "composite": 29,
+   "drift_reg": 30,
+   "map_update": 31
+  },
+  "repro": "commit 1797169 | phase2 (decomposed) | t_fn=3600 t_fn_round1=1200 t_reg=300 ecd_iters=6 stitch_iters=6 dream=off curriculum=on | n_bel=6 n_goal=6 n_obstacle=6 n_relocate=16 | 2026-08-05T19:35:11Z"
+ }
+}

@@ -1,42 +1,42 @@
-"""Solve-dynamics figures (phases 1-2): HOW the wake-sleep loop reaches belief.
+"""Solve-dynamics numbers (phases 1-2): HOW the wake-sleep loop reaches belief.
 
 `corpus_dl.py` prices the corpus under each round's library — it shows the description
-length falling.  This script instead charts the SEARCH behaviour that the falling DL
-buys, straight from a run, in two panels:
+length falling.  This script reports the SEARCH behaviour that the falling DL buys,
+straight from a run: which round each task was first solved in, and how long enumeration
+took in the round a task missed against the round it solved.
 
-  Plot 1 — CUMULATIVE SOLVES vs round, one line per family.  The non-mental families
-    (physics / desire / world) are shallow from the base primitives and solve in the
-    first round, then sit flat at their ceiling.  Belief is deep — it only becomes
-    reachable once the joint stitch has abstracted the parts it reuses — so its curve is
-    an S: nothing, then a step up at the round its agency signature lands in the library.
+It emits NUMBERS, NOT A FIGURE.  It used to draw two panels and both were cut; the
+reasons are in the comment block above `run()`, and the short version is that one panel
+duplicated a table and the other implied per-task speedups the run never measured.  The
+thesis quotes this script's `headline` block in prose instead.
 
-  Plot 2 — PER-TASK SOLVE-TIME COLLAPSE, the round before a task solves vs the round it
-    solves (a paired slope-graph, log time axis).  A belief task burns the whole `--t-fn`
-    budget MISSING while its abstraction is still absent, then, the very next round, solves
-    in seconds once stitch has added it — the ~1100 s → ~10 s collapse that is otherwise
-    buried in the per-round `OK/MISS` log lines.  Non-mental tasks that solve immediately
-    never pay that toll; they are the fast cluster with no prior miss.
+READ THE CENSORING NOTE BEFORE QUOTING ANY NUMBER FROM HERE.  A miss time is a TIMEOUT:
+the task needed more than that, by an unknown margin.  So `median_miss_lower_bound` and
+`worst_speedup_lower_bound` are bounds, not measurements, and they are named that way on
+purpose.  The budget also steps (round 1 gets `--t-fn-round1`, later rounds `--t-fn`), so
+a round-1 miss paired with a round-2 solve crosses a budget increase as well as a change
+of library.  `n_library_attributable` and the `clean_*` quartiles are the subset where
+neither problem bites — those are the per-task numbers that can be defended.
 
-Both plots are DERIVED FROM AN ACTUAL RUN, not ground truth.  `experiment.run_phase`
-records, per solved task, the round it was solved (for Plot 1) and, per fn enumeration
-attempt, the round/solved/seconds triple (for Plot 2), into the trajectory artifact
-`phase{1,2}_traj[.smoke].json` (`save_trajectory_artifact`).  Older artifacts, or a full
-HPC run whose dramatic numbers only reached stdout, can instead be read straight from the
-run log with `--log` (we parse the same `OK/MISS <secs> <kind> <shape>#<crc>` lines).
+Everything is DERIVED FROM AN ACTUAL RUN, not ground truth.  `experiment.run_phase`
+records, per solved task, the round it was solved (the `cumulative` block) and, per fn
+enumeration attempt, the round/solved/seconds triple (the `pairs` block), into the
+trajectory artifact `phase{1,2}_traj[.smoke].json` (`save_trajectory_artifact`).  Older
+artifacts, or a full HPC run whose numbers only reached stdout, can instead be read
+straight from the run log with `--log` (we parse the same
+`OK/MISS <secs> <kind> <shape>#<crc>` lines).
 
     # 1. produce a run (slow; HPC) — writes the trajectory artifact we consume
     sbatch run.job phase1.py --t-fn 1200      -> phase1_traj.json  (+ phase1_run.json)
-    # 2. build the solve-dynamics figure
+    # 2. compute the solve-dynamics numbers
     python solve_dynamics.py                  phase 1 (reads phase1_traj.json)
     python solve_dynamics.py --decomposed     phase 2 (reads phase2_traj.json)
-    python solve_dynamics.py --both           phases 1 and 2, one JSON each, one PNG
+    python solve_dynamics.py --both           phases 1 and 2, one JSON each
     python solve_dynamics.py --smoke          use the .smoke trajectory artifacts
-    python solve_dynamics.py --run PATH        consume a specific trajectory artifact
-    python solve_dynamics.py --log run.out     parse per-task timings out of a run log
-    python solve_dynamics.py --no-plot         recompute the JSON only
-    python solve_dynamics.py out.png           choose the figure path
+    python solve_dynamics.py --run PATH       consume a specific trajectory artifact
+    python solve_dynamics.py --log run.out    parse per-task timings out of a run log
 
-Writes solve_dynamics[.decomposed].json and solve_dynamics.png/.pdf.
+Writes solve_dynamics[.decomposed].json.
 """
 
 import re
@@ -51,6 +51,8 @@ import numpy as np
 # All belief variants (kind 'belief', including the extra plain wall-belief batch) fold
 # into 'belief'; physics/desire are their own families; every non-mental maker folds into
 # the single 'world' facet — the contrast the figure is about is belief vs the rest.
+# ('world' is only the internal key; it is LABELLED 'non-mental', the thesis' own word for
+# these families — 'world' would collide with the world model.)
 def family(kind):
     if kind.startswith('belief'):
         return 'belief'
@@ -67,12 +69,12 @@ FAM_COLOR = {
     'belief':  '#2a78d6',   # blue — the hero
 }
 FAM_LABEL = {
-    'physics': 'physics',
-    'desire':  'desire',
-    'world':   'world (non-mental)',
+    'physics': 'constant movement',
+    'desire':  'goal-directed movement',
+    'world':   'non-mental',
     'belief':  'belief',
 }
-INK, MUTED, GRID, BG = '#0b0b0b', '#52514e', '#e6e6e2', '#fcfcfb'
+MUTED, GRID, BG = '#52514e', '#e6e6e2', '#fcfcfb'
 
 
 # ── data loading: trajectory artifact (default) or a raw run log (--log) ───────────────
@@ -181,17 +183,42 @@ def compute(data):
             immediate.append({'id': tid, 'kind': kind, 'family': family(kind),
                               'solve_round': rs, 'solve_time': solve_t})
 
-    # headline collapse: the biggest belief miss→solve drop, plus the belief medians.
+    # Headline collapse.  Two things make the naive miss→solve comparison unusable, and
+    # both are handled here rather than left to the reader:
+    #
+    #   CENSORING.  A miss time is a TIMEOUT — the task needed *more* than that, by an
+    #     unknown margin.  So `median_miss` is a lower bound, not a measurement, and no
+    #     per-task speedup is recoverable.  `worst_speedup` is likewise a lower bound; it
+    #     is kept because a lower bound on a 160x drop is still worth quoting, but it must
+    #     never be reported as *the* speedup.
+    #   BUDGET STEP.  Round 1 allows `t_fn_round1` per task and later rounds `t_fn` — 1200 s
+    #     against 3600 s in the thesis runs — so a round-1 miss paired with a round-2 solve
+    #     has crossed a budget increase as well as a change of library.
+    #
+    # The subset that survives both is `n_library_attributable`: solves that fit inside the
+    # budget the MISS round already had.  There the extra clock cannot be the explanation,
+    # so the library is, and the quartiles of that subset are the honest per-task numbers.
+    # The complement (`n_budget_confounded`) is evidence for neither side.
     bel_pairs = [p for p in pairs if p['family'] == 'belief']
     headline = None
     if bel_pairs:
         worst = max(bel_pairs, key=lambda p: p['miss_time'] - p['solve_time'])
+        clean = [p for p in bel_pairs if p['solve_time'] < p['miss_time']]
+        cq = (np.percentile([p['solve_time'] for p in clean], [25, 50, 75]).tolist()
+              if clean else None)
         headline = {
             'worst_miss': worst['miss_time'], 'worst_solve': worst['solve_time'],
-            'worst_speedup': worst['speedup'],
-            'median_miss': float(np.median([p['miss_time'] for p in bel_pairs])),
-            'median_solve': float(np.median([p['solve_time'] for p in bel_pairs])),
+            'worst_speedup_lower_bound': worst['speedup'],
+            'median_miss_lower_bound': float(np.median([p['miss_time'] for p in bel_pairs])),
+            'median_solve_all': float(np.median([p['solve_time'] for p in bel_pairs])),
+            'slowest_solve': max(p['solve_time'] for p in bel_pairs),
             'n_belief_collapsed': len(bel_pairs),
+            'n_library_attributable': len(clean),
+            'n_budget_confounded': len(bel_pairs) - len(clean),
+            'clean_q25': cq[0] if cq else None,
+            'clean_median': cq[1] if cq else None,
+            'clean_q75': cq[2] if cq else None,
+            'clean_fastest': min((p['solve_time'] for p in clean), default=None),
         }
 
     return {
@@ -228,15 +255,22 @@ def run(decomposed=False, smoke=False, run_path=None, log_path=None):
     if out['has_timings']:
         h = out['headline']
         if h:
-            print(f"  belief solve-time collapse: {h['n_belief_collapsed']} tasks; "
-                  f"steepest {h['worst_miss']:.1f}s → {h['worst_solve']:.1f}s "
-                  f"({h['worst_speedup']:.0f}×); median {h['median_miss']:.1f}s → "
-                  f"{h['median_solve']:.1f}s")
+            print(f"  belief tasks missed then solved: {h['n_belief_collapsed']}; "
+                  f"slowest solve {h['slowest_solve']:.0f}s")
+            print(f"  library-attributable (solve fits the miss round's own budget): "
+                  f"{h['n_library_attributable']}/{h['n_belief_collapsed']}; "
+                  f"quartiles {h['clean_q25']:.0f} / {h['clean_median']:.0f} / "
+                  f"{h['clean_q75']:.0f}s; fastest {h['clean_fastest']:.1f}s")
+            print(f"  budget-confounded (solve exceeds it): {h['n_budget_confounded']} "
+                  f"— evidence for neither side")
+            print(f"  NB miss times are TIMEOUTS (censored): median miss "
+                  f">={h['median_miss_lower_bound']:.0f}s and the {h['worst_speedup_lower_bound']:.0f}× "
+                  f"steepest drop are LOWER BOUNDS, not measured speedups")
         else:
             print("  no belief task had a prior-round miss to pair (all solved on first "
                   "attempt this run — nothing to collapse).")
     else:
-        print("  NOTE: this artifact carries no per-task timings — Plot 2 will be a stub. "
+        print("  NOTE: this artifact carries no per-task timings. "
               "Re-run the phase (timings are recorded now) or pass --log <run stdout>.")
 
     path = f"solve_dynamics{'.decomposed' if decomposed else ''}.json"
@@ -246,170 +280,45 @@ def run(decomposed=False, smoke=False, run_path=None, log_path=None):
     return out
 
 
-# ── plotting ──────────────────────────────────────────────────────────────────────────
-def _panel_cumulative(ax, d):
-    "Plot 1: cumulative solves vs round — belief's S-curve against the flat non-mental lines."
-    xs = list(range(0, d['n_rounds'] + 1))
-    for f in FAM_ORDER:
-        ys = d['cumulative'][f]
-        hero = f == 'belief'
-        ax.plot(xs, ys, color=FAM_COLOR[f], lw=2.8 if hero else 1.9,
-                alpha=1.0 if hero else 0.85, zorder=6 if hero else 3,
-                marker='o', ms=6.5 if hero else 4.5, solid_capstyle='round',
-                drawstyle='steps-post' if not hero else 'default')
-        ax.text(xs[-1] + 0.08, ys[-1], f"{FAM_LABEL[f]}  ({ys[-1]}/{d['totals'][f]})",
-                color=FAM_COLOR[f], fontsize=8.8 if hero else 8.2, va='center', ha='left',
-                fontweight='bold' if hero else 'normal', zorder=7)
-
-    # the round belief's cumulative rises the most: where its agency signature lands.
-    bel = d['cumulative']['belief']
-    steps = [(bel[i] - bel[i - 1], i) for i in range(1, len(bel))]
-    if steps and max(steps)[0] > 0:
-        sr = max(steps)[1]
-        ax.axvline(sr, color=FAM_COLOR['belief'], lw=1.4, ls=(0, (4, 3)), zorder=2, alpha=0.8)
-        ax.annotate('', xy=(sr, bel[sr]), xytext=(sr, bel[sr - 1]),
-                    arrowprops=dict(arrowstyle='-|>', color=FAM_COLOR['belief'], lw=2))
-        ax.text(sr - 0.08, (bel[sr] + bel[sr - 1]) / 2,
-                f"agency signature\nenters library\n(+{bel[sr] - bel[sr - 1]} belief solves)",
-                color=FAM_COLOR['belief'], fontsize=8.4, ha='right', va='center',
-                zorder=7, fontweight='bold')
-
-    _style_axes(ax, xs, xlabel='ECD round  (enumerate ↦ joint stitch)')
-    ax.set_ylabel('cumulative tasks solved', fontsize=9.5, color=MUTED)
-    ymax = max(max(d['cumulative'][f]) for f in FAM_ORDER)
-    ax.set_ylim(-ymax * 0.03, ymax * 1.08)
-
-
-def _panel_collapse(ax, d):
-    "Plot 2: per-task solve-time collapse — round before solve vs solve round (log time)."
-    pairs = d['pairs']
-    if not d['has_timings'] or not pairs:
-        ax.text(0.5, 0.5, "no per-task timings in this run\n"
-                          "(re-run the phase, or pass --log <run stdout>)",
-                transform=ax.transAxes, ha='center', va='center', color=MUTED, fontsize=10)
-        ax.set_axis_off()
-        return
-
-    x0, x1 = 0.0, 1.0
-    # order so belief draws on top of the non-mental lines
-    for p in sorted(pairs, key=lambda p: p['family'] == 'belief'):
-        hero = p['family'] == 'belief'
-        c = FAM_COLOR[p['family']]
-        ax.plot([x0, x1], [p['miss_time'], p['solve_time']], color=c,
-                lw=2.0 if hero else 1.0, alpha=0.9 if hero else 0.5,
-                zorder=6 if hero else 3, solid_capstyle='round')
-        ax.scatter([x0, x1], [p['miss_time'], p['solve_time']], s=26 if hero else 12,
-                   color=c, alpha=0.95 if hero else 0.6, zorder=7 if hero else 4)
-
-    # the timeout ceiling: misses pile up at ~t_fn (the largest miss time observed).
-    t_fn = max(p['miss_time'] for p in pairs)
-    ax.axhline(t_fn, color=MUTED, lw=1, ls=(0, (2, 3)), zorder=1, alpha=0.7)
-    ax.text(1.28, t_fn, f"~timeout {t_fn:.0f}s", color=MUTED, fontsize=8,
-            ha='right', va='bottom')
-
-    h = d['headline']
-    if h:
-        ax.annotate(f"belief\n{h['worst_miss']:.0f}s → {h['worst_solve']:.0f}s"
-                    f"  ({h['worst_speedup']:.0f}× faster)",
-                    xy=(x1, h['worst_solve']), xytext=(x1 - 0.32, h['worst_solve']),
-                    color=FAM_COLOR['belief'], fontsize=8.6, fontweight='bold',
-                    va='center', ha='right', zorder=8,
-                    arrowprops=dict(arrowstyle='-|>', color=FAM_COLOR['belief'], lw=1.6))
-
-    ax.set_yscale('log')
-    ax.set_xlim(-0.42, 1.30)
-    ax.set_xticks([x0, x1])
-    ax.set_xticklabels(['round before\n(miss)', 'solve round\n(hit)'])
-    ax.grid(True, axis='y', color=GRID, lw=0.8, zorder=0)
-    ax.set_axisbelow(True)
-    for s in ('top', 'right'):
-        ax.spines[s].set_visible(False)
-    for s in ('left', 'bottom'):
-        ax.spines[s].set_color(GRID)
-    ax.tick_params(colors=MUTED, labelsize=8.5)
-    ax.set_ylabel('per-task enumeration time  (s, log)', fontsize=9.5, color=MUTED)
-
-    # direct family labels at the right (solve) column
-    fam_seen = {}
-    for p in pairs:
-        fam_seen.setdefault(p['family'], p['solve_time'])
-    n_imm = len(d['immediate'])
-    ax.text(0.015, 0.985, f"{n_imm} tasks solved on the first\nattempt (no prior miss)",
-            transform=ax.transAxes, fontsize=8, color=MUTED, ha='left', va='top')
-
-
-def _style_axes(ax, xs, xlabel):
-    ax.set_xlabel(xlabel, fontsize=9.5, color=MUTED)
-    ax.set_xlim(min(xs) - 0.15, max(xs) + 1.35)
-    ax.set_xticks(xs)
-    ax.set_xticklabels([('0\n(base)' if x == 0 else str(x)) for x in xs])
-    ax.grid(True, axis='y', color=GRID, lw=0.8, zorder=0)
-    ax.set_axisbelow(True)
-    for s in ('top', 'right'):
-        ax.spines[s].set_visible(False)
-    for s in ('left', 'bottom'):
-        ax.spines[s].set_color(GRID)
-    ax.tick_params(colors=MUTED, labelsize=8.5)
-
-
-def plot(datasets, out_path='solve_dynamics.png'):
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-
-    n = len(datasets)
-    fig, axes = plt.subplots(n, 2, figsize=(13.4, 4.7 * n + 0.8), squeeze=False)
-    fig.patch.set_facecolor(BG)
-    for row, d in enumerate(datasets):
-        kind = 'atomic fork/sync' if d['phase'] == 1 else 'decomposed plumbing'
-        axA, axB = axes[row, 0], axes[row, 1]
-        for ax in (axA, axB):
-            ax.set_facecolor(BG)
-        axA.set_title(f"Phase {d['phase']}  —  {kind}   (cumulative solves)",
-                      fontsize=11, color=INK, loc='left', pad=8)
-        axB.set_title("per-task solve-time collapse", fontsize=11, color=INK, loc='left', pad=8)
-        _panel_cumulative(axA, d)
-        _panel_collapse(axB, d)
-
-    top = 1 - 1.0 / fig.get_figheight()
-    fig.tight_layout(rect=[0, 0, 1, top])
-    fig.text(0.02, 1 - 0.32 / fig.get_figheight(),
-             'Belief is reached late and cheaply — an S-curve of solves, and a solve-time '
-             'collapse the round its abstraction lands',
-             fontsize=13.5, fontweight='bold', color=INK, ha='left', va='top')
-    fig.text(0.02, 1 - 0.62 / fig.get_figheight(),
-             'Non-mental families solve in round 1 and sit flat at their ceiling. Belief '
-             'becomes reachable only once the joint stitch abstracts the parts it reuses —\n'
-             'its enumeration time then drops from the full timeout to seconds in a single '
-             'round, the round its S-curve steps up.',
-             fontsize=9, color=MUTED, ha='left', va='top', linespacing=1.5)
-
-    for ext in ({out_path, out_path.rsplit('.', 1)[0] + '.pdf'}):
-        fig.savefig(ext, dpi=200, facecolor=fig.get_facecolor())
-        print(f"wrote {ext}")
+# ── no figure ─────────────────────────────────────────────────────────────────────────
+# This script used to emit a two-panel figure and now emits none; both panels were cut,
+# for different reasons, and the reasons are worth keeping so neither gets rebuilt.
+#
+#   Panel 1, cumulative solves per round, was REDUNDANT.  Its whole content is the belief
+#     row of the per-round library table (0 / 75 / 107 / 132 against a flat non-mental
+#     144), the prose quotes those four numbers anyway, and on the page it read as a
+#     near-twin of the corpus-DL figure — same x-axis, same four series, same colours — so
+#     the same round-2 step got told three times.
+#   Panel 2, the miss→solve slopegraph, was MISLEADING.  Every left endpoint was a timeout,
+#     so it took exactly two values (1200 s and 3600 s) and no line's slope carried
+#     anything the right endpoint did not.  Worse, a timeout is CENSORED — the task needed
+#     more than that by an unknown margin — so drawing a line from it to a measured solve
+#     time implies a magnitude the run never observed.  Reading that picture is what
+#     produced the "large mass pressed against the ceiling" and "most tasks spend most of
+#     the window" claims the thesis used to make; both are false against the 3600 s budget
+#     (median 32%, three tasks of 132 within 90% of it).
+#
+# The numbers that replaced them are in `headline`, which is censoring- and budget-aware.
+# The `cumulative` and `pairs` blocks are still computed into the JSON — they are the
+# run's record, and only their plots are gone.
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────────────
 def main(argv):
     smoke = '--smoke' in argv
     both = '--both' in argv
-    no_plot = '--no-plot' in argv
     run_path = argv[argv.index('--run') + 1] if '--run' in argv else None
     log_path = argv[argv.index('--log') + 1] if '--log' in argv else None
-    out_path = next((a for a in argv[1:] if a.endswith('.png')), 'solve_dynamics.png')
 
     if both:
         if log_path is not None:
             sys.exit("--log names a single phase's stdout; drop --both or run each phase "
                      "separately with its own --log.")
-        datasets = [run(decomposed=False, smoke=smoke),
-                    run(decomposed=True, smoke=smoke)]
+        run(decomposed=False, smoke=smoke)
+        run(decomposed=True, smoke=smoke)
     else:
         decomposed = '--decomposed' in argv
-        datasets = [run(decomposed=decomposed, smoke=smoke, run_path=run_path, log_path=log_path)]
-
-    if not no_plot:
-        plot(datasets, out_path)
+        run(decomposed=decomposed, smoke=smoke, run_path=run_path, log_path=log_path)
 
 
 if __name__ == '__main__':

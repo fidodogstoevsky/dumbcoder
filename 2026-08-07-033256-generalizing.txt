@@ -1,0 +1,81 @@
+▗ ▗   ▖ ▖  Claude Code v2.1.223
+           Opus 5 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/mol/s26/dumbcoder
+
+
+❯ The obstacle task visualized in chapter4.typ :107 is so good because only one 
+  of the scenes requires positing the wall, so the solution program has to      
+  posit more than it has to for the other scenes in order to be consistent. A   
+  similar principle applies to the desire tasks vs belief tasks. The desire     
+  tasks are just optimize, there's no belief attribution. There's no need to    
+  posit that the agent is navigating by a true representaiton of the grid,      
+  that's just assumed by default. We only need to attribute belief when there's 
+  a false belief. Which I guess is the whole point of false belief tasks, that  
+  they isolate belief attribution since it can't be solved otherwise by the     
+  extensional story. So I'm interested in why humans see the desire task        
+  solutions as mental, as attributing true beleif (even though it's more than   
+  is necessary). So clearly it's because we constnatly see people having        
+  beliefs all the time, that's the general model of an agent, a human, so then  
+  when we see an agent navigating around we take it as it having a true belief  
+  about the world in which it's nagvigating                                     
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Your obstacle figure and the desire/belief contrast are the same mechanism at
+  two different scales of $k$, and I think that's the sharpest way to say what
+  you're circling.
+
+  The formal fact underneath it. With a null perturbation, the belief
+  construction and the desire solution are extensionally identical. Fork the
+  world grid, don't touch the copy, run the planner against the copy, sync back
+  the agent's position — you get exactly what optimize on the world gives you,
+  frame for frame. So on desire scenes the mental and non-mental readings are
+  not two hypotheses that make different predictions; they are two spellings of
+  one function. Nothing in the data can separate them, ever. The only thing that
+  separates them is description length: the belief spelling pays for the fork,
+  the sync, and the identity, and buys nothing. That's why your learner never
+  posits it, and it's the right result — a per-task MDL objective should refuse
+  to pay for a slot it fills trivially.
+
+  Why humans pay anyway. Your obstacle caption already contains the answer:
+  "even though only scene 4 needs the wall, the program posits a wall in the
+  other scenes as well." The wall is over-posited in scenes 1–3 because one
+  program covers four scenes and it can't condition on which scene it's in. Now
+  let $k$ be a lifetime rather than four. If a person runs one agent schema
+  across every agent-episode they've ever observed, and some minority of those
+  episodes are false-belief episodes that force a private-model slot, then the
+  schema has the slot, and the slot gets filled in every episode — with the null
+  perturbation in the overwhelming majority. Over-attribution of true belief
+  isn't a separate psychological fact needing its own explanation. It's a slot
+  forced by a minority of the corpus, filled degenerately across the rest,
+  exactly as the wall is stamped into scenes 1–3.
+
+  That framing also predicts something about the phenomenology, which I think is
+  right: the true-belief attribution should feel contentless. Nobody watching
+  someone cross a room to a coffee cup is actively representing what they
+  believe. But ask, and the slot is there to be filled — because it's
+  structurally present, not because it was doing work.
+
+  There's a second, weaker mechanism worth distinguishing from the first: schema
+  economy. Two productions (planner-on-world and planner-on-private-model) cost
+  more to store than one that subsumes both. Uniformity is compressive at the
+  library level even when it's wasteful per task. Your two-part objective
+  already has the resources to say this — it's the same objective, just priced
+  where the library lives rather than where the task does.
+
+  The honest disanalogy, for limitations. Your endowment grants the planner as a
+  primitive, so the non-mental route is permanently free and your learner
+  cannot exhibit this over-generalization no matter how much of the corpus is
+  false-belief. The mechanism is unavailable to it by construction. That's a
+  real limit and a clean one to state: the model explains why belief attribution
+  is discovered, not why it then spreads to cases that don't need it.
+
+  If it'd help, I can measure the actual gap under the final library — price the
+  null-perturbation belief spelling against the extensional solution on the
+  desire family with the mdl_margin machinery. A number for "how many nats the
+  uniform schema would cost you per non-mental task" would make the limitations
+  paragraph concrete rather than hand-wavy.
+
+✻ Crunched for 1m 26s
+
+※ recap: We were discussing why humans read desire tasks as belief attribution when the model doesn't need it, for your thesis framing. Next: I can measure the nat cost of the null-perturbation belief spelling on desire tasks if you want it. (disable recaps in /config)

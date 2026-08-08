@@ -25,14 +25,8 @@
 )
 
 #mol-abstract[
-
+We study the acquisition of Theory of Mind.
 ]
-
-// _Niets is mooi genoeg voor de arbeider, die zo lang zonder schoonheid heeft moeten leven_
-
-// _Nothing is precious enough for the worker, who has had to live without beauty for so long_
-
-// Michel de Klerk
 
 #pagebreak()
 
@@ -43,7 +37,8 @@
 #include "chapter4.typ"
 #include "chapter5.typ"
 #include "chapter6.typ"
+#include "chapter7.typ"
 #include "appendix.typ"
 #pagebreak()
 
-#load-bib(read("refs.bib"), main: true)
+#load-bib(read("refs2.bib"), main: true)

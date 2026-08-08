@@ -47,10 +47,9 @@
 //   (a figure centres its body anyway, so the two never fight).
 //
 //   `caption: auto` brings back viz's own HEADER above the grids — the family
-//   title, its ground-truth program and the instance tag — which is what the
-//   `all-tasks` catalogue uses, since nothing else there names the family.  Putting
-//   that header inside a #figure numbers it as a "Listing", because the ground
-//   truth is `raw` and Typst infers the kind from the body: pass `kind: image`.
+//   title and a plain-English account of the mechanism, named to the values in the
+//   grids underneath — which is what the `all-tasks` catalogue uses, since nothing
+//   else there says which family is which.
 //
 // COMPILE STANDALONE (preview every family):
 //   typst compile viz.typ
@@ -64,7 +63,7 @@
 // (wall / witness / goal / false-obstacle / observers).  Each sample is
 // {kind, tag, k, scenes:[{T, panels:[{label, grid}]}]}, with scene 0's `T`/`panels`
 // also lifted to the top level; fn families list successive `unfold` frames, fn_p_g
-// families world | template | result (each scene carrying its own template).
+// families canvas | template | result (each scene carrying its own template).
 
 #let task-data = json("task_samples.json")
 
@@ -306,12 +305,14 @@
 )
 
 // Which panels of a sample form a trajectory?  fn families list t0 … tn; fn_p_g
-// families list world | template | t1, where world → t1 is the (one-step)
+// families list canvas | template | t1, where canvas → t1 is the (one-step)
 // trajectory and the template is a separate channel shown alongside.  For the
 // fn_p_g families that REPLACE the grid rather than move things in it (readout,
 // perception) that one step is a diff, not motion — render those with
 // mode: "frames" if the arrows read as more than they are.
-#let _is-frame(p) = p.label == "world" or (
+// ("world" is the pre-canvas spelling of the same panel; kept so older artifacts
+// and rival_samples.json keep rendering.)
+#let _is-frame(p) = p.label == "canvas" or p.label == "world" or (
   p.label.starts-with("t") and p.label.slice(1).match(regex("^[0-9]+$")) != none)
 
 // takes anything carrying `panels` — a whole sample or one of its scenes
@@ -324,61 +325,146 @@
 // top-level T/panels ARE the one scene, so they keep rendering unchanged.
 #let _scenes-of(s) = if "scenes" in s { s.scenes } else { ((T: s.T, panels: s.panels),) }
 
-// ── per-kind captions: human title + ground-truth program ─────────────────────
+// ── per-kind captions: human title + what the task's mechanism is ─────────────
+// A sample's `tag` records the latent the generator sampled — "av=1, gv=2,
+// pw=(1, 2), bv=5".  Parsed into a dict, it lets a caption name the values and
+// cells the reader is actually looking at instead of talking about "the agent".
+// Values may be parenthesised or bracketed tuples, so the comma split has to
+// respect brackets.
+#let _tag-fields(tag) = {
+  let out = (:)
+  for m in tag.matches(regex("(\\w+)=(\\([^)]*\\)|\\[[^\\]]*\\]|[^,]+)")) {
+    out.insert(m.captures.at(0), m.captures.at(1).trim())
+  }
+  out
+}
+#let _fld(t, k) = t.at(k, default: "?")
+
+// Title + a plain-English account of the mechanism, the second a function of the
+// parsed tag so it names this instance's values and cells.  ONLY fields that
+// belong to the family's latent — the ones every one of the k scenes shares —
+// may be named; per-scene incidentals (which values happen to be misplaced this
+// time round) are described by role instead, since the caption sits under one
+// scene but is about the task.
 #let info = (
   // minds-free substrate
-  physics:      ("Physics — a body moves",                 "(step v d)"),
-  desire:       ("Desire — seek a goal (true belief)",     "(optimize (neg_dist gv) av)"),
+  physics: ("Constant movement", t => [
+    Value #_fld(t, "val") drifts one cell #_fld(t, "dir") per frame; nothing else
+    on the grid changes.]),
+  desire: ("Goal-directed movement", t => [
+    Value #_fld(t, "av") wants value #_fld(t, "gv") and takes the shortest route
+    to it, one step per frame. It sees the grid as it is, so nothing separates
+    what it takes to be the case from what is.]),
   // independent extension: fork / sync without belief
-  overlay:      ("Overlay — motion-blur trail",            "(fork (step v d) overlay)"),
-  comet:        ("Comet — fork with a seek derive",
-                 "(fork (optimize (neg_dist gv) av) overlay)"),
-  registration: ("Registration — snap one object",         "(sync_to_world v)"),
+  overlay: ("Overlay", t => [
+    Value #_fld(t, "val") steps #_fld(t, "dir"), but the cells it leaves are
+    never cleared, so it smears across the grid rather than moving through it.]),
+  comet: ("Comet", t => [
+    Value #_fld(t, "av") walks to value #_fld(t, "gv") as in goal-directed movement, but keeps
+    every cell it has passed through: goal-directed motion and a trail, with no
+    mind in it.]),
+  registration: ("Registration", t => [
+    Value #_fld(t, "val") is moved to the cell the template assigns it. Every
+    other value on the canvas stays where it stands, including the ones the
+    template disagrees about.]),
   // belief — the five theory-of-mind variants (all kind='belief' in the corpus)
-  belief_wall:  ("False belief — detour round an invisible wall",
-                 "(fork (compose (wall_at r c) (optimize (neg_dist gv) av)) (sync_to_world av))"),
-  belief_witness: ("Witness belief — a bystander crosses the phantom wall",
-                 "(compose (fork (compose (wall_at r c) (optimize (neg_dist gv) av)) (sync_to_world av)) (optimize (neg_dist gw) aw))"),
-  belief_goal:  ("Goal displacement — Sally-Anne",
-                 "(fork (seq (step gv d) (optimize (neg_dist gv) av)) (sync_to_world av))"),
-  belief_observers: ("Two observers — one goal, one grid, one fork",
-                 "(compose (optimize (neg_dist gv) ao) (fork (compose (step gv d) (optimize (neg_dist gv) av)) (sync_to_world av)))"),
-  belief_false_obstacle: ("False obstacle — wrong about wall AND goal",
-                 "(fork (seq (wall_at Wb) (step gv d) (optimize (neg_dist gv) av)) (sync_to_world av))"),
+  belief_wall: ("False belief", t => [
+    Value #_fld(t, "av") heads for value #_fld(t, "gv") but believes a wall
+    stands at #_fld(t, "pw"), so it bends round that cell and pays extra steps
+    for it. No frame of the task contains a wall, and value #_fld(t, "bv") is
+    standing on the cell in question throughout, untouched.]),
+  belief_witness: ("Witness belief", t => [
+    Value #_fld(t, "av") believes a wall stands at #_fld(t, "pw") and detours
+    round it on its way to value #_fld(t, "gv"). Value #_fld(t, "aw"), heading
+    for value #_fld(t, "gw"), walks straight through that same cell. The wall
+    has to be attributed to one agent and withheld from the other.]),
+  belief_goal: ("Goal displacement", t => [
+    Value #_fld(t, "gv") never moves. Value #_fld(t, "av") walks to
+    #_fld(t, "displaced_to") and stops there, because in its own model the goal
+    has been shifted away from where it actually lies: it goes to where it
+    believes the goal to be, as Sally goes to her own basket.]),
+  belief_observers: ("Two observers", t => [
+    Value #_fld(t, "gv") stays where it is. Value #_fld(t, "av") heads for
+    #_fld(t, "displaced_to"), the cell where it believes the goal to be, while
+    value #_fld(t, "observer") heads for the goal itself. One scene, a false
+    belief attributed to the first agent and none to the second.]),
+  belief_false_obstacle: ("False obstacle", t => [
+    Value #_fld(t, "av") is mistaken twice over: it believes a wall stands at
+    #_fld(t, "pw"), where value #_fld(t, "bv") is in fact standing, and that
+    value #_fld(t, "gv") lies at #_fld(t, "displaced_to"). So it bends round an
+    empty cell and settles one short of the goal. The wall at
+    #_fld(t, "real_wall") is the real one, and stays on the grid throughout.]),
   // symmetric corners — one minds-free task per cube axis
-  flee:         ("Flee — avoid the nearest hazard",        "(optimize (distance hv) av)"),
-  deletion:     ("Deletion — punch one hole",              "(clear_at r c)"),
-  denoise:      ("Denoise — drop a noise value",           "(erase nv)"),
-  obstacle:     ("Obstacle — detour round a REAL wall",
-                 "(compose (wall_at r c) (optimize (neg_dist gv) av))"),
-  relocate:     ("Relocation — a real wall jumps cell",
-                 "(compose (clear_at r c) (wall_at r' c'))"),
-  underlay:     ("Underlay — world-wins motion trail",     "(fork (step v d) underlay)"),
-  perception:   ("Perception — record into the model",     "(sync_to_model v)"),
-  multi_reg:    ("Multi-registration — snap all",          "sync_all"),
-  reg_except:   ("Registration-except — all but one",      "(sync_except a)"),
-  inpaint:      ("Inpainting — fill holes, keep pixels",   "underlay"),
-  readout:      ("Readout — report the model",             "snd_gg"),
+  flee: ("Flee", t => [
+    Value #_fld(t, "av") moves to whichever neighbouring cell is furthest from
+    value #_fld(t, "hv"), and stops once no move gains it anything.]),
+  deletion: ("Deletion", t => [
+    Cell #_fld(t, "cell") is cleared, whatever was standing on it; the rest of
+    the grid is untouched.]),
+  denoise: ("Denoise", t => [
+    Every cell holding value #_fld(t, "noise") is erased at once, wherever it
+    lies; everything else is kept.]),
+  obstacle: ("Obstacle", t => [
+    A wall is put on the grid at #_fld(t, "pw"), and value #_fld(t, "av") walks
+    round it to reach value #_fld(t, "gv"). The detour has the shape of the
+    false-belief one, but here the grid itself shows what causes it.]),
+  relocate: ("Relocation", t => [
+    The wall at #_fld(t, "from") is cleared and a wall appears at
+    #_fld(t, "to"). Nothing else on the grid moves.]),
+  underlay: ("Underlay", t => [
+    Value #_fld(t, "val") steps #_fld(t, "dir") and leaves a trail, but wherever
+    the grid is already occupied the standing value wins: the trail stops at
+    value #_fld(t, "bystander") instead of painting over it.]),
+  perception: ("Perception", t => [
+    The template is updated to say where value #_fld(t, "val") actually is on
+    the canvas; everything else the template holds is left as it was. The world
+    is read but not changed.]),
+  multi_reg: ("Multi-registration", t => [
+    Every value the template also carries is moved to the cell the template
+    assigns it; values only the canvas has stay put. The program names no value
+    at all — it applies to whatever the two grids share.]),
+  reg_except: ("Registration-except", t => [
+    Every value is snapped to its template cell except value
+    #_fld(t, "anchor"), which keeps the position it has on the canvas: one
+    object exempted from a rule the rest are subject to.]),
+  inpaint: ("Inpainting", _ => [
+    Wherever the canvas is empty the template's value is filled in; wherever the
+    canvas already holds something, the canvas wins.]),
+  readout: ("Readout", _ => [
+    The template is returned as it stands and the canvas is thrown away: the
+    answer is whatever the second grid says, however the first one looks.]),
   // pair-plumbing corners — one minds-free task per combinator complement
-  wipe:         ("Wipe — the grid goes blank",             "(pipe_gpg pair_blank snd_gg)"),
-  composite:    ("Composite — two layers, one map each",
-                 "(compose_pg (bimap (step u d) (erase w)) overlay)"),
-  drift_reg:    ("Drifting registration — snap while the image scrolls",
-                 "(compose_pg (mapfst (step u d)) (register (locate v) (place v)))"),
-  map_update:   ("Map update — the model adopts the world",
-                 "(compose_pg swap sync_all)"),
+  wipe: ("Wipe", _ => [
+    Every value on the grid is cleared in a single step, and the blank grid then
+    stays blank.]),
+  composite: ("Composite", t => [
+    Value #_fld(t, "drift") steps #_fld(t, "dir") on one layer while value
+    #_fld(t, "masked") is erased from the other, and the two layers are then
+    flattened into a single grid.]),
+  drift_reg: ("Drifting registration", t => [
+    Value #_fld(t, "val") is moved to the cell the template assigns it while
+    value #_fld(t, "drift") steps #_fld(t, "dir") at the same time: a
+    registration carried out inside a moving image.]),
+  map_update: ("Map update", t => [
+    The two grids trade roles and everything is then snapped: the template takes
+    on the canvas's position for every value they both hold, keeps value
+    #_fld(t, "stale"), which only it has, and does not take up value
+    #_fld(t, "fresh"), which only the canvas has.]),
 )
 
-// The built-in caption for a sample: bold title + [kind], ground-truth program,
-// and the per-instance tag.  Exposed so callers can build on / tweak it.
+// The built-in caption for a sample: bold title + [kind], then a sentence or two
+// on the mechanism, named to the values in the grids below it.  Exposed so
+// callers can build on / tweak it.
 #let default-caption(s) = {
-  let meta = info.at(s.kind, default: (s.kind, ""))
-  stack(dir: ttb, spacing: 5pt,
+  let meta = info.at(s.kind, default: (s.kind, none))
+  stack(dir: ttb, spacing: 4pt,
     stack(dir: ltr, spacing: 6pt,
       text(weight: "bold", meta.at(0)),
       text(fill: luma(150), size: 8pt, "[" + s.kind + "]")),
-    raw(meta.at(1)),
-    ..if s.tag != "" { (text(size: 8pt, fill: luma(120), s.tag),) } else { () },
+    ..if meta.at(1) != none {
+      (block(width: 100%, text(size: 9pt, fill: luma(60),
+                               (meta.at(1))(_tag-fields(s.tag)))),)
+    } else { () },
   )
 }
 
@@ -459,8 +545,8 @@
 // it is safe either way.
 #let _placed(body, alignment) = if alignment == none { body } else { align(alignment, body) }
 
-// Render a single sample.  `caption` is the HEADER above the grids (title + ground
-// truth + tag), not a figure caption:
+// Render a single sample.  `caption` is the HEADER above the grids (title + the
+// mechanism in words), not a figure caption:
 //   none (default) → no header, grids only — the figure's own caption says what it
 //                    is, so the header would only repeat it
 //   auto           → the built-in default-caption(s)
@@ -525,8 +611,8 @@
 // pass none to take every family in data order.  `dir: ltr` lays the chosen
 // instances out side by side (handy for a compact one/two-up demo figure).
 // `caption` is forwarded to each sample as its HEADER (none by default, auto =
-// built-in title + ground truth + tag, or custom content applied to every chosen
-// sample) — for a numbered caption below, put the result in a #figure.
+// built-in title + mechanism, or custom content applied to every chosen sample) —
+// for a numbered caption below, put the result in a #figure.
 // `mode: "path"` collapses each trajectory onto a single arrowed grid; `scenes`
 // says how many of the task's k scenes to draw (1 = a representative one, auto =
 // the whole set).  `alignment` (default center) places the result on the page;
